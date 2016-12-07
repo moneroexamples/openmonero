@@ -4,3 +4,5 @@
 *.user
 .idea/
 cmake-build-debug/
+ext/restbed/dependency/catch/
+ext/restbed/dependency/catch/
