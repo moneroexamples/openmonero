@@ -19,4 +19,5 @@ add_executable(restbed_xmr
 target_link_libraries(restbed_xmr
         myext
         restbed
-        pthread)
+        pthread
+        curl)
