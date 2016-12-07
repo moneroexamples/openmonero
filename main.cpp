@@ -55,6 +55,8 @@ main()
 
     settings->set_default_header( "Connection", "close" );
 
+    cout << "Start the service at https://127.0.0.1:1984" << endl;
+
     Service service;
     service.publish( resource );
     service.start( settings );
