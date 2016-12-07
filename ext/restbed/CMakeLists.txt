@@ -1,0 +1,72 @@
+# Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+cmake_minimum_required( VERSION 2.8.10 )
+
+project( "restbed" )
+set( restbed_VERSION_MAJOR 4 )
+set( restbed_VERSION_MINOR 5.0 )
+set( restbed_VERSION ${restbed_VERSION_MAJOR}.${restbed_VERSION_MINOR} )
+set( PACKAGE_VERSION ${restbed_VERSION} )
+set( VERSION "${restbed_VERSION}" )
+
+#
+# Build Options
+#
+option( BUILD_SHARED   "Build shared library."              OFF )
+option( BUILD_EXAMPLES "Build examples applications."       OFF )
+option( BUILD_TESTS    "Build all available test suites."   OFF )
+option( BUILD_SSL      "Build secure socket layer support."  ON )
+
+#
+# Configuration
+#
+include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/configuration.cmake" )
+
+message( "   ${Blue}Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.${Reset}" )
+
+#
+# Dependencies
+#
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/modules" )
+
+find_package( asio REQUIRED )
+include_directories( SYSTEM ${asio_INCLUDE} )
+
+find_package( kashmir REQUIRED )
+include_directories( SYSTEM ${kashmir_INCLUDE} )
+
+if ( BUILD_SSL )
+    find_package( openssl REQUIRED )
+    include_directories( SYSTEM ${ssl_INCLUDE} )
+endif ( )
+
+#
+# Build
+#
+include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/manifest.cmake" )
+
+include_directories( ${INCLUDE_DIR} )
+
+add_library( ${PROJECT_NAME} ${MANIFEST} )
+
+if ( BUILD_SHARED )
+    set_target_properties( ${PROJECT_NAME} PROPERTIES SOVERSION ${restbed_VERSION_MAJOR} VERSION ${restbed_VERSION} )
+endif ( )
+
+if ( BUILD_SSL )
+    target_link_libraries( ${PROJECT_NAME} LINK_PRIVATE ${ssl_LIBRARY} ${crypto_LIBRARY} )
+else ( )
+    target_link_libraries( ${PROJECT_NAME} )
+endif ( )
+
+#
+# Install
+#
+include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/artifacts.cmake" )
+
+if ( NOT DEFINED CMAKE_INSTALL_LIBDIR )
+    set( CMAKE_INSTALL_LIBDIR library )
+endif ( )
+
+install( FILES "${INCLUDE_DIR}/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_PREFIX}/include" )
+install( FILES ${ARTIFACTS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/corvusoft/${PROJECT_NAME}" )
+install( TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library )
