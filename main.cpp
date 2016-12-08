@@ -19,15 +19,17 @@ main()
 
     xmreg::YourMoneroRequests your_xmr;
 
-    auto login            = your_xmr.make_resource(
-            &xmreg::YourMoneroRequests::login           , "/login");
+    auto login                 = your_xmr.make_resource(
+            &xmreg::YourMoneroRequests::login                , "/login");
 
-    auto get_address_txs  = your_xmr.make_resource(
-            &xmreg::YourMoneroRequests::get_address_txs , "/get_address_txs");
+    auto get_address_txs       = your_xmr.make_resource(
+            &xmreg::YourMoneroRequests::get_address_txs      , "/get_address_txs");
 
-    auto get_address_info = your_xmr.make_resource(
-            &xmreg::YourMoneroRequests::get_address_info, "/get_address_info");
+    auto get_address_info      = your_xmr.make_resource(
+            &xmreg::YourMoneroRequests::get_address_info     , "/get_address_info");
 
+    auto import_wallet_request = your_xmr.make_resource(
+            &xmreg::YourMoneroRequests::import_wallet_request, "/import_wallet_request");
 
     bool use_ssl {false};
 
@@ -57,6 +59,7 @@ main()
     service.publish(login);
     service.publish(get_address_txs);
     service.publish(get_address_info);
+    service.publish(import_wallet_request);
 
     service.start(settings);
 

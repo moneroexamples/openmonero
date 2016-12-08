@@ -148,6 +148,30 @@ public:
         session->close( OK, response_body, response_headers);
     }
 
+    void
+    import_wallet_request(const shared_ptr< Session > session, const Bytes & body)
+    {
+        json j_request = body_to_json(body);
+
+        if (show_logs)
+            print_json_log("import_wallet_request request: ", j_request);
+
+        json j_response  {
+                {"payment_id", "27b64e5edb47f8060cf2648704c8a914ba5657e73cd79cc58a781bc6d21ce5d6"},
+                {"import_fee", "1000000000000"},
+                {"new_request", true},
+                {"request_fulfilled",  false},
+                {"payment_address", "44LbNqbmRCmEPxZYmwKw2hbga37svZsHPQ6hLAK4mtApPoWrbpTBiKo6jW452raUXW3M7qUq7yztuchsNYgwYj8S5KQKK43"},
+                {"status", "Payment not yet received"}
+        };
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+    }
+
     shared_ptr<Resource>
     make_resource(function< void (YourMoneroRequests&, const shared_ptr< Session >, const Bytes& ) > handle_func,
                   const string& path)
