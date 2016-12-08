@@ -53,7 +53,6 @@ make_headers(const multimap<string, string>& extra_headers = multimap<string, st
 
 struct handel_
 {
-
     using fetch_func_t = function< void ( const shared_ptr< Session >, const Bytes& ) >;
 
     fetch_func_t request_callback;
@@ -62,20 +61,13 @@ struct handel_
             request_callback {callback}
     {}
 
-
     void operator()(const shared_ptr< Session > session)
     {
         const auto request = session->get_request( );
-
         size_t content_length = request->get_header( "Content-Length", 0);
-
-        cout << "post_get_address_info_handler" << endl;
-
         session->fetch(content_length, this->request_callback);
     }
 };
-
-
 
 
 class YourMoneroRequests
