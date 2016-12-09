@@ -5,8 +5,8 @@
 
 #include "ext/restbed/source/restbed"
 
+#include "src/MySqlConnector.h"
 #include "src/YourMoneroRequests.h"
-
 
 
 using namespace std;
@@ -15,6 +15,15 @@ using namespace restbed;
 int
 main()
 {
+    xmreg::MySqlAccounts xmr_accounts;
+
+    //xmr_accounts.create_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
+
+
+    xmr_accounts.select_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
+
+
+
     xmreg::YourMoneroRequests::show_logs = true;
 
     xmreg::YourMoneroRequests your_xmr;

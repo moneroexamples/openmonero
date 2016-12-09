@@ -101,6 +101,7 @@ target_link_libraries(restbed_xmr
         lmdb
         ringct
         common
+        mysqlcppconn
         ${Boost_LIBRARIES}
         pthread
         unbound
