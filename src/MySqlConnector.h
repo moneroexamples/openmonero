@@ -5,25 +5,17 @@
 #ifndef RESTBED_XMR_MYSQLCONNECTOR_H
 #define RESTBED_XMR_MYSQLCONNECTOR_H
 
+
+#include <mysql++/mysql++.h>
+
 #include <iostream>
 #include <memory>
-
-
-
-#include "mysql_connection.h"
-
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
-
 
 
 namespace xmreg
 {
 
-using namespace sql;
+using namespace mysqlpp;
 using namespace std;
 
 
@@ -62,9 +54,8 @@ class MySqlConnector
     string dbname;
 
 protected:
-    Driver* driver;
 
-    unique_ptr<Connection> con;
+    Connection conn;
 
 public:
     MySqlConnector(
@@ -84,96 +75,98 @@ public:
     void
     connect()
     {
-        Driver* driver = get_driver_instance();
-        con = unique_ptr<Connection>(driver->connect(url, username, password));
-        con->setSchema(dbname);
+        if (conn.connect(dbname.c_str(), url.c_str(),
+                         username.c_str(), password.c_str()))
+        {
+            cout << "connection successful" << endl;
+        }
     }
 
 };
-
-
-class MySqlAccounts: public MySqlConnector
-{
-    static constexpr const char* TABLE_NAME = "Accounts";
-
-    static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts`  (`address`) VALUES (?)
-    )";
-
-    static constexpr const char* SELECT_STMT = R"(
-        SELECT * FROM `Accounts` WHERE `address` = ?
-    )";
-
-public:
-    MySqlAccounts(): MySqlConnector() {}
-
-
-    bool
-    select_account(const string& address)
-    {
-        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
-
-        prep_stmt->setString(1, address);
-
-        try
-        {
-            unique_ptr<ResultSet> res {prep_stmt->executeQuery()};
-
-            cout << res->getRow() << endl;
-
-        }
-        catch (SQLException& e)
-        {
-            MYSQL_EXCEPTION_MSG(e);
-            return false;
-        }
-
-        return true;
-    }
-
-    bool
-    create_account(const string& address)
-    {
-        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
-
-        prep_stmt->setString(1, address);
-
-        try
-        {
-            prep_stmt->execute();
-        }
-        catch (SQLException& e)
-        {
-            MYSQL_EXCEPTION_MSG(e);
-            return false;
-        }
-
-        return true;
-    }
-
-    bool
-    update_account(
-            const string& address,
-            const uint64_t& total_recieved = 0,
-            const uint64_t& total_sent = 0,
-            const uint64_t& scanned_height = 0,
-            const uint64_t& scanned_block_height = 0,
-            const uint64_t& start_height = 0,
-            const uint64_t& transaction_height = 0,
-            const uint64_t& blockchain_height = 0
-    )
-    {
-        mysql_unqiue_ptr<PreparedStatement> prep_stmt(con->prepareStatement(INSERT_STMT));
-
-        prep_stmt->setString(1, address);
-        prep_stmt->setUInt64(2, total_recieved);
-        prep_stmt->setString(3, "a");
-        prep_stmt->execute();
-
-        return false;
-    }
-
-};
+//
+//
+//class MySqlAccounts: public MySqlConnector
+//{
+//    static constexpr const char* TABLE_NAME = "Accounts";
+//
+//    static constexpr const char* INSERT_STMT = R"(
+//        INSERT INTO `Accounts`  (`address`) VALUES (?)
+//    )";
+//
+//    static constexpr const char* SELECT_STMT = R"(
+//        SELECT * FROM `Accounts` WHERE `address` = ?
+//    )";
+//
+//public:
+//    MySqlAccounts(): MySqlConnector() {}
+//
+//
+//    bool
+//    select_account(const string& address)
+//    {
+//        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
+//
+//        prep_stmt->setString(1, address);
+//
+//        try
+//        {
+//            unique_ptr<ResultSet> res {prep_stmt->executeQuery()};
+//
+//            cout << res->getRow() << endl;
+//
+//        }
+//        catch (SQLException& e)
+//        {
+//            MYSQL_EXCEPTION_MSG(e);
+//            return false;
+//        }
+//
+//        return true;
+//    }
+//
+//    bool
+//    create_account(const string& address)
+//    {
+//        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
+//
+//        prep_stmt->setString(1, address);
+//
+//        try
+//        {
+//            prep_stmt->execute();
+//        }
+//        catch (SQLException& e)
+//        {
+//            MYSQL_EXCEPTION_MSG(e);
+//            return false;
+//        }
+//
+//        return true;
+//    }
+//
+//    bool
+//    update_account(
+//            const string& address,
+//            const uint64_t& total_recieved = 0,
+//            const uint64_t& total_sent = 0,
+//            const uint64_t& scanned_height = 0,
+//            const uint64_t& scanned_block_height = 0,
+//            const uint64_t& start_height = 0,
+//            const uint64_t& transaction_height = 0,
+//            const uint64_t& blockchain_height = 0
+//    )
+//    {
+//        mysql_unqiue_ptr<PreparedStatement> prep_stmt(con->prepareStatement(INSERT_STMT));
+//
+//        prep_stmt->setString(1, address);
+//        prep_stmt->setUInt64(2, total_recieved);
+//        prep_stmt->setString(3, "a");
+//        prep_stmt->execute();
+//
+//        return false;
+//    }
+//
+//};
 
 
 }
