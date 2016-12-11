@@ -88,7 +88,33 @@ public:
         if (show_logs)
             print_json_log("login request: ", j_request);
 
-        json j_response {{"new_address", true}};
+        string xmr_address  = j_request["address"];
+
+        // check if login address is new or existing
+        xmreg::MySqlAccounts xmr_accounts;
+
+        xmreg::XmrAccount acc;
+
+        uint64_t acc_id {0};
+
+        json j_response;
+
+        if (xmr_accounts.select(xmr_address, acc))
+        {
+            //cout << "Account found: " << acc.id << endl;
+            acc_id = acc.id;
+            j_response = {{"new_address", false}};
+        }
+        else
+        {
+            //cout << "Account does not exist" << endl;
+
+            if ((acc_id = xmr_accounts.create(xmr_address)) != 0)
+            {
+                //cout << "account created acc_id: " << acc_id << endl;
+                j_response = {{"new_address", true}};
+            }
+        }
 
         string response_body = j_response.dump();
 

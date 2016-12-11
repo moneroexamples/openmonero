@@ -15,38 +15,32 @@ using namespace restbed;
 int
 main()
 {
-    xmreg::MySqlAccounts xmr_accounts;
-
-    //xmr_accounts.create_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
-
-
-    string addr = "41vEA7Ye8Bpeda6g9v5t46koWrVn2PNgEKgluJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB";
-
-    xmreg::XmrAccount acc;
-
-    bool r = xmr_accounts.select(addr, acc);
-
-    if (r)
-    {
-        cout << "Account foudn: " << acc.id << endl;
-
-        xmreg::XmrAccount new_acc = acc;
-        new_acc.total_received = 20e12;
-
-        cout << xmr_accounts.update(acc, new_acc) << endl;
-
-    }
-    else
-    {
-        cout << "Account does not exist" << endl;
-        cout << xmr_accounts.create(addr) << endl;
-    }
-
-
-
-
-
-
+//    xmreg::MySqlAccounts xmr_accounts;
+//
+//    //xmr_accounts.create_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
+//
+//
+//    string addr = "41vEA7Ye8Bpeda6g9v5t46koWrVn2PNgEKgluJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB";
+//
+//    xmreg::XmrAccount acc;
+//
+//    bool r = xmr_accounts.select(addr, acc);
+//
+//    if (r)
+//    {
+//        cout << "Account foudn: " << acc.id << endl;
+//
+//        xmreg::XmrAccount new_acc = acc;
+//        new_acc.total_received = 20e12;
+//
+//        cout << xmr_accounts.update(acc, new_acc) << endl;
+//
+//    }
+//    else
+//    {
+//        cout << "Account does not exist" << endl;
+//        cout << xmr_accounts.create(addr) << endl;
+//    }
 
 
     xmreg::YourMoneroRequests::show_logs = true;

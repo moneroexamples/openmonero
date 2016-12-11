@@ -150,7 +150,7 @@ public:
         return false;
     }
 
-    bool
+    uint64_t
     create(const string& address)
     {
         Query query = conn.query(INSERT_STMT);
@@ -161,15 +161,15 @@ public:
             SimpleResult sr = query.execute(address);
 
             if (sr.rows() == 1)
-                return true;
+                return sr.insert_id();
         }
         catch (mysqlpp::Exception& e)
         {
             MYSQL_EXCEPTION_MSG(e);
-            return false;
+            return 0;
         }
 
-        return false;
+        return 0;
     }
 
     bool
