@@ -44,10 +44,6 @@ struct MySqlDeleter
 
 class MySqlConnector
 {
-
-    template <typename T>
-    using mysql_unqiue_ptr =  unique_ptr<T, MySqlDeleter<T>>;
-
     string url;
     string username;
     string password;
@@ -88,7 +84,7 @@ public:
 
 // to see what it does can run preprecoess on this file
 // g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
-sql_create_11(AccountRow, 1, 0,
+sql_create_11(Accounts, 1, 2,
              sql_int_unsigned   , id,
              sql_varchar        , address,
              sql_bigint_unsigned, total_received,
@@ -101,9 +97,11 @@ sql_create_11(AccountRow, 1, 0,
              sql_timestamp      , created,
              sql_timestamp      , modified);
 
-struct Account : public AccountRow
+
+
+struct XmrAccount : public Accounts
 {
-    using AccountRow::AccountRow;
+    using Accounts::Accounts;
 };
 
 
@@ -117,7 +115,7 @@ class MySqlAccounts: public MySqlConnector
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts`  (`address`) VALUES (%0q)
+        INSERT INTO `Accounts` (`address`) VALUES (%0q);
     )";
 
 
@@ -126,7 +124,7 @@ public:
 
 
     bool
-    select_account(const string& address, Account& account)
+    select(const string& address, XmrAccount& account)
     {
 
         Query query = conn.query(SELECT_STMT);
@@ -134,7 +132,7 @@ public:
 
         try
         {
-            vector<Account> res;
+            vector<XmrAccount> res;
             query.storein(res, address);
 
             if (!res.empty())
@@ -152,47 +150,51 @@ public:
         return false;
     }
 
-//    bool
-//    create_account(const string& address)
-//    {
-//        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
-//
-//        prep_stmt->setString(1, address);
-//
-//        try
-//        {
-//            prep_stmt->execute();
-//        }
-//        catch (SQLException& e)
-//        {
-//            MYSQL_EXCEPTION_MSG(e);
-//            return false;
-//        }
-//
-//        return true;
-//    }
-//
-//    bool
-//    update_account(
-//            const string& address,
-//            const uint64_t& total_recieved = 0,
-//            const uint64_t& total_sent = 0,
-//            const uint64_t& scanned_height = 0,
-//            const uint64_t& scanned_block_height = 0,
-//            const uint64_t& start_height = 0,
-//            const uint64_t& transaction_height = 0,
-//            const uint64_t& blockchain_height = 0
-//    )
-//    {
-//        mysql_unqiue_ptr<PreparedStatement> prep_stmt(con->prepareStatement(INSERT_STMT));
-//
-//        prep_stmt->setString(1, address);
-//        prep_stmt->setUInt64(2, total_recieved);
-//        prep_stmt->setString(3, "a");
-//        prep_stmt->execute();
-//
-//        return false;
-//    }
+    bool
+    create(const string& address)
+    {
+        Query query = conn.query(INSERT_STMT);
+        query.parse();
+
+        try
+        {
+            SimpleResult sr = query.execute(address);
+
+            if (sr.rows() == 1)
+                return true;
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return false;
+        }
+
+        return false;
+    }
+
+    bool
+    update(XmrAccount& acc_orginal, XmrAccount& acc_new)
+    {
+
+        Query query = conn.query();
+
+        try
+        {
+            query.update(acc_orginal, acc_new);
+
+            SimpleResult sr = query.execute();
+
+            if (sr.rows() == 1)
+                return true;
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return false;
+        }
+
+        return false;
+    }
 
 };
 
