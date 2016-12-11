@@ -7,6 +7,8 @@
 
 
 #include <mysql++/mysql++.h>
+#include <mysql++/ssqls.h>
+
 
 #include <iostream>
 #include <memory>
@@ -22,8 +24,6 @@ using namespace std;
 #define MYSQL_EXCEPTION_MSG(sql_excetption) cerr << "# ERR: SQLException in " << __FILE__ \
          << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl \
          << "# ERR: " << sql_excetption.what() \
-         << " (MySQL error code: " <<sql_excetption.getErrorCode() \
-         << ", SQLState: " << sql_excetption.getSQLState() << " )" \
          << endl;
 
 /**
@@ -59,7 +59,7 @@ protected:
 
 public:
     MySqlConnector(
-        string _url      = "tcp://127.0.0.1:3306",
+        string _url      = "127.0.0.1",
         string _username = "root",
         string _password = "root",
         string _dbname   = "yourmonero"
@@ -78,52 +78,80 @@ public:
         if (conn.connect(dbname.c_str(), url.c_str(),
                          username.c_str(), password.c_str()))
         {
-            cout << "connection successful" << endl;
+            cout << "Connection to Mysql successful" << endl;
         }
     }
 
 };
-//
-//
-//class MySqlAccounts: public MySqlConnector
-//{
-//    static constexpr const char* TABLE_NAME = "Accounts";
-//
-//    static constexpr const char* INSERT_STMT = R"(
-//        INSERT INTO `Accounts`  (`address`) VALUES (?)
-//    )";
-//
-//    static constexpr const char* SELECT_STMT = R"(
-//        SELECT * FROM `Accounts` WHERE `address` = ?
-//    )";
-//
-//public:
-//    MySqlAccounts(): MySqlConnector() {}
-//
-//
-//    bool
-//    select_account(const string& address)
-//    {
-//        mysql_unqiue_ptr<PreparedStatement> prep_stmt {con->prepareStatement(SELECT_STMT)};
-//
-//        prep_stmt->setString(1, address);
-//
-//        try
-//        {
-//            unique_ptr<ResultSet> res {prep_stmt->executeQuery()};
-//
-//            cout << res->getRow() << endl;
-//
-//        }
-//        catch (SQLException& e)
-//        {
-//            MYSQL_EXCEPTION_MSG(e);
-//            return false;
-//        }
-//
-//        return true;
-//    }
-//
+
+
+
+// to see what it does can run preprecoess on this file
+// g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
+sql_create_11(AccountRow, 1, 0,
+             sql_int_unsigned   , id,
+             sql_varchar        , address,
+             sql_bigint_unsigned, total_received,
+             sql_bigint_unsigned, scanned_height,
+             sql_bigint_unsigned, scanned_block_height,
+             sql_bigint_unsigned, start_height,
+             sql_bigint_unsigned, transaction_height,
+             sql_bigint_unsigned, blockchain_height,
+             sql_bigint_unsigned, total_sent,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
+
+struct Account : public AccountRow
+{
+    using AccountRow::AccountRow;
+};
+
+
+
+class MySqlAccounts: public MySqlConnector
+{
+    static constexpr const char* TABLE_NAME = "Accounts";
+
+    static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `Accounts` WHERE `address` = (%0q)
+    )";
+
+    static constexpr const char* INSERT_STMT = R"(
+        INSERT INTO `Accounts`  (`address`) VALUES (%0q)
+    )";
+
+
+public:
+    MySqlAccounts(): MySqlConnector() {}
+
+
+    bool
+    select_account(const string& address, Account& account)
+    {
+
+        Query query = conn.query(SELECT_STMT);
+        query.parse();
+
+        try
+        {
+            vector<Account> res;
+            query.storein(res, address);
+
+            if (!res.empty())
+            {
+                account = res.at(0);
+                return true;
+            }
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
 //    bool
 //    create_account(const string& address)
 //    {
@@ -165,8 +193,8 @@ public:
 //
 //        return false;
 //    }
-//
-//};
+
+};
 
 
 }

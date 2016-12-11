@@ -32,6 +32,8 @@ include_directories(
         ${MONERO_HEADERS_DIR}/contrib/epee/include
         ${MONERO_HEADERS_DIR}/external/db_drivers/liblmdb)
 
+include_directories(/usr/include/mysql)
+
 # get individual monero static libraries
 # that are needed in this project
 
@@ -88,7 +90,8 @@ set(SOURCE_FILES
 add_executable(restbed_xmr
         ${SOURCE_FILES})
 
-target_link_libraries(restbed_xmr
+
+target_link_libraries(restbed_xmr PRIVATE
         myxrm
         myext
         restbed
@@ -101,7 +104,8 @@ target_link_libraries(restbed_xmr
         lmdb
         ringct
         common
-        mysqlcppconn
+        mysqlpp
+        mysqlclient
         ${Boost_LIBRARIES}
         pthread
         unbound

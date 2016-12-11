@@ -15,12 +15,29 @@ using namespace restbed;
 int
 main()
 {
-    xmreg::MySqlConnector xmr_accounts;
+    xmreg::MySqlAccounts xmr_accounts;
 
     //xmr_accounts.create_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
 
 
-    //xmr_accounts.select_account("41vEA7Ye8Bpeda6g59v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB");
+
+    xmreg::Account acc;
+
+    bool r = xmr_accounts.select_account("41vEA7Ye8Bpeda6g9v5t46koWrVn2PNgEKgzquJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB", acc);
+
+    if (r)
+    {
+        cout << "Account foudn: " << acc.id << endl;
+    }
+    else
+    {
+        cout << "Account does not exist" << endl;
+    }
+
+
+
+
+
 
 
 
