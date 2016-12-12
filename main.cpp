@@ -43,13 +43,13 @@ main()
 //    }
 
 
-//    xmreg::MySqlAccounts xmr_accounts;
+   xmreg::MySqlAccounts xmr_accounts;
 //
-//    string addr = "41vEA7Ye8Bpeda6g9v5t46koWrVn2PNgEKgluJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB";
-//
-//    xmreg::XmrAccount acc;
-//
-//    cout << xmr_accounts.select(addr, acc) << endl;
+    string addr = "41vEA7Ye8Bpeda6g9v5t46koWrVn2PNgEKgluJjmiKCFTsh9gajr8J3pad49rqu581TAtFGCH9CYTCkYrCpuWUG9GkgeB";
+
+    xmreg::XmrAccount acc;
+
+    cout << xmr_accounts.select(addr, acc) << endl;
 //
 //    cout << xmr_accounts.select("fdfdfd", acc) << endl;
 //
@@ -59,6 +59,8 @@ main()
 
     xmreg::YourMoneroRequests your_xmr(
             shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
+
+    your_xmr.start_tx_search_thread(acc);
 
     auto login                 = your_xmr.make_resource(
             &xmreg::YourMoneroRequests::login                , "/login");

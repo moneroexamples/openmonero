@@ -292,19 +292,18 @@ public:
         return j;
     }
 
-private:
-
     bool
     start_tx_search_thread(XmrAccount& acc)
     {
         if (searching_threads.count(acc.address) > 0)
         {
             // thread for this address exist, dont make new one
+            cout << "Thread exisist, dont make new one" << endl;
             return false;
         }
 
         // make a tx_search object for the given xmr account
-        searching_threads[acc.address] = make_shared<TxSearch>(acc);
+        searching_threads[acc.address] = make_shared<TxSearch>();
 
         // start the thread for the created object
         std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
@@ -312,6 +311,10 @@ private:
 
         return true;
     }
+
+private:
+
+
 
 };
 

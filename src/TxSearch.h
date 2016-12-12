@@ -30,6 +30,9 @@ class TxSearch
     XmrAccount xmr_account;
 
 public:
+
+    TxSearch() {}
+
     TxSearch(XmrAccount& _acc):
             xmr_account {_acc}
     {}
@@ -39,7 +42,7 @@ public:
     {
         cout << "TxSearch::Search for: " << xmr_account.address << endl;
 
-        while(continue_search)
+        while(true)
         {
             cout << " - searching tx of: " << xmr_account.address << endl;
 
