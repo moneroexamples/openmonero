@@ -5,6 +5,7 @@
 #ifndef RESTBED_XMR_MYSQLCONNECTOR_H
 #define RESTBED_XMR_MYSQLCONNECTOR_H
 
+#include "tools.h"
 
 #include <mysql++/mysql++.h>
 #include <mysql++/ssqls.h>
@@ -19,7 +20,7 @@ namespace xmreg
 
 using namespace mysqlpp;
 using namespace std;
-
+using namespace nlohmann;
 
 #define MYSQL_EXCEPTION_MSG(sql_excetption) cerr << "# ERR: SQLException in " << __FILE__ \
          << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl \
@@ -89,9 +90,30 @@ sql_create_11(Accounts, 1, 2,
 struct XmrAccount : public Accounts
 {
     using Accounts::Accounts;
+
+    json
+    to_json() const
+    {
+        json j {{"id"                  , id},
+                {"address"             , address},
+                {"total_received"      , total_received},
+                {"total_sent"          , total_sent},
+                {"scanned_block_height", scanned_block_height},
+                {"blockchain_height"   , blockchain_height}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
+
 };
 
-
+ostream& operator<< (std::ostream& os, const XmrAccount& acc) {
+    os << "XmrAccount: " << acc.to_json().dump() << '\n';
+    return os;
+};
 
 class MySqlAccounts: public MySqlConnector
 {
@@ -101,9 +123,15 @@ class MySqlAccounts: public MySqlConnector
         SELECT * FROM `Accounts` WHERE `address` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT2 = R"(
+        SELECT * FROM `Accounts` WHERE `id` = (%0q)
+    )";
+
     static constexpr const char* INSERT_STMT = R"(
         INSERT INTO `Accounts` (`address`) VALUES (%0q);
     )";
+
+
 
 
 public:
@@ -114,13 +142,52 @@ public:
     select(const string& address, XmrAccount& account)
     {
 
-        Query query = conn.query(SELECT_STMT);
-        query.parse();
+        static shared_ptr<Query> query;
+
+        if (!query)
+        {
+            Query q = conn.query(SELECT_STMT);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
 
         try
         {
             vector<XmrAccount> res;
-            query.storein(res, address);
+            query->storein(res, address);
+
+            if (!res.empty())
+            {
+                account = res.at(0);
+                return true;
+            }
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+    bool
+    select(const int64_t& acc_id, XmrAccount& account)
+    {
+
+        static shared_ptr<Query> query;
+
+        if (!query)
+        {
+            Query q = conn.query(SELECT_STMT2);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
+
+        try
+        {
+            vector<XmrAccount> res;
+            query->storein(res, acc_id);
 
             if (!res.empty())
             {
@@ -149,6 +216,7 @@ public:
 
             if (sr.rows() == 1)
                 return sr.insert_id();
+
         }
         catch (mysqlpp::Exception& e)
         {

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <functional>
 
+#include "TxSearch.h"
 #include "MySqlConnector.h"
 #include "tools.h"
 
@@ -73,9 +74,12 @@ struct handel_
 
 class YourMoneroRequests
 {
-
    // this manages all mysql queries
    shared_ptr<MySqlAccounts> xmr_accounts;
+
+   // map that will keep track of search threads. In the
+   // map, key is address to which a running thread belongs to.
+   map<string, shared_ptr<xmreg::TxSearch>> searching_threads;
 
 public:
 
@@ -108,26 +112,34 @@ public:
 
         string xmr_address  = j_request["address"];
 
-        // a placeholder for exciting or newly created account's data
+        // a placeholder for exciting or new account data
         xmreg::XmrAccount acc;
+
+        uint64_t acc_id {0};
 
         json j_response;
 
+        // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
         {
-            //cout << "Account found: " << acc.id << endl;
             j_response = {{"new_address", false}};
         }
         else
         {
-            //cout << "Account does not exist" << endl;
+            // account does not exist, so create new one
+            // for this address
 
             if ((acc_id = xmr_accounts->create(xmr_address)) != 0)
             {
-                //cout << "account created acc_id: " << acc_id << endl;
-                j_response = {{"new_address", true}};
+                // select newly created account
+                if (xmr_accounts->select(acc_id, acc))
+                {
+                    j_response = {{"new_address", true}};
+                }
             }
         }
+
+        cout << acc << endl;
 
         // so we have an account now. Either existing or
         // newly created. Thus, we can start a tread
@@ -141,6 +153,11 @@ public:
         // any belonging transactions in a loop. Thus the thread does not need
         // to do anything except looking for tx and updating mysql
         // with relative tx information
+
+        if (start_tx_search_thread(acc))
+        {
+            cout << "Search thread started" << endl;
+        }
 
         string response_body = j_response.dump();
 
@@ -273,6 +290,27 @@ public:
     {
         json j = json::parse(body_to_string(body));
         return j;
+    }
+
+private:
+
+    bool
+    start_tx_search_thread(XmrAccount& acc)
+    {
+        if (searching_threads.count(acc.address) > 0)
+        {
+            // thread for this address exist, dont make new one
+            return false;
+        }
+
+        // make a tx_search object for the given xmr account
+        searching_threads[acc.address] = make_shared<TxSearch>(acc);
+
+        // start the thread for the created object
+        std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
+        t1.detach();
+
+        return true;
     }
 
 };

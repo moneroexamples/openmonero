@@ -5,7 +5,7 @@ project(myxrm)
 set(SOURCE_FILES
 		MicroCore.cpp
 		tools.cpp
-		CmdLineOptions.cpp MySqlConnector.h)
+		CmdLineOptions.cpp MySqlConnector.h TxSearch.h)
 
 # make static library called libmyxrm
 # that we are going to link to
