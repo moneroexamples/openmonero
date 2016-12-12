@@ -26,21 +26,6 @@ using namespace std;
          << "# ERR: " << sql_excetption.what() \
          << endl;
 
-/**
- * Custom deleter for some MySql object
- * as they are often virtual thus cant use unique_ptr
- * @tparam T
- */
-template <typename T>
-struct MySqlDeleter
-{
-    void
-    operator()(T *p)
-    {
-        delete p;
-    }
-};
-
 
 class MySqlConnector
 {
@@ -77,6 +62,8 @@ public:
             cout << "Connection to Mysql successful" << endl;
         }
     }
+
+    virtual ~MySqlConnector() {};
 
 };
 

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <functional>
 
+#include "MySqlConnector.h"
 #include "tools.h"
 
 #include "../ext/restbed/source/restbed"
@@ -73,15 +74,18 @@ struct handel_
 class YourMoneroRequests
 {
 
+   shared_ptr<MySqlAccounts> xmr_accounts;
+
 public:
 
     static bool show_logs;
 
-    YourMoneroRequests()
+    YourMoneroRequests(shared_ptr<MySqlAccounts> _acc):
+            xmr_accounts {_acc}
     {}
 
     void
-    login(const shared_ptr< Session > session, const Bytes & body)
+    login(const shared_ptr<Session> session, const Bytes & body)
     {
         json j_request = body_to_json(body);
 
@@ -91,15 +95,13 @@ public:
         string xmr_address  = j_request["address"];
 
         // check if login address is new or existing
-        xmreg::MySqlAccounts xmr_accounts;
-
         xmreg::XmrAccount acc;
 
         uint64_t acc_id {0};
 
         json j_response;
 
-        if (xmr_accounts.select(xmr_address, acc))
+        if (xmr_accounts->select(xmr_address, acc))
         {
             //cout << "Account found: " << acc.id << endl;
             acc_id = acc.id;
@@ -109,12 +111,25 @@ public:
         {
             //cout << "Account does not exist" << endl;
 
-            if ((acc_id = xmr_accounts.create(xmr_address)) != 0)
+            if ((acc_id = xmr_accounts->create(xmr_address)) != 0)
             {
                 //cout << "account created acc_id: " << acc_id << endl;
                 j_response = {{"new_address", true}};
             }
         }
+
+        // so we have an account now. Either existing or
+        // newly created. Thus, we can start a tread
+        // which will scan for transactions belonging to
+        // that account, using its address and view key.
+        // the thread will scan the blockchain for txs belonging
+        // to that account and updated mysql database whenever it
+        // will find something.
+        //
+        // The other JSON request will query other functions to retrieve
+        // any belonging transactions. Thus the thread does not need
+        // to do anything except looking for tx and updating mysql
+        // with relative tx information
 
         string response_body = j_response.dump();
 

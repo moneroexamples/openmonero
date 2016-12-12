@@ -45,7 +45,8 @@ main()
 
     xmreg::YourMoneroRequests::show_logs = true;
 
-    xmreg::YourMoneroRequests your_xmr;
+    xmreg::YourMoneroRequests your_xmr(
+            shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
 
     auto login                 = your_xmr.make_resource(
             &xmreg::YourMoneroRequests::login                , "/login");
