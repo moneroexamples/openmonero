@@ -17,13 +17,17 @@
 #include <iostream>
 #include <memory>
 #include <thread>
-
+#include <mutex>
 
 namespace xmreg
 {
 
+mutex mtx;
+
 class TxSearch
 {
+
+
 
     bool continue_search {true};
 
@@ -44,6 +48,8 @@ public:
 
         while(true)
         {
+
+            //std::lock_guard<std::mutex> lck (mtx);
             cout << " - searching tx of: " << xmr_account.address << endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(1));

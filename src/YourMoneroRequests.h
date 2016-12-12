@@ -166,6 +166,82 @@ public:
         session->close( OK, response_body, response_headers);
     }
 
+
+    void
+    login2(const shared_ptr< Session > session)
+    {
+
+        const auto request = session->get_request( );
+
+        int content_length = request->get_header( "Content-Length", 0);
+
+        session->fetch( content_length, [&]( const shared_ptr< Session > session, const Bytes & body )
+        {
+            json j_request = body_to_json(body);
+
+            if (show_logs)
+                print_json_log("login request: ", j_request);
+
+            string xmr_address  = j_request["address"];
+
+            // a placeholder for exciting or new account data
+            xmreg::XmrAccount acc;
+
+            uint64_t acc_id {0};
+
+            json j_response;
+
+            // select this account if its existing one
+            if (xmr_accounts->select(xmr_address, acc))
+            {
+                j_response = {{"new_address", false}};
+            }
+            else
+            {
+                // account does not exist, so create new one
+                // for this address
+
+                if ((acc_id = xmr_accounts->create(xmr_address)) != 0)
+                {
+                    // select newly created account
+                    if (xmr_accounts->select(acc_id, acc))
+                    {
+                        j_response = {{"new_address", true}};
+                    }
+                }
+            }
+
+            cout << acc << endl;
+
+            // so we have an account now. Either existing or
+            // newly created. Thus, we can start a tread
+            // which will scan for transactions belonging to
+            // that account, using its address and view key.
+            // the thread will scan the blockchain for txs belonging
+            // to that account and updated mysql database whenever it
+            // will find something.
+            //
+            // The other client (i.e., a webbrowser) will query other functions to retrieve
+            // any belonging transactions in a loop. Thus the thread does not need
+            // to do anything except looking for tx and updating mysql
+            // with relative tx information
+
+//            if (start_tx_search_thread(acc))
+//            {
+//                cout << "Search thread started" << endl;
+//            }
+
+            string response_body = j_response.dump();
+
+            auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+            session->close( OK, response_body, response_headers);
+        } );
+
+
+
+    }
+
     void
     get_address_txs(const shared_ptr< Session > session, const Bytes & body)
     {
@@ -303,7 +379,7 @@ public:
         }
 
         // make a tx_search object for the given xmr account
-        searching_threads[acc.address] = make_shared<TxSearch>();
+        searching_threads[acc.address] = make_shared<TxSearch>(acc);
 
         // start the thread for the created object
         std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};

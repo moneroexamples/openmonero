@@ -142,19 +142,22 @@ public:
     select(const string& address, XmrAccount& account)
     {
 
-        static shared_ptr<Query> query;
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = conn.query(SELECT_STMT);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
 
-        if (!query)
-        {
-            Query q = conn.query(SELECT_STMT);
-            q.parse();
-            query = shared_ptr<Query>(new Query(q));
-        }
+        Query query = conn.query(SELECT_STMT);
+        query.parse();
 
         try
         {
             vector<XmrAccount> res;
-            query->storein(res, address);
+            query.storein(res, address);
 
             if (!res.empty())
             {
@@ -174,20 +177,23 @@ public:
     bool
     select(const int64_t& acc_id, XmrAccount& account)
     {
+//
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = conn.query(SELECT_STMT2);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
 
-        static shared_ptr<Query> query;
-
-        if (!query)
-        {
-            Query q = conn.query(SELECT_STMT2);
-            q.parse();
-            query = shared_ptr<Query>(new Query(q));
-        }
+        Query query = conn.query(SELECT_STMT2);
+        query.parse();
 
         try
         {
             vector<XmrAccount> res;
-            query->storein(res, acc_id);
+            query.storein(res, acc_id);
 
             if (!res.empty())
             {

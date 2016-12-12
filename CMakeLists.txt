@@ -91,7 +91,7 @@ add_executable(restbed_xmr
         ${SOURCE_FILES})
 
 
-target_link_libraries(restbed_xmr PRIVATE
+target_link_libraries(restbed_xmr
         myxrm
         myext
         restbed

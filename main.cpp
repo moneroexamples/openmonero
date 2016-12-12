@@ -65,6 +65,16 @@ main()
     auto login                 = your_xmr.make_resource(
             &xmreg::YourMoneroRequests::login                , "/login");
 
+
+//    auto login = make_shared< Resource >( );
+//    login->set_path( "/login" );
+//    login->set_method_handler( "POST",
+//                                  std::bind(&xmreg::YourMoneroRequests::login2,
+//                                            your_xmr,
+//                                            std::placeholders::_1)
+//    );
+//    login->set_method_handler( "OPTIONS", &xmreg::YourMoneroRequests::generic_options_handler);
+
     auto get_address_txs       = your_xmr.make_resource(
             &xmreg::YourMoneroRequests::get_address_txs      , "/get_address_txs");
 
