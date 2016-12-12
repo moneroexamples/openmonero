@@ -170,6 +170,10 @@ public:
         {
             MYSQL_EXCEPTION_MSG(e);
         }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
 
         return false;
     }
