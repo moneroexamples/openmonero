@@ -177,6 +177,9 @@ public:
 
         session->fetch( content_length, [&]( const shared_ptr< Session > session, const Bytes & body )
         {
+
+            xmreg::MySqlAccounts xmr_accounts;
+
             json j_request = body_to_json(body);
 
             if (show_logs)
@@ -192,7 +195,7 @@ public:
             json j_response;
 
             // select this account if its existing one
-            if (xmr_accounts->select(xmr_address, acc))
+            if (xmr_accounts.select(xmr_address, acc))
             {
                 j_response = {{"new_address", false}};
             }
@@ -201,10 +204,10 @@ public:
                 // account does not exist, so create new one
                 // for this address
 
-                if ((acc_id = xmr_accounts->create(xmr_address)) != 0)
+                if ((acc_id = xmr_accounts.create(xmr_address)) != 0)
                 {
                     // select newly created account
-                    if (xmr_accounts->select(acc_id, acc))
+                    if (xmr_accounts.select(acc_id, acc))
                     {
                         j_response = {{"new_address", true}};
                     }
@@ -226,10 +229,10 @@ public:
             // to do anything except looking for tx and updating mysql
             // with relative tx information
 
-//            if (start_tx_search_thread(acc))
-//            {
-//                cout << "Search thread started" << endl;
-//            }
+            if (start_tx_search_thread(acc))
+            {
+                cout << "Search thread started" << endl;
+            }
 
             string response_body = j_response.dump();
 
