@@ -74,6 +74,7 @@ struct handel_
 class YourMoneroRequests
 {
 
+   // this manages all mysql queries
    shared_ptr<MySqlAccounts> xmr_accounts;
 
 public:
@@ -84,6 +85,19 @@ public:
             xmr_accounts {_acc}
     {}
 
+    /**
+     * A login request handler.
+     *
+     * It takes address and viewkey from the request
+     * and check mysql if address/account exist. If yes,
+     * it returns this account. If not, it creates new one.
+     *
+     * Once this complites, a thread is tarted that looks
+     * for txs belonging to that account.
+     *
+     * @param session a Restbed session
+     * @param body a POST body, i.e., json string
+     */
     void
     login(const shared_ptr<Session> session, const Bytes & body)
     {
@@ -94,17 +108,14 @@ public:
 
         string xmr_address  = j_request["address"];
 
-        // check if login address is new or existing
+        // a placeholder for exciting or newly created account's data
         xmreg::XmrAccount acc;
-
-        uint64_t acc_id {0};
 
         json j_response;
 
         if (xmr_accounts->select(xmr_address, acc))
         {
             //cout << "Account found: " << acc.id << endl;
-            acc_id = acc.id;
             j_response = {{"new_address", false}};
         }
         else
@@ -126,8 +137,8 @@ public:
         // to that account and updated mysql database whenever it
         // will find something.
         //
-        // The other JSON request will query other functions to retrieve
-        // any belonging transactions. Thus the thread does not need
+        // The other client (i.e., a webbrowser) will query other functions to retrieve
+        // any belonging transactions in a loop. Thus the thread does not need
         // to do anything except looking for tx and updating mysql
         // with relative tx information
 
