@@ -49,6 +49,12 @@ struct CurrentBlockchainStatus
 
     static uint64_t refresh_block_status_every_seconds;
 
+    // since this class monitors current status
+    // of the blockchain, its seems logical to
+    // make object for accessing the blockchain here
+    static xmreg::MicroCore mcore;
+    static cryptonote::Blockchain* core_storage;
+
     static
     void start_monitor_blockchain_thread()
     {
@@ -87,15 +93,35 @@ struct CurrentBlockchainStatus
     {
         testnet = is_testnet;
     }
+
+    static bool
+    init_monero_blockchain()
+    {
+        // enable basic monero log output
+        xmreg::enable_monero_log();
+
+         // initialize mcore and core_storage
+        if (!xmreg::init_blockchain(blockchain_path,
+                                    mcore, core_storage))
+        {
+            cerr << "Error accessing blockchain." << endl;
+            return false;
+        }
+
+        return true;
+    }
+
 };
 
 // initialize static variables
-atomic<uint64_t> CurrentBlockchainStatus::current_height {0};
-string           CurrentBlockchainStatus::blockchain_path {"/home/mwo/.blockchain/lmdb"};
-bool             CurrentBlockchainStatus::testnet  {false};
-bool             CurrentBlockchainStatus::is_running  {false};
-std::thread      CurrentBlockchainStatus::m_thread;
-uint64_t         CurrentBlockchainStatus::refresh_block_status_every_seconds {60};
+atomic<uint64_t>        CurrentBlockchainStatus::current_height {0};
+string                  CurrentBlockchainStatus::blockchain_path {"/home/mwo/.blockchain/lmdb"};
+bool                    CurrentBlockchainStatus::testnet  {false};
+bool                    CurrentBlockchainStatus::is_running  {false};
+std::thread             CurrentBlockchainStatus::m_thread;
+uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds {60};
+xmreg::MicroCore        CurrentBlockchainStatus::mcore;
+cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
 
 class TxSearch
 {

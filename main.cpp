@@ -59,39 +59,37 @@ if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
 
 cout << "Blockchain path: " << blockchain_path.string() << endl;
 
-// enable basic monero log output
-xmreg::enable_monero_log();
-
-
-// create instance of our MicroCore
-// and make pointer to the Blockchain
-xmreg::MicroCore mcore;
-cryptonote::Blockchain* core_storage;
-
-// initialize mcore and core_storage
-if (!xmreg::init_blockchain(blockchain_path.string(),
-                            mcore, core_storage))
-{
-    cerr << "Error accessing blockchain." << endl;
-    return EXIT_FAILURE;
-}
-
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(false);
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
+
+// since CurrentBlockchainStatus class monitors current status
+// of the blockchain (e.g, current height), its seems logical to
+// make static objects for accessing the blockchain in this class.
+// this way monero accesssing blockchain variables (i.e. mcore and core_storage)
+// are not passed around like crazy everywhere.
+// There are here, and this is the only class that
+// has direct access to blockchain.
+if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+{
+    cerr << "Error accessing blockchain." << endl;
+    return EXIT_FAILURE;
+}
 
 // launch the status monitoring thread so that it keeps track of blockchain
 // info, e.g., current height. Information from this thread is used
 // by tx searching threads that are launch upon for each user independent.
 xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
-xmreg::YourMoneroRequests::show_logs = true;
 
+
+
+
+xmreg::YourMoneroRequests::show_logs = true;
 
 xmreg::YourMoneroRequests your_xmr(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
-
 
 
 auto login                 = your_xmr.make_resource(
