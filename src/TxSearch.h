@@ -185,16 +185,29 @@ public:
         while(continue_search)
         {
 
+            if (searched_blk_no > CurrentBlockchainStatus::current_height)
+            {
+                fmt::print("searched_blk_no {:d} and current_height {:d}\n",
+                           searched_blk_no, CurrentBlockchainStatus::current_height);
+
+                std::this_thread::sleep_for(
+                        std::chrono::seconds(
+                                CurrentBlockchainStatus::refresh_block_status_every_seconds)
+                );
+
+                continue;
+            }
+
             //
             cout << " - searching tx of: " << acc << endl;
 
             // get block cointaining this tx
             block blk;
 
-            if (!CurrentBlockchainStatus::get_block(++searched_blk_no, blk))
+            if (!CurrentBlockchainStatus::get_block(searched_blk_no, blk))
             {
                 cerr << "Cant get block of height: " << searched_blk_no << endl;
-                throw TxSearchException("Cant get block of height: " + to_string(searched_blk_no));
+                continue;
             }
 
             std::lock_guard<std::mutex> lck (mtx);
@@ -203,15 +216,9 @@ public:
                        epee::string_tools::pod_to_hex(get_block_hash(blk)));
 
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            ++searched_blk_no;
 
-            if (searched_blk_no == CurrentBlockchainStatus::current_height)
-            {
-                std::this_thread::sleep_for(
-                        std::chrono::seconds(
-                                CurrentBlockchainStatus::refresh_block_status_every_seconds)
-                );
-            }
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 

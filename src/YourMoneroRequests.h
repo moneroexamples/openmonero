@@ -131,7 +131,15 @@ public:
             // account does not exist, so create new one
             // for this address
 
-            if ((acc_id = xmr_accounts->create(xmr_address)) != 0)
+            // we will save current blockchain height
+            // in mysql, so that we know from what block
+            // to start searching txs of this new acount
+            // make it 1 block lower than current, just in case.
+            // this variable will be our using to initialize
+            // `canned_block_height` in mysql Accounts table.
+            uint64_t current_blkchain_height = get_current_blockchain_height() - 1;
+
+            if ((acc_id = xmr_accounts->create(xmr_address, current_blkchain_height)) != 0)
             {
                 // select newly created account
                 if (xmr_accounts->select(acc_id, acc))
@@ -314,6 +322,12 @@ public:
         t1.detach();
 
         return true;
+    }
+
+    inline uint64_t
+    get_current_blockchain_height()
+    {
+        return CurrentBlockchainStatus::get_current_blockchain_height();
     }
 
 private:

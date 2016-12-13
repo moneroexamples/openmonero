@@ -133,7 +133,7 @@ class MySqlAccounts: public MySqlConnector
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts` (`address`) VALUES (%0q);
+        INSERT INTO `Accounts` (`address`, `scanned_block_height`) VALUES (%0q, %1q);
     )";
 
 
@@ -147,22 +147,22 @@ public:
     select(const string& address, XmrAccount& account)
     {
 
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = conn.query(SELECT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
+        static shared_ptr<Query> query;
 
-        Query query = conn.query(SELECT_STMT);
-        query.parse();
+        if (!query)
+        {
+            Query q = conn.query(SELECT_STMT);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
+
+//        Query query = conn.query(SELECT_STMT);
+//        query.parse();
 
         try
         {
             vector<XmrAccount> res;
-            query.storein(res, address);
+            query->storein(res, address);
 
             if (!res.empty())
             {
@@ -186,23 +186,23 @@ public:
     bool
     select(const int64_t& acc_id, XmrAccount& account)
     {
-//
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = conn.query(SELECT_STMT2);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
 
-        Query query = conn.query(SELECT_STMT2);
-        query.parse();
+        static shared_ptr<Query> query;
+
+        if (!query)
+        {
+            Query q = conn.query(SELECT_STMT2);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
+
+//        Query query = conn.query(SELECT_STMT2);
+//        query.parse();
 
         try
         {
             vector<XmrAccount> res;
-            query.storein(res, acc_id);
+            query->storein(res, acc_id);
 
             if (!res.empty())
             {
@@ -220,14 +220,27 @@ public:
     }
 
     uint64_t
-    create(const string& address)
+    create(const string& address, const uint64_t& scanned_block_height = 0)
     {
-        Query query = conn.query(INSERT_STMT);
-        query.parse();
+
+        static shared_ptr<Query> query;
+
+        if (!query)
+        {
+            Query q = conn.query(INSERT_STMT);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
+
+
+//        Query query = conn.query(INSERT_STMT);
+//        query.parse();
+
+        cout << query << endl;
 
         try
         {
-            SimpleResult sr = query.execute(address);
+            SimpleResult sr = query->execute(address, scanned_block_height);
 
             if (sr.rows() == 1)
                 return sr.insert_id();
