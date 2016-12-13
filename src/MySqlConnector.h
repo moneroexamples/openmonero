@@ -236,7 +236,7 @@ public:
 //        Query query = conn.query(INSERT_STMT);
 //        query.parse();
 
-        cout << query << endl;
+       // cout << query << endl;
 
         try
         {

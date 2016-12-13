@@ -183,8 +183,8 @@ public:
     {
         json j_request = body_to_json(body);
 
-        if (show_logs)
-            print_json_log("get_address_txs request: ", j_request);
+//        if (show_logs)
+//            print_json_log("get_address_txs request: ", j_request);
 
         json j_response {
                 { "total_received", "0"},
@@ -207,8 +207,8 @@ public:
     {
         json j_request = body_to_json(body);
 
-        if (show_logs)
-            print_json_log("get_address_info request: ", j_request);
+//        if (show_logs)
+//            print_json_log("get_address_info request: ", j_request);
 
         json j_response  {
                 {"locked_funds", "0"},

@@ -49,6 +49,8 @@ namespace lt = boost::local_time;
 
 using json = nlohmann::json;
 
+using  epee::string_tools::pod_to_hex;
+using  epee::string_tools::hex_to_pod;
 
 template <typename T>
 bool
