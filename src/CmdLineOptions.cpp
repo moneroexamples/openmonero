@@ -18,15 +18,13 @@ namespace xmreg
         p.add("txhash", -1);
 
         options_description desc(
-                "xmrblocks, start Onion Monero Blockchain Explorer");
+                "yourmonero, start YourMonare backend service");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
-                ("enable-pusher", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable pushing signed tx")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),

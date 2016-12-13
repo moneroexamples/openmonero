@@ -43,8 +43,6 @@ struct CurrentBlockchainStatus
 
     static bool testnet;
 
-    static string blk_path;
-
     static std::thread m_thread;
 
     static bool is_running;
