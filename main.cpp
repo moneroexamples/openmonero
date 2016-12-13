@@ -8,6 +8,7 @@
 #include "src/MySqlConnector.h"
 #include "src/YourMoneroRequests.h"
 #include "src/tools.h"
+#include "src/TxSearch.h"
 
 using namespace std;
 using namespace restbed;
@@ -17,10 +18,19 @@ int
 main()
 {
 
+    xmreg::CurrentBlockchainStatus::set_blockchain_path("/home/mwo/.bitmonero/lmdb");
+    xmreg::CurrentBlockchainStatus::set_testnet(false);
+    xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
+
+    xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+
     xmreg::YourMoneroRequests::show_logs = true;
+
 
     xmreg::YourMoneroRequests your_xmr(
             shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
+
+
 
     auto login                 = your_xmr.make_resource(
             &xmreg::YourMoneroRequests::login                , "/login");
