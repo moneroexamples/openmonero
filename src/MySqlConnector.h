@@ -91,11 +91,16 @@ struct XmrAccount : public Accounts
 {
     using Accounts::Accounts;
 
+    // viewkey is not stored in mysql db or anywhere
+    // so need to be populated when user logs in.
+    string viewkey;
+
     json
     to_json() const
     {
         json j {{"id"                  , id},
                 {"address"             , address},
+                {"viewkey"             , viewkey},
                 {"total_received"      , total_received},
                 {"total_sent"          , total_sent},
                 {"scanned_block_height", scanned_block_height},

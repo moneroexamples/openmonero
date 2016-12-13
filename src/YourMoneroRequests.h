@@ -74,12 +74,14 @@ struct handel_
 
 class YourMoneroRequests
 {
-   // this manages all mysql queries
+    // map that will keep track of search threads. In the
+    // map, key is address to which a running thread belongs to.
+    // make it static to garantee only one such map exist.
+    static map<string, shared_ptr<xmreg::TxSearch>> searching_threads;
+
+    // this manages all mysql queries
    shared_ptr<MySqlAccounts> xmr_accounts;
 
-   // map that will keep track of search threads. In the
-   // map, key is address to which a running thread belongs to.
-   map<string, shared_ptr<xmreg::TxSearch>> searching_threads;
 
 public:
 
@@ -139,6 +141,8 @@ public:
             }
         }
 
+        acc.viewkey = j_request["view_key"];
+
         cout << acc << endl;
 
         // so we have an account now. Either existing or
@@ -164,85 +168,6 @@ public:
         auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
-    }
-
-
-    void
-    login2(const shared_ptr< Session > session)
-    {
-
-        const auto request = session->get_request( );
-
-        int content_length = request->get_header( "Content-Length", 0);
-
-        session->fetch( content_length, [&]( const shared_ptr< Session > session, const Bytes & body )
-        {
-
-            xmreg::MySqlAccounts xmr_accounts;
-
-            json j_request = body_to_json(body);
-
-            if (show_logs)
-                print_json_log("login request: ", j_request);
-
-            string xmr_address  = j_request["address"];
-
-            // a placeholder for exciting or new account data
-            xmreg::XmrAccount acc;
-
-            uint64_t acc_id {0};
-
-            json j_response;
-
-            // select this account if its existing one
-            if (xmr_accounts.select(xmr_address, acc))
-            {
-                j_response = {{"new_address", false}};
-            }
-            else
-            {
-                // account does not exist, so create new one
-                // for this address
-
-                if ((acc_id = xmr_accounts.create(xmr_address)) != 0)
-                {
-                    // select newly created account
-                    if (xmr_accounts.select(acc_id, acc))
-                    {
-                        j_response = {{"new_address", true}};
-                    }
-                }
-            }
-
-            cout << acc << endl;
-
-            // so we have an account now. Either existing or
-            // newly created. Thus, we can start a tread
-            // which will scan for transactions belonging to
-            // that account, using its address and view key.
-            // the thread will scan the blockchain for txs belonging
-            // to that account and updated mysql database whenever it
-            // will find something.
-            //
-            // The other client (i.e., a webbrowser) will query other functions to retrieve
-            // any belonging transactions in a loop. Thus the thread does not need
-            // to do anything except looking for tx and updating mysql
-            // with relative tx information
-
-            if (start_tx_search_thread(acc))
-            {
-                cout << "Search thread started" << endl;
-            }
-
-            string response_body = j_response.dump();
-
-            auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
-
-            session->close( OK, response_body, response_headers);
-        } );
-
-
-
     }
 
     void
@@ -372,7 +297,7 @@ public:
     }
 
     bool
-    start_tx_search_thread(XmrAccount& acc)
+    start_tx_search_thread(XmrAccount acc)
     {
         if (searching_threads.count(acc.address) > 0)
         {
@@ -397,7 +322,11 @@ private:
 
 };
 
+// define static variables
+
 bool YourMoneroRequests::show_logs = false;
+
+map<string, shared_ptr<xmreg::TxSearch>> YourMoneroRequests::searching_threads;
 
 }
 #endif //RESTBED_XMR_YOURMONEROREQUESTS_H

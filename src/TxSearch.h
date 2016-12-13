@@ -44,13 +44,13 @@ public:
     void
     search()
     {
-        cout << "TxSearch::Search for: " << xmr_account.address << endl;
+        cout << "TxSearch::Search for: " << xmr_account << endl;
 
-        while(true)
+        while(continue_search)
         {
 
-            //std::lock_guard<std::mutex> lck (mtx);
-            cout << " - searching tx of: " << xmr_account.address << endl;
+            std::lock_guard<std::mutex> lck (mtx);
+            cout << " - searching tx of: " << xmr_account << endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
