@@ -111,6 +111,12 @@ struct CurrentBlockchainStatus
         return true;
     }
 
+    static bool
+    get_block(uint64_t height, block blk)
+    {
+        return mcore.get_block_by_height(height, blk);
+    }
+
 };
 
 // initialize static variables
@@ -137,8 +143,6 @@ class TxSearch
     // address and viewkey for this search thread.
     account_public_address address;
     secret_key viewkey;
-
-
 
 public:
 
@@ -181,21 +185,27 @@ public:
         while(continue_search)
         {
 
-            //std::lock_guard<std::mutex> lck (mtx);
+            //
             cout << " - searching tx of: " << acc << endl;
 
             // get block cointaining this tx
             block blk;
-//
-//            if (!mcore->get_block_by_height(tx_blk_height, blk))
-//            {
-//                cerr << "Cant get block: " << tx_blk_height << endl;
-//            }
+
+            if (!CurrentBlockchainStatus::get_block(++searched_blk_no, blk))
+            {
+                cerr << "Cant get block of height: " << searched_blk_no << endl;
+                throw TxSearchException("Cant get block of height: " + to_string(searched_blk_no));
+            }
+
+            std::lock_guard<std::mutex> lck (mtx);
+            fmt::print(" - searching block  {:d} of hash {:s} \n",
+                       searched_blk_no,
+                       epee::string_tools::pod_to_hex(get_block_hash(blk)));
 
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
-            if (++searched_blk_no == CurrentBlockchainStatus::current_height)
+            if (searched_blk_no == CurrentBlockchainStatus::current_height)
             {
                 std::this_thread::sleep_for(
                         std::chrono::seconds(
