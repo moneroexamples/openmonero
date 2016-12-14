@@ -38,6 +38,20 @@ sql_create_11(Accounts, 1, 2,
 
 struct XmrAccount : public Accounts
 {
+
+    static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `Accounts` WHERE `address` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT2 = R"(
+        SELECT * FROM `Accounts` WHERE `id` = (%0q)
+    )";
+
+    static constexpr const char* INSERT_STMT = R"(
+        INSERT INTO `Accounts` (`address`, `scanned_block_height`) VALUES (%0q, %1q);
+    )";
+
+
     using Accounts::Accounts;
 
     // viewkey is not stored in mysql db or anywhere
@@ -85,6 +99,15 @@ sql_create_10(Transactions, 1, 2,
 
 struct XmrTransaction : public Transactions
 {
+
+    static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `Transactions` WHERE `address_id` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT2 = R"(
+        SELECT * FROM `Transactions` WHERE `id` = (%0q)
+    )";
+
     using Transactions::Transactions;
 
     // viewkey is not stored in mysql db or anywhere

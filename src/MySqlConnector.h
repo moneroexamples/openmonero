@@ -29,35 +29,37 @@ using namespace nlohmann;
          << endl;
 
 
+/*
+ * This is singleton class that connects
+ * and holds connection to our mysql.
+ *
+ * Only one instance of it can exist.
+ *
+ */
 class MySqlConnector
 {
-    string url;
-    string username;
-    string password;
-    string dbname;
-
-protected:
 
     Connection conn;
 
 public:
-    MySqlConnector(
-        string _url      = "127.0.0.1",
-        string _username = "root",
-        string _password = "root",
-        string _dbname   = "yourmonero"
-    ):
-        url      {_url},
-        username {_username},
-        password {_password},
-        dbname   {_dbname}
-    {
-        connect();
-    }
 
-    void
-    connect()
+    static string url;
+    static string username;
+    static string password;
+    static string dbname;
+
+    static MySqlConnector& getInstance()
     {
+        static MySqlConnector  instance; // Guaranteed to be destroyed.
+        // Instantiated on first use.
+        return instance;
+    }
+private:
+    MySqlConnector()
+    {
+        if (conn.connected())
+            return;
+
         if (conn.connect(dbname.c_str(), url.c_str(),
                          username.c_str(), password.c_str()))
         {
@@ -65,35 +67,45 @@ public:
         }
     }
 
-    virtual ~MySqlConnector() {};
+public:
+    MySqlConnector(MySqlConnector const&)  = delete;
+    void operator=(MySqlConnector const&)  = delete;
 
+    virtual ~MySqlConnector()
+    {
+        conn.disconnect();
+    };
+};
+
+string MySqlConnector::url;
+string MySqlConnector::username;
+string MySqlConnector::password;
+string MySqlConnector::dbname;
+
+class MysqlTransactions
+{
+
+    Connection* conn;
+
+public:
+
+    MysqlTransactions(MySqlConnector& _connector): conn {_connector.get_connection()}
+    {}
 };
 
 
 
-
-class MySqlAccounts: public MySqlConnector
+class MySqlAccounts
 {
-    static constexpr const char* TABLE_NAME = "Accounts";
 
-    static constexpr const char* SELECT_STMT = R"(
-        SELECT * FROM `Accounts` WHERE `address` = (%0q)
-    )";
+    Connection* conn;
 
-    static constexpr const char* SELECT_STMT2 = R"(
-        SELECT * FROM `Accounts` WHERE `id` = (%0q)
-    )";
-
-    static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts` (`address`, `scanned_block_height`) VALUES (%0q, %1q);
-    )";
-
-
-
+    vector<MysqlTransactions> txs;
 
 public:
-    MySqlAccounts(): MySqlConnector() {}
 
+    MysqlTransactions(MySqlConnector& _connector): conn {_connector.get_connection()}
+    {}
 
     bool
     select(const string& address, XmrAccount& account)
@@ -103,12 +115,12 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(SELECT_STMT);
+            Query q = conn.query(XmrAccount::SELECT_STMT);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
 
-//        Query query = conn.query(SELECT_STMT);
+//        Query query = conn.query(XmrAccount::SELECT_STMT);
 //        query.parse();
 
         try
@@ -143,12 +155,12 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(SELECT_STMT2);
+            Query q = conn.query(XmrAccount::SELECT_STMT2);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
 
-//        Query query = conn.query(SELECT_STMT2);
+//        Query query = conn.query(XmrAccount::SELECT_STMT2);
 //        query.parse();
 
         try
@@ -179,13 +191,13 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(INSERT_STMT);
+            Query q = conn.query(XmrAccount::INSERT_STMT);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
 
 
-//        Query query = conn.query(INSERT_STMT);
+//        Query query = conn.query(XmrAccount::INSERT_STMT);
 //        query.parse();
 
        // cout << query << endl;

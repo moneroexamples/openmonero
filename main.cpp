@@ -59,6 +59,12 @@ if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
 
 cout << "Blockchain path: " << blockchain_path.string() << endl;
 
+
+xmreg::MySqlConnector::url       = "127.0.0.1";
+xmreg::MySqlConnector::username  = "root";
+xmreg::MySqlConnector::password  = "root";
+xmreg::MySqlConnector::dbname    = "yourmonero";
+
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(false);
