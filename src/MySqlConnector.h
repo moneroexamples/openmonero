@@ -71,6 +71,26 @@ public:
     MySqlConnector(MySqlConnector const&)  = delete;
     void operator=(MySqlConnector const&)  = delete;
 
+//    Connection*
+//    get_connection()
+//    {
+//        return &conn;
+//    }
+
+    Query
+    query(const char* qstr = 0)
+    {
+        return conn.query(qstr);
+    }
+
+    Query
+    query(const std::string& qstr)
+    {
+        return conn.query(qstr);
+    }
+
+
+
     virtual ~MySqlConnector()
     {
         conn.disconnect();
@@ -85,12 +105,47 @@ string MySqlConnector::dbname;
 class MysqlTransactions
 {
 
-    Connection* conn;
-
 public:
 
-    MysqlTransactions(MySqlConnector& _connector): conn {_connector.get_connection()}
-    {}
+    bool
+    select(const string& address)
+    {
+
+        static shared_ptr<Query> query;
+
+        if (!query)
+        {
+            Query q = MySqlConnector::getInstance().query(
+                    XmrTransaction::SELECT_STMT);
+            q.parse();
+            query = shared_ptr<Query>(new Query(q));
+        }
+
+
+        try
+        {
+            vector<XmrTransaction> res;
+            query->storein(res, address);
+
+            if (!res.empty())
+            {
+                account = res.at(0);
+                return true;
+            }
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
 };
 
 
@@ -98,14 +153,8 @@ public:
 class MySqlAccounts
 {
 
-    Connection* conn;
-
-    vector<MysqlTransactions> txs;
-
 public:
 
-    MysqlTransactions(MySqlConnector& _connector): conn {_connector.get_connection()}
-    {}
 
     bool
     select(const string& address, XmrAccount& account)
@@ -115,7 +164,7 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(XmrAccount::SELECT_STMT);
+            Query q = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
@@ -155,7 +204,7 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(XmrAccount::SELECT_STMT2);
+            Query q = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT2);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
@@ -191,7 +240,7 @@ public:
 
         if (!query)
         {
-            Query q = conn.query(XmrAccount::INSERT_STMT);
+            Query q = MySqlConnector::getInstance().query(XmrAccount::INSERT_STMT);
             q.parse();
             query = shared_ptr<Query>(new Query(q));
         }
@@ -223,7 +272,7 @@ public:
     update(XmrAccount& acc_orginal, XmrAccount& acc_new)
     {
 
-        Query query = conn.query();
+        Query query = MySqlConnector::getInstance().query();
 
         try
         {
