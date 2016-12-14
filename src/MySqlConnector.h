@@ -108,7 +108,7 @@ class MysqlTransactions
 public:
 
     bool
-    select(const string& address)
+    select(const string& address, vector<XmrTransaction>& txs)
     {
 
         static shared_ptr<Query> query;
@@ -121,18 +121,14 @@ public:
             query = shared_ptr<Query>(new Query(q));
         }
 
-
         try
         {
-            vector<XmrTransaction> res;
-            query->storein(res, address);
+            query->storein(txs, address);
 
-            if (!res.empty())
+            if (!txs.empty())
             {
-                account = res.at(0);
                 return true;
             }
-
         }
         catch (mysqlpp::Exception& e)
         {

@@ -110,10 +110,6 @@ struct XmrTransaction : public Transactions
 
     using Transactions::Transactions;
 
-    // viewkey is not stored in mysql db or anywhere
-    // so need to be populated when user logs in.
-    string viewkey;
-
     json
     to_json() const
     {
