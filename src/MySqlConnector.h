@@ -73,7 +73,7 @@ public:
 // to see what it does can run preprecoess on this file
 // g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
 sql_create_11(Accounts, 1, 2,
-             sql_int_unsigned   , id,
+             sql_bigint_unsigned, id,
              sql_varchar        , address,
              sql_bigint_unsigned, total_received,
              sql_bigint_unsigned, scanned_height,
@@ -85,7 +85,17 @@ sql_create_11(Accounts, 1, 2,
              sql_timestamp      , created,
              sql_timestamp      , modified);
 
-
+sql_create_10(Transactions, 1, 2,
+              sql_bigint_unsigned, id,
+              sql_varchar        , hash,
+              sql_bigint_unsigned, account_id,
+              sql_bigint_unsigned, total_received,
+              sql_bigint_unsigned, total_sent,
+              sql_bigint_unsigned, unlock_time,
+              sql_bigint_unsigned, height,
+              sql_bool           , coinbase,
+              sql_bigint_unsigned, mixin,
+              sql_timestamp      , timestamp);
 
 struct XmrAccount : public Accounts
 {
@@ -110,7 +120,6 @@ struct XmrAccount : public Accounts
         return j;
     }
 
-
     friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
 
 };
@@ -119,6 +128,40 @@ ostream& operator<< (std::ostream& os, const XmrAccount& acc) {
     os << "XmrAccount: " << acc.to_json().dump() << '\n';
     return os;
 };
+
+
+struct XmrTransaction : public Transactions
+{
+    using Transactions::Transactions;
+
+    // viewkey is not stored in mysql db or anywhere
+    // so need to be populated when user logs in.
+    string viewkey;
+
+    json
+    to_json() const
+    {
+        json j {{"id"                  , id},
+                {"hash"                , hash},
+                {"account_id"          , account_id},
+                {"total_received"      , total_received},
+                {"total_sent"          , total_sent},
+                {"height"              , height},
+                {"timestamp"           , timestamp}
+        };
+
+        return j;
+    }
+
+    friend std::ostream& operator<< (std::ostream& stream, const XmrTransaction& acc);
+
+};
+
+ostream& operator<< (std::ostream& os, const XmrTransaction& acc) {
+    os << "XmrTransactions: " << acc.to_json().dump() << '\n';
+    return os;
+};
+
 
 class MySqlAccounts: public MySqlConnector
 {
