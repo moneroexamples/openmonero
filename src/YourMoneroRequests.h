@@ -183,17 +183,53 @@ public:
     {
         json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_address_txs request: ", j_request);
+        if (show_logs)
+            print_json_log("get_address_txs request: ", j_request);
 
+        string xmr_address  = j_request["address"];
+
+        // initializa json response
         json j_response {
                 { "total_received", "0"},
-                { "scanned_height", 2012455},
-                { "scanned_block_height", 1195848},
-                { "start_height", 2012455},
-                { "transaction_height", 2012455},
-                { "blockchain_height", 1195848}
+                { "scanned_height", 0},
+                { "scanned_block_height", 0},
+                { "start_height", 0},
+                { "transaction_height", 0},
+                { "blockchain_height", 0}
         };
+
+
+        // a placeholder for exciting or new account data
+        xmreg::XmrAccount acc;
+
+        // select this account if its existing one
+        if (xmr_accounts->select(xmr_address, acc))
+        {
+            j_response["total_received"]       = acc.total_received;
+            j_response["scanned_block_height"] = acc.scanned_block_height;
+            j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
+
+            vector<XmrTransaction> txs;
+
+            // retrive txs from mysql associated with the given address
+            if (xmr_accounts->select_txs(acc.id, txs))
+            {
+                // we found some txs.
+
+                if (!txs.empty())
+                {
+                    json j_txs = json::array();
+
+                    for (XmrTransaction tx: txs)
+                    {
+                        j_txs.push_back(tx.to_json());
+                    }
+
+                    j_response["transactions"] = j_txs;
+                }
+            }
+        }
+
 
         string response_body = j_response.dump();
 

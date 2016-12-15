@@ -89,11 +89,9 @@ public:
             throw TxSearchException("searched_blk_no > CurrentBlockchainStatus::current_height");
         }
 
-        while(continue_search)
-        {
+        while(continue_search) {
 
-            if (searched_blk_no > CurrentBlockchainStatus::current_height)
-            {
+            if (searched_blk_no > CurrentBlockchainStatus::current_height) {
                 fmt::print("searched_blk_no {:d} and current_height {:d}\n",
                            searched_blk_no, CurrentBlockchainStatus::current_height);
 
@@ -106,33 +104,34 @@ public:
             }
 
             //
-            cout << " - searching tx of: " << acc << endl;
+            //cout << " - searching tx of: " << acc << endl;
 
             // get block cointaining this tx
             block blk;
 
-            if (!CurrentBlockchainStatus::get_block(searched_blk_no, blk))
-            {
+            if (!CurrentBlockchainStatus::get_block(searched_blk_no, blk)) {
                 cerr << "Cant get block of height: " + to_string(searched_blk_no) << endl;
-                searched_blk_no =- 2; // just go back one block, and retry
+                searched_blk_no = -2; // just go back one block, and retry
                 continue;
             }
 
             // for each tx in the given block look, get ouputs
 
 
-            list<cryptonote::transaction> blk_txs;
+            list <cryptonote::transaction> blk_txs;
 
-            if (!CurrentBlockchainStatus::get_block_txs(blk, blk_txs))
-            {
+            if (!CurrentBlockchainStatus::get_block_txs(blk, blk_txs)) {
                 throw TxSearchException("Cant get transactions in block: " + to_string(searched_blk_no));
             }
 
 
-
-            //std::lock_guard<std::mutex> lck (mtx);
-            fmt::print(" - searching block  {:d} of hash {:s} \n",
-                       searched_blk_no, pod_to_hex(get_block_hash(blk)));
+//            if (searched_blk_no % 10 == 0)
+//            {
+//                // print status every 10th block
+//
+//                fmt::print(" - searching block  {:d} of hash {:s} \n",
+//                           searched_blk_no, pod_to_hex(get_block_hash(blk)));
+//            }
 
             for (transaction& tx: blk_txs)
             {
@@ -163,6 +162,10 @@ public:
 
                     throw TxSearchException("");
                 }
+
+                uint64_t total_received {0};
+
+                bool found_mine_outputs {false};
 
                 for (auto& out: outputs)
                 {
@@ -225,15 +228,88 @@ public:
                                                  pod_to_hex(txout_k.key));
 
                         cout << msg << endl;
+
+
+                        total_received += amount;
+
+                        found_mine_outputs = true;
                     }
 
                 } // for (const auto& out: outputs)
 
+                if (found_mine_outputs)
+                {
+
+                    crypto::hash  payment_id  = null_hash;
+                    crypto::hash8 payment_id8 = null_hash8;
+
+                    get_payment_id(tx, payment_id, payment_id8);
+
+                    string payment_id_str {""};
+
+                    if (payment_id != null_hash)
+                    {
+                        payment_id_str = pod_to_hex(payment_id);
+                    }
+                    else if (payment_id8 != null_hash8)
+                    {
+                        payment_id_str = pod_to_hex(payment_id8);
+                    }
+
+                    XmrTransaction tx_data;
+
+                    tx_data.hash           = pod_to_hex(tx_hash);
+                    tx_data.account_id     = acc.id;
+                    tx_data.total_received = total_received;
+                    tx_data.total_sent     = 0; // at this stage we don't have any
+                                                // info about spendings
+                    tx_data.unlock_time    = 0;
+                    tx_data.height         = searched_blk_no;
+                    tx_data.coinbase       = is_coinbase(tx);
+                    tx_data.payment_id     = payment_id_str;
+                    tx_data.mixin          = get_mixin_no(tx) - 1;
+                    tx_data.timestamp      = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
+
+                    // insert tx_data into mysql's Transactions table
+                    uint64_t tx_mysql_id = xmr_accounts.insert_tx(tx_data);
+
+
+                    // once tx was added, update Accounts table
+
+                    XmrAccount updated_acc = acc;
+
+                    updated_acc.total_received = acc.total_received + tx_data.total_received;
+
+                    if (xmr_accounts.update(acc, updated_acc))
+                    {
+                        // iff success, set acc to updated_acc;
+                        acc = updated_acc;
+                    }
+
+                }
+
+
             } // for (const transaction& tx: blk_txs)
+
+
+            if (searched_blk_no % 10)
+            {
+                // every 10 blocks updated scanned_block_height
+
+                XmrAccount updated_acc = acc;
+
+                updated_acc.scanned_block_height = searched_blk_no;
+
+                if (xmr_accounts.update(acc, updated_acc))
+                {
+                    // iff success, set acc to updated_acc;
+                    acc = updated_acc;
+                }
+            }
 
             ++searched_blk_no;
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            //std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 

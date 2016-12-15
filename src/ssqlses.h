@@ -54,6 +54,17 @@ struct XmrAccount : public Accounts
 
     using Accounts::Accounts;
 
+    XmrAccount():Accounts()
+    {
+        address = "";
+        scanned_height = 0;
+        scanned_block_height = 0;
+        start_height = 0;
+        transaction_height = 0;
+        blockchain_height = 0;
+        total_sent = 0;
+    }
+
     // viewkey is not stored in mysql db or anywhere
     // so need to be populated when user logs in.
     string viewkey;
@@ -83,7 +94,7 @@ ostream& operator<< (std::ostream& os, const XmrAccount& acc) {
 };
 
 
-sql_create_10(Transactions, 1, 2,
+sql_create_11(Transactions, 1, 2,
               sql_bigint_unsigned, id,
               sql_varchar        , hash,
               sql_bigint_unsigned, account_id,
@@ -92,6 +103,7 @@ sql_create_10(Transactions, 1, 2,
               sql_bigint_unsigned, unlock_time,
               sql_bigint_unsigned, height,
               sql_bool           , coinbase,
+              sql_varchar        , payment_id,
               sql_bigint_unsigned, mixin,
               sql_timestamp      , timestamp);
 
@@ -101,12 +113,25 @@ struct XmrTransaction : public Transactions
 {
 
     static constexpr const char* SELECT_STMT = R"(
-        SELECT * FROM `Transactions` WHERE `address_id` = (%0q)
+        SELECT * FROM `Transactions` WHERE `account_id` = (%0q)
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
         SELECT * FROM `Transactions` WHERE `id` = (%0q)
     )";
+
+    static constexpr const char* INSERT_STMT = R"(
+        INSERT IGNORE INTO `Transactions` (`hash`, `account_id`, `total_received`,
+                                    `total_sent`, `unlock_time`, `height`,
+                                    `coinbase`, `payment_id`, `mixin`,
+                                    `timestamp`)
+                                VALUES (%0q, %1q, %2q,
+                                        %3q, %4q, %5q,
+                                        %6q, %7q, %8q,
+                                        %9q);
+    )";
+
+
 
     using Transactions::Transactions;
 
@@ -119,10 +144,18 @@ struct XmrTransaction : public Transactions
                 {"total_received"      , total_received},
                 {"total_sent"          , total_sent},
                 {"height"              , height},
+                {"coinbase"            , bool {coinbase}},
+                {"mixin"               , mixin},
                 {"timestamp"           , timestamp}
         };
 
         return j;
+    }
+
+    static DateTime
+    timestamp_to_DateTime(time_t timestamp)
+    {
+        return DateTime(timestamp);
     }
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrTransaction& acc);
