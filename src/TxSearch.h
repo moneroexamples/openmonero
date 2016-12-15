@@ -45,7 +45,7 @@ class TxSearch
     // its better to when each thread has its own mysql connection object.
     // this way if one thread crashes, it want take down
     // connection for the entire service
-    MySqlAccounts xmr_accounts;
+    shared_ptr<MySqlAccounts> xmr_accounts;
 
     // address and viewkey for this search thread.
     account_public_address address;
@@ -53,12 +53,11 @@ class TxSearch
 
 public:
 
-    TxSearch() {}
-
     TxSearch(XmrAccount& _acc):
-            acc {_acc},
-            xmr_accounts()
+            acc {_acc}
     {
+
+        xmr_accounts = make_shared<MySqlAccounts>();
 
         bool testnet = CurrentBlockchainStatus::testnet;
 
@@ -125,13 +124,13 @@ public:
             }
 
 
-//            if (searched_blk_no % 10 == 0)
-//            {
-//                // print status every 10th block
-//
-//                fmt::print(" - searching block  {:d} of hash {:s} \n",
-//                           searched_blk_no, pod_to_hex(get_block_hash(blk)));
-//            }
+            if (searched_blk_no % 100 == 0)
+            {
+                // print status every 10th block
+
+                fmt::print(" - searching block  {:d} of hash {:s} \n",
+                           searched_blk_no, pod_to_hex(get_block_hash(blk)));
+            }
 
             for (transaction& tx: blk_txs)
             {
@@ -271,7 +270,7 @@ public:
                     tx_data.timestamp      = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
                     // insert tx_data into mysql's Transactions table
-                    uint64_t tx_mysql_id = xmr_accounts.insert_tx(tx_data);
+                    uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
 
                     // once tx was added, update Accounts table
@@ -280,7 +279,7 @@ public:
 
                     updated_acc.total_received = acc.total_received + tx_data.total_received;
 
-                    if (xmr_accounts.update(acc, updated_acc))
+                    if (xmr_accounts->update(acc, updated_acc))
                     {
                         // iff success, set acc to updated_acc;
                         acc = updated_acc;
@@ -292,7 +291,7 @@ public:
             } // for (const transaction& tx: blk_txs)
 
 
-            if (searched_blk_no % 10)
+            if (searched_blk_no % 10 == 0)
             {
                 // every 10 blocks updated scanned_block_height
 
@@ -300,7 +299,7 @@ public:
 
                 updated_acc.scanned_block_height = searched_blk_no;
 
-                if (xmr_accounts.update(acc, updated_acc))
+                if (xmr_accounts->update(acc, updated_acc))
                 {
                     // iff success, set acc to updated_acc;
                     acc = updated_acc;

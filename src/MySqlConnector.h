@@ -48,13 +48,6 @@ public:
     static string password;
     static string dbname;
 
-    static MySqlConnector& getInstance()
-    {
-        static MySqlConnector  instance; // Guaranteed to be destroyed.
-        // Instantiated on first use.
-        return instance;
-    }
-private:
     MySqlConnector()
     {
         if (conn.connected())
@@ -66,16 +59,6 @@ private:
             cout << "Connection to Mysql successful" << endl;
         }
     }
-
-public:
-    MySqlConnector(MySqlConnector const&)  = delete;
-    void operator=(MySqlConnector const&)  = delete;
-
-//    Connection*
-//    get_connection()
-//    {
-//        return &conn;
-//    }
 
     Query
     query(const char* qstr = 0)
@@ -105,7 +88,12 @@ string MySqlConnector::dbname;
 class MysqlTransactions
 {
 
+  shared_ptr<MySqlConnector> conn;
+
 public:
+
+    MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
+    {}
 
     bool
     select(const uint64_t& address_id, vector<XmrTransaction>& txs)
@@ -121,7 +109,7 @@ public:
 //            query = shared_ptr<Query>(new Query(q));
 //        }
 
-        Query query = MySqlConnector::getInstance().query(XmrTransaction::SELECT_STMT);
+        Query query = conn->query(XmrTransaction::SELECT_STMT);
         query.parse();
 
         try
@@ -160,7 +148,7 @@ public:
 //        }
 
 
-        Query query = MySqlConnector::getInstance().query(XmrTransaction::INSERT_STMT);
+        Query query = conn->query(XmrTransaction::INSERT_STMT);
         query.parse();
 
         // cout << query << endl;
@@ -199,9 +187,19 @@ public:
 class MySqlAccounts
 {
 
-    MysqlTransactions mysql_tx;
+    shared_ptr<MySqlConnector> conn;
+
+    shared_ptr<MysqlTransactions> mysql_tx;
 
 public:
+
+
+    MySqlAccounts()
+    {
+        cout << "MySqlAccounts() makes new connection" << endl;
+        conn     = make_shared<MySqlConnector>();
+        mysql_tx = make_shared<MysqlTransactions>(conn);
+    }
 
 
     bool
@@ -217,7 +215,7 @@ public:
 //            query = shared_ptr<Query>(new Query(q));
 //        }
 
-        Query query = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT);
+        Query query = conn->query(XmrAccount::SELECT_STMT);
         query.parse();
 
         try
@@ -257,7 +255,7 @@ public:
 //            query = shared_ptr<Query>(new Query(q));
 //        }
 
-        Query query = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT2);
+        Query query = conn->query(XmrAccount::SELECT_STMT2);
         query.parse();
 
         try
@@ -294,7 +292,7 @@ public:
 //        }
 
 
-        Query query = MySqlConnector::getInstance().query(XmrAccount::INSERT_STMT);
+        Query query = conn->query(XmrAccount::INSERT_STMT);
         query.parse();
 
        // cout << query << endl;
@@ -319,7 +317,7 @@ public:
     uint64_t
     insert_tx(const XmrTransaction& tx_data)
     {
-        return mysql_tx.insert(tx_data);
+        return mysql_tx->insert(tx_data);
     }
 
     bool
@@ -339,13 +337,13 @@ public:
         }
 
 
-        return mysql_tx.select(acc.id, txs);
+        return mysql_tx->select(acc.id, txs);
     }
 
     bool
     select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs)
     {
-        return mysql_tx.select(account_id, txs);
+        return mysql_tx->select(account_id, txs);
     }
 
 
@@ -353,7 +351,7 @@ public:
     update(XmrAccount& acc_orginal, XmrAccount& acc_new)
     {
 
-        Query query = MySqlConnector::getInstance().query();
+        Query query = conn->query();
 
         try
         {
