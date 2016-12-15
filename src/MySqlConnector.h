@@ -229,7 +229,7 @@ public:
     }
 
     uint64_t
-    create(const string& address, const uint64_t& scanned_block_height = 0)
+    insert(const string& address, const uint64_t& scanned_block_height = 0)
     {
 
         static shared_ptr<Query> query;

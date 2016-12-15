@@ -139,7 +139,7 @@ public:
             // `canned_block_height` in mysql Accounts table.
             uint64_t current_blkchain_height = get_current_blockchain_height() - 1;
 
-            if ((acc_id = xmr_accounts->create(xmr_address, current_blkchain_height)) != 0)
+            if ((acc_id = xmr_accounts->insert(xmr_address, current_blkchain_height)) != 0)
             {
                 // select newly created account
                 if (xmr_accounts->select(acc_id, acc))
