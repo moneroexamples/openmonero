@@ -1,17 +1,16 @@
-#include <iostream>
-
-#include <memory>
-#include <cstdlib>
+#include "src/CmdLineOptions.h"
+#include "src/MicroCore.h"
+#include "src/MySqlAccounts.h"
+#include "src/YourMoneroRequests.h"
+#include "src/tools.h"
+#include "src/TxSearch.h"
 
 #include "ext/restbed/source/restbed"
 
 
-#include "src/CmdLineOptions.h"
-#include "src/MicroCore.h"
-#include "src/MySqlConnector.h"
-#include "src/YourMoneroRequests.h"
-#include "src/tools.h"
-#include "src/TxSearch.h"
+#include <iostream>
+#include <memory>
+#include <cstdlib>
 
 using namespace std;
 using namespace restbed;
@@ -67,7 +66,7 @@ xmreg::MySqlConnector::dbname    = "yourmonero";
 
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
-xmreg::CurrentBlockchainStatus::set_testnet(false);
+xmreg::CurrentBlockchainStatus::set_testnet(testnet);
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
 
 // since CurrentBlockchainStatus class monitors current status
