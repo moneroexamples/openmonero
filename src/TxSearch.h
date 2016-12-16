@@ -157,6 +157,22 @@ public:
                            searched_blk_no, pod_to_hex(get_block_hash(blk)));
             }
 
+
+
+            // searching for our incoming and outgoing xmr has two componotes.
+            //
+            // FIRIST. to search for the incoming xmr, we use address, viewkey and
+            // outputs public key. Its stright forward.
+            // second. searching four our spendings is trickier, as we dont have
+            //
+            // SECOND. But what we can do, we can look for condidate spend keys.
+            // and this can be achieved by checking if any mixin in associated with
+            // the given image, is our output. If it is our output, than we assume
+            // its our key image (i.e. we spend this output). Off course this is only
+            // assumption as our outputs can be used in key images of others for their
+            // mixin purposes. Thus, we sent to the front end, the list of key images
+            // that we think are yours, and the frontend, because it has spend key,
+            // can filter out false positives.
             for (transaction& tx: blk_txs)
             {
 
