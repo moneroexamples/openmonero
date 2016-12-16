@@ -205,7 +205,8 @@ public:
 
                 uint64_t total_received {0};
 
-                bool found_mine_outputs {false};
+                //     <out_pub_key, index in tx>
+                vector<pair<string, uint64_t>> found_mine_outputs;
 
                 for (auto& out: outputs)
                 {
@@ -266,31 +267,33 @@ public:
 
                     if (mine_output)
                     {
+
+                        string out_key_str = pod_to_hex(txout_k.key);
+
                         // found an output associated with the given address and viewkey
                         string msg = fmt::format("block: {:d}, tx_hash:  {:s}, output_pub_key: {:s}\n",
                                                  searched_blk_no,
                                                  pod_to_hex(tx_hash),
-                                                 pod_to_hex(txout_k.key));
+                                                 out_key_str);
 
                         cout << msg << endl;
 
 
                         total_received += amount;
 
-                        found_mine_outputs = true;
+                        found_mine_outputs.emplace_back(out_key_str, output_idx_in_tx);
                     }
 
                 } // for (const auto& out: outputs)
 
-                if (found_mine_outputs)
-                {
+                if (!found_mine_outputs.empty()) {
 
-                    crypto::hash  payment_id  = null_hash;
+                    crypto::hash payment_id = null_hash;
                     crypto::hash8 payment_id8 = null_hash8;
 
                     get_payment_id(tx, payment_id, payment_id8);
 
-                    string payment_id_str {""};
+                    string payment_id_str{""};
 
                     if (payment_id != null_hash)
                     {
@@ -301,25 +304,45 @@ public:
                         payment_id_str = pod_to_hex(payment_id8);
                     }
 
+                    string tx_hash_str = pod_to_hex(tx_hash);
+
                     XmrTransaction tx_data;
 
-                    tx_data.hash           = pod_to_hex(tx_hash);
-                    tx_data.account_id     = acc.id;
+                    tx_data.hash = tx_hash_str;
+                    tx_data.account_id = acc.id;
                     tx_data.total_received = total_received;
-                    tx_data.total_sent     = 0; // at this stage we don't have any
-                                                // info about spendings
-                    tx_data.unlock_time    = 0;
-                    tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase(tx);
-                    tx_data.payment_id     = payment_id_str;
-                    tx_data.mixin          = get_mixin_no(tx) - 1;
-                    tx_data.timestamp      = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
+                    tx_data.total_sent = 0; // at this stage we don't have any
+                                            // info about spendings
+                    tx_data.unlock_time = 0;
+                    tx_data.height = searched_blk_no;
+                    tx_data.coinbase = is_coinbase(tx);
+                    tx_data.payment_id = payment_id_str;
+                    tx_data.mixin = get_mixin_no(tx) - 1;
+                    tx_data.timestamp = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
                     // insert tx_data into mysql's Transactions table
                     uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
+                    // now add the found outputs into Outputs tables
 
-                    // once tx was added, update Accounts table
+                    for (auto &out_k_idx: found_mine_outputs)
+                    {
+                        XmrOutput out_data;
+
+                        out_data.account_id   = acc.id;
+                        out_data.tx_id        = tx_mysql_id;
+                        out_data.out_pub_key  = out_k_idx.first;
+                        out_data.tx_pub_key   = pod_to_hex(tx_pub_key);
+                        out_data.out_index    = out_k_idx.second;
+                        out_data.mixin        = tx_data.mixin;
+                        out_data.timestamp    = tx_data.timestamp;
+
+                        // insert output into mysql's outputs table
+                        uint64_t out_mysql_id = xmr_accounts->insert_output(out_data);
+                    }
+
+
+                    // once tx and outputs were added, update Accounts table
 
                     XmrAccount updated_acc = acc;
 

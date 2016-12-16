@@ -100,6 +100,7 @@ public:
         {
             SimpleResult sr = query.execute(out_data.account_id,
                                             out_data.tx_id,
+                                            out_data.out_pub_key,
                                             out_data.tx_pub_key,
                                             out_data.out_index,
                                             out_data.mixin,
@@ -253,14 +254,17 @@ class MySqlAccounts
 
     shared_ptr<MysqlTransactions> mysql_tx;
 
+    shared_ptr<MysqlOutpus> mysql_out;
+
 public:
 
 
     MySqlAccounts()
     {
-        cout << "MySqlAccounts() makes new connection" << endl;
-        conn     = make_shared<MySqlConnector>();
-        mysql_tx = make_shared<MysqlTransactions>(conn);
+        //cout << "MySqlAccounts() makes new connection" << endl;
+        conn      = make_shared<MySqlConnector>();
+        mysql_tx  = make_shared<MysqlTransactions>(conn);
+        mysql_out = make_shared<MysqlOutpus>(conn);
     }
 
 
@@ -382,6 +386,12 @@ public:
         return mysql_tx->insert(tx_data);
     }
 
+    uint64_t
+    insert_output(const XmrOutput& tx_out)
+    {
+        return mysql_out->insert(tx_out);
+    }
+
     bool
     select_txs(const string& xmr_address, vector<XmrTransaction>& txs)
     {
@@ -405,6 +415,13 @@ public:
     select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs)
     {
         return mysql_tx->select(account_id, txs);
+    }
+
+
+    bool
+    select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
+    {
+        return mysql_out->select(account_id, outs);
     }
 
 
