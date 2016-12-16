@@ -147,7 +147,6 @@ get_ouputs_tuple(const transaction& tx);
 vector<txin_to_key>
 get_key_images(const transaction& tx);
 
-
 bool
 get_payment_id(const vector<uint8_t>& extra,
                crypto::hash& payment_id,

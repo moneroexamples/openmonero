@@ -328,8 +328,8 @@ public:
 
                     if (tx_mysql_id == 0)
                     {
-                        cerr << "tx_mysql_id is zero!" << endl;
-                        throw TxSearchException("tx_mysql_id is zero!");
+                        //cerr << "tx_mysql_id is zero!" << endl;
+                        //throw TxSearchException("tx_mysql_id is zero!");
                     }
 
                     // now add the found outputs into Outputs tables
@@ -351,16 +351,54 @@ public:
 
                         if (out_mysql_id == 0)
                         {
-                            cerr << "out_mysql_id is zero!" << endl;
-                            throw TxSearchException("out_mysql_id is zero!");
+                            //cerr << "out_mysql_id is zero!" << endl;
+                            //throw TxSearchException("out_mysql_id is zero!");
                         }
                     }
 
 
                     // SECOND component: Checking for our key images, i.e., inputs.
 
+                    vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+
+                    // make timescale maps for mixins in input
+                    for (const txin_to_key& in_key: input_key_imgs)
+                    {
+                        // get absolute offsets of mixins
+                        std::vector<uint64_t> absolute_offsets
+                                = cryptonote::relative_output_offsets_to_absolute(
+                                        in_key.key_offsets);
+
+                        // get public keys of outputs used in the mixins that match to the offests
+                        std::vector<cryptonote::output_data_t> outputs;
 
 
+                        if (CurrentBlockchainStatus::get_output_keys(in_key.amount,
+                                                                     absolute_offsets,
+                                                                     outputs)) {
+                            cerr << "Mixins key images not found" << endl;
+                            continue;
+                        }
+
+
+                        // for each found output public key find its block to get timestamp
+                        for (const cryptonote::output_data_t& output_data: outputs)
+                        {
+                            string output_public_key_str = pod_to_hex(output_data.pubkey);
+
+                            XmrOutput out;
+
+                            if (xmr_accounts->output_exists(output_public_key_str, out))
+                            {
+                                cout << "input uses some mixins which are our outputs"
+                                     << out << endl;
+
+                                // seems that this key image is ours.
+                                // so save it to database for later use.
+                            }
+                        }
+
+                    }
 
 
                     // once tx and outputs were added, update Accounts table

@@ -79,7 +79,8 @@ struct CurrentBlockchainStatus {
 
         // initialize mcore and core_storage
         if (!xmreg::init_blockchain(blockchain_path,
-                                    mcore, core_storage)) {
+                                    mcore, core_storage))
+        {
             cerr << "Error accessing blockchain." << endl;
             return false;
         }
@@ -88,12 +89,14 @@ struct CurrentBlockchainStatus {
     }
 
     static bool
-    get_block(uint64_t height, block &blk) {
+    get_block(uint64_t height, block &blk)
+    {
         return mcore.get_block_by_height(height, blk);
     }
 
     static bool
-    get_block_txs(const block &blk, list <transaction> &blk_txs) {
+    get_block_txs(const block &blk, list <transaction> &blk_txs)
+    {
         // get all transactions in the block found
         // initialize the first list with transaction for solving
         // the block i.e. coinbase tx.
@@ -103,6 +106,26 @@ struct CurrentBlockchainStatus {
 
         if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs)) {
             cerr << "Cant get transactions in block: " << get_block_hash(blk) << endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool
+    get_output_keys(const uint64_t& amount,
+                    const vector<uint64_t>& absolute_offsets,
+                    vector<cryptonote::output_data_t> outputs)
+    {
+        try
+        {
+            core_storage->get_db().get_output_key(amount,
+                                                  absolute_offsets,
+                                                  outputs);
+        }
+        catch (const OUTPUT_DNE& e)
+        {
+            cerr << "get_output_keys: " << e.what() << endl;
             return false;
         }
 

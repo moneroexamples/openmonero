@@ -77,6 +77,42 @@ public:
     }
 
 
+    bool
+    exist(const string& output_public_key_str, XmrOutput& out)
+    {
+
+        Query query = conn->query(XmrOutput::EXIST_STMT);
+        query.parse();
+
+        try
+        {
+
+            vector<XmrOutput> outs;
+
+            query.storein(outs, output_public_key_str);
+
+            if (!outs.empty())
+            {
+                return false;
+            }
+
+            out = outs.at(0);
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+
+
     uint64_t
     insert(const XmrOutput& out_data)
     {
@@ -422,6 +458,12 @@ public:
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
     {
         return mysql_out->select(account_id, outs);
+    }
+
+    bool
+    output_exists(const string& output_public_key_str, XmrOutput& out)
+    {
+        return mysql_out->exist(output_public_key_str, out);
     }
 
 

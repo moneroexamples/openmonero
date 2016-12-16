@@ -567,7 +567,6 @@ get_key_images(const transaction& tx)
     return key_images;
 }
 
-
 bool
 get_payment_id(const vector<uint8_t>& extra,
                crypto::hash& payment_id,
