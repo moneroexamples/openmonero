@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 14, 2016 at 10:03 AM
+-- Generation Time: Dec 16, 2016 at 12:57 PM
 -- Server version: 5.7.16-0ubuntu0.16.10.1
 -- PHP Version: 7.0.8-3ubuntu3
 
@@ -45,6 +45,23 @@ CREATE TABLE `Accounts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `Outputs`
+--
+
+CREATE TABLE `Outputs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `account_id` bigint(20) UNSIGNED NOT NULL,
+  `tx_id` bigint(20) UNSIGNED NOT NULL,
+  `out_pub_key` char(64) NOT NULL,
+  `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
+  `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `Transactions`
 --
 
@@ -57,6 +74,7 @@ CREATE TABLE `Transactions` (
   `unlock_time` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `height` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `coinbase` tinyint(1) NOT NULL DEFAULT '0',
+  `payment_id` varchar(64) NOT NULL DEFAULT '',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -71,6 +89,15 @@ CREATE TABLE `Transactions` (
 ALTER TABLE `Accounts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `address` (`address`);
+
+--
+-- Indexes for table `Outputs`
+--
+ALTER TABLE `Outputs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `out_pub_key` (`out_pub_key`),
+  ADD KEY `account_id` (`account_id`),
+  ADD KEY `tx_id` (`tx_id`);
 
 --
 -- Indexes for table `Transactions`
@@ -89,10 +116,27 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+--
+-- AUTO_INCREMENT for table `Outputs`
+--
+ALTER TABLE `Outputs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+--
+-- AUTO_INCREMENT for table `Transactions`
+--
+ALTER TABLE `Transactions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `Outputs`
+--
+ALTER TABLE `Outputs`
+  ADD CONSTRAINT `account_id3_FK` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `transaction_id_FK` FOREIGN KEY (`tx_id`) REFERENCES `Transactions` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `Transactions`

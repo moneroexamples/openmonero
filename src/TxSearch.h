@@ -205,6 +205,9 @@ public:
 
                 uint64_t total_received {0};
 
+
+                // FIRST component: Checking for our outputs.
+
                 //     <out_pub_key, index in tx>
                 vector<pair<string, uint64_t>> found_mine_outputs;
 
@@ -323,6 +326,12 @@ public:
                     // insert tx_data into mysql's Transactions table
                     uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
+                    if (tx_mysql_id == 0)
+                    {
+                        cerr << "tx_mysql_id is zero!" << endl;
+                        throw TxSearchException("tx_mysql_id is zero!");
+                    }
+
                     // now add the found outputs into Outputs tables
 
                     for (auto &out_k_idx: found_mine_outputs)
@@ -339,7 +348,19 @@ public:
 
                         // insert output into mysql's outputs table
                         uint64_t out_mysql_id = xmr_accounts->insert_output(out_data);
+
+                        if (out_mysql_id == 0)
+                        {
+                            cerr << "out_mysql_id is zero!" << endl;
+                            throw TxSearchException("out_mysql_id is zero!");
+                        }
                     }
+
+
+                    // SECOND component: Checking for our key images, i.e., inputs.
+
+
+
 
 
                     // once tx and outputs were added, update Accounts table
