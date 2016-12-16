@@ -84,6 +84,7 @@ struct XmrAccount : public Accounts
         return j;
     }
 
+
     friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
 
 };
@@ -176,7 +177,57 @@ ostream& operator<< (std::ostream& os, const XmrTransaction& acc) {
 };
 
 
+sql_create_7(Outputs, 1, 3,
+             sql_bigint_unsigned, id,
+             sql_bigint_unsigned, account_id,
+             sql_bigint_unsigned, tx_id,
+             sql_varchar        , tx_pub_key,
+             sql_bigint_unsigned, out_index,
+             sql_bigint_unsigned, mixin,
+             sql_timestamp      , timestamp);
 
+
+struct XmrOutput : public Outputs
+{
+
+    static constexpr const char* SELECT_STMT = R"(
+    SELECT * FROM `Outputs` WHERE `account_id` = (%0q)
+    )";
+
+    static constexpr const char* INSERT_STMT = R"(
+    INSERT IGNORE INTO `Outputs` (`account_id`, `tx_id`, `tx_pub_key`, `out_index`, `mixin`, `timestamp`)
+                            VALUES (%0q, %1q, %2q,
+                                    %3q, %4q, %5q);
+)";
+
+
+
+    using Outputs::Outputs;
+
+    json
+    to_json() const
+    {
+        json j {{"id"                  , id},
+                {"account_id"          , account_id},
+                {"tx_id"               , tx_id},
+                {"tx_pub_key"          , tx_pub_key},
+                {"out_index"           , out_index},
+                {"mixin"               , mixin},
+                {"timestamp"           , timestamp}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream, const XmrOutput& out);
+
+};
+
+ostream& operator<< (std::ostream& os, const XmrOutput& out) {
+    os << "XmrOutputs: " << out.to_json().dump() << '\n';
+    return os;
+};
 }
 
 

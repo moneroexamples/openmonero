@@ -26,6 +26,102 @@ using namespace std;
 using namespace nlohmann;
 
 
+
+
+class MysqlOutpus
+{
+
+    shared_ptr<MySqlConnector> conn;
+
+public:
+
+    MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
+    {}
+
+    bool
+    select(const uint64_t& address_id, vector<XmrOutput>& outs)
+    {
+//
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = MySqlConnector::getInstance().query(
+//                    XmrTransaction::SELECT_STMT);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
+
+        Query query = conn->query(XmrOutput::SELECT_STMT);
+        query.parse();
+
+        try
+        {
+            query.storein(outs, address_id);
+
+            if (!outs.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+
+    uint64_t
+    insert(const XmrOutput& out_data)
+    {
+
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = MySqlConnector::getInstance().query(XmrOutput::INSERT_STMT);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
+
+
+        Query query = conn->query(XmrOutput::INSERT_STMT);
+        query.parse();
+
+        // cout << query << endl;
+
+        try
+        {
+            SimpleResult sr = query.execute(out_data.account_id,
+                                            out_data.tx_id,
+                                            out_data.tx_pub_key,
+                                            out_data.out_index,
+                                            out_data.mixin,
+                                            out_data.timestamp);
+
+            if (sr.rows() == 1)
+                return sr.insert_id();
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return 0;
+        }
+
+        return 0;
+    }
+
+};
+
+
+
 class MysqlTransactions
 {
 
