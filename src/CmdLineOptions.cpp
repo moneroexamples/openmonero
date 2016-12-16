@@ -25,6 +25,8 @@ namespace xmreg
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
+                ("use-ssl", value<bool>()->default_value(false)->implicit_value(true),
+                 "whether to use ssl (i.e., https) or not.")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),

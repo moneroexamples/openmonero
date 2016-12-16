@@ -321,9 +321,11 @@ public:
             } // for (const transaction& tx: blk_txs)
 
 
-            if (loop_timestamp - current_timestamp > UPDATE_SCANNED_HEIGHT_INTERVAL)
+            if ((loop_timestamp - current_timestamp > UPDATE_SCANNED_HEIGHT_INTERVAL)
+                  || searched_blk_no == CurrentBlockchainStatus::current_height)
             {
-                // every 10 blocks updated scanned_block_height
+                // update scanned_block_height every given interval
+                // or when we reached top of the blockchain
 
                 XmrAccount updated_acc = acc;
 

@@ -32,6 +32,7 @@ xmreg::CmdLineOptions opts {ac, av};
 
 auto help_opt          = opts.get_option<bool>("help");
 auto testnet_opt       = opts.get_option<bool>("testnet");
+auto use_ssl_opt       = opts.get_option<bool>("use-ssl");
 
 // if help was chosen, display help text and finish
 if (*help_opt)
@@ -40,6 +41,7 @@ if (*help_opt)
 }
 
 bool testnet       {*testnet_opt};
+bool use_ssl       {*use_ssl_opt};
 
 auto port_opt           = opts.get_option<string>("port");
 auto bc_path_opt        = opts.get_option<string>("bc-path");
@@ -72,7 +74,7 @@ xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
 // since CurrentBlockchainStatus class monitors current status
 // of the blockchain (e.g, current height), its seems logical to
 // make static objects for accessing the blockchain in this class.
-// this way monero accesssing blockchain variables (i.e. mcore and core_storage)
+// this way monero accessing blockchain variables (i.e. mcore and core_storage)
 // are not passed around like crazy everywhere.
 // There are here, and this is the only class that
 // has direct access to blockchain.
@@ -84,7 +86,8 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 
 // launch the status monitoring thread so that it keeps track of blockchain
 // info, e.g., current height. Information from this thread is used
-// by tx searching threads that are launch upon for each user independent.
+// by tx searching threads that are launch for each user independent,
+// when they login back or create new account.
 xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 
@@ -108,8 +111,6 @@ auto get_address_info      = your_xmr.make_resource(
 
 auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request, "/import_wallet_request");
-
-bool use_ssl {false};
 
 auto settings = make_shared< Settings >( );
 
