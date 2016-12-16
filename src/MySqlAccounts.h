@@ -120,6 +120,32 @@ public:
         return 0;
     }
 
+    uint64_t
+    get_total_recieved(const uint64_t& account_id)
+    {
+        Query query = conn->query(XmrTransaction::SUM_XMR_RECIEVED);
+        query.parse();
+
+        try
+        {
+            StoreQueryResult sqr = query.store(account_id);
+
+            if (!sqr)
+            {
+                return 0;
+            }
+
+            Row row = sqr.at(0);
+
+            return row["total_received"];
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return 0;
+        }
+    }
+
 
 };
 
@@ -276,14 +302,20 @@ public:
             return false;
         }
 
-
-        return mysql_tx->select(acc.id, txs);
+         return mysql_tx->select(acc.id, txs);
     }
 
     bool
     select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs)
     {
         return mysql_tx->select(account_id, txs);
+    }
+
+
+    uint64_t
+    get_total_recieved(const uint64_t& account_id)
+    {
+        return mysql_tx->get_total_recieved(account_id);
     }
 
 

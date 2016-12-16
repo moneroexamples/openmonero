@@ -131,6 +131,14 @@ struct XmrTransaction : public Transactions
                                         %9q);
     )";
 
+    static constexpr const char* SUM_XMR_RECIEVED = R"(
+        SELECT SUM(`total_received`) AS total_received
+               FROM `Transactions`
+               WHERE `account_id` = %0q
+               GROUP BY `account_id`
+    )";
+
+
 
 
     using Transactions::Transactions;
