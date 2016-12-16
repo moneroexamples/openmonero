@@ -183,8 +183,8 @@ public:
     {
         json j_request = body_to_json(body);
 
-        if (show_logs)
-            print_json_log("get_address_txs request: ", j_request);
+//        if (show_logs)
+//            print_json_log("get_address_txs request: ", j_request);
 
         string xmr_address  = j_request["address"];
 
@@ -246,19 +246,34 @@ public:
 //        if (show_logs)
 //            print_json_log("get_address_info request: ", j_request);
 
+        string xmr_address  = j_request["address"];
+
         json j_response  {
                 {"locked_funds", "0"},
                 {"total_received", "0"},
                 {"total_sent", "0"},
-                {"scanned_height", 2012470},
-                {"scanned_block_height", 1195850},
-                {"start_height", 2012470},
-                {"transaction_height", 2012470},
-                {"blockchain_height", 1195850},
+                {"scanned_height", 0},
+                {"scanned_block_height", 0},
+                {"start_height", 0},
+                {"transaction_height", 0},
+                {"blockchain_height", 0},
                 {"spent_outputs", nullptr}
         };
 
-        string response_body = j_response.dump();
+
+        // a placeholder for exciting or new account data
+        xmreg::XmrAccount acc;
+
+        // select this account if its existing one
+        if (xmr_accounts->select(xmr_address, acc))
+        {
+            j_response["total_received"] = acc.total_received;
+            j_response["scanned_block_height"] = acc.scanned_block_height;
+            j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
+
+        }
+
+            string response_body = j_response.dump();
 
         auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
 

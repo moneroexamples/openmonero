@@ -21,6 +21,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 
 namespace xmreg
 {
@@ -35,6 +36,9 @@ class TxSearchException: public std::runtime_error
 
 class TxSearch
 {
+
+    static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 10; // seconds
+
 
     bool continue_search {true};
 
@@ -83,12 +87,33 @@ public:
         // this accont
         uint64_t searched_blk_no = acc.scanned_block_height;
 
+        // start scanning from befor for tests.
+        searched_blk_no -= 100;
+
         if (searched_blk_no > CurrentBlockchainStatus::current_height)
         {
             throw TxSearchException("searched_blk_no > CurrentBlockchainStatus::current_height");
         }
 
-        while(continue_search) {
+        uint64_t current_timestamp = chrono::duration_cast<chrono::seconds>(
+                chrono::system_clock::now().time_since_epoch()).count();
+
+
+        uint64_t loop_idx {0};
+
+        while(continue_search)
+        {
+            ++loop_idx;
+
+            uint64_t loop_timestamp {current_timestamp};
+
+            if (loop_idx % 2 == 0)
+            {
+                // get loop time every second iteration. no need to call it
+                // all the time.
+                loop_timestamp = chrono::duration_cast<chrono::seconds>(
+                     chrono::system_clock::now().time_since_epoch()).count();
+            }
 
             if (searched_blk_no > CurrentBlockchainStatus::current_height) {
                 fmt::print("searched_blk_no {:d} and current_height {:d}\n",
@@ -184,6 +209,11 @@ public:
 
                     // check if generated public key matches the current output's key
                     bool mine_output = (txout_k.key == generated_tx_pubkey);
+
+
+                    //cout  << "Chekcing output: "  << pod_to_hex(txout_k.key) << " "
+                    //      << "mine_output: " << mine_output << endl;
+
 
                     // if mine output has RingCT, i.e., tx version is 2
                     // need to decode its amount. otherwise its zero.
@@ -291,7 +321,7 @@ public:
             } // for (const transaction& tx: blk_txs)
 
 
-            if (searched_blk_no % 10 == 0)
+            if (loop_timestamp - current_timestamp > UPDATE_SCANNED_HEIGHT_INTERVAL)
             {
                 // every 10 blocks updated scanned_block_height
 
@@ -302,8 +332,11 @@ public:
                 if (xmr_accounts->update(acc, updated_acc))
                 {
                     // iff success, set acc to updated_acc;
+                    cout << "scanned_block_height updated"  << endl;
                     acc = updated_acc;
                 }
+
+                current_timestamp = loop_timestamp;
             }
 
             ++searched_blk_no;
@@ -322,6 +355,8 @@ public:
     {
         cout << "TxSearch destroyed" << endl;
     }
+
+
 
 
 };
