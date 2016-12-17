@@ -309,19 +309,22 @@ public:
 
                     string tx_hash_str = pod_to_hex(tx_hash);
 
+                    DateTime blk_timestamp_mysql_format
+                            = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
+
                     XmrTransaction tx_data;
 
-                    tx_data.hash = tx_hash_str;
-                    tx_data.account_id = acc.id;
+                    tx_data.hash           = tx_hash_str;
+                    tx_data.account_id     = acc.id;
                     tx_data.total_received = total_received;
-                    tx_data.total_sent = 0; // at this stage we don't have any
+                    tx_data.total_sent     = 0; // at this stage we don't have any
                                             // info about spendings
-                    tx_data.unlock_time = 0;
-                    tx_data.height = searched_blk_no;
-                    tx_data.coinbase = is_coinbase(tx);
-                    tx_data.payment_id = payment_id_str;
-                    tx_data.mixin = get_mixin_no(tx) - 1;
-                    tx_data.timestamp = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
+                    tx_data.unlock_time    = 0;
+                    tx_data.height         = searched_blk_no;
+                    tx_data.coinbase       = is_coinbase(tx);
+                    tx_data.payment_id     = payment_id_str;
+                    tx_data.mixin          = get_mixin_no(tx) - 1;
+                    tx_data.timestamp      = blk_timestamp_mysql_format;
 
                     // insert tx_data into mysql's Transactions table
                     uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);

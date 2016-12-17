@@ -235,6 +235,65 @@ ostream& operator<< (std::ostream& os, const XmrOutput& out) {
     os << "XmrOutputs: " << out.to_json().dump() << '\n';
     return os;
 };
+
+
+sql_create_6(Inputs, 1, 4,
+             sql_bigint_unsigned, id,
+             sql_bigint_unsigned, account_id,
+             sql_bigint_unsigned, tx_id,
+             sql_bigint_unsigned, output_id,
+             sql_varchar        , key_image,
+             sql_timestamp      , timestamp);
+
+
+struct XmrInput : public Inputs
+{
+
+    static constexpr const char* SELECT_STMT = R"(
+     SELECT * FROM `Inputs` WHERE `account_id` = (%0q)
+    )";
+
+    static constexpr const char* EXIST_STMT = R"(
+     SELECT 1 FROM `Inputs` WHERE `key_image` == (%0q)
+    )";
+
+    static constexpr const char* INSERT_STMT = R"(
+      INSERT IGNORE INTO `Inputs` (`account_id`, `tx_id`, `output_id`,
+                                `key_image`, `timestamp`)
+                        VALUES (%0q, %1q, %2q,
+                                %3q, %4q);
+    )";
+
+
+
+    using Inputs::Inputs;
+
+    json
+    to_json() const
+    {
+        json j {{"id"                  , id},
+                {"account_id"          , account_id},
+                {"tx_id"               , tx_id},
+                {"output_id"           , output_id},
+                {"key_image"           , key_image},
+                {"timestamp"           , timestamp}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream, const XmrInput& out);
+
+};
+
+ostream& operator<< (std::ostream& os, const XmrInput& out) {
+    os << "XmrInput: " << out.to_json().dump() << '\n';
+    return os;
+};
+
+
+
 }
 
 
