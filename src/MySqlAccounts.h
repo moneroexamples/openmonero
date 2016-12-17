@@ -183,7 +183,7 @@ public:
 
             query.storein(outs, output_public_key_str);
 
-            if (!outs.empty())
+            if (outs.empty())
             {
                 return false;
             }
@@ -200,7 +200,7 @@ public:
             MYSQL_EXCEPTION_MSG(e);
         }
 
-        return false;
+        return true;
     }
 
 
@@ -230,6 +230,7 @@ public:
                                             out_data.tx_id,
                                             out_data.out_pub_key,
                                             out_data.tx_pub_key,
+                                            out_data.amount,
                                             out_data.out_index,
                                             out_data.mixin,
                                             out_data.timestamp);
@@ -523,6 +524,12 @@ public:
         return mysql_out->insert(tx_out);
     }
 
+    uint64_t
+    insert_input(const XmrInput& tx_in)
+    {
+        return mysql_in->insert(tx_in);
+    }
+
     bool
     select_txs(const string& xmr_address, vector<XmrTransaction>& txs)
     {
@@ -553,6 +560,12 @@ public:
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
     {
         return mysql_out->select(account_id, outs);
+    }
+
+    bool
+    select_inputs(const uint64_t& account_id, vector<XmrInput>& ins)
+    {
+        return mysql_in->select(account_id, ins);
     }
 
     bool

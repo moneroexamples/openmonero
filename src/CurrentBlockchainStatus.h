@@ -115,7 +115,7 @@ struct CurrentBlockchainStatus {
     static bool
     get_output_keys(const uint64_t& amount,
                     const vector<uint64_t>& absolute_offsets,
-                    vector<cryptonote::output_data_t> outputs)
+                    vector<cryptonote::output_data_t>& outputs)
     {
         try
         {
