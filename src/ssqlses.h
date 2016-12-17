@@ -253,10 +253,6 @@ struct XmrInput : public Inputs
      SELECT * FROM `Inputs` WHERE `account_id` = (%0q)
     )";
 
-    static constexpr const char* EXIST_STMT = R"(
-     SELECT 1 FROM `Inputs` WHERE `key_image` == (%0q)
-    )";
-
     static constexpr const char* INSERT_STMT = R"(
       INSERT IGNORE INTO `Inputs` (`account_id`, `tx_id`, `output_id`,
                                 `key_image`, `timestamp`)

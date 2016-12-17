@@ -25,6 +25,98 @@ using namespace mysqlpp;
 using namespace std;
 using namespace nlohmann;
 
+class MysqlInputs
+{
+
+    shared_ptr<MySqlConnector> conn;
+
+public:
+
+    MysqlInputs(shared_ptr<MySqlConnector> _conn): conn {_conn}
+    {}
+
+    bool
+    select(const uint64_t& address_id, vector<XmrInput>& ins)
+    {
+//
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = MySqlConnector::getInstance().query(
+//                    XmrInput::SELECT_STMT);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
+
+        Query query = conn->query(XmrInput::SELECT_STMT);
+        query.parse();
+
+        try
+        {
+            query.storein(ins, address_id);
+
+            if (!ins.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+
+
+
+    uint64_t
+    insert(const XmrInput& in_data)
+    {
+
+//        static shared_ptr<Query> query;
+//
+//        if (!query)
+//        {
+//            Query q = MySqlConnector::getInstance().query(XmrInput::INSERT_STMT);
+//            q.parse();
+//            query = shared_ptr<Query>(new Query(q));
+//        }
+
+
+        Query query = conn->query(XmrInput::INSERT_STMT);
+        query.parse();
+
+        // cout << query << endl;
+
+        try
+        {
+            SimpleResult sr = query.execute(in_data.account_id,
+                                            in_data.tx_id,
+                                            in_data.output_id,
+                                            in_data.key_image,
+                                            in_data.timestamp);
+
+            if (sr.rows() == 1)
+                return sr.insert_id();
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return 0;
+        }
+
+        return 0;
+    }
+
+};
 
 
 
@@ -292,6 +384,8 @@ class MySqlAccounts
 
     shared_ptr<MysqlOutpus> mysql_out;
 
+    shared_ptr<MysqlInputs> mysql_in;
+
 public:
 
 
@@ -301,6 +395,7 @@ public:
         conn      = make_shared<MySqlConnector>();
         mysql_tx  = make_shared<MysqlTransactions>(conn);
         mysql_out = make_shared<MysqlOutpus>(conn);
+        mysql_in  = make_shared<MysqlInputs>(conn);
     }
 
 
