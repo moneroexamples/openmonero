@@ -298,10 +298,6 @@ public:
                 if (!found_mine_outputs.empty())
                 {
 
-
-
-
-
                     XmrTransaction tx_data;
 
                     tx_data.hash           = tx_hash_str;
