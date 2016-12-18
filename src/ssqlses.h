@@ -121,6 +121,10 @@ struct XmrTransaction : public Transactions
         SELECT * FROM `Transactions` WHERE `id` = (%0q)
     )";
 
+    static constexpr const char* EXIST_STMT = R"(
+        SELECT * FROM `Transactions` WHERE `hash` = (%0q)
+    )";
+
     static constexpr const char* INSERT_STMT = R"(
         INSERT IGNORE INTO `Transactions` (`hash`, `account_id`, `total_received`,
                                     `total_sent`, `unlock_time`, `height`,
@@ -238,12 +242,13 @@ ostream& operator<< (std::ostream& os, const XmrOutput& out) {
 };
 
 
-sql_create_6(Inputs, 1, 4,
+sql_create_7(Inputs, 1, 4,
              sql_bigint_unsigned, id,
              sql_bigint_unsigned, account_id,
              sql_bigint_unsigned, tx_id,
              sql_bigint_unsigned, output_id,
              sql_varchar        , key_image,
+             sql_bigint_unsigned, amount,
              sql_timestamp      , timestamp);
 
 
@@ -254,11 +259,16 @@ struct XmrInput : public Inputs
      SELECT * FROM `Inputs` WHERE `account_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT2 = R"(
+     SELECT * FROM `Inputs` WHERE `tx_id` = (%0q)
+    )";
+
+
     static constexpr const char* INSERT_STMT = R"(
       INSERT IGNORE INTO `Inputs` (`account_id`, `tx_id`, `output_id`,
-                                `key_image`, `timestamp`)
+                                `key_image`, `amount` , `timestamp`)
                         VALUES (%0q, %1q, %2q,
-                                %3q, %4q);
+                                %3q, %4q, %5q);
     )";
 
 
@@ -273,6 +283,7 @@ struct XmrInput : public Inputs
                 {"tx_id"               , tx_id},
                 {"output_id"           , output_id},
                 {"key_image"           , key_image},
+                {"amount"              , amount},
                 {"timestamp"           , timestamp}
         };
 
@@ -293,18 +304,14 @@ ostream& operator<< (std::ostream& os, const XmrInput& out) {
 
 // this is MySQL VIEW, based on the Transactions,
 // Outputs and Inputs tables
-sql_create_11(TransactionsWithOutsAndIns, 1, 2,
+sql_create_7(TransactionsWithOutsAndIns, 1, 2,
              sql_bigint_unsigned, tx_id,
              sql_bigint_unsigned, account_id,
-             sql_varchar        , hash,
-             sql_bigint_unsigned, total_received,
-             sql_bigint_unsigned, out_amount,
-             sql_bigint_unsigned, height,
-             sql_bigint_unsigned, tx_mixin,
-             sql_timestamp      , timestamp,
+             sql_bigint_unsigned, amount,
              sql_varchar        , tx_pub_key,
              sql_bigint_unsigned, out_index,
-             sql_varchar_null   , key_image);
+             sql_varchar_null   , key_image,
+             sql_bigint_unsigned, mixin);
 
 
 
@@ -313,6 +320,10 @@ struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 
     static constexpr const char* SELECT_STMT = R"(
        SELECT * FROM `TransactionsWithOutsAndIns` WHERE `account_id` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT2 = R"(
+       SELECT * FROM `TransactionsWithOutsAndIns` WHERE `tx_id` = (%0q)
     )";
 
 
@@ -324,16 +335,29 @@ struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 
         json j {{"tx_id"               , tx_id},
                 {"account_id"          , account_id},
-                {"hash"                , hash},
-                {"out_amount"          , out_amount},
+                {"amount"              , amount},
                 {"tx_pub_key"          , tx_pub_key},
                 {"out_index"           , out_index},
                 {"key_image"           , key_image_to_string()},
-                {"mixin"               , tx_mixin}
+                {"mixin"               , mixin}
         };
 
         return j;
     }
+
+    json
+    spent_output() const
+    {
+        json j {{"amount"    , amount},
+                {"key_image" , key_image_to_string()},
+                {"tx_pub_key", tx_pub_key},
+                {"out_index" , out_index},
+                {"mixin"     , mixin}
+        };
+
+        return j;
+    }
+
 
     string key_image_to_string() const
     {

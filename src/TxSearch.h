@@ -291,26 +291,16 @@ public:
                 DateTime blk_timestamp_mysql_format
                         = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
+                uint64_t tx_mysql_id {0};
+
+                string tx_hash_str = pod_to_hex(tx_hash);
+
                 if (!found_mine_outputs.empty())
                 {
 
-                    crypto::hash payment_id = null_hash;
-                    crypto::hash8 payment_id8 = null_hash8;
 
-                    get_payment_id(tx, payment_id, payment_id8);
 
-                    string payment_id_str{""};
 
-                    if (payment_id != null_hash)
-                    {
-                        payment_id_str = pod_to_hex(payment_id);
-                    }
-                    else if (payment_id8 != null_hash8)
-                    {
-                        payment_id_str = pod_to_hex(payment_id8);
-                    }
-
-                    string tx_hash_str = pod_to_hex(tx_hash);
 
                     XmrTransaction tx_data;
 
@@ -322,12 +312,12 @@ public:
                     tx_data.unlock_time    = 0;
                     tx_data.height         = searched_blk_no;
                     tx_data.coinbase       = is_coinbase(tx);
-                    tx_data.payment_id     = payment_id_str;
+                    tx_data.payment_id     = get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;
                     tx_data.timestamp      = blk_timestamp_mysql_format;
 
                     // insert tx_data into mysql's Transactions table
-                    uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+                    tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
                     if (tx_mysql_id == 0)
                     {
@@ -382,6 +372,9 @@ public:
 
                 vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
+                // here we will keep what we find.
+                vector<XmrInput> inputs_found;
+
                 // make timescale maps for mixins in input
                 for (const txin_to_key& in_key: input_key_imgs)
                 {
@@ -403,7 +396,7 @@ public:
                     }
 
 
-                    // for each found output public key find its block to get timestamp
+                    // for each found output public key find check if its ours or not
                     for (const cryptonote::output_data_t& output_data: mixin_outputs)
                     {
                         string output_public_key_str = pod_to_hex(output_data.pubkey);
@@ -418,19 +411,22 @@ public:
                             // seems that this key image is ours.
                             // so save it to database for later use.
 
+
+
                             XmrInput in_data;
 
                             in_data.account_id  = acc.id;
-                            in_data.tx_id       = out.tx_id;
+                            in_data.tx_id       = 0; // for now zero, later we set it
                             in_data.output_id   = out.id;
                             in_data.key_image   = pod_to_hex(in_key.k_image);
+                            in_data.amount      = in_key.amount;
                             in_data.timestamp   = blk_timestamp_mysql_format;
 
-                            // insert possible input key image into Inputs table
-                            uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
+                            inputs_found.push_back(in_data);
 
                             // a key image has only one real mixin. Rest is fake.
-                            // so if we find a candidate, break the search
+                            // so if we find a candidate, break the search.
+
                             // break;
 
                         } // if (xmr_accounts->output_exists(output_public_key_str, out))
@@ -438,6 +434,65 @@ public:
                     } // for (const cryptonote::output_data_t& output_data: outputs)
 
                 } // for (const txin_to_key& in_key: input_key_imgs)
+
+
+                if (!inputs_found.empty())
+                {
+                    // seems we have some inputs found. time
+                    // to write it to mysql. But first,
+                    // check if this tx is written in mysql.
+
+
+                    // calculate how much we preasumply spent.
+                    uint64_t total_sent {0};
+
+                    for (const XmrInput& in_data: inputs_found)
+                    {
+                        total_sent += in_data.amount;
+                    }
+
+
+                    if (tx_mysql_id == 0)
+                    {
+                        // this txs hasnt been seen in step first.
+                        // it means that it only contains potentially our
+                        // key images. It does not have our outputs.
+                        // so write it to mysql as ours, with
+                        // total received of 0.
+
+                        XmrTransaction tx_data;
+
+                        tx_data.hash           = tx_hash_str;
+                        tx_data.account_id     = acc.id;
+                        tx_data.total_received = 0;
+                        tx_data.total_sent     = total_sent;
+                        tx_data.unlock_time    = 0;
+                        tx_data.height         = searched_blk_no;
+                        tx_data.coinbase       = is_coinbase(tx);
+                        tx_data.payment_id     = get_payment_id_as_string(tx);
+                        tx_data.mixin          = get_mixin_no(tx) - 1;
+                        tx_data.timestamp      = blk_timestamp_mysql_format;
+
+                        // insert tx_data into mysql's Transactions table
+                        tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+
+                        if (tx_mysql_id == 0)
+                        {
+                            //cerr << "tx_mysql_id is zero!" << endl;
+                            //throw TxSearchException("tx_mysql_id is zero!");
+                        }
+                    }
+
+                } //  if (!inputs_found.empty())
+
+
+                // save all input found into database
+                for (XmrInput& in_data: inputs_found)
+                {
+                    in_data.tx_id = tx_mysql_id;
+                    uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
+                }
+
 
             } // for (const transaction& tx: blk_txs)
 
@@ -477,6 +532,29 @@ public:
     ~TxSearch()
     {
         cout << "TxSearch destroyed" << endl;
+    }
+
+
+    string
+    get_payment_id_as_string(const transaction& tx)
+    {
+        crypto::hash payment_id = null_hash;
+        crypto::hash8 payment_id8 = null_hash8;
+
+        get_payment_id(tx, payment_id, payment_id8);
+
+        string payment_id_str{""};
+
+        if (payment_id != null_hash)
+        {
+            payment_id_str = pod_to_hex(payment_id);
+        }
+        else if (payment_id8 != null_hash8)
+        {
+            payment_id_str = pod_to_hex(payment_id8);
+        }
+
+        return payment_id_str;
     }
 
 

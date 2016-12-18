@@ -41,10 +41,37 @@ public:
         Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT);
         query.parse();
 
-        try {
+        try
+        {
             query.storein(txs, address_id);
 
-            if (!txs.empty()) {
+            if (!txs.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+    bool
+    select_for_tx(const uint64_t &tx_id, vector<XmrTransactionWithOutsAndIns>& txs) {
+
+        Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT2);
+        query.parse();
+
+        try
+        {
+            query.storein(txs, tx_id);
+
+            if (!txs.empty())
+            {
                 return true;
             }
         }
@@ -73,16 +100,6 @@ public:
     bool
     select(const uint64_t& address_id, vector<XmrInput>& ins)
     {
-//
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(
-//                    XmrInput::SELECT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
 
         Query query = conn->query(XmrInput::SELECT_STMT);
         query.parse();
@@ -108,7 +125,33 @@ public:
         return false;
     }
 
+    bool
+    select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
+    {
 
+        Query query = conn->query(XmrInput::SELECT_STMT2);
+        query.parse();
+
+        try
+        {
+            query.storein(ins, address_id);
+
+            if (!ins.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
 
 
     uint64_t
@@ -136,6 +179,7 @@ public:
                                             in_data.tx_id,
                                             in_data.output_id,
                                             in_data.key_image,
+                                            in_data.amount,
                                             in_data.timestamp);
 
             if (sr.rows() == 1)
@@ -381,6 +425,42 @@ public:
         return 0;
     }
 
+
+    bool
+    exist(const string& tx_hash_str, XmrTransaction& tx)
+    {
+
+        Query query = conn->query(XmrTransaction::EXIST_STMT);
+        query.parse();
+
+        try
+        {
+
+            vector<XmrTransaction> outs;
+
+            query.storein(outs, tx_hash_str);
+
+            if (outs.empty())
+            {
+                return false;
+            }
+
+            tx = outs.at(0);
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return true;
+    }
+
+
     uint64_t
     get_total_recieved(const uint64_t& account_id)
     {
@@ -618,9 +698,21 @@ public:
     }
 
     bool
+    select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransactionWithOutsAndIns>& ins)
+    {
+        return mysql_tx_inout->select_for_tx(tx_id, ins);
+    }
+
+    bool
     output_exists(const string& output_public_key_str, XmrOutput& out)
     {
         return mysql_out->exist(output_public_key_str, out);
+    }
+
+    bool
+    tx_exists(const string& tx_hash_str, XmrTransaction& tx)
+    {
+        return mysql_tx->exist(tx_hash_str, tx);
     }
 
 

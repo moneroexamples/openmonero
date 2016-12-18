@@ -191,6 +191,7 @@ public:
         // initializa json response
         json j_response {
                 { "total_received", "0"},
+                { "total_sent", "0"},
                 { "scanned_height", 0},
                 { "scanned_block_height", 0},
                 { "start_height", 0},
@@ -222,7 +223,31 @@ public:
 
                     for (XmrTransaction tx: txs)
                     {
-                        j_txs.push_back(tx.to_json());
+                        // get inputs associated with a given
+                        // transaction, if any.
+
+                        json j_tx = tx.to_json();
+
+                        vector<XmrTransactionWithOutsAndIns> inputs;
+
+                        if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+                        {
+
+                            json j_spent_outputs = json::array();
+
+                            uint64_t total_spent {0};
+
+                            for (XmrTransactionWithOutsAndIns input: inputs)
+                            {
+                                total_spent += input.amount;
+                                j_spent_outputs.push_back(input.spent_output());
+                            }
+
+                            j_tx["total_sent"]    = total_spent;
+                            j_tx["spent_outputs"] = j_spent_outputs;
+                        }
+
+                        j_txs.push_back(j_tx);
                     }
 
                     j_response["transactions"] = j_txs;
@@ -294,15 +319,9 @@ public:
                             continue;
                         }
 
-                        j_spent_outputs.push_back(json {
-                                {"amount"    , tx.out_amount},
-                                {"key_image" , tx.key_image_to_string()},
-                                {"tx_pub_key", tx.tx_pub_key},
-                                {"out_index" , tx.out_index},
-                                {"mixin"     , tx.tx_mixin},
-                        });
+                        j_spent_outputs.push_back(tx.spent_output());
 
-                        total_sent += tx.out_amount;
+                        total_sent += tx.amount;
                     }
 
                     j_response["spent_outputs"] = j_spent_outputs;
