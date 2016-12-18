@@ -36,7 +36,7 @@ public:
     MysqlTransactionWithOutsAndIns(shared_ptr<MySqlConnector> _conn) : conn{_conn} {}
 
     bool
-    select(const uint64_t &address_id, vector<XmrTransactionWithOutsAndIns> &txs) {
+    select(const uint64_t &address_id, vector<XmrTransactionWithOutsAndIns>& txs) {
 
         Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT);
         query.parse();

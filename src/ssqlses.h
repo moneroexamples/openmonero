@@ -304,14 +304,15 @@ sql_create_11(TransactionsWithOutsAndIns, 1, 2,
              sql_timestamp      , timestamp,
              sql_varchar        , tx_pub_key,
              sql_bigint_unsigned, out_index,
-             sql_varchar        , key_image);
+             sql_varchar_null   , key_image);
+
 
 
 struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 {
 
     static constexpr const char* SELECT_STMT = R"(
-       SELECT * FROM `TransactionWithOutsAndIns` WHERE `account_id` = (%0q)
+       SELECT * FROM `TransactionsWithOutsAndIns` WHERE `account_id` = (%0q)
     )";
 
 
@@ -320,17 +321,30 @@ struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
     json
     to_json() const
     {
+
         json j {{"tx_id"               , tx_id},
                 {"account_id"          , account_id},
                 {"hash"                , hash},
                 {"out_amount"          , out_amount},
                 {"tx_pub_key"          , tx_pub_key},
                 {"out_index"           , out_index},
-                {"key_image"           , key_image},
+                {"key_image"           , key_image_to_string()},
                 {"mixin"               , tx_mixin}
         };
 
         return j;
+    }
+
+    string key_image_to_string() const
+    {
+        string key_image_str {"NULL"};
+
+        if (!key_image.is_null)
+        {
+            key_image_str = key_image.data;
+        }
+
+        return key_image_str;
     }
 
 

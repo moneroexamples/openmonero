@@ -271,9 +271,50 @@ public:
             j_response["scanned_block_height"] = acc.scanned_block_height;
             j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
 
-        }
 
-            string response_body = j_response.dump();
+            uint64_t total_sent {0};
+
+            vector<XmrTransactionWithOutsAndIns> txs;
+
+            // retrieve txs from mysql associated with the given address
+            if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+            {
+                // we found some txs.
+
+                if (!txs.empty())
+                {
+                    //
+                    json j_spent_outputs = json::array();
+
+                    for (XmrTransactionWithOutsAndIns tx: txs)
+                    {
+
+                        if (tx.key_image.is_null)
+                        {
+                            continue;
+                        }
+
+                        j_spent_outputs.push_back(json {
+                                {"amount"    , tx.out_amount},
+                                {"key_image" , tx.key_image_to_string()},
+                                {"tx_pub_key", tx.tx_pub_key},
+                                {"out_index" , tx.out_index},
+                                {"mixin"     , tx.tx_mixin},
+                        });
+
+                        total_sent += tx.out_amount;
+                    }
+
+                    j_response["spent_outputs"] = j_spent_outputs;
+
+                    j_response["total_sent"]    = total_sent;
+                }
+
+            } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+
+        } // if (xmr_accounts->select(xmr_address, acc))
+
+        string response_body = j_response.dump();
 
         auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
 
