@@ -25,6 +25,41 @@ using namespace mysqlpp;
 using namespace std;
 using namespace nlohmann;
 
+
+class MysqlTransactionWithOutsAndIns
+{
+
+    shared_ptr<MySqlConnector> conn;
+
+public:
+
+    MysqlTransactionWithOutsAndIns(shared_ptr<MySqlConnector> _conn) : conn{_conn} {}
+
+    bool
+    select(const uint64_t &address_id, vector<XmrTransactionWithOutsAndIns> &txs) {
+
+        Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT);
+        query.parse();
+
+        try {
+            query.storein(txs, address_id);
+
+            if (!txs.empty()) {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+};
+
+
 class MysqlInputs
 {
 
@@ -387,16 +422,22 @@ class MySqlAccounts
 
     shared_ptr<MysqlInputs> mysql_in;
 
+    shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
+
+
 public:
 
 
     MySqlAccounts()
     {
-        //cout << "MySqlAccounts() makes new connection" << endl;
-        conn      = make_shared<MySqlConnector>();
-        mysql_tx  = make_shared<MysqlTransactions>(conn);
-        mysql_out = make_shared<MysqlOutpus>(conn);
-        mysql_in  = make_shared<MysqlInputs>(conn);
+        // create connection to the mysql
+        conn            = make_shared<MySqlConnector>();
+
+        // use same connection with working with other tables
+        mysql_tx        = make_shared<MysqlTransactions>(conn);
+        mysql_out       = make_shared<MysqlOutpus>(conn);
+        mysql_in        = make_shared<MysqlInputs>(conn);
+        mysql_tx_inout  = make_shared<MysqlTransactionWithOutsAndIns>(conn);
     }
 
 

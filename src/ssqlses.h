@@ -307,7 +307,7 @@ sql_create_11(TransactionsWithOutsAndIns, 1, 2,
              sql_varchar        , key_image);
 
 
-struct TransactionWithOutsAndIns : public TransactionsWithOutsAndIns
+struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -334,12 +334,13 @@ struct TransactionWithOutsAndIns : public TransactionsWithOutsAndIns
     }
 
 
-    friend std::ostream& operator<< (std::ostream& stream, const TransactionWithOutsAndIns& out);
+    friend std::ostream& operator<< (std::ostream& stream,
+                                     const XmrTransactionWithOutsAndIns& out);
 
 };
 
-ostream& operator<< (std::ostream& os, const TransactionWithOutsAndIns& out) {
-    os << "TransactionWithOutsAndIns: " << out.to_json().dump() << '\n';
+ostream& operator<< (std::ostream& os, const XmrTransactionWithOutsAndIns& out) {
+    os << "XmrTransactionWithOutsAndIns: " << out.to_json().dump() << '\n';
     return os;
 };
 
