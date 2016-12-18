@@ -87,9 +87,6 @@ public:
         // this accont
         uint64_t searched_blk_no = acc.scanned_block_height;
 
-        // start scanning from befor for tests.
-        searched_blk_no -= 100;
-
         if (searched_blk_no > CurrentBlockchainStatus::current_height)
         {
             throw TxSearchException("searched_blk_no > CurrentBlockchainStatus::current_height");

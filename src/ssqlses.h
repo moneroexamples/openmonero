@@ -291,6 +291,59 @@ ostream& operator<< (std::ostream& os, const XmrInput& out) {
 
 
 
+// this is MySQL VIEW, based on the Transactions,
+// Outputs and Inputs tables
+sql_create_11(TransactionsWithOutsAndIns, 1, 2,
+             sql_bigint_unsigned, tx_id,
+             sql_bigint_unsigned, account_id,
+             sql_varchar        , hash,
+             sql_bigint_unsigned, total_received,
+             sql_bigint_unsigned, out_amount,
+             sql_bigint_unsigned, height,
+             sql_bigint_unsigned, tx_mixin,
+             sql_timestamp      , timestamp,
+             sql_varchar        , tx_pub_key,
+             sql_bigint_unsigned, out_index,
+             sql_varchar        , key_image);
+
+
+struct TransactionWithOutsAndIns : public TransactionsWithOutsAndIns
+{
+
+    static constexpr const char* SELECT_STMT = R"(
+       SELECT * FROM `TransactionWithOutsAndIns` WHERE `account_id` = (%0q)
+    )";
+
+
+    using TransactionsWithOutsAndIns::TransactionsWithOutsAndIns;
+
+    json
+    to_json() const
+    {
+        json j {{"tx_id"               , tx_id},
+                {"account_id"          , account_id},
+                {"hash"                , hash},
+                {"out_amount"          , out_amount},
+                {"tx_pub_key"          , tx_pub_key},
+                {"out_index"           , out_index},
+                {"key_image"           , key_image},
+                {"mixin"               , tx_mixin}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream, const TransactionWithOutsAndIns& out);
+
+};
+
+ostream& operator<< (std::ostream& os, const TransactionWithOutsAndIns& out) {
+    os << "TransactionWithOutsAndIns: " << out.to_json().dump() << '\n';
+    return os;
+};
+
+
 }
 
 
