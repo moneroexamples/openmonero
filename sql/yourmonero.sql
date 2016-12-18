@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 16, 2016 at 12:57 PM
--- Server version: 5.7.16-0ubuntu0.16.10.1
--- PHP Version: 7.0.8-3ubuntu3
+-- Generation Time: Dec 18, 2016 at 10:38 PM
+-- Server version: 10.1.20-MariaDB
+-- PHP Version: 7.0.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -28,6 +28,7 @@ USE `yourmonero`;
 -- Table structure for table `Accounts`
 --
 
+DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
@@ -45,15 +46,34 @@ CREATE TABLE `Accounts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `Inputs`
+--
+
+DROP TABLE IF EXISTS `Inputs`;
+CREATE TABLE `Inputs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `account_id` bigint(20) UNSIGNED NOT NULL,
+  `tx_id` bigint(20) UNSIGNED NOT NULL,
+  `output_id` bigint(20) UNSIGNED NOT NULL,
+  `key_image` varchar(64) NOT NULL DEFAULT '',
+  `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT '00000000000000000000',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `Outputs`
 --
 
+DROP TABLE IF EXISTS `Outputs`;
 CREATE TABLE `Outputs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `tx_id` bigint(20) UNSIGNED NOT NULL,
-  `out_pub_key` char(64) NOT NULL,
+  `out_pub_key` varchar(64) NOT NULL,
   `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
+  `amount` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -65,6 +85,7 @@ CREATE TABLE `Outputs` (
 -- Table structure for table `Transactions`
 --
 
+DROP TABLE IF EXISTS `Transactions`;
 CREATE TABLE `Transactions` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `hash` varchar(64) NOT NULL,
@@ -79,6 +100,32 @@ CREATE TABLE `Transactions` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `TransactionsWithOutsAndIns`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `TransactionsWithOutsAndIns`;
+CREATE TABLE `TransactionsWithOutsAndIns` (
+`tx_id` bigint(20) unsigned
+,`account_id` bigint(20) unsigned
+,`amount` bigint(20) unsigned zerofill
+,`tx_pub_key` varchar(64)
+,`out_index` bigint(20) unsigned
+,`key_image` varchar(64)
+,`mixin` bigint(20) unsigned
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `TransactionsWithOutsAndIns`
+--
+DROP TABLE IF EXISTS `TransactionsWithOutsAndIns`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `TransactionsWithOutsAndIns`  AS  select `Inputs`.`tx_id` AS `tx_id`,`Inputs`.`account_id` AS `account_id`,`Inputs`.`amount` AS `amount`,`Outputs`.`tx_pub_key` AS `tx_pub_key`,`Outputs`.`out_index` AS `out_index`,`Inputs`.`key_image` AS `key_image`,`Outputs`.`mixin` AS `mixin` from (`Inputs` join `Outputs` on((`Inputs`.`output_id` = `Outputs`.`id`))) ;
+
 --
 -- Indexes for dumped tables
 --
@@ -89,6 +136,15 @@ CREATE TABLE `Transactions` (
 ALTER TABLE `Accounts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `address` (`address`);
+
+--
+-- Indexes for table `Inputs`
+--
+ALTER TABLE `Inputs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `account_id2` (`account_id`),
+  ADD KEY `tx_id2` (`tx_id`),
+  ADD KEY `output_id2` (`output_id`);
 
 --
 -- Indexes for table `Outputs`
@@ -116,20 +172,33 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+--
+-- AUTO_INCREMENT for table `Inputs`
+--
+ALTER TABLE `Inputs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 --
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `Inputs`
+--
+ALTER TABLE `Inputs`
+  ADD CONSTRAINT `account_id3_FK2` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `outputs_id_FK2` FOREIGN KEY (`output_id`) REFERENCES `Outputs` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `transaction_id_FK2` FOREIGN KEY (`tx_id`) REFERENCES `Transactions` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `Outputs`
