@@ -598,6 +598,14 @@ public:
 
 
     bool
+    select_txs_with_inputs_and_outputs(const uint64_t& account_id,
+                                       vector<XmrTransactionWithOutsAndIns>& txs)
+    {
+        return mysql_tx_inout->select(account_id, txs);
+    }
+
+
+    bool
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
     {
         return mysql_out->select(account_id, outs);
