@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 18, 2016 at 10:38 PM
+-- Generation Time: Dec 25, 2016 at 04:01 AM
 -- Server version: 10.1.20-MariaDB
 -- PHP Version: 7.0.14
 
@@ -17,10 +17,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `yourmonero`
+-- Database: `openmonero`
 --
-CREATE DATABASE IF NOT EXISTS `yourmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `yourmonero`;
+CREATE DATABASE IF NOT EXISTS `openmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `openmonero`;
 
 -- --------------------------------------------------------
 

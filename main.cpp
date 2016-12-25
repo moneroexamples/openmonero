@@ -64,7 +64,7 @@ cout << "Blockchain path: " << blockchain_path.string() << endl;
 xmreg::MySqlConnector::url       = "127.0.0.1";
 xmreg::MySqlConnector::username  = "root";
 xmreg::MySqlConnector::password  = "root";
-xmreg::MySqlConnector::dbname    = "yourmonero";
+xmreg::MySqlConnector::dbname    = "openmonero";
 
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
