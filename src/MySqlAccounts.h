@@ -598,7 +598,7 @@ public:
     }
 
     uint64_t
-    insert(const string& address, const uint64_t& scanned_block_height = 0)
+    insert(const string& address, const uint64_t& current_blkchain_height = 0)
     {
 
         //    static shared_ptr<Query> query;
@@ -618,7 +618,13 @@ public:
 
         try
         {
-            SimpleResult sr = query.execute(address, scanned_block_height);
+            // scanned_block_height and start_height are
+            // set to current blockchain height
+            // when account is created.
+
+            SimpleResult sr = query.execute(address,
+                                            current_blkchain_height,
+                                            current_blkchain_height);
 
             if (sr.rows() == 1)
                 return sr.insert_id();

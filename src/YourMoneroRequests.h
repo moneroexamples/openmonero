@@ -190,13 +190,12 @@ public:
 
         // initializa json response
         json j_response {
-                { "total_received", "0"},
-                { "total_sent", "0"},
-                { "scanned_height", 0},
-                { "scanned_block_height", 0},
-                { "start_height", 0},
-                { "transaction_height", 0},
-                { "blockchain_height", 0}
+                { "total_received", "0"},     // taken from Accounts table
+                { "scanned_height", 0},       // not used. it is here to match mymonero
+                { "scanned_block_height", 0}, // taken from Accounts table
+                { "start_height", 0},         // not used. it is here to match mymonero
+                { "transaction_height", 0},   // not used. it is here to match mymonero
+                { "blockchain_height", 0}     // current blockchain height
         };
 
 
@@ -212,13 +211,13 @@ public:
 
             vector<XmrTransaction> txs;
 
-            // retrive txs from mysql associated with the given address
+            // retrieve txs from mysql associated with the given address
             if (xmr_accounts->select_txs(acc.id, txs))
             {
-                // we found some txs.
-
                 if (!txs.empty())
                 {
+                    // we found some txs.
+
                     json j_txs = json::array();
 
                     for (XmrTransaction tx: txs)
@@ -232,7 +231,6 @@ public:
 
                         if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
                         {
-
                             json j_spent_outputs = json::array();
 
                             uint64_t total_spent {0};
@@ -244,6 +242,7 @@ public:
                             }
 
                             j_tx["total_sent"]    = total_spent;
+
                             j_tx["spent_outputs"] = j_spent_outputs;
                         }
 
@@ -251,9 +250,12 @@ public:
                     }
 
                     j_response["transactions"] = j_txs;
-                }
-            }
-        }
+
+                } //  if (!txs.empty())
+
+            } // if (xmr_accounts->select_txs(acc.id, txs))
+
+        } // if (xmr_accounts->select(xmr_address, acc))
 
 
         string response_body = j_response.dump();
@@ -295,7 +297,6 @@ public:
             j_response["total_received"] = acc.total_received;
             j_response["scanned_block_height"] = acc.scanned_block_height;
             j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
-
 
             uint64_t total_sent {0};
 

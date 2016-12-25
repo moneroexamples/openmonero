@@ -22,16 +22,12 @@ using namespace nlohmann;
 
 // to see what it does can run preprecoess on this file
 // g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
-sql_create_11(Accounts, 1, 2,
+sql_create_7(Accounts, 1, 2,
               sql_bigint_unsigned, id,
               sql_varchar        , address,
               sql_bigint_unsigned, total_received,
-              sql_bigint_unsigned, scanned_height,
               sql_bigint_unsigned, scanned_block_height,
               sql_bigint_unsigned, start_height,
-              sql_bigint_unsigned, transaction_height,
-              sql_bigint_unsigned, blockchain_height,
-              sql_bigint_unsigned, total_sent,
               sql_timestamp      , created,
               sql_timestamp      , modified);
 
@@ -48,7 +44,7 @@ struct XmrAccount : public Accounts
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts` (`address`, `scanned_block_height`) VALUES (%0q, %1q);
+        INSERT INTO `Accounts` (`address`, `start_height`, `scanned_block_height`) VALUES (%0q, %1q , %2q);
     )";
 
 
@@ -57,12 +53,9 @@ struct XmrAccount : public Accounts
     XmrAccount():Accounts()
     {
         address = "";
-        scanned_height = 0;
+        total_received = 0;
         scanned_block_height = 0;
         start_height = 0;
-        transaction_height = 0;
-        blockchain_height = 0;
-        total_sent = 0;
     }
 
     // viewkey is not stored in mysql db or anywhere
@@ -76,9 +69,8 @@ struct XmrAccount : public Accounts
                 {"address"             , address},
                 {"viewkey"             , viewkey},
                 {"total_received"      , total_received},
-                {"total_sent"          , total_sent},
                 {"scanned_block_height", scanned_block_height},
-                {"blockchain_height"   , blockchain_height}
+                {"start_height"        , start_height}
         };
 
         return j;
