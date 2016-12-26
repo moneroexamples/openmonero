@@ -158,7 +158,7 @@ public:
 
             // searching for our incoming and outgoing xmr has two componotes.
             //
-            // FIRIST. to search for the incoming xmr, we use address, viewkey and
+            // FIRST. to search for the incoming xmr, we use address, viewkey and
             // outputs public key. Its stright forward.
             // second. searching four our spendings is trickier, as we dont have
             //
@@ -173,7 +173,8 @@ public:
             for (transaction& tx: blk_txs)
             {
 
-                crypto::hash tx_hash  = get_transaction_hash(tx);
+                crypto::hash tx_hash         = get_transaction_hash(tx);
+                crypto::hash tx_prefix_hash  = get_transaction_prefix_hash(tx);
 
                 // cout << pod_to_hex(tx_hash) << endl;
 
@@ -293,7 +294,8 @@ public:
 
                 uint64_t tx_mysql_id {0};
 
-                string tx_hash_str = pod_to_hex(tx_hash);
+                string tx_hash_str        = pod_to_hex(tx_hash);
+                string tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
                 if (!found_mine_outputs.empty())
                 {
@@ -301,6 +303,7 @@ public:
                     XmrTransaction tx_data;
 
                     tx_data.hash           = tx_hash_str;
+                    tx_data.prefix_hash    = tx_prefix_hash_str;
                     tx_data.account_id     = acc.id;
                     tx_data.total_received = total_received;
                     tx_data.total_sent     = 0; // at this stage we don't have any
@@ -459,6 +462,7 @@ public:
                         XmrTransaction tx_data;
 
                         tx_data.hash           = tx_hash_str;
+                        tx_data.prefix_hash    = tx_prefix_hash_str;
                         tx_data.account_id     = acc.id;
                         tx_data.total_received = 0;
                         tx_data.total_sent     = total_sent;

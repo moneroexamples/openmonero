@@ -109,6 +109,9 @@ auto get_address_txs       = your_xmr.make_resource(
 auto get_address_info      = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::get_address_info     , "/get_address_info");
 
+auto get_unspent_outs      = your_xmr.make_resource(
+        &xmreg::YourMoneroRequests::import_wallet_request, "/get_unspent_outs");
+
 auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request, "/import_wallet_request");
 

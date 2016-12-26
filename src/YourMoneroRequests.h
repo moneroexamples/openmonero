@@ -347,6 +347,45 @@ public:
         session->close( OK, response_body, response_headers);
     }
 
+
+    void
+    get_unspent_outs(const shared_ptr< Session > session, const Bytes & body)
+    {
+        json j_request = body_to_json(body);
+
+//        if (show_logs)
+//            print_json_log("get_unspent_outs request: ", j_request);
+
+        string xmr_address = j_request["address"];
+        uint64_t mixin     = j_request["mixin"];
+        uint64_t use_dust  = j_request["use_dust"];
+        uint64_t amount    = j_request["amount"];
+
+
+        json j_response  {
+                {"amount", "0"},       // total value of the outputs
+                {"outputs", nullptr}   // list of outputs
+                                       // exclude those without require
+                                       // no of confirmation
+        };
+
+        // a placeholder for exciting or new account data
+        xmreg::XmrAccount acc;
+
+        // select this account if its existing one
+        if (xmr_accounts->select(xmr_address, acc))
+        {
+
+        }
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+
+    }
+
     void
     import_wallet_request(const shared_ptr< Session > session, const Bytes & body)
     {
