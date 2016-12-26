@@ -188,12 +188,13 @@ public:
 
         string xmr_address  = j_request["address"];
 
-        // initializa json response
+        // initialize json response
         json j_response {
                 { "total_received", "0"},     // taken from Accounts table
                 { "scanned_height", 0},       // not used. it is here to match mymonero
                 { "scanned_block_height", 0}, // taken from Accounts table
-                { "start_height", 0},         // not used. it is here to match mymonero
+                { "start_height", 0},         // not used, but available in Accounts table.
+                                              // it is here to match mymonero
                 { "transaction_height", 0},   // not used. it is here to match mymonero
                 { "blockchain_height", 0}     // current blockchain height
         };
@@ -251,7 +252,7 @@ public:
 
                     j_response["transactions"] = j_txs;
 
-                } //  if (!txs.empty())
+                } // if (!txs.empty())
 
             } // if (xmr_accounts->select_txs(acc.id, txs))
 
@@ -276,15 +277,19 @@ public:
         string xmr_address  = j_request["address"];
 
         json j_response  {
-                {"locked_funds", "0"},
-                {"total_received", "0"},
-                {"total_sent", "0"},
-                {"scanned_height", 0},
-                {"scanned_block_height", 0},
-                {"start_height", 0},
-                {"transaction_height", 0},
-                {"blockchain_height", 0},
-                {"spent_outputs", nullptr}
+                {"locked_funds", "0"},       // xmr in mempool transactions
+                {"total_received", "0"},     // taken from Accounts table
+                {"total_sent", "0"},         // sum of xmr in possible spent outputs
+                {"scanned_height", 0},       // not used. it is here to match mymonero
+                {"scanned_block_height", 0}, // taken from Accounts table
+                {"start_height", 0},         // not used, but available in Accounts table.
+                                             // it is here to match mymonero
+                {"transaction_height", 0},   // not used. it is here to match mymonero
+                {"blockchain_height", 0},    // current blockchain height
+                {"spent_outputs", nullptr}   // list of spent outputs that we think
+                                             // user has spent. client side will
+                                             // filter out false positives since
+                                             // only client has spent key
         };
 
 
@@ -294,9 +299,9 @@ public:
         // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
         {
-            j_response["total_received"] = acc.total_received;
+            j_response["total_received"]       = acc.total_received;
             j_response["scanned_block_height"] = acc.scanned_block_height;
-            j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
+            j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
 
             uint64_t total_sent {0};
 
@@ -328,7 +333,8 @@ public:
                     j_response["spent_outputs"] = j_spent_outputs;
 
                     j_response["total_sent"]    = total_sent;
-                }
+
+                } // if (!txs.empty())
 
             } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
 
