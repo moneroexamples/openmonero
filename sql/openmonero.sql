@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.6.5.2
--- https://www.phpmyadmin.net/
+-- version 4.5.2
+-- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Dec 25, 2016 at 04:01 AM
--- Server version: 10.1.20-MariaDB
--- PHP Version: 7.0.14
+-- Generation Time: Dec 27, 2016 at 06:13 AM
+-- Server version: 10.1.19-MariaDB
+-- PHP Version: 7.0.9
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -33,12 +33,8 @@ CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
   `total_received` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `scanned_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `start_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `transaction_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `blockchain_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `total_sent` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -89,6 +85,7 @@ DROP TABLE IF EXISTS `Transactions`;
 CREATE TABLE `Transactions` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `hash` varchar(64) NOT NULL,
+  `prefix_hash` varchar(64) NOT NULL DEFAULT '',
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `total_received` bigint(20) UNSIGNED NOT NULL,
   `total_sent` bigint(20) UNSIGNED NOT NULL,
@@ -104,7 +101,6 @@ CREATE TABLE `Transactions` (
 
 --
 -- Stand-in structure for view `TransactionsWithOutsAndIns`
--- (See below for the actual view)
 --
 DROP VIEW IF EXISTS `TransactionsWithOutsAndIns`;
 CREATE TABLE `TransactionsWithOutsAndIns` (
@@ -172,7 +168,7 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 --
 -- AUTO_INCREMENT for table `Inputs`
 --
