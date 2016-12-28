@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Dec 27, 2016 at 06:13 AM
+-- Generation Time: Dec 28, 2016 at 08:00 AM
 -- Server version: 10.1.19-MariaDB
 -- PHP Version: 7.0.9
 
@@ -28,7 +28,6 @@ USE `openmonero`;
 -- Table structure for table `Accounts`
 --
 
-DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
@@ -45,7 +44,6 @@ CREATE TABLE `Accounts` (
 -- Table structure for table `Inputs`
 --
 
-DROP TABLE IF EXISTS `Inputs`;
 CREATE TABLE `Inputs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `account_id` bigint(20) UNSIGNED NOT NULL,
@@ -62,7 +60,6 @@ CREATE TABLE `Inputs` (
 -- Table structure for table `Outputs`
 --
 
-DROP TABLE IF EXISTS `Outputs`;
 CREATE TABLE `Outputs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `account_id` bigint(20) UNSIGNED NOT NULL,
@@ -70,6 +67,7 @@ CREATE TABLE `Outputs` (
   `out_pub_key` varchar(64) NOT NULL,
   `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
   `amount` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `global_index` bigint(20) UNSIGNED NOT NULL,
   `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -81,7 +79,6 @@ CREATE TABLE `Outputs` (
 -- Table structure for table `Transactions`
 --
 
-DROP TABLE IF EXISTS `Transactions`;
 CREATE TABLE `Transactions` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `hash` varchar(64) NOT NULL,
@@ -102,13 +99,13 @@ CREATE TABLE `Transactions` (
 --
 -- Stand-in structure for view `TransactionsWithOutsAndIns`
 --
-DROP VIEW IF EXISTS `TransactionsWithOutsAndIns`;
 CREATE TABLE `TransactionsWithOutsAndIns` (
 `tx_id` bigint(20) unsigned
 ,`account_id` bigint(20) unsigned
 ,`amount` bigint(20) unsigned zerofill
 ,`tx_pub_key` varchar(64)
 ,`out_index` bigint(20) unsigned
+,`global_index` bigint(20) unsigned
 ,`key_image` varchar(64)
 ,`mixin` bigint(20) unsigned
 );
@@ -120,7 +117,7 @@ CREATE TABLE `TransactionsWithOutsAndIns` (
 --
 DROP TABLE IF EXISTS `TransactionsWithOutsAndIns`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `TransactionsWithOutsAndIns`  AS  select `Inputs`.`tx_id` AS `tx_id`,`Inputs`.`account_id` AS `account_id`,`Inputs`.`amount` AS `amount`,`Outputs`.`tx_pub_key` AS `tx_pub_key`,`Outputs`.`out_index` AS `out_index`,`Inputs`.`key_image` AS `key_image`,`Outputs`.`mixin` AS `mixin` from (`Inputs` join `Outputs` on((`Inputs`.`output_id` = `Outputs`.`id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `TransactionsWithOutsAndIns`  AS  select `Inputs`.`tx_id` AS `tx_id`,`Inputs`.`account_id` AS `account_id`,`Inputs`.`amount` AS `amount`,`Outputs`.`tx_pub_key` AS `tx_pub_key`,`Outputs`.`out_index` AS `out_index`,`Outputs`.`global_index` AS `global_index`,`Inputs`.`key_image` AS `key_image`,`Outputs`.`mixin` AS `mixin` from (`Inputs` join `Outputs` on((`Inputs`.`output_id` = `Outputs`.`id`))) ;
 
 --
 -- Indexes for dumped tables
@@ -173,17 +170,17 @@ ALTER TABLE `Accounts`
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 --
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 --
 -- Constraints for dumped tables
 --

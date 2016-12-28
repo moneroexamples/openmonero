@@ -132,6 +132,30 @@ struct CurrentBlockchainStatus {
         return true;
     }
 
+    static bool
+    get_amount_specific_indices(const crypto::hash& tx_hash,
+                                vector<uint64_t> out_indices)
+    {
+        try
+        {
+            // this index is lmdb index of a tx, not tx hash
+            uint64_t tx_index;
+
+            if (core_storage->get_db().tx_exists(tx_hash, tx_index))
+            {
+                out_indices = core_storage->get_db()
+                        .get_tx_amount_output_indices(tx_index);
+
+                return true;
+            }
+        }
+        catch(const exception& e)
+        {
+            cerr << e.what() << endl;
+        }
+
+        return false;
+    }
 
 };
 

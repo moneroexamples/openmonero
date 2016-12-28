@@ -176,6 +176,8 @@ public:
                 crypto::hash tx_hash         = get_transaction_hash(tx);
                 crypto::hash tx_prefix_hash  = get_transaction_prefix_hash(tx);
 
+                vector<uint64_t> amount_specific_indices;
+
                 // cout << pod_to_hex(tx_hash) << endl;
 
                 public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
@@ -318,6 +320,15 @@ public:
                     // insert tx_data into mysql's Transactions table
                     tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
+                    // get amount specific (i.e., global) indices of outputs
+
+                    if (!CurrentBlockchainStatus::get_amount_specific_indices(tx_hash,
+                                                                              amount_specific_indices))
+                    {
+                        cerr << "cant get_amount_specific_indices!" << endl;
+                        throw TxSearchException("cant get_amount_specific_indices!");
+                    }
+
                     if (tx_mysql_id == 0)
                     {
                         //cerr << "tx_mysql_id is zero!" << endl;
@@ -336,6 +347,7 @@ public:
                         out_data.tx_pub_key   = pod_to_hex(tx_pub_key);
                         out_data.amount       = std::get<1>(out_k_idx);
                         out_data.out_index    = std::get<2>(out_k_idx);
+                        out_data.global_index = amount_specific_indices.at(out_data.out_index);
                         out_data.mixin        = tx_data.mixin;
                         out_data.timestamp    = tx_data.timestamp;
 

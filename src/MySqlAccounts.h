@@ -310,6 +310,7 @@ public:
                                             out_data.out_pub_key,
                                             out_data.tx_pub_key,
                                             out_data.amount,
+                                            out_data.global_index,
                                             out_data.out_index,
                                             out_data.mixin,
                                             out_data.timestamp);
