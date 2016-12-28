@@ -134,7 +134,7 @@ struct CurrentBlockchainStatus {
 
     static bool
     get_amount_specific_indices(const crypto::hash& tx_hash,
-                                vector<uint64_t> out_indices)
+                                vector<uint64_t>& out_indices)
     {
         try
         {
