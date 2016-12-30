@@ -112,6 +112,9 @@ auto get_address_info      = your_xmr.make_resource(
 auto get_unspent_outs      = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::get_unspent_outs     , "/get_unspent_outs");
 
+auto get_random_outs      = your_xmr.make_resource(
+        &xmreg::YourMoneroRequests::get_random_outs     , "/get_random_outs");
+
 auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request, "/import_wallet_request");
 
@@ -142,6 +145,7 @@ service.publish(login);
 service.publish(get_address_txs);
 service.publish(get_address_info);
 service.publish(get_unspent_outs);
+service.publish(get_random_outs);
 service.publish(import_wallet_request);
 
 service.start(settings);

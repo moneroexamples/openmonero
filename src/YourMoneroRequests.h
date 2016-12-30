@@ -440,8 +440,31 @@ public:
         auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
-
     }
+
+    void
+    get_random_outs(const shared_ptr< Session > session, const Bytes & body)
+    {
+        json j_request = body_to_json(body);
+
+//        if (show_logs)
+//            print_json_log("get_unspent_outs request: ", j_request);
+
+        uint64_t count     = j_request["count"];
+        json&    j_amounts = j_request["amounts"];
+
+        json j_response  {
+                {"amount_outs", json::array()}
+        };
+
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+    }
+
 
     void
     import_wallet_request(const shared_ptr< Session > session, const Bytes & body)
