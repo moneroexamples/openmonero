@@ -361,7 +361,6 @@ public:
         uint64_t use_dust  = j_request["use_dust"];
         uint64_t amount    = j_request["amount"];
 
-
         json j_response  {
                 {"amount", "0"},       // total value of the outputs
                 {"outputs", nullptr}   // list of outputs
@@ -375,7 +374,34 @@ public:
         // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
         {
+            uint64_t total_outputs_amount {0};
 
+            vector<XmrTransactionWithOutsAndIns> txs;
+
+            // retrieve txs from mysql associated with the given address
+            if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+            {
+                // we found some txs.
+
+                if (!txs.empty())
+                {
+                    json j_outputs = json::array();
+
+                    for (XmrTransactionWithOutsAndIns tx: txs)
+                    {
+
+                        if (tx.key_image.is_null)
+                        {
+                            continue;
+                        }
+
+                        j_outputs.push_back(tx.spent_output());
+
+                        total_outputs_amount += tx.amount;
+                    }
+
+                }
+            }
         }
 
         string response_body = j_response.dump();

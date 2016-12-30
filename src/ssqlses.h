@@ -152,6 +152,7 @@ struct XmrTransaction : public Transactions
                 {"total_received"      , total_received},
                 {"total_sent"          , total_sent},
                 {"height"              , height},
+                {"payment_id"          , payment_id},
                 {"coinbase"            , bool {coinbase}},
                 {"mixin"               , mixin},
                 {"timestamp"           , timestamp}
@@ -302,13 +303,18 @@ ostream& operator<< (std::ostream& os, const XmrInput& out) {
 
 // this is MySQL VIEW, based on the Transactions,
 // Outputs and Inputs tables
-sql_create_8(TransactionsWithOutsAndIns, 1, 2,
+sql_create_13(TransactionsWithOutsAndIns, 1, 2,
              sql_bigint_unsigned, tx_id,
              sql_bigint_unsigned, account_id,
+             sql_varchar        , out_pub_key,
              sql_bigint_unsigned, amount,
-             sql_varchar        , tx_pub_key,
              sql_bigint_unsigned, out_index,
              sql_bigint_unsigned, global_index,
+             sql_varchar        , hash,
+             sql_varchar        , prefix_hash,
+             sql_varchar        , tx_pub_key,
+             sql_timestamp      , timestamp,
+             sql_bigint_unsigned, height,
              sql_varchar_null   , key_image,
              sql_bigint_unsigned, mixin);
 
@@ -336,8 +342,14 @@ struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
                 {"account_id"          , account_id},
                 {"amount"              , amount},
                 {"tx_pub_key"          , tx_pub_key},
+                {"out_pub_key"         , out_pub_key},
                 {"global_index"        , global_index},
+                {"tx_hash"             , hash},
+                {"tx_prefix_hash"      , prefix_hash},
                 {"out_index"           , out_index},
+                {"timestamp"           , timestamp},
+                {"height"              , height},
+                {"spend_key_images"    , json::array()},
                 {"key_image"           , key_image_to_string()},
                 {"mixin"               , mixin}
         };
