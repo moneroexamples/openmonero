@@ -358,14 +358,14 @@ public:
 
         string xmr_address = j_request["address"];
         uint64_t mixin     = j_request["mixin"];
-        uint64_t use_dust  = j_request["use_dust"];
-        uint64_t amount    = j_request["amount"];
+        bool use_dust      = j_request["use_dust"];
+        uint64_t amount    = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
 
         json j_response  {
-                {"amount", "0"},       // total value of the outputs
-                {"outputs", nullptr}   // list of outputs
-                                       // exclude those without require
-                                       // no of confirmation
+                {"amount" , 0},            // total value of the outputs
+                {"outputs", json::array()} // list of outputs
+                                           // exclude those without require
+                                           // no of confirmation
         };
 
         // a placeholder for exciting or new account data
@@ -376,33 +376,64 @@ public:
         {
             uint64_t total_outputs_amount {0};
 
-            vector<XmrTransactionWithOutsAndIns> txs;
+            vector<XmrTransaction> txs;
 
             // retrieve txs from mysql associated with the given address
-            if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+            if (xmr_accounts->select_txs(acc.id, txs))
             {
                 // we found some txs.
 
-                if (!txs.empty())
+                json& j_outputs = j_response["outputs"];
+
+                for (XmrTransaction& tx: txs)
                 {
-                    json j_outputs = json::array();
+                    vector<XmrOutput> outs;
 
-                    for (XmrTransactionWithOutsAndIns tx: txs)
+                    if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
                     {
-
-                        if (tx.key_image.is_null)
+                        for (XmrOutput &out: outs)
                         {
-                            continue;
-                        }
+                            json j_out{
+                                {"amount",           out.amount},
+                                {"public_key",       out.out_pub_key},
+                                {"index",            out.out_index},
+                                {"global_index",     out.global_index},
+                                {"tx_id",            out.tx_id},
+                                {"tx_hash",          tx.hash},
+                                {"tx_prefix_hash",   tx.prefix_hash},
+                                {"tx_pub_key"    ,   out.tx_pub_key},
+                                {"timestamp",        out.timestamp},
+                                {"height",           tx.height},
+                                {"spend_key_images", json::array()}
+                            };
 
-                        j_outputs.push_back(tx.spent_output());
+                            vector<XmrInput> ins;
 
-                        total_outputs_amount += tx.amount;
-                    }
+                            if (xmr_accounts->select_inputs_for_out(out.id, ins))
+                            {
+                                json& j_ins = j_out["spend_key_images"];
 
-                }
-            }
-        }
+                                for (XmrInput& in: ins)
+                                {
+                                    j_ins.push_back(in.key_image);
+                                }
+                            }
+
+                            j_outputs.push_back(j_out);
+
+                            total_outputs_amount += out.amount;
+
+                        }  //for (XmrOutput &out: outs)
+
+                    } // if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
+
+                } // for (XmrTransaction& tx: txs)
+
+            } //  if (xmr_accounts->select_txs(acc.id, txs))
+
+            j_response["amount"] = total_outputs_amount;
+
+        } //  if (xmr_accounts->select(xmr_address, acc))
 
         string response_body = j_response.dump();
 

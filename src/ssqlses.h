@@ -197,6 +197,10 @@ struct XmrOutput : public Outputs
       SELECT * FROM `Outputs` WHERE `account_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT2 = R"(
+      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q)
+    )";
+
     static constexpr const char* EXIST_STMT = R"(
       SELECT * FROM `Outputs` WHERE `out_pub_key` = (%0q)
     )";
@@ -262,6 +266,9 @@ struct XmrInput : public Inputs
      SELECT * FROM `Inputs` WHERE `tx_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT3 = R"(
+     SELECT * FROM `Inputs` WHERE `output_id` = (%0q)
+    )";
 
     static constexpr const char* INSERT_STMT = R"(
       INSERT IGNORE INTO `Inputs` (`account_id`, `tx_id`, `output_id`,
@@ -387,6 +394,70 @@ ostream& operator<< (std::ostream& os, const XmrTransactionWithOutsAndIns& out) 
     os << "XmrTransactionWithOutsAndIns: " << out.to_json().dump() << '\n';
     return os;
 };
+
+
+
+
+// this is MySQL VIEW, based on the Transactions,
+// Outputs
+sql_create_12(TransactionsWithOuts, 1, 2,
+              sql_bigint_unsigned, tx_id,
+              sql_bigint_unsigned, account_id,
+              sql_varchar        , out_pub_key,
+              sql_bigint_unsigned, amount,
+              sql_bigint_unsigned, out_index,
+              sql_bigint_unsigned, global_index,
+              sql_varchar        , tx_pub_key,
+              sql_varchar        , hash,
+              sql_varchar        , prefix_hash,
+              sql_bigint_unsigned, height,
+              sql_timestamp      , timestamp,
+              sql_bigint_unsigned, mixin);
+
+
+
+struct XmrTransactionsWithOuts : public TransactionsWithOuts
+{
+
+    static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `TransactionsWithOutsAndIns` WHERE `tx_id` = (%0q)
+    )";
+
+
+    using TransactionsWithOuts::TransactionsWithOuts;
+
+    json
+    to_json() const
+    {
+
+        json j {{"tx_id"               , tx_id},
+                {"account_id"          , account_id},
+                {"amount"              , amount},
+                {"tx_pub_key"          , tx_pub_key},
+                {"out_pub_key"         , out_pub_key},
+                {"out_index"           , out_index},
+                {"global_index"        , global_index},
+                {"hash"                , hash},
+                {"prefix_hash"         , prefix_hash},
+                {"height"              , height},
+                {"timestamp"           , timestamp},
+                {"mixin"               , mixin}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream,
+                                     const XmrTransactionsWithOuts& out);
+
+};
+
+ostream& operator<< (std::ostream& os, const XmrTransactionsWithOuts& out) {
+    os << "XmrTransactionsWithOuts: " << out.to_json().dump() << '\n';
+    return os;
+};
+
 
 
 }

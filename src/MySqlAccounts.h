@@ -87,6 +87,44 @@ public:
 };
 
 
+
+class MysqlTransactionWithOuts
+{
+
+    shared_ptr<MySqlConnector> conn;
+
+public:
+
+    MysqlTransactionWithOuts(shared_ptr<MySqlConnector> _conn) : conn{_conn} {}
+
+    bool
+    select(const uint64_t &tx_id, vector<XmrTransactionsWithOuts>& txs) {
+
+        Query query = conn->query(XmrTransactionsWithOuts::SELECT_STMT);
+        query.parse();
+
+        try
+        {
+            query.storein(txs, tx_id);
+
+            if (!txs.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception &e) {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+};
+
+
 class MysqlInputs
 {
 
@@ -135,6 +173,35 @@ public:
         try
         {
             query.storein(ins, address_id);
+
+            if (!ins.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+
+    bool
+    select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
+    {
+
+        Query query = conn->query(XmrInput::SELECT_STMT3);
+        query.parse();
+
+        try
+        {
+            query.storein(ins, output_id);
 
             if (!ins.empty())
             {
@@ -212,23 +279,39 @@ public:
     bool
     select(const uint64_t& address_id, vector<XmrOutput>& outs)
     {
-//
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(
-//                    XmrTransaction::SELECT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
         Query query = conn->query(XmrOutput::SELECT_STMT);
         query.parse();
 
         try
         {
             query.storein(outs, address_id);
+
+            if (!outs.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+    bool
+    select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
+    {
+        Query query = conn->query(XmrOutput::SELECT_STMT2);
+        query.parse();
+
+        try
+        {
+            query.storein(outs, tx_id);
 
             if (!outs.empty())
             {
@@ -506,6 +589,8 @@ class MySqlAccounts
 
     shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
 
+    shared_ptr<MysqlTransactionWithOuts> mysql_tx_out;
+
 
 public:
 
@@ -520,6 +605,7 @@ public:
         mysql_out       = make_shared<MysqlOutpus>(conn);
         mysql_in        = make_shared<MysqlInputs>(conn);
         mysql_tx_inout  = make_shared<MysqlTransactionWithOutsAndIns>(conn);
+        mysql_tx_out    = make_shared<MysqlTransactionWithOuts>(conn);
     }
 
 
@@ -694,9 +780,24 @@ public:
 
 
     bool
+    select_txs_with_outputs(const uint64_t& tx_id,
+                            vector<XmrTransactionsWithOuts>& txs)
+    {
+        return mysql_tx_out->select(tx_id, txs);
+    }
+
+
+
+    bool
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
     {
         return mysql_out->select(account_id, outs);
+    }
+
+    bool
+    select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
+    {
+        return mysql_out->select_for_tx(tx_id, outs);
     }
 
     bool
@@ -709,6 +810,12 @@ public:
     select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransactionWithOutsAndIns>& ins)
     {
         return mysql_tx_inout->select_for_tx(tx_id, ins);
+    }
+
+    bool
+    select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
+    {
+        return mysql_in->select_for_out(output_id, ins);
     }
 
     bool
