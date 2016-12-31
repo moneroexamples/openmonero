@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <random>
 
 /**
  * Some helper functions that might or might not be useful in this project.
@@ -46,6 +47,7 @@ namespace bf = boost::filesystem;
 namespace pt = boost::posix_time;
 namespace gt = boost::gregorian;
 namespace lt = boost::local_time;
+
 
 using json = nlohmann::json;
 
@@ -278,6 +280,7 @@ void chunks(Iterator begin,
 
 bool
 make_tx_from_json(const string& json_str, transaction& tx);
+
 
 }
 

@@ -350,4 +350,46 @@ namespace xmreg
         return blockchain_path;
     }
 
+
+
+    // this is not finished!
+    bool
+    MicroCore::get_random_outs_for_amounts(const uint64_t& amount,
+                                           const uint64_t& no_of_outputs,
+                                           vector<pair<uint64_t, public_key>>& found_outputs)
+    {
+
+        uint64_t total_number_of_outputs = m_blockchain_storage.get_db().get_num_outputs(amount);
+
+
+        // ensure we don't include outputs that aren't yet eligible to be used
+        // outpouts are sorted by height
+        while (total_number_of_outputs > 0)
+        {
+            const tx_out_index toi = m_blockchain_storage.get_db()
+                    .get_output_tx_and_index(amount, total_number_of_outputs - 1);
+
+            const uint64_t height = m_blockchain_storage.get_db().get_tx_block_height(toi.first);
+
+            if (height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE <= m_blockchain_storage.get_db().height())
+                break;
+
+            --total_number_of_outputs;
+        }
+
+
+        std::unordered_set<uint64_t> seen_indices;
+
+        // for each amount that we need to get mixins for, get <n> random outputs
+        // from BlockchainDB where <n> is req.outs_count (number of mixins).
+        for (uint64_t i = 0; i <  no_of_outputs; ++i)
+        {
+
+        }
+
+        return false;
+    }
+
+
+
 }

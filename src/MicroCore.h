@@ -6,6 +6,7 @@
 #define XMREG01_MICROCORE_H
 
 #include <iostream>
+#include <random>
 
 #include "monero_headers.h"
 #include "tools.h"
@@ -68,7 +69,19 @@ namespace xmreg
         get_blkchain_path();
 
 
+
+        bool
+        get_random_outs_for_amounts(const uint64_t& amount,
+                                    const uint64_t& no_of_outputs,
+                                    vector<pair<uint64_t, public_key>>& found_outputs);
+
+
+
         virtual ~MicroCore();
+
+
+
+
     };
 
 
@@ -78,6 +91,7 @@ namespace xmreg
     init_blockchain(const string& path,
                     MicroCore& mcore,
                     Blockchain*& core_storage);
+
 
 
 }
