@@ -451,12 +451,41 @@ public:
 //            print_json_log("get_unspent_outs request: ", j_request);
 
         uint64_t count     = j_request["count"];
-        json&    j_amounts = j_request["amounts"];
+        vector<uint64_t> amounts;
+
+        for (json amount: j_request["amounts"])
+        {
+            amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
+        }
 
         json j_response  {
                 {"amount_outs", json::array()}
         };
 
+        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
+
+        if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
+        {
+            json& j_amount_outs = j_response["amount_outs"];
+
+            for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount& outs: found_outputs)
+            {
+                json j_outs {{"amount", outs.amount},
+                             {"outputs", json::array()}};
+
+                json& j_outputs = j_outs["outputs"];
+
+                for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry& out: outs.outs)
+                {
+                    j_outputs.push_back(json {
+                            {"global_index", out.global_amount_index},
+                            {"public_key"  , pod_to_hex(out.out_key)}
+                    });
+                }
+
+                j_amount_outs.push_back(j_outs);
+            }
+        }
 
         string response_body = j_response.dump();
 
@@ -465,6 +494,32 @@ public:
         session->close( OK, response_body, response_headers);
     }
 
+
+    void
+    submit_raw_tx(const shared_ptr< Session > session, const Bytes & body)
+    {
+        json j_request = body_to_json(body);
+
+//        if (show_logs)
+//            print_json_log("get_unspent_outs request: ", j_request);
+
+        string raw_tx_blob     = j_request["tx"];
+
+        json j_response  {
+                {"status", "Failed"}
+        };
+
+        if (CurrentBlockchainStatus::commit_tx(raw_tx_blob))
+        {
+            j_response["status"] = "OK";
+        }
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+    }
 
     void
     import_wallet_request(const shared_ptr< Session > session, const Bytes & body)

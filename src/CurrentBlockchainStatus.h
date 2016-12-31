@@ -6,6 +6,7 @@
 #define RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
 
 #include "mylmdb.h"
+#include "rpccalls.h"
 #include "tools.h"
 
 #include <iostream>
@@ -25,6 +26,8 @@ struct CurrentBlockchainStatus {
     static string blockchain_path;
 
     static atomic<uint64_t> current_height;
+
+    static string deamon_url;
 
     static bool testnet;
 
@@ -157,11 +160,46 @@ struct CurrentBlockchainStatus {
         return false;
     }
 
+    static bool
+    get_random_outputs(const vector<uint64_t>& amounts,
+                       const uint64_t& outs_count,
+                       vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs)
+    {
+        rpccalls rpc {deamon_url};
+
+        string error_msg;
+
+        if (!rpc.get_random_outs_for_amounts(amounts, outs_count, found_outputs, error_msg))
+        {
+            cerr << "rpc.get_random_outs_for_amounts failed" << endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool
+    commit_tx(const string& tx_blob)
+    {
+        rpccalls rpc {deamon_url};
+
+        string error_msg;
+
+        if (!rpc.commit_tx(tx_blob, error_msg))
+        {
+            cerr << "commit_tx failed" << endl;
+            return false;
+        }
+
+        return true;
+    }
+
 };
 
 // initialize static variables
 atomic<uint64_t>        CurrentBlockchainStatus::current_height{0};
 string                  CurrentBlockchainStatus::blockchain_path{"/home/mwo/.blockchain/lmdb"};
+string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
 bool                    CurrentBlockchainStatus::testnet{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;

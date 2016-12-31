@@ -109,14 +109,50 @@ namespace xmreg
 
 
         bool
-        commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)
+        get_random_outs_for_amounts(const vector<uint64_t>& amounts,
+                                    const uint64_t& outs_count,
+                                    vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs,
+                                    string& error_msg)
+        {
+            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request  req;
+            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
+
+            req.outs_count = outs_count;
+            req.amounts = amounts;
+
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            bool r = epee::net_utils::invoke_http_bin_remote_command2(
+                    deamon_url + "/getrandom_outs.bin",
+                    req, res, m_http_client, timeout_time);
+
+
+            if (!r || res.status == "Failed")
+            {
+                error_msg = "rpc call to /getrandom_outs.bin failed for some reason";
+
+                cerr << "rpc call to /getrandom_outs.bin failed for some reason" << endl;
+                return false;
+            }
+
+            if (!res.outs.empty())
+            {
+                found_outputs = res.outs;
+                return true;
+            }
+
+            return false;
+
+        }
+
+
+        bool
+        commit_tx(const string& tx_blob, string& error_msg)
         {
             COMMAND_RPC_SEND_RAW_TX::request  req;
             COMMAND_RPC_SEND_RAW_TX::response res;
 
-            req.tx_as_hex = epee::string_tools::buff_to_hex_nodelimer(
-                    tx_to_blob(ptx.tx)
-            );
+            req.tx_as_hex = tx_blob;
 
             req.do_not_relay = false;
 
@@ -138,6 +174,17 @@ namespace xmreg
             return true;
         }
 
+
+        bool
+        commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)
+        {
+
+            string tx_blob = epee::string_tools::buff_to_hex_nodelimer(
+                    tx_to_blob(ptx.tx)
+            );
+
+            return commit_tx(tx_blob, error_msg);
+        }
     };
 
 
