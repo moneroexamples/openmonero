@@ -506,7 +506,7 @@ public:
         string raw_tx_blob     = j_request["tx"];
 
         json j_response  {
-                {"status", "Failed"}
+                {"status", "error"}
         };
 
         if (CurrentBlockchainStatus::commit_tx(raw_tx_blob))
