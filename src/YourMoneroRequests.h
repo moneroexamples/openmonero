@@ -187,8 +187,7 @@ public:
                 { "total_received", "0"},     // taken from Accounts table
                 { "scanned_height", 0},       // not used. it is here to match mymonero
                 { "scanned_block_height", 0}, // taken from Accounts table
-                { "start_height", 0},         // not used, but available in Accounts table.
-                                              // it is here to match mymonero
+                { "start_height", 0},         // blockchain hieght when acc was created
                 { "transaction_height", 0},   // not used. it is here to match mymonero
                 { "blockchain_height", 0}     // current blockchain height
         };
@@ -201,6 +200,7 @@ public:
         if (xmr_accounts->select(xmr_address, acc))
         {
             j_response["total_received"]       = acc.total_received;
+            j_response["start_height"]         = acc.start_height;
             j_response["scanned_block_height"] = acc.scanned_block_height;
             j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
 
@@ -298,6 +298,7 @@ public:
             CurrentBlockchainStatus::ping_search_thread(xmr_address);
 
             j_response["total_received"]       = acc.total_received;
+            j_response["start_height"]         = acc.start_height;
             j_response["scanned_block_height"] = acc.scanned_block_height;
             j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
 

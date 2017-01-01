@@ -22,6 +22,9 @@ namespace xmreg {
 
 class TxSearch;
 
+
+mutex searching_threads_map_mtx;
+
 /*
 * This is a thread class
 */
@@ -59,6 +62,7 @@ struct CurrentBlockchainStatus
                 while (true) {
                     current_height = get_current_blockchain_height();
                     cout << "Check block height: " << current_height << endl;
+                    clean_search_thread_map();
                     std::this_thread::sleep_for(std::chrono::seconds(refresh_block_status_every_seconds));
                 }
 
@@ -212,6 +216,9 @@ struct CurrentBlockchainStatus
     static bool
     ping_search_thread(const string& address);
 
+    static bool
+    clean_search_thread_map();
+
 };
 
 
@@ -308,13 +315,14 @@ public:
                 loop_timestamp = chrono::duration_cast<chrono::seconds>(
                         chrono::system_clock::now().time_since_epoch()).count();
 
-                cout << "loop_timestamp: " <<  loop_timestamp << endl;
-                cout << "last_ping_timestamp: " <<  last_ping_timestamp << endl;
-                cout << "loop_timestamp - last_ping_timestamp: " <<  (loop_timestamp - last_ping_timestamp) << endl;
+                //cout << "loop_timestamp: " <<  loop_timestamp << endl;
+                //cout << "last_ping_timestamp: " <<  last_ping_timestamp << endl;
+                //cout << "loop_timestamp - last_ping_timestamp: " <<  (loop_timestamp - last_ping_timestamp) << endl;
 
                 if (loop_timestamp - last_ping_timestamp > THREAD_LIFE_DURATION)
                 {
                     stop();
+                    continue;
                 }
             }
 
@@ -383,6 +391,9 @@ public:
 
                 crypto::hash tx_hash         = get_transaction_hash(tx);
                 crypto::hash tx_prefix_hash  = get_transaction_prefix_hash(tx);
+
+                string tx_hash_str           = pod_to_hex(tx_hash);
+                string tx_prefix_hash_str    = pod_to_hex(tx_prefix_hash);
 
                 vector<uint64_t> amount_specific_indices;
 
@@ -503,9 +514,6 @@ public:
                         = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
                 uint64_t tx_mysql_id {0};
-
-                string tx_hash_str        = pod_to_hex(tx_hash);
-                string tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
                 if (!found_mine_outputs.empty())
                 {
@@ -786,6 +794,13 @@ public:
                 chrono::system_clock::now().time_since_epoch()).count();
     }
 
+    bool
+    still_searching()
+    {
+        return continue_search;
+    }
+
+
 };
 
 
@@ -806,6 +821,8 @@ map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 bool
 CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
 {
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
     if (searching_threads.count(acc.address) > 0)
     {
         // thread for this address exist, dont make new one
@@ -826,6 +843,8 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
 bool
 CurrentBlockchainStatus::ping_search_thread(const string& address)
 {
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
     if (searching_threads.count(address) == 0)
     {
         // thread does not exist
@@ -837,6 +856,23 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
 
     return true;
 }
+
+
+bool
+CurrentBlockchainStatus::clean_search_thread_map()
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto st: searching_threads)
+    {
+        if (st.second->still_searching() == false)
+        {
+            cout << st.first << " still searching: " << st.second->still_searching() << endl;
+            searching_threads.erase(st.first);
+        }
+    }
+}
+
 
 }
 #endif //RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
