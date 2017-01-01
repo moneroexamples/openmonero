@@ -1,6 +1,17 @@
-# JSON REST service for Monero stuff over https
+# JSON REST service for Monero
 
 Example of using [restbed](https://github.com/Corvusoft/restbed/) to provide Monero related JSON REST service.
+For the example, a service called Open Monero was developed.
+
+##  Open Monero 
+
+Open Monero is an open source, prove of concept implementation
+of https://mymonero.com/. The frontend, html, css, JavaScript, were adapted
+from, and originally developed by https://mymonero.com/. 
+
+However, MyMonero's backend is closed source. Thus for Open Monero, the open sourced 
+backand was developed from scratch. As such it is open source, free
+to use, host and modify by anybody. 
 
 ## Scrap notes
 
