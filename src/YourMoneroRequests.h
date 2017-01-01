@@ -8,8 +8,8 @@
 #include <iostream>
 #include <functional>
 
-#include "TxSearch.h"
 #include "MySqlConnector.h"
+#include "CurrentBlockchainStatus.h"
 #include "tools.h"
 
 #include "../ext/restbed/source/restbed"
@@ -74,10 +74,6 @@ struct handel_
 
 class YourMoneroRequests
 {
-    // map that will keep track of search threads. In the
-    // map, key is address to which a running thread belongs to.
-    // make it static to garantee only one such map exist.
-    static map<string, shared_ptr<xmreg::TxSearch>> searching_threads;
 
     // this manages all mysql queries
    shared_ptr<MySqlAccounts> xmr_accounts;
@@ -151,8 +147,6 @@ public:
 
         acc.viewkey = j_request["view_key"];
 
-        cout << acc << endl;
-
         // so we have an account now. Either existing or
         // newly created. Thus, we can start a tread
         // which will scan for transactions belonging to
@@ -166,7 +160,7 @@ public:
         // to do anything except looking for tx and updating mysql
         // with relative tx information
 
-        if (start_tx_search_thread(acc))
+        if (CurrentBlockchainStatus::start_tx_search_thread(acc))
         {
             cout << "Search thread started" << endl;
         }
@@ -299,6 +293,10 @@ public:
         // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
         {
+            // ping the search thread that we still need it.
+            // otherwise it will finish after some time.
+            CurrentBlockchainStatus::ping_search_thread(xmr_address);
+
             j_response["total_received"]       = acc.total_received;
             j_response["scanned_block_height"] = acc.scanned_block_height;
             j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
@@ -596,25 +594,7 @@ public:
         return j;
     }
 
-    bool
-    start_tx_search_thread(XmrAccount acc)
-    {
-        if (searching_threads.count(acc.address) > 0)
-        {
-            // thread for this address exist, dont make new one
-            cout << "Thread exisist, dont make new one" << endl;
-            return false;
-        }
 
-        // make a tx_search object for the given xmr account
-        searching_threads[acc.address] = make_shared<TxSearch>(acc);
-
-        // start the thread for the created object
-        std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
-        t1.detach();
-
-        return true;
-    }
 
     inline uint64_t
     get_current_blockchain_height()
@@ -632,7 +612,6 @@ private:
 
 bool YourMoneroRequests::show_logs = false;
 
-map<string, shared_ptr<xmreg::TxSearch>> YourMoneroRequests::searching_threads;
 
 }
 #endif //RESTBED_XMR_YOURMONEROREQUESTS_H

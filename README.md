@@ -10,7 +10,7 @@ of https://mymonero.com/. The frontend, html, css, JavaScript, were adapted
 from, and originally developed by https://mymonero.com/. 
 
 However, MyMonero's backend is closed source. Thus for Open Monero, the open sourced 
-backand was developed from scratch. As such it is open source, free
+backend was developed from scratch. As such it is open sourced, free
 to use, host and modify by anybody. 
 
 ## Scrap notes

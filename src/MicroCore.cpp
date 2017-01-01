@@ -135,6 +135,26 @@ namespace xmreg
     }
 
 
+    bool
+    MicroCore::get_block_from_height(const uint64_t& height, block& blk)
+    {
+
+        crypto::hash block_id;
+
+        try
+        {
+            blk = m_blockchain_storage.get_db().get_block_from_height(height);
+        }
+        catch (const exception& e)
+        {
+            cerr << e.what() << endl;
+            return false;
+        }
+
+        return true;
+    }
+
+
 
     /**
      * Get transaction tx from the blockchain using it hash
