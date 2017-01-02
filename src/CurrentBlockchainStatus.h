@@ -321,8 +321,12 @@ public:
 
                 if (loop_timestamp - last_ping_timestamp > THREAD_LIFE_DURATION)
                 {
-                    stop();
-                    continue;
+                    // also check if we caught up with current blockchain height
+                    if (searched_blk_no == CurrentBlockchainStatus::current_height)
+                    {
+                        stop();
+                        continue;
+                    }
                 }
             }
 
