@@ -282,6 +282,13 @@ bool
 make_tx_from_json(const string& json_str, transaction& tx);
 
 
+inline
+crypto::hash
+generated_payment_id()
+{
+    return crypto::rand<crypto::hash>();
+}
+
 }
 
 #endif //XMREG01_TOOLS_H

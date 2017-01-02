@@ -88,43 +88,6 @@ public:
 
 
 
-class MysqlTransactionWithOuts
-{
-
-    shared_ptr<MySqlConnector> conn;
-
-public:
-
-    MysqlTransactionWithOuts(shared_ptr<MySqlConnector> _conn) : conn{_conn} {}
-
-    bool
-    select(const uint64_t &tx_id, vector<XmrTransactionsWithOuts>& txs) {
-
-        Query query = conn->query(XmrTransactionsWithOuts::SELECT_STMT);
-        query.parse();
-
-        try
-        {
-            query.storein(txs, tx_id);
-
-            if (!txs.empty())
-            {
-                return true;
-            }
-        }
-        catch (mysqlpp::Exception &e) {
-            MYSQL_EXCEPTION_MSG(e);
-        }
-        catch (std::exception &e) {
-            MYSQL_EXCEPTION_MSG(e);
-        }
-
-        return false;
-    }
-
-};
-
-
 class MysqlInputs
 {
 
@@ -589,9 +552,6 @@ class MySqlAccounts
 
     shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
 
-    shared_ptr<MysqlTransactionWithOuts> mysql_tx_out;
-
-
 public:
 
 
@@ -605,7 +565,6 @@ public:
         mysql_out       = make_shared<MysqlOutpus>(conn);
         mysql_in        = make_shared<MysqlInputs>(conn);
         mysql_tx_inout  = make_shared<MysqlTransactionWithOutsAndIns>(conn);
-        mysql_tx_out    = make_shared<MysqlTransactionWithOuts>(conn);
     }
 
 
@@ -777,15 +736,6 @@ public:
     {
         return mysql_tx_inout->select(account_id, txs);
     }
-
-
-    bool
-    select_txs_with_outputs(const uint64_t& tx_id,
-                            vector<XmrTransactionsWithOuts>& txs)
-    {
-        return mysql_tx_out->select(tx_id, txs);
-    }
-
 
 
     bool

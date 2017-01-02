@@ -528,8 +528,10 @@ public:
         if (show_logs)
             print_json_log("import_wallet_request request: ", j_request);
 
+        string payment_id_str = pod_to_hex(generated_payment_id());
+
         json j_response  {
-                {"payment_id", "27b64e5edb47f8060cf2648704c8a914ba5657e73cd79cc58a781bc6d21ce5d6"},
+                {"payment_id", payment_id_str},
                 {"import_fee", "1000000000000"},
                 {"new_request", true},
                 {"request_fulfilled",  false},
