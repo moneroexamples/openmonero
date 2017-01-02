@@ -236,7 +236,7 @@ class TxSearch
     // how long should the search thread be live after no request
     // are coming from the frontend. For example, when a user finishes
     // using the service.
-    static constexpr uint64_t THREAD_LIFE_DURATION           = 1 * 60; // in seconds
+    static constexpr uint64_t THREAD_LIFE_DURATION           = 10 * 60; // in seconds
 
 
     bool continue_search {true};
@@ -395,6 +395,8 @@ public:
                 string tx_hash_str           = pod_to_hex(tx_hash);
                 string tx_prefix_hash_str    = pod_to_hex(tx_prefix_hash);
 
+                bool is_coinbase_tx = is_coinbase(tx);
+
                 vector<uint64_t> amount_specific_indices;
 
                 // cout << pod_to_hex(tx_hash) << endl;
@@ -461,25 +463,27 @@ public:
                         // initialize with regular amount
                         uint64_t rct_amount = amount;
 
-                        bool r;
 
-                        r = decode_ringct(tx.rct_signatures,
-                                          tx_pub_key,
-                                          viewkey,
-                                          output_idx_in_tx,
-                                          tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                          rct_amount);
-
-                        if (!r)
-                        {
-                            cerr << "Cant decode ringCT!" << endl;
-                            throw TxSearchException("");
-                        }
 
                         // cointbase txs have amounts in plain sight.
                         // so use amount from ringct, only for non-coinbase txs
-                        if (!is_coinbase(tx))
+                        if (!is_coinbase_tx)
                         {
+                            bool r;
+
+                            r = decode_ringct(tx.rct_signatures,
+                                              tx_pub_key,
+                                              viewkey,
+                                              output_idx_in_tx,
+                                              tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
+                                              rct_amount);
+
+                            if (!r)
+                            {
+                                cerr << "Cant decode ringCT!" << endl;
+                                throw TxSearchException("Cant decode ringCT!");
+                            }
+
                             rct_amount = amount;
                         }
 
@@ -528,7 +532,7 @@ public:
                     // info about spendings
                     tx_data.unlock_time    = 0;
                     tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase(tx);
+                    tx_data.coinbase       = is_coinbase_tx;
                     tx_data.payment_id     = get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;
                     tx_data.timestamp      = blk_timestamp_mysql_format;
