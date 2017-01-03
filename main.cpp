@@ -100,25 +100,32 @@ xmreg::YourMoneroRequests your_xmr(
 
 
 auto login                 = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::login                , "/login");
+        &xmreg::YourMoneroRequests::login,
+        "/login");
 
 auto get_address_txs       = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::get_address_txs      , "/get_address_txs");
+        &xmreg::YourMoneroRequests::get_address_txs,
+        "/get_address_txs");
 
 auto get_address_info      = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::get_address_info     , "/get_address_info");
+        &xmreg::YourMoneroRequests::get_address_info,
+        "/get_address_info");
 
 auto get_unspent_outs      = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::get_unspent_outs     , "/get_unspent_outs");
+        &xmreg::YourMoneroRequests::get_unspent_outs,
+        "/get_unspent_outs");
 
 auto get_random_outs      = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::get_random_outs     , "/get_random_outs");
+        &xmreg::YourMoneroRequests::get_random_outs,
+        "/get_random_outs");
 
 auto submit_raw_tx      = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::submit_raw_tx       , "/submit_raw_tx");
+        &xmreg::YourMoneroRequests::submit_raw_tx,
+        "/submit_raw_tx");
 
 auto import_wallet_request = your_xmr.make_resource(
-        &xmreg::YourMoneroRequests::import_wallet_request, "/import_wallet_request");
+        &xmreg::YourMoneroRequests::import_wallet_request,
+        "/import_wallet_request");
 
 auto settings = make_shared< Settings >( );
 
