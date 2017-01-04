@@ -5,12 +5,11 @@ For the example, a service called Open Monero was developed.
 
 ##  Open Monero 
 
-Open Monero is an open source, prove of concept implementation
-of https://mymonero.com/. The frontend, html, css, JavaScript, were adapted
+Open Monero is an open source implementation of backend for
+https://mymonero.com/. The frontend, html, css, JavaScript, were adapted
 from, and originally developed by https://mymonero.com/. 
 
-However, MyMonero's backend is closed source. Thus for Open Monero, the open sourced 
-backend was developed from scratch. As such it is open sourced, free
+However, MyMonero's backend is closed source. Open Monero is open sourced, free
 to use, host and modify by anybody. 
 
 ## Scrap notes
