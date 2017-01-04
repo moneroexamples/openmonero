@@ -216,7 +216,7 @@ struct CurrentBlockchainStatus
     static bool
     ping_search_thread(const string& address);
 
-    static bool
+    static void
     clean_search_thread_map();
 
 };
@@ -866,7 +866,7 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
 }
 
 
-bool
+void
 CurrentBlockchainStatus::clean_search_thread_map()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);

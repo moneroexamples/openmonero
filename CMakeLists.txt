@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 project(restbed_xmr)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # find boost
 find_package(Boost COMPONENTS
@@ -43,8 +44,8 @@ set_property(TARGET common PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcomm
 add_library(blocks STATIC IMPORTED)
 set_property(TARGET blocks PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libblocks.a)
 
-add_library(crypto STATIC IMPORTED)
-set_property(TARGET crypto
+add_library(cryptoxmr STATIC IMPORTED)
+set_property(TARGET cryptoxmr
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcrypto.a)
 
 add_library(cryptonote_core STATIC IMPORTED)
@@ -54,6 +55,10 @@ set_property(TARGET cryptonote_core
 add_library(cryptonote_protocol STATIC IMPORTED)
 set_property(TARGET cryptonote_protocol
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_protocol.a)
+
+add_library(mnemonics STATIC IMPORTED)
+set_property(TARGET mnemonics
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libmnemonics.a)
 
 add_library(blockchain_db STATIC IMPORTED)
 set_property(TARGET blockchain_db
@@ -99,11 +104,12 @@ target_link_libraries(restbed_xmr
         cryptonote_core
         cryptonote_protocol
         blockchain_db
-        crypto
+        cryptoxmr
         blocks
         lmdb
         ringct
         common
+        mnemonics
         mysqlpp
         mysqlclient
         ${Boost_LIBRARIES}
@@ -111,4 +117,5 @@ target_link_libraries(restbed_xmr
         unbound
         unwind
         curl
-        dl)
+        dl
+        crypto)
