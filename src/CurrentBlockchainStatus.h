@@ -24,6 +24,7 @@ class TxSearch;
 
 
 mutex searching_threads_map_mtx;
+mutex getting_mempool_txs;
 
 /*
 * This is a thread class
@@ -49,6 +50,11 @@ struct CurrentBlockchainStatus
     // make it static to guarantee only one such map exist.
     static map<string, shared_ptr<TxSearch>> searching_threads;
 
+
+    // vector of mempool transactions that all threads
+    // can refer to
+    static vector<transaction> mempool_txs;
+
     // since this class monitors current status
     // of the blockchain, its seems logical to
     // make object for accessing the blockchain here
@@ -56,16 +62,22 @@ struct CurrentBlockchainStatus
     static cryptonote::Blockchain *core_storage;
 
     static
-    void start_monitor_blockchain_thread() {
-        if (!is_running) {
-            m_thread = std::thread{[]() {
-                while (true) {
+    void start_monitor_blockchain_thread()
+    {
+        if (!is_running)
+        {
+            m_thread = std::thread{[]()
+            {
+                while (true)
+                {
                     current_height = get_current_blockchain_height();
-                    cout << "Check block height: " << current_height << endl;
+                    read_mempool();
+                    cout << "Check block height: " << current_height;
+                    cout << " no of mempool txs: " << mempool_txs.size();
+                    cout << endl;
                     clean_search_thread_map();
                     std::this_thread::sleep_for(std::chrono::seconds(refresh_block_status_every_seconds));
                 }
-
             }};
 
             is_running = true;
@@ -74,22 +86,26 @@ struct CurrentBlockchainStatus
 
     static inline
     uint64_t
-    get_current_blockchain_height() {
+    get_current_blockchain_height()
+    {
         return xmreg::MyLMDB::get_blockchain_height(blockchain_path) - 1;
     }
 
     static void
-    set_blockchain_path(const string &path) {
+    set_blockchain_path(const string &path)
+    {
         blockchain_path = path;
     }
 
     static void
-    set_testnet(bool is_testnet) {
+    set_testnet(bool is_testnet)
+    {
         testnet = is_testnet;
     }
 
     static bool
-    init_monero_blockchain() {
+    init_monero_blockchain()
+    {
         // enable basic monero log output
         xmreg::enable_monero_log();
 
@@ -205,6 +221,74 @@ struct CurrentBlockchainStatus
         }
 
         return true;
+    }
+
+    static bool
+    read_mempool()
+    {
+        rpccalls rpc {deamon_url};
+
+        string error_msg;
+
+        std::lock_guard<std::mutex> lck (getting_mempool_txs);
+
+        // clear current mempool txs vector
+        // repopulate it with each execution of read_mempool()
+        // not very efficient but good enough for now.
+        mempool_txs.clear();
+
+        // get txs in the mempool
+        std::vector<tx_info> mempool_tx_info;
+
+        if (!rpc.get_mempool(mempool_tx_info))
+        {
+            cerr << "Getting mempool failed " << endl;
+            return false;
+        }
+
+        // if dont have tx_blob member, construct tx
+        // from json obtained from the rpc call
+
+        for (size_t i = 0; i < mempool_tx_info.size(); ++i)
+        {
+            // get transaction info of the tx in the mempool
+            tx_info _tx_info = mempool_tx_info.at(i);
+
+            crypto::hash mem_tx_hash = null_hash;
+
+            if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+            {
+                transaction tx;
+
+                if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
+                {
+                    cerr << "Cant make tx from _tx_info.tx_json" << endl;
+                    return false;
+                }
+
+                if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
+                {
+                    cerr << "Hash of reconstructed tx from json does not match "
+                            "what we should get!"
+                         << endl;
+
+                    return false;
+                }
+
+                mempool_txs.push_back(tx);
+
+            } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+
+        } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
+
+        return true;
+    }
+
+    static vector<transaction>
+    get_mempool_txs()
+    {
+        std::lock_guard<std::mutex> lck (getting_mempool_txs);
+        return mempool_txs;
     }
 
 
@@ -822,6 +906,8 @@ std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{60};
 xmreg::MicroCore        CurrentBlockchainStatus::mcore;
 cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
+vector<transaction>     CurrentBlockchainStatus::mempool_txs;
+
 
 map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 
