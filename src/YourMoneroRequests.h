@@ -528,7 +528,6 @@ public:
         if (show_logs)
             print_json_log("import_wallet_request request: ", j_request);
 
-
         string xmr_address = j_request["address"];
 
         // a placeholder for exciting or new account data
@@ -539,19 +538,49 @@ public:
         // select this payment if its existing one
         if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
         {
+            // payment record exists, so now we need to check if
+            // actually payment has been done, and updated
+            // mysql record accordingly.
+
+            bool request_fulfilled = bool {xmr_payment.request_fulfilled};
+
             j_response["payment_id"]        = xmr_payment.payment_id;
             j_response["import_fee"]        = xmr_payment.import_fee;
             j_response["new_request"]       = false;
-            j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
+            j_response["request_fulfilled"] = request_fulfilled;
             j_response["payment_address"]   = xmr_payment.payment_address;
+            j_response["status"]            = "Payment not yet received";
 
-            if (bool {xmr_payment.request_fulfilled} == false)
+            string tx_hash_with_payment;
+
+            if (!request_fulfilled
+                && CurrentBlockchainStatus::search_if_payment_made(
+                    xmr_payment.payment_id,
+                    xmr_payment.import_fee,
+                    tx_hash_with_payment))
             {
-                j_response["status"] = "Payment not yet received";
+                XmrPayment updated_xmr_payment = xmr_payment;
+
+                // updated values
+                updated_xmr_payment.request_fulfilled = true;
+                updated_xmr_payment.tx_hash           = tx_hash_with_payment;
+
+                // save to mysql
+                if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
+                {
+                    request_fulfilled = true;
+                }
+                else
+                {
+                    cerr << "Updating payment mysql failed! " << endl;
+                    j_response["status"] = "Updating payment mysql failed!";
+                }
             }
-            else
+
+            if (request_fulfilled)
             {
-                j_response["status"] = "Payment received";
+                j_response["request_fulfilled"]  = request_fulfilled;
+                j_response["status"]             = "Payment received. Thank you.";
             }
         }
         else
@@ -561,12 +590,12 @@ public:
 
             uint64_t payment_table_id {0};
 
-            xmr_payment.address = xmr_address;
-            xmr_payment.payment_id = pod_to_hex(generated_payment_id());
-            xmr_payment.import_fee = 1000000000000; // xmr
+            xmr_payment.address           = xmr_address;
+            xmr_payment.payment_id        = pod_to_hex(generated_payment_id());
+            xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
             xmr_payment.request_fulfilled = false;
-            xmr_payment.tx_hash = ""; // no tx_hash yet with the payment
-            xmr_payment.payment_address = "49tyE1AZLzDHM1JPeLeG3vMjqXDGQRQPwWij3ARjZfQMhRLDNyH8PyJVX9AxF3jzabUqjQSecbzYm1JX3MtSib1NQvodSMQ";
+            xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
+            xmr_payment.payment_address   = CurrentBlockchainStatus::import_payment_address;
 
 
             if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)

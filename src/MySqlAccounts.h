@@ -635,6 +635,33 @@ public:
 
         return 0;
     }
+
+
+    bool
+    update(XmrPayment& payment_orginal, XmrPayment& payment_new)
+    {
+
+        Query query = conn->query();
+
+        try
+        {
+            query.update(payment_orginal, payment_new);
+
+            SimpleResult sr = query.execute();
+
+            if (sr.rows() == 1)
+                return true;
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return false;
+        }
+
+        return false;
+    }
+
+
 };
 
 class MySqlAccounts
@@ -924,6 +951,11 @@ public:
         return r;
     }
 
+    bool
+    update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new)
+    {
+        return mysql_payment->update(payment_orginal, payment_new);
+    }
 
     uint64_t
     get_total_recieved(const uint64_t& account_id)

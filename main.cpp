@@ -29,6 +29,8 @@ main(int ac, const char* av[])
 // get command line options
 xmreg::CmdLineOptions opts {ac, av};
 
+auto address_opt      = opts.get_option<string>("address");
+auto viewkey_opt      = opts.get_option<string>("viewkey");
 auto help_opt          = opts.get_option<bool>("help");
 auto testnet_opt       = opts.get_option<bool>("testnet");
 auto use_ssl_opt       = opts.get_option<bool>("use-ssl");
@@ -39,8 +41,12 @@ if (*help_opt)
     return EXIT_SUCCESS;
 }
 
-bool testnet       {*testnet_opt};
-bool use_ssl       {*use_ssl_opt};
+
+bool testnet        = *testnet_opt;
+bool use_ssl        = *use_ssl_opt;
+string address_str  = address_opt ? *address_opt : "";
+string viewkey_str  = viewkey_opt ? *viewkey_opt : "";
+
 
 auto port_opt           = opts.get_option<string>("port");
 auto bc_path_opt        = opts.get_option<string>("bc-path");
@@ -69,6 +75,9 @@ xmreg::MySqlConnector::dbname    = "openmonero";
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 60;
+xmreg::CurrentBlockchainStatus::import_payment_address = address_str;
+xmreg::CurrentBlockchainStatus::import_payment_viewkey = viewkey_str;
+xmreg::CurrentBlockchainStatus::import_fee = 0.01e12;
 
 // since CurrentBlockchainStatus class monitors current status
 // of the blockchain (e.g, current height), its seems logical to

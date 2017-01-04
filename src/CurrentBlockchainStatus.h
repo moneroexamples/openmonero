@@ -50,6 +50,12 @@ struct CurrentBlockchainStatus
     // make it static to guarantee only one such map exist.
     static map<string, shared_ptr<TxSearch>> searching_threads;
 
+    static string   import_payment_address;
+    static string   import_payment_viewkey;
+    static uint64_t import_fee;
+
+    static account_public_address address;
+    static secret_key             viewkey;
 
     // vector of mempool transactions that all threads
     // can refer to
@@ -64,6 +70,33 @@ struct CurrentBlockchainStatus
     static
     void start_monitor_blockchain_thread()
     {
+        bool testnet = CurrentBlockchainStatus::testnet;
+
+
+        if (!import_payment_address.empty() && !import_payment_viewkey.empty())
+        {
+            if (!xmreg::parse_str_address(
+                    import_payment_address,
+                    address,
+                    testnet))
+            {
+                cerr << "Cant parse address_str: "
+                     << import_payment_address
+                     << endl;
+                return;
+            }
+
+            if (!xmreg::parse_str_secret_key(
+                    import_payment_viewkey,
+                    viewkey))
+            {
+                cerr << "Cant parse the viewkey_str: "
+                     << import_payment_viewkey
+                     << endl;
+                return;
+            }
+        }
+
         if (!is_running)
         {
             m_thread = std::thread{[]()
@@ -291,8 +324,127 @@ struct CurrentBlockchainStatus
         return mempool_txs;
     }
 
+    static bool
+    search_if_payment_made(
+            const string& payment_id_str,
+            const uint64_t& desired_amount,
+            string& tx_hash_with_payment)
+    {
 
-    // definitions of these function are at the end of this file
+        crypto::hash payment_id;
+
+        if (!hex_to_pod(payment_id_str, payment_id))
+        {
+            cerr << "Cant parse the payment_id_str: " << payment_id_str << endl;
+            return false;
+        }
+
+        vector<transaction> txs_to_check = get_mempool_txs();
+
+        uint64_t current_blockchain_height = current_height;
+
+        // apend txs in last to blocks into the txs_to_check vector
+        for (uint64_t blk_i = current_blockchain_height - 2;
+             blk_i <= current_blockchain_height;
+             ++blk_i)
+        {
+            // get block cointaining this tx
+            block blk;
+
+            if (!get_block(blk_i, blk)) {
+                cerr << "Cant get block of height: " + to_string(blk_i) << endl;
+                return false;
+            }
+
+            list <cryptonote::transaction> blk_txs;
+
+            if (!get_block_txs(blk, blk_txs))
+            {
+                cerr << "Cant get transactions in block: " << to_string(blk_i) << endl;
+                return false;
+            }
+
+            txs_to_check.insert(txs_to_check.end(), blk_txs.begin(), blk_txs.end());
+        }
+
+        for (transaction& tx: txs_to_check)
+        {
+            if (is_coinbase(tx))
+            {
+                // not interested in coinbase txs
+                continue;
+            }
+
+            public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+
+            //          <public_key  , amount  , out idx>
+            vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
+
+            outputs = get_ouputs_tuple(tx);
+
+            // for each output, in a tx, check if it belongs
+            // to the given account of specific address and viewkey
+
+            // public transaction key is combined with our viewkey
+            // to create, so called, derived key.
+            key_derivation derivation;
+
+            if (!generate_key_derivation(tx_pub_key, viewkey, derivation))
+            {
+                cerr << "Cant get derived key for: "  << "\n"
+                     << "pub_tx_key: " << tx_pub_key << " and "
+                     << "prv_view_key" << viewkey << endl;
+
+                return false;
+            }
+
+            string tx_hash_str = pod_to_hex(get_transaction_hash(tx));
+
+
+
+            uint64_t total_received {0};
+
+            for (auto& out: outputs)
+            {
+                txout_to_key txout_k = std::get<0>(out);
+                uint64_t amount = std::get<1>(out);
+                uint64_t output_idx_in_tx = std::get<2>(out);
+
+                // get the tx output public key
+                // that normally would be generated for us,
+                // if someone had sent us some xmr.
+                public_key generated_tx_pubkey;
+
+                derive_public_key(derivation,
+                                  output_idx_in_tx,
+                                  address.m_spend_public_key,
+                                  generated_tx_pubkey);
+
+                // check if generated public key matches the current output's key
+                bool mine_output = (txout_k.key == generated_tx_pubkey);
+
+                if (mine_output)
+                {
+                    total_received += amount;
+                }
+            }
+
+            cout << " - payment id check in tx: "
+                 << tx_hash_str
+                 << " found: " << total_received << endl;
+
+            if (total_received == desired_amount)
+            {
+                // the payment has been made.
+                tx_hash_with_payment = tx_hash_str;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+        // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch
     static bool
     start_tx_search_thread(XmrAccount acc);
@@ -907,8 +1059,11 @@ uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seco
 xmreg::MicroCore        CurrentBlockchainStatus::mcore;
 cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
 vector<transaction>     CurrentBlockchainStatus::mempool_txs;
-
-
+string                  CurrentBlockchainStatus::import_payment_address;
+string                  CurrentBlockchainStatus::import_payment_viewkey;
+uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
+account_public_address  CurrentBlockchainStatus::address;
+secret_key              CurrentBlockchainStatus::viewkey;
 map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 
 
