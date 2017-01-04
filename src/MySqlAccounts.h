@@ -538,6 +538,104 @@ public:
 
 };
 
+class MysqlPayments
+{
+
+    shared_ptr<MySqlConnector> conn;
+
+public:
+
+    MysqlPayments(shared_ptr<MySqlConnector> _conn): conn {_conn}
+    {}
+
+    bool
+    select(const string& address, vector<XmrPayment>& payments)
+    {
+
+        Query query = conn->query(XmrPayment::SELECT_STMT);
+        query.parse();
+
+        try
+        {
+            query.storein(payments, address);
+
+            if (!payments.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+    bool
+    select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments)
+    {
+
+        Query query = conn->query(XmrPayment::SELECT_STMT2);
+        query.parse();
+
+        try
+        {
+            query.storein(payments, payment_id);
+
+            if (!payments.empty())
+            {
+                return true;
+            }
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return false;
+    }
+
+
+    uint64_t
+    insert(const XmrPayment& payment_data)
+    {
+
+        Query query = conn->query(XmrPayment::INSERT_STMT);
+        query.parse();
+
+        // cout << query << endl;
+
+        try
+        {
+            SimpleResult sr = query.execute(payment_data.address,
+                                            payment_data.payment_id,
+                                            payment_data.tx_hash,
+                                            payment_data.request_fulfilled,
+                                            payment_data.payment_address,
+                                            payment_data.import_fee);
+
+            if (sr.rows() == 1)
+                return sr.insert_id();
+
+        }
+        catch (mysqlpp::Exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+            return 0;
+        }
+
+        return 0;
+    }
+};
 
 class MySqlAccounts
 {
@@ -550,6 +648,8 @@ class MySqlAccounts
 
     shared_ptr<MysqlInputs> mysql_in;
 
+    shared_ptr<MysqlPayments> mysql_payment;
+
     shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
 
 public:
@@ -560,11 +660,13 @@ public:
         // create connection to the mysql
         conn            = make_shared<MySqlConnector>();
 
-        // use same connection with working with other tables
+        // use same connection when working with other tables
         mysql_tx        = make_shared<MysqlTransactions>(conn);
         mysql_out       = make_shared<MysqlOutpus>(conn);
         mysql_in        = make_shared<MysqlInputs>(conn);
+        mysql_payment   = make_shared<MysqlPayments>(conn);
         mysql_tx_inout  = make_shared<MysqlTransactionWithOutsAndIns>(conn);
+
     }
 
 
@@ -778,6 +880,18 @@ public:
     tx_exists(const string& tx_hash_str, XmrTransaction& tx)
     {
         return mysql_tx->exist(tx_hash_str, tx);
+    }
+
+    uint64_t
+    insert_payment(const XmrPayment& payment)
+    {
+        return mysql_payment->insert(payment);
+    }
+
+    bool
+    select_payment_by_id(const string& payment_id, vector<XmrPayment>& payments)
+    {
+        return mysql_payment->select_by_payment_id(payment_id, payments);
     }
 
 

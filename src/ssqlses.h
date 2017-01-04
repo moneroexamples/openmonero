@@ -308,6 +308,69 @@ ostream& operator<< (std::ostream& os, const XmrInput& out) {
 
 
 
+sql_create_9(Payments, 1, 2,
+             sql_bigint_unsigned, id,
+             sql_varchar        , address,
+             sql_varchar        , payment_id,
+             sql_varchar        , tx_hash,
+             sql_boolean        , request_fulfilled,
+             sql_varchar        , payment_address,
+             sql_bigint_unsigned, import_fee,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
+
+
+struct XmrPayment : public Payments
+{
+
+    static constexpr const char* SELECT_STMT = R"(
+      SELECT * FROM `Payments` WHERE `address` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT2 = R"(
+       SELECT * FROM `Payments` WHERE `payment_id` = (%0q)
+    )";
+
+
+    static constexpr const char* INSERT_STMT = R"(
+       INSERT IGNORE INTO `Payments` (`address`, `payment_id`, `tx_hash`,
+                                 `request_fulfilled`, `payment_address`, `import_fee`)
+                    VALUES (%0q, %1q, %2q,
+                            %3q, %4q, %5q);
+    )";
+
+
+
+    using Payments::Payments;
+
+    json
+    to_json() const
+    {
+        json j {{"id"               , id},
+                {"address"          , address},
+                {"payment_id"       , payment_id},
+                {"tx_hash"          , tx_hash},
+                {"request_fulfilled", bool {request_fulfilled}},
+                {"payment_address"  , payment_address},
+                {"import_fee"       , import_fee}
+        };
+
+        return j;
+    }
+
+
+    friend std::ostream& operator<< (std::ostream& stream, const XmrPayment& out);
+
+};
+
+ostream& operator<< (std::ostream& os, const XmrPayment& out) {
+    os << "XmrPayment: " << out.to_json().dump() << '\n';
+    return os;
+};
+
+
+
+
 // this is MySQL VIEW, based on the Transactions,
 // Outputs and Inputs tables
 sql_create_10(TransactionsWithOutsAndIns, 1, 2,
