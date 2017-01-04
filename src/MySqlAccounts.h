@@ -894,6 +894,36 @@ public:
         return mysql_payment->select_by_payment_id(payment_id, payments);
     }
 
+    bool
+    select_payment_by_address(const string& address, vector<XmrPayment>& payments)
+    {
+        return mysql_payment->select(address, payments);
+    }
+
+    bool
+    select_payment_by_address(const string& address, XmrPayment& payment)
+    {
+
+        vector<XmrPayment> payments;
+
+        bool r = mysql_payment->select(address, payments);
+
+        if (!r)
+        {
+            return false;
+        }
+
+        if (payments.empty())
+        {
+            return false;
+        }
+
+        // always get last payment details.
+        payment = payments.back();
+
+        return r;
+    }
+
 
     uint64_t
     get_total_recieved(const uint64_t& account_id)

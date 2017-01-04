@@ -40,7 +40,7 @@ make_headers(const multimap<string, string>& extra_headers = multimap<string, st
 {
     multimap<string, string> headers {
             {"Date", get_current_time()},
-            {"Access-Control-Allow-Origin",      "http://127.0.0.1"},
+            {"Access-Control-Allow-Origin",      "http://127.0.0.1:81"},
             {"access-control-allow-headers",     "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Set-Cookie"},
             {"access-control-max-age",           "86400, 1728000"},
             {"access-control-allow-methods",     "GET, POST, OPTIONS"},
@@ -528,16 +528,59 @@ public:
         if (show_logs)
             print_json_log("import_wallet_request request: ", j_request);
 
-        string payment_id_str = pod_to_hex(generated_payment_id());
 
-        json j_response  {
-                {"payment_id", payment_id_str},
-                {"import_fee", "1000000000000"},
-                {"new_request", true},
-                {"request_fulfilled",  false},
-                {"payment_address", "44LbNqbmRCmEPxZYmwKw2hbga37svZsHPQ6hLAK4mtApPoWrbpTBiKo6jW452raUXW3M7qUq7yztuchsNYgwYj8S5KQKK43"},
-                {"status", "Payment not yet received"}
-        };
+        string xmr_address = j_request["address"];
+
+        // a placeholder for exciting or new account data
+        xmreg::XmrPayment xmr_payment;
+
+        json j_response;
+
+        // select this payment if its existing one
+        if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
+        {
+            j_response["payment_id"]        = xmr_payment.payment_id;
+            j_response["import_fee"]        = xmr_payment.import_fee;
+            j_response["new_request"]       = false;
+            j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
+            j_response["payment_address"]   = xmr_payment.payment_address;
+
+            if (bool {xmr_payment.request_fulfilled} == false)
+            {
+                j_response["status"] = "Payment not yet received";
+            }
+            else
+            {
+                j_response["status"] = "Payment received";
+            }
+        }
+        else
+        {
+            // payment request is now, so create its entry in
+            // Payments table
+
+            uint64_t payment_table_id {0};
+
+            xmr_payment.address = xmr_address;
+            xmr_payment.payment_id = pod_to_hex(generated_payment_id());
+            xmr_payment.import_fee = 1000000000000; // xmr
+            xmr_payment.request_fulfilled = false;
+            xmr_payment.tx_hash = ""; // no tx_hash yet with the payment
+            xmr_payment.payment_address = "49tyE1AZLzDHM1JPeLeG3vMjqXDGQRQPwWij3ARjZfQMhRLDNyH8PyJVX9AxF3jzabUqjQSecbzYm1JX3MtSib1NQvodSMQ";
+
+
+            if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)
+            {
+                // payment entry created
+
+                j_response["payment_id"]  = xmr_payment.payment_id;
+                j_response["import_fee"]  = xmr_payment.import_fee;
+                j_response["new_request"] = true;
+                j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
+                j_response["payment_address"] = xmr_payment.payment_address;
+                j_response["status"] = "Payment not yet received";
+            }
+        }
 
         string response_body = j_response.dump();
 
