@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.5.2
--- http://www.phpmyadmin.net
+-- version 4.6.5.2
+-- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 02, 2017 at 10:23 PM
--- Server version: 10.1.19-MariaDB
--- PHP Version: 7.0.9
+-- Generation Time: Jan 04, 2017 at 06:39 AM
+-- Server version: 10.1.20-MariaDB
+-- PHP Version: 7.0.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -28,6 +28,7 @@ USE `openmonero`;
 -- Table structure for table `Accounts`
 --
 
+DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
@@ -44,6 +45,7 @@ CREATE TABLE `Accounts` (
 -- Table structure for table `Inputs`
 --
 
+DROP TABLE IF EXISTS `Inputs`;
 CREATE TABLE `Inputs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `account_id` bigint(20) UNSIGNED NOT NULL,
@@ -60,6 +62,7 @@ CREATE TABLE `Inputs` (
 -- Table structure for table `Outputs`
 --
 
+DROP TABLE IF EXISTS `Outputs`;
 CREATE TABLE `Outputs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `account_id` bigint(20) UNSIGNED NOT NULL,
@@ -76,9 +79,29 @@ CREATE TABLE `Outputs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `Payments`
+--
+
+DROP TABLE IF EXISTS `Payments`;
+CREATE TABLE `Payments` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `address` varchar(95) NOT NULL,
+  `payment_id` varchar(64) NOT NULL,
+  `tx_hash` varchar(64) NOT NULL DEFAULT '',
+  `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
+  `payment_address` varchar(95) NOT NULL,
+  `import_fee` bigint(20) NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `Transactions`
 --
 
+DROP TABLE IF EXISTS `Transactions`;
 CREATE TABLE `Transactions` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `hash` varchar(64) NOT NULL,
@@ -98,7 +121,9 @@ CREATE TABLE `Transactions` (
 
 --
 -- Stand-in structure for view `TransactionsWithOutsAndIns`
+-- (See below for the actual view)
 --
+DROP VIEW IF EXISTS `TransactionsWithOutsAndIns`;
 CREATE TABLE `TransactionsWithOutsAndIns` (
 `tx_id` bigint(20) unsigned
 ,`account_id` bigint(20) unsigned
@@ -151,6 +176,13 @@ ALTER TABLE `Outputs`
   ADD KEY `tx_id` (`tx_id`);
 
 --
+-- Indexes for table `Payments`
+--
+ALTER TABLE `Payments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `payment_id` (`payment_id`);
+
+--
 -- Indexes for table `Transactions`
 --
 ALTER TABLE `Transactions`
@@ -171,17 +203,22 @@ ALTER TABLE `Accounts`
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT for table `Payments`
+--
+ALTER TABLE `Payments`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 --
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 --
 -- Constraints for dumped tables
 --
