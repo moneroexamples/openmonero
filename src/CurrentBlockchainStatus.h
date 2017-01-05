@@ -331,14 +331,6 @@ struct CurrentBlockchainStatus
             string& tx_hash_with_payment)
     {
 
-        crypto::hash payment_id;
-
-        if (!hex_to_pod(payment_id_str, payment_id))
-        {
-            cerr << "Cant parse the payment_id_str: " << payment_id_str << endl;
-            return false;
-        }
-
         vector<transaction> txs_to_check = get_mempool_txs();
 
         uint64_t current_blockchain_height = current_height;
@@ -372,6 +364,14 @@ struct CurrentBlockchainStatus
             if (is_coinbase(tx))
             {
                 // not interested in coinbase txs
+                continue;
+            }
+
+            string tx_payment_id_str = get_payment_id_as_string(tx);
+
+            if (payment_id_str != tx_payment_id_str)
+            {
+                // check tx having specific payment id only
                 continue;
             }
 
@@ -433,7 +433,7 @@ struct CurrentBlockchainStatus
                  << tx_hash_str
                  << " found: " << total_received << endl;
 
-            if (total_received == desired_amount)
+            if (total_received >= desired_amount)
             {
                 // the payment has been made.
                 tx_hash_with_payment = tx_hash_str;
@@ -444,7 +444,30 @@ struct CurrentBlockchainStatus
         return false;
     }
 
-        // definitions of these function are at the end of this file
+
+    static string
+    get_payment_id_as_string(const transaction& tx)
+    {
+        crypto::hash payment_id = null_hash;
+        crypto::hash8 payment_id8 = null_hash8;
+
+        get_payment_id(tx, payment_id, payment_id8);
+
+        string payment_id_str{""};
+
+        if (payment_id != null_hash)
+        {
+            payment_id_str = pod_to_hex(payment_id);
+        }
+        else if (payment_id8 != null_hash8)
+        {
+            payment_id_str = pod_to_hex(payment_id8);
+        }
+
+        return payment_id_str;
+    }
+
+    // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch
     static bool
     start_tx_search_thread(XmrAccount acc);
@@ -773,7 +796,7 @@ public:
                     tx_data.unlock_time    = 0;
                     tx_data.height         = searched_blk_no;
                     tx_data.coinbase       = is_coinbase_tx;
-                    tx_data.payment_id     = get_payment_id_as_string(tx);
+                    tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;
                     tx_data.timestamp      = blk_timestamp_mysql_format;
 
@@ -941,7 +964,7 @@ public:
                         tx_data.unlock_time    = 0;
                         tx_data.height         = searched_blk_no;
                         tx_data.coinbase       = is_coinbase(tx);
-                        tx_data.payment_id     = get_payment_id_as_string(tx);
+                        tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                         tx_data.mixin          = get_mixin_no(tx) - 1;
                         tx_data.timestamp      = blk_timestamp_mysql_format;
 
@@ -1006,28 +1029,6 @@ public:
         cout << "TxSearch destroyed" << endl;
     }
 
-
-    string
-    get_payment_id_as_string(const transaction& tx)
-    {
-        crypto::hash payment_id = null_hash;
-        crypto::hash8 payment_id8 = null_hash8;
-
-        get_payment_id(tx, payment_id, payment_id8);
-
-        string payment_id_str{""};
-
-        if (payment_id != null_hash)
-        {
-            payment_id_str = pod_to_hex(payment_id);
-        }
-        else if (payment_id8 != null_hash8)
-        {
-            payment_id_str = pod_to_hex(payment_id8);
-        }
-
-        return payment_id_str;
-    }
 
     void
     ping()

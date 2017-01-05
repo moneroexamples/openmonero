@@ -568,7 +568,24 @@ public:
                 // save to mysql
                 if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
                 {
-                    request_fulfilled = true;
+
+                    // set scanned_block_height	to 0 to begin
+                    // scanning entire blockchain
+
+                    XmrAccount acc;
+
+                    if (xmr_accounts->select(xmr_address, acc))
+                    {
+                        XmrAccount updated_acc = acc;
+
+                        updated_acc.scanned_block_height = 0;
+
+                        if (xmr_accounts->update(acc, updated_acc))
+                        {
+                            // if success, set acc to updated_acc;
+                            request_fulfilled = true;
+                        }
+                    }
                 }
                 else
                 {
