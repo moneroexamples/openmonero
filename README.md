@@ -12,6 +12,10 @@ from, and originally developed by https://mymonero.com/.
 However, unlike MyMonero's backend, Open Monero's backend is open sourced, free
 to use, host and modify. 
 
+## Screenshot
+
+![Open Monero]()
+
 ## Scrap notes
 
 ### Generate your own ssl certificate 
@@ -37,6 +41,9 @@ To overcome this for development purposes on localhost, just open new tab in the
 and go to any link from the service, e.g., `https://localhost:1984/login`. Once you do this,
 you should get warring about unsecured or un verified certificate. Then you just add it manually
 as exception.
+
+Also Open Monero generates uses 25 word seeds, which are fully comptabilite with `monero-wallet-cli`
+and `monero-core`.
  
 ### Test connection using curl
 
