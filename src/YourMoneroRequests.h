@@ -584,7 +584,19 @@ public:
                         {
                             // if success, set acc to updated_acc;
                             request_fulfilled = true;
+
+                            // change search blk number in the search thread
+                            if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                            {
+                                cerr << "Updating searched_blk_no failed!" << endl;
+                                j_response["status"] = "Updating searched_blk_no failed!";
+                            }
                         }
+                    }
+                    else
+                    {
+                        cerr << "Updating accounts due to made payment mysql failed! " << endl;
+                        j_response["status"] = "Updating accounts due to made payment mysql failed!";
                     }
                 }
                 else

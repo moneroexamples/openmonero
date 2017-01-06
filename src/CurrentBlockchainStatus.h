@@ -475,6 +475,9 @@ struct CurrentBlockchainStatus
     static bool
     ping_search_thread(const string& address);
 
+    static bool
+    set_new_searched_blk_no(const string& address, uint64_t new_value);
+
     static void
     clean_search_thread_map();
 
@@ -503,6 +506,7 @@ class TxSearch
 
     uint64_t last_ping_timestamp;
 
+    atomic<uint64_t> searched_blk_no;
 
     // represents a row in mysql's Accounts table
     XmrAccount acc;
@@ -539,6 +543,10 @@ public:
             throw TxSearchException("Cant parse private key: " + acc.viewkey);
         }
 
+        // start searching from last block that we searched for
+        // this accont
+        searched_blk_no = acc.scanned_block_height;
+
         ping();
     }
 
@@ -546,9 +554,7 @@ public:
     search()
     {
 
-        // start searching from last block that we searched for
-        // this accont
-        uint64_t searched_blk_no = acc.scanned_block_height;
+
 
         if (searched_blk_no > CurrentBlockchainStatus::current_height)
         {
@@ -1029,6 +1035,12 @@ public:
         cout << "TxSearch destroyed" << endl;
     }
 
+    void
+    set_searched_blk_no(uint64_t new_value)
+    {
+        searched_blk_no = new_value;
+    }
+
 
     void
     ping()
@@ -1103,6 +1115,23 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
     }
 
     searching_threads[address].get()->ping();
+
+    return true;
+}
+
+bool
+CurrentBlockchainStatus::set_new_searched_blk_no(const string& address, uint64_t new_value)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address) == 0)
+    {
+        // thread does not exist
+        cout << " thread does not exist" << endl;
+        return false;
+    }
+
+    searching_threads[address].get()->set_searched_blk_no(new_value);
 
     return true;
 }
