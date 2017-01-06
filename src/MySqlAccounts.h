@@ -475,7 +475,7 @@ public:
 
 
     bool
-    exist(const string& tx_hash_str, XmrTransaction& tx)
+    exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
     {
 
         Query query = conn->query(XmrTransaction::EXIST_STMT);
@@ -486,7 +486,7 @@ public:
 
             vector<XmrTransaction> outs;
 
-            query.storein(outs, tx_hash_str);
+            query.storein(outs, account_id, tx_hash_str);
 
             if (outs.empty())
             {
@@ -904,9 +904,9 @@ public:
     }
 
     bool
-    tx_exists(const string& tx_hash_str, XmrTransaction& tx)
+    tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
     {
-        return mysql_tx->exist(tx_hash_str, tx);
+        return mysql_tx->exist(account_id, tx_hash_str, tx);
     }
 
     uint64_t

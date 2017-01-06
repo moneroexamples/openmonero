@@ -791,7 +791,21 @@ public:
                 if (!found_mine_outputs.empty())
                 {
 
+                    // before adding this tx and its outputs to mysql
+                    // check if it already exists. So that we dont
+                    // do it twice.
+
                     XmrTransaction tx_data;
+
+                    if (xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data))
+                    {
+                        cout << "\nTransaction " << tx_hash_str
+                             << " already present in mysql"
+                             << endl;
+
+                        continue;
+                    }
+
 
                     tx_data.hash           = tx_hash_str;
                     tx_data.prefix_hash    = tx_prefix_hash_str;

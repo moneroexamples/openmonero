@@ -115,7 +115,7 @@ struct XmrTransaction : public Transactions
     )";
 
     static constexpr const char* EXIST_STMT = R"(
-        SELECT * FROM `Transactions` WHERE `hash` = (%0q)
+        SELECT * FROM `Transactions` WHERE `account_id` = (%0q) AND `hash` = (%1q)
     )";
 
     static constexpr const char* INSERT_STMT = R"(
