@@ -9,8 +9,8 @@ Open Monero is an open source implementation of backend for
 https://mymonero.com/. The frontend, html, css, JavaScript, were adapted
 from, and originally developed by https://mymonero.com/. 
 
-However, MyMonero's backend is closed source. Open Monero is open sourced, free
-to use, host and modify by anybody. 
+However, unlike MyMonero's backend, Open Monero's backend is open sourced, free
+to use, host and modify. 
 
 ## Scrap notes
 

@@ -336,7 +336,7 @@ struct CurrentBlockchainStatus
         uint64_t current_blockchain_height = current_height;
 
         // apend txs in last to blocks into the txs_to_check vector
-        for (uint64_t blk_i = current_blockchain_height - 2;
+        for (uint64_t blk_i = current_blockchain_height - 10;
              blk_i <= current_blockchain_height;
              ++blk_i)
         {
