@@ -7,10 +7,13 @@
 
 #include "tools.h"
 #include "MySqlConnector.h"
+#include "CurrentBlockchainStatus.h"
 
 
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 
 namespace xmreg
@@ -27,6 +30,10 @@ class XmrOutput;
 class XmrTransaction;
 class XmrPayment;
 class XmrAccount;
+
+
+static mutex searching_threads_map_mtx;
+
 
 class MysqlTransactionWithOutsAndIns
 {
@@ -154,6 +161,8 @@ public:
 
 };
 
+class TxSearch;
+
 class MySqlAccounts
 {
 
@@ -168,6 +177,11 @@ class MySqlAccounts
     shared_ptr<MysqlPayments> mysql_payment;
 
     shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
+
+    // map that will keep track of search threads. In the
+    // map, key is address to which a running thread belongs to.
+    // make it static to guarantee only one such map exist.
+    static map<string, shared_ptr<TxSearch>> searching_threads;
 
 public:
 
@@ -246,7 +260,86 @@ public:
     bool
     update(XmrAccount& acc_orginal, XmrAccount& acc_new);
 
+
+    // definitions of these function are at the end of this file
+    // due to forward declaraions of TxSearch
+    static bool
+    start_tx_search_thread(XmrAccount acc);
+
+    static bool
+    ping_search_thread(const string& address);
+
+    static bool
+    set_new_searched_blk_no(const string& address, uint64_t new_value);
+
+    static void
+    clean_search_thread_map();
+
 };
+
+
+class TxSearchException: public std::runtime_error
+{
+    using std::runtime_error::runtime_error;
+};
+
+
+class TxSearch
+{
+    // how frequently update scanned_block_height in Accounts table
+    static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 10; // seconds
+
+    // how long should the search thread be live after no request
+    // are coming from the frontend. For example, when a user finishes
+    // using the service.
+    static constexpr uint64_t THREAD_LIFE_DURATION           = 10 * 60; // in seconds
+
+
+    bool continue_search {true};
+
+
+    uint64_t last_ping_timestamp;
+
+    atomic<uint64_t> searched_blk_no;
+
+    // represents a row in mysql's Accounts table
+    shared_ptr<XmrAccount> acc;
+
+    // this manages all mysql queries
+    // its better to when each thread has its own mysql connection object.
+    // this way if one thread crashes, it want take down
+    // connection for the entire service
+    shared_ptr<MySqlAccounts> xmr_accounts;
+
+    // address and viewkey for this search thread.
+    cryptonote::account_public_address address;
+    secret_key viewkey;
+
+public:
+
+    TxSearch(XmrAccount& _acc);
+
+    void
+    search();
+
+    void
+    stop();
+
+    ~TxSearch();
+
+    void
+    set_searched_blk_no(uint64_t new_value);
+
+    void
+    ping();
+
+    bool
+    still_searching();
+
+};
+
+
+
 
 
 }

@@ -11,7 +11,7 @@
 //#include "MySqlConnector.h"
 #include "CurrentBlockchainStatus.h"
 #include "MySqlAccounts.h"
-#include "ssqlses.h"
+//#include "ssqlses.h"
 
 #include "../ext/restbed/source/restbed"
 
@@ -161,7 +161,7 @@ public:
         // to do anything except looking for tx and updating mysql
         // with relative tx information
 
-        if (CurrentBlockchainStatus::start_tx_search_thread(acc))
+        if (MySqlAccounts::start_tx_search_thread(acc))
         {
             cout << "Search thread started" << endl;
         }
@@ -296,7 +296,7 @@ public:
         {
             // ping the search thread that we still need it.
             // otherwise it will finish after some time.
-            CurrentBlockchainStatus::ping_search_thread(xmr_address);
+            MySqlAccounts::ping_search_thread(xmr_address);
 
             j_response["total_received"]       = acc.total_received;
             j_response["start_height"]         = acc.start_height;
@@ -587,7 +587,7 @@ public:
                             request_fulfilled = true;
 
                             // change search blk number in the search thread
-                            if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                            if (!MySqlAccounts::set_new_searched_blk_no(xmr_address, 0))
                             {
                                 cerr << "Updating searched_blk_no failed!" << endl;
                                 j_response["status"] = "Updating searched_blk_no failed!";
