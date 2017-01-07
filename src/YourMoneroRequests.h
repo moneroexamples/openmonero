@@ -23,7 +23,7 @@ using namespace restbed;
 using namespace nlohmann;
 
 
-string
+inline string
 get_current_time(const char* format = "%a, %d %b %Y %H:%M:%S %Z")
 {
 
@@ -36,7 +36,7 @@ get_current_time(const char* format = "%a, %d %b %Y %H:%M:%S %Z")
 }
 
 
-multimap<string, string>
+inline multimap<string, string>
 make_headers(const multimap<string, string>& extra_headers = multimap<string, string>())
 {
     multimap<string, string> headers {

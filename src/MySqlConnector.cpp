@@ -4,8 +4,6 @@
 
 #include "MySqlConnector.h"
 
-//#include "ssqlses.h"
-
 #include <mysql++/mysql++.h>
 #include <mysql++/ssqls.h>
 

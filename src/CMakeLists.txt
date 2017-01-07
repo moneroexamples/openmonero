@@ -8,7 +8,7 @@ set(SOURCE_FILES
 		CmdLineOptions.cpp
 		CurrentBlockchainStatus.cpp
 		MySqlConnector.cpp
-		MySqlAccounts.cpp ssqlses.cpp)
+		MySqlAccounts.cpp ssqlses.cpp ssqls_sql.h)
 
 # make static library called libmyxrm
 # that we are going to link to

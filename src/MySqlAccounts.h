@@ -7,7 +7,6 @@
 
 #include "tools.h"
 #include "MySqlConnector.h"
-//#include "ssqlses.h"
 
 
 #include <iostream>
