@@ -8,9 +8,10 @@
 #include <iostream>
 #include <functional>
 
-#include "MySqlConnector.h"
+//#include "MySqlConnector.h"
 #include "CurrentBlockchainStatus.h"
-#include "tools.h"
+#include "MySqlAccounts.h"
+#include "ssqlses.h"
 
 #include "../ext/restbed/source/restbed"
 

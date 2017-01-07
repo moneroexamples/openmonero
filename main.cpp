@@ -1,11 +1,6 @@
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-#include "src/MySqlAccounts.h"
 #include "src/YourMoneroRequests.h"
-#include "src/tools.h"
-
-#include "ext/restbed/source/restbed"
-
 
 #include <iostream>
 #include <memory>
@@ -31,9 +26,9 @@ xmreg::CmdLineOptions opts {ac, av};
 
 auto address_opt      = opts.get_option<string>("address");
 auto viewkey_opt      = opts.get_option<string>("viewkey");
-auto help_opt          = opts.get_option<bool>("help");
-auto testnet_opt       = opts.get_option<bool>("testnet");
-auto use_ssl_opt       = opts.get_option<bool>("use-ssl");
+auto help_opt         = opts.get_option<bool>("help");
+auto testnet_opt      = opts.get_option<bool>("testnet");
+auto use_ssl_opt      = opts.get_option<bool>("use-ssl");
 
 // if help was chosen, display help text and finish
 if (*help_opt)
@@ -48,11 +43,11 @@ string address_str  = address_opt ? *address_opt : "";
 string viewkey_str  = viewkey_opt ? *viewkey_opt : "";
 
 
-auto port_opt           = opts.get_option<string>("port");
-auto bc_path_opt        = opts.get_option<string>("bc-path");
+auto port_opt       = opts.get_option<string>("port");
+auto bc_path_opt    = opts.get_option<string>("bc-path");
 
 //cast port number in string to uint16
-uint16_t app_port = boost::lexical_cast<uint16_t>(*port_opt);
+uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // get blockchain path
 path blockchain_path;
@@ -75,9 +70,9 @@ xmreg::MySqlConnector::dbname    = "openmonero";
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 60;
-xmreg::CurrentBlockchainStatus::import_payment_address = address_str;
-xmreg::CurrentBlockchainStatus::import_payment_viewkey = viewkey_str;
-xmreg::CurrentBlockchainStatus::import_fee = 0.01e12;
+xmreg::CurrentBlockchainStatus::import_payment_address             = address_str;
+xmreg::CurrentBlockchainStatus::import_payment_viewkey             = viewkey_str;
+xmreg::CurrentBlockchainStatus::import_fee                         = static_cast<uint64_t>(0.01e12);
 
 // since CurrentBlockchainStatus class monitors current status
 // of the blockchain (e.g, current height), its seems logical to
@@ -124,11 +119,11 @@ auto get_unspent_outs      = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::get_unspent_outs,
         "/get_unspent_outs");
 
-auto get_random_outs      = your_xmr.make_resource(
+auto get_random_outs       = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::get_random_outs,
         "/get_random_outs");
 
-auto submit_raw_tx      = your_xmr.make_resource(
+auto submit_raw_tx         = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::submit_raw_tx,
         "/submit_raw_tx");
 

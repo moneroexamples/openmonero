@@ -7,7 +7,7 @@
 
 
 #include <mysql++/mysql++.h>
-#include <mysql++/ssqls.h>
+
 
 #include "../ext/json.hpp"
 

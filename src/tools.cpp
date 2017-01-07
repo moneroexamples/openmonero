@@ -932,6 +932,15 @@ parse(const std::string& str, string format)
     return tp;
 }
 
+
+string
+xmr_amount_to_str(const uint64_t& xmr_amount, string format)
+{
+    return fmt::format("{:0.12f}", XMR_AMOUNT(xmr_amount));
+}
+
+
+
 /**
 * Check if given output (specified by output_index)
 * belongs is ours based
