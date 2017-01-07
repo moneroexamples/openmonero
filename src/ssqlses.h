@@ -23,13 +23,13 @@ using namespace nlohmann;
 // to see what it does can run preprecoess on this file
 // g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
 sql_create_7(Accounts, 1, 2,
-              sql_bigint_unsigned, id,
-              sql_varchar        , address,
-              sql_bigint_unsigned, total_received,
-              sql_bigint_unsigned, scanned_block_height,
-              sql_bigint_unsigned, start_height,
-              sql_timestamp      , created,
-              sql_timestamp      , modified);
+             sql_bigint_unsigned, id,
+             sql_varchar        , address,
+             sql_bigint_unsigned, total_received,
+             sql_bigint_unsigned, scanned_block_height,
+             sql_bigint_unsigned, start_height,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
 
 
 struct XmrAccount : public Accounts
@@ -50,40 +50,16 @@ struct XmrAccount : public Accounts
 
     using Accounts::Accounts;
 
-    XmrAccount():Accounts()
-    {
-        address = "";
-        total_received = 0;
-        scanned_block_height = 0;
-        start_height = 0;
-    }
-
     // viewkey is not stored in mysql db or anywhere
     // so need to be populated when user logs in.
     string viewkey;
 
     json
-    to_json() const
-    {
-        json j {{"id"                  , id},
-                {"address"             , address},
-                {"viewkey"             , viewkey},
-                {"total_received"      , total_received},
-                {"scanned_block_height", scanned_block_height},
-                {"start_height"        , start_height}
-        };
-
-        return j;
-    }
+    to_json() const;
 
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
 
-};
-
-ostream& operator<< (std::ostream& os, const XmrAccount& acc) {
-    os << "XmrAccount: " << acc.to_json().dump() << '\n';
-    return os;
 };
 
 
