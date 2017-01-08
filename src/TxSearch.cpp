@@ -111,12 +111,11 @@ TxSearch::search()
             continue;
         }
 
-        // for each tx in the given block look, get ouputs
-
-
+        // get all txs in the block
         list <cryptonote::transaction> blk_txs;
 
-        if (!CurrentBlockchainStatus::get_block_txs(blk, blk_txs)) {
+        if (!CurrentBlockchainStatus::get_block_txs(blk, blk_txs))
+        {
             throw TxSearchException("Cant get transactions in block: " + to_string(searched_blk_no));
         }
 
@@ -131,18 +130,19 @@ TxSearch::search()
 
 
 
-        // searching for our incoming and outgoing xmr has two componotes.
+        // searching for our incoming and outgoing xmr has two components.
         //
         // FIRST. to search for the incoming xmr, we use address, viewkey and
-        // outputs public key. Its stright forward.
-        // second. searching four our spendings is trickier, as we dont have
+        // outputs public key. Its straight forward, as this is what viewkey was
+        // designed to do.
         //
-        // SECOND. But what we can do, we can look for condidate spend keys.
-        // and this can be achieved by checking if any mixin in associated with
-        // the given image, is our output. If it is our output, than we assume
-        // its our key image (i.e. we spend this output). Off course this is only
+        // SECOND. Searching for spendings (i.e., key images) is more difficult,
+        // because we dont have spendkey. But what we can do is, we can look for
+        // candidate key images. And this can be achieved by checking if any mixin
+        // in associated with the given key image, is our output. If it is our output,
+        // then we assume its our key image (i.e. we spend this output). Off course this is only
         // assumption as our outputs can be used in key images of others for their
-        // mixin purposes. Thus, we sent to the front end, the list of key images
+        // mixin purposes. Thus, we sent to the front end the list of key images
         // that we think are yours, and the frontend, because it has spend key,
         // can filter out false positives.
         for (transaction& tx: blk_txs)

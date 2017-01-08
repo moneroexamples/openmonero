@@ -273,6 +273,7 @@ public:
     static bool
     set_new_searched_blk_no(const string& address, uint64_t new_value);
 
+    //@TODO: Need to use it somewhere
     static void
     clean_search_thread_map();
 
