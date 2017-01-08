@@ -5,9 +5,10 @@
 #ifndef RESTBED_XMR_SSQLSES_H
 #define RESTBED_XMR_SSQLSES_H
 
-#include "ssqls_sql.h"
-
 #include "../ext/json.hpp"
+
+#include <mysql++/mysql++.h>
+#include <mysql++/ssqls.h>
 
 namespace xmreg
 {
@@ -15,7 +16,16 @@ namespace xmreg
 
 using namespace std;
 using namespace nlohmann;
+using namespace mysqlpp;
 
+sql_create_7(Accounts, 1, 2,
+             sql_bigint_unsigned, id,
+             sql_varchar        , address,
+             sql_bigint_unsigned, total_received,
+             sql_bigint_unsigned, scanned_block_height,
+             sql_bigint_unsigned, start_height,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
 
 
 struct XmrAccount : public Accounts
@@ -48,6 +58,19 @@ struct XmrAccount : public Accounts
 
 };
 
+sql_create_12(Transactions, 1, 2,
+              sql_bigint_unsigned, id,
+              sql_varchar        , hash,
+              sql_varchar        , prefix_hash,
+              sql_bigint_unsigned, account_id,
+              sql_bigint_unsigned, total_received,
+              sql_bigint_unsigned, total_sent,
+              sql_bigint_unsigned, unlock_time,
+              sql_bigint_unsigned, height,
+              sql_bool           , coinbase,
+              sql_varchar        , payment_id,
+              sql_bigint_unsigned, mixin,
+              sql_timestamp      , timestamp);
 
 
 struct XmrTransaction : public Transactions
@@ -99,7 +122,17 @@ struct XmrTransaction : public Transactions
 
 };
 
-
+sql_create_10(Outputs, 1, 3,
+              sql_bigint_unsigned, id,
+              sql_bigint_unsigned, account_id,
+              sql_bigint_unsigned, tx_id,
+              sql_varchar        , out_pub_key,
+              sql_varchar        , tx_pub_key,
+              sql_bigint_unsigned, amount,
+              sql_bigint_unsigned, global_index,
+              sql_bigint_unsigned, out_index,
+              sql_bigint_unsigned, mixin,
+              sql_timestamp      , timestamp);
 
 struct XmrOutput : public Outputs
 {
@@ -136,6 +169,16 @@ struct XmrOutput : public Outputs
 };
 
 
+sql_create_7(Inputs, 1, 4,
+             sql_bigint_unsigned, id,
+             sql_bigint_unsigned, account_id,
+             sql_bigint_unsigned, tx_id,
+             sql_bigint_unsigned, output_id,
+             sql_varchar        , key_image,
+             sql_bigint_unsigned, amount,
+             sql_timestamp      , timestamp);
+
+
 struct XmrInput : public Inputs
 {
 
@@ -166,6 +209,17 @@ struct XmrInput : public Inputs
     friend std::ostream& operator<< (std::ostream& stream, const XmrInput& out);
 
 };
+
+sql_create_9(Payments, 1, 2,
+             sql_bigint_unsigned, id,
+             sql_varchar        , address,
+             sql_varchar        , payment_id,
+             sql_varchar        , tx_hash,
+             sql_boolean        , request_fulfilled,
+             sql_varchar        , payment_address,
+             sql_bigint_unsigned, import_fee,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
 
 
 struct XmrPayment : public Payments
@@ -198,7 +252,17 @@ struct XmrPayment : public Payments
 
 };
 
-
+sql_create_10(TransactionsWithOutsAndIns, 1, 2,
+              sql_bigint_unsigned, tx_id,
+              sql_bigint_unsigned, account_id,
+              sql_varchar        , out_pub_key,
+              sql_bigint_unsigned, amount,
+              sql_bigint_unsigned, out_index,
+              sql_bigint_unsigned, global_index,
+              sql_varchar        , tx_pub_key,
+              sql_timestamp      , timestamp,
+              sql_varchar_null   , key_image,
+              sql_bigint_unsigned, mixin);
 
 struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 {

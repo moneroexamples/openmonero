@@ -2,9 +2,11 @@
 // Created by mwo on 8/01/17.
 //
 
+#define MYSQLPP_SSQLS_NO_STATICS 1
+
 #include "YourMoneroRequests.h"
 
-//#include "ssqlses.h"
+#include "ssqlses.h"
 
 namespace xmreg
 {
@@ -79,7 +81,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     json j_response;
 
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, *acc))
+    if (xmr_accounts->select(xmr_address, acc))
     {
         j_response = {{"new_address", false}};
     }
@@ -99,7 +101,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         if ((acc_id = xmr_accounts->insert(xmr_address, current_blkchain_height)) != 0)
         {
             // select newly created account
-            if (xmr_accounts->select(acc_id, *acc))
+            if (xmr_accounts->select(acc_id, acc))
             {
                 j_response = {{"new_address", true}};
             }
