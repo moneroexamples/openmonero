@@ -129,6 +129,8 @@ TxSearch::search()
         }
 
 
+        DateTime blk_timestamp_mysql_format
+                = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
         // searching for our incoming and outgoing xmr has two components.
         //
@@ -148,17 +150,15 @@ TxSearch::search()
         for (transaction& tx: blk_txs)
         {
 
-            crypto::hash tx_hash         = get_transaction_hash(tx);
-            crypto::hash tx_prefix_hash  = get_transaction_prefix_hash(tx);
+            crypto::hash tx_hash;
+            crypto::hash tx_prefix_hash;
 
-            string tx_hash_str           = pod_to_hex(tx_hash);
-            string tx_prefix_hash_str    = pod_to_hex(tx_prefix_hash);
+            string tx_hash_str;
+            string tx_prefix_hash_str;
 
             bool is_coinbase_tx = is_coinbase(tx);
 
             vector<uint64_t> amount_specific_indices;
-
-            // cout << pod_to_hex(tx_hash) << endl;
 
             public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
 
@@ -222,8 +222,6 @@ TxSearch::search()
                     // initialize with regular amount
                     uint64_t rct_amount = amount;
 
-
-
                     // cointbase txs have amounts in plain sight.
                     // so use amount from ringct, only for non-coinbase txs
                     if (!is_coinbase_tx)
@@ -252,6 +250,10 @@ TxSearch::search()
 
                 if (mine_output)
                 {
+                    tx_hash            = get_transaction_hash(tx);
+                    tx_hash_str        = pod_to_hex(tx_hash);
+                    tx_prefix_hash     = get_transaction_prefix_hash(tx);
+                    tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
                     string out_key_str = pod_to_hex(txout_k.key);
 
@@ -273,8 +275,6 @@ TxSearch::search()
 
             } // for (const auto& out: outputs)
 
-            DateTime blk_timestamp_mysql_format
-                    = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
             uint64_t tx_mysql_id {0};
 
@@ -415,8 +415,6 @@ TxSearch::search()
                         // seems that this key image is ours.
                         // so save it to database for later use.
 
-
-
                         XmrInput in_data;
 
                         in_data.account_id  = acc->id;
@@ -446,6 +444,10 @@ TxSearch::search()
                 // to write it to mysql. But first,
                 // check if this tx is written in mysql.
 
+                tx_hash            = get_transaction_hash(tx);
+                tx_hash_str        = pod_to_hex(tx_hash);
+                tx_prefix_hash     = get_transaction_prefix_hash(tx);
+                tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
                 // calculate how much we preasumply spent.
                 uint64_t total_sent {0};
@@ -454,7 +456,6 @@ TxSearch::search()
                 {
                     total_sent += in_data.amount;
                 }
-
 
                 if (tx_mysql_id == 0)
                 {
