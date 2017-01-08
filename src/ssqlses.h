@@ -5,31 +5,27 @@
 #ifndef RESTBED_XMR_SSQLSES_H
 #define RESTBED_XMR_SSQLSES_H
 
+#include "../ext/json.hpp"
 
 #include <mysql++/mysql++.h>
 #include <mysql++/ssqls.h>
 
-#include "../ext/json.hpp"
-
 namespace xmreg
 {
 
-using namespace mysqlpp;
+
 using namespace std;
 using namespace nlohmann;
+using namespace mysqlpp;
 
-
-
-// to see what it does can run preprecoess on this file
-// g++ -I/usr/include/mysql -E ~/restbed-xmr/src/MySqlConnector.h > /tmp/out.h
 sql_create_7(Accounts, 1, 2,
-              sql_bigint_unsigned, id,
-              sql_varchar        , address,
-              sql_bigint_unsigned, total_received,
-              sql_bigint_unsigned, scanned_block_height,
-              sql_bigint_unsigned, start_height,
-              sql_timestamp      , created,
-              sql_timestamp      , modified);
+             sql_bigint_unsigned, id,
+             sql_varchar        , address,
+             sql_bigint_unsigned, total_received,
+             sql_bigint_unsigned, scanned_block_height,
+             sql_bigint_unsigned, start_height,
+             sql_timestamp      , created,
+             sql_timestamp      , modified);
 
 
 struct XmrAccount : public Accounts
@@ -50,42 +46,17 @@ struct XmrAccount : public Accounts
 
     using Accounts::Accounts;
 
-    XmrAccount():Accounts()
-    {
-        address = "";
-        total_received = 0;
-        scanned_block_height = 0;
-        start_height = 0;
-    }
-
     // viewkey is not stored in mysql db or anywhere
     // so need to be populated when user logs in.
     string viewkey;
 
     json
-    to_json() const
-    {
-        json j {{"id"                  , id},
-                {"address"             , address},
-                {"viewkey"             , viewkey},
-                {"total_received"      , total_received},
-                {"scanned_block_height", scanned_block_height},
-                {"start_height"        , start_height}
-        };
-
-        return j;
-    }
+    to_json() const;
 
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
 
 };
-
-ostream& operator<< (std::ostream& os, const XmrAccount& acc) {
-    os << "XmrAccount: " << acc.to_json().dump() << '\n';
-    return os;
-};
-
 
 sql_create_12(Transactions, 1, 2,
               sql_bigint_unsigned, id,
@@ -100,7 +71,6 @@ sql_create_12(Transactions, 1, 2,
               sql_varchar        , payment_id,
               sql_bigint_unsigned, mixin,
               sql_timestamp      , timestamp);
-
 
 
 struct XmrTransaction : public Transactions
@@ -143,52 +113,26 @@ struct XmrTransaction : public Transactions
     using Transactions::Transactions;
 
     json
-    to_json() const
-    {
-        json j {{"id"                  , id},
-                {"hash"                , hash},
-                {"prefix_hash"         , prefix_hash},
-                {"account_id"          , account_id},
-                {"total_received"      , total_received},
-                {"total_sent"          , total_sent},
-                {"height"              , height},
-                {"payment_id"          , payment_id},
-                {"coinbase"            , bool {coinbase}},
-                {"mixin"               , mixin},
-                {"timestamp"           , timestamp}
-        };
-
-        return j;
-    }
+    to_json() const;
 
     static DateTime
-    timestamp_to_DateTime(time_t timestamp)
-    {
-        return DateTime(timestamp);
-    }
+    timestamp_to_DateTime(time_t timestamp);
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrTransaction& acc);
 
 };
 
-ostream& operator<< (std::ostream& os, const XmrTransaction& acc) {
-    os << "XmrTransactions: " << acc.to_json().dump() << '\n';
-    return os;
-};
-
-
 sql_create_10(Outputs, 1, 3,
-             sql_bigint_unsigned, id,
-             sql_bigint_unsigned, account_id,
-             sql_bigint_unsigned, tx_id,
-             sql_varchar        , out_pub_key,
-             sql_varchar        , tx_pub_key,
-             sql_bigint_unsigned, amount,
-             sql_bigint_unsigned, global_index,
-             sql_bigint_unsigned, out_index,
-             sql_bigint_unsigned, mixin,
-             sql_timestamp      , timestamp);
-
+              sql_bigint_unsigned, id,
+              sql_bigint_unsigned, account_id,
+              sql_bigint_unsigned, tx_id,
+              sql_varchar        , out_pub_key,
+              sql_varchar        , tx_pub_key,
+              sql_bigint_unsigned, amount,
+              sql_bigint_unsigned, global_index,
+              sql_bigint_unsigned, out_index,
+              sql_bigint_unsigned, mixin,
+              sql_timestamp      , timestamp);
 
 struct XmrOutput : public Outputs
 {
@@ -217,31 +161,11 @@ struct XmrOutput : public Outputs
     using Outputs::Outputs;
 
     json
-    to_json() const
-    {
-        json j {{"id"                  , id},
-                {"account_id"          , account_id},
-                {"tx_id"               , tx_id},
-                {"out_pub_key"         , out_pub_key},
-                {"tx_pub_key"          , tx_pub_key},
-                {"amount"              , amount},
-                {"global_index"        , global_index},
-                {"out_index"           , out_index},
-                {"mixin"               , mixin},
-                {"timestamp"           , timestamp}
-        };
-
-        return j;
-    }
+    to_json() const;
 
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrOutput& out);
 
-};
-
-ostream& operator<< (std::ostream& os, const XmrOutput& out) {
-    os << "XmrOutputs: " << out.to_json().dump() << '\n';
-    return os;
 };
 
 
@@ -277,36 +201,14 @@ struct XmrInput : public Inputs
                                 %3q, %4q, %5q);
     )";
 
-
-
     using Inputs::Inputs;
 
     json
-    to_json() const
-    {
-        json j {{"id"                  , id},
-                {"account_id"          , account_id},
-                {"tx_id"               , tx_id},
-                {"output_id"           , output_id},
-                {"key_image"           , key_image},
-                {"amount"              , amount},
-                {"timestamp"           , timestamp}
-        };
-
-        return j;
-    }
-
+    to_json() const;
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrInput& out);
 
 };
-
-ostream& operator<< (std::ostream& os, const XmrInput& out) {
-    os << "XmrInput: " << out.to_json().dump() << '\n';
-    return os;
-};
-
-
 
 sql_create_9(Payments, 1, 2,
              sql_bigint_unsigned, id,
@@ -344,48 +246,23 @@ struct XmrPayment : public Payments
     using Payments::Payments;
 
     json
-    to_json() const
-    {
-        json j {{"id"               , id},
-                {"address"          , address},
-                {"payment_id"       , payment_id},
-                {"tx_hash"          , tx_hash},
-                {"request_fulfilled", bool {request_fulfilled}},
-                {"payment_address"  , payment_address},
-                {"import_fee"       , import_fee}
-        };
-
-        return j;
-    }
-
+    to_json() const;
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrPayment& out);
 
 };
 
-ostream& operator<< (std::ostream& os, const XmrPayment& out) {
-    os << "XmrPayment: " << out.to_json().dump() << '\n';
-    return os;
-};
-
-
-
-
-// this is MySQL VIEW, based on the Transactions,
-// Outputs and Inputs tables
 sql_create_10(TransactionsWithOutsAndIns, 1, 2,
-             sql_bigint_unsigned, tx_id,
-             sql_bigint_unsigned, account_id,
-             sql_varchar        , out_pub_key,
-             sql_bigint_unsigned, amount,
-             sql_bigint_unsigned, out_index,
-             sql_bigint_unsigned, global_index,
-             sql_varchar        , tx_pub_key,
-             sql_timestamp      , timestamp,
-             sql_varchar_null   , key_image,
-             sql_bigint_unsigned, mixin);
-
-
+              sql_bigint_unsigned, tx_id,
+              sql_bigint_unsigned, account_id,
+              sql_varchar        , out_pub_key,
+              sql_bigint_unsigned, amount,
+              sql_bigint_unsigned, out_index,
+              sql_bigint_unsigned, global_index,
+              sql_varchar        , tx_pub_key,
+              sql_timestamp      , timestamp,
+              sql_varchar_null   , key_image,
+              sql_bigint_unsigned, mixin);
 
 struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
 {
@@ -402,60 +279,17 @@ struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
     using TransactionsWithOutsAndIns::TransactionsWithOutsAndIns;
 
     json
-    to_json() const
-    {
-
-        json j {{"tx_id"               , tx_id},
-                {"account_id"          , account_id},
-                {"amount"              , amount},
-                {"tx_pub_key"          , tx_pub_key},
-                {"out_pub_key"         , out_pub_key},
-                {"global_index"        , global_index},
-                {"out_index"           , out_index},
-                {"timestamp"           , timestamp},
-                {"spend_key_images"    , json::array()},
-                {"key_image"           , key_image_to_string()},
-                {"mixin"               , mixin}
-        };
-
-        return j;
-    }
+    to_json() const;
 
     json
-    spent_output() const
-    {
-        json j {{"amount"    , amount},
-                {"key_image" , key_image_to_string()},
-                {"tx_pub_key", tx_pub_key},
-                {"out_index" , out_index},
-                {"mixin"     , mixin}
-        };
+    spent_output() const;
 
-        return j;
-    }
-
-
-    string key_image_to_string() const
-    {
-        string key_image_str {"NULL"};
-
-        if (!key_image.is_null)
-        {
-            key_image_str = key_image.data;
-        }
-
-        return key_image_str;
-    }
-
+    string
+    key_image_to_string() const;
 
     friend std::ostream& operator<< (std::ostream& stream,
                                      const XmrTransactionWithOutsAndIns& out);
 
-};
-
-ostream& operator<< (std::ostream& os, const XmrTransactionWithOutsAndIns& out) {
-    os << "XmrTransactionWithOutsAndIns: " << out.to_json().dump() << '\n';
-    return os;
 };
 
 

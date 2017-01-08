@@ -5,10 +5,12 @@ project(myxrm)
 set(SOURCE_FILES
 		MicroCore.cpp
 		tools.cpp
-		CmdLineOptions.cpp MySqlConnector.h
-		CurrentBlockchainStatus.h
-		ssqlses.h
-		MySqlAccounts.h)
+		CmdLineOptions.cpp
+		CurrentBlockchainStatus.cpp
+		MySqlConnector.cpp
+		MySqlAccounts.cpp
+		ssqlses.cpp
+		YourMoneroRequests.cpp TxSearch.cpp TxSearch.h)
 
 # make static library called libmyxrm
 # that we are going to link to
