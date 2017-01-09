@@ -1266,14 +1266,7 @@ get_human_readable_timestamp(uint64_t ts)
 
     gmtime_r(&tt, &tm);
 
-    uint64_t now = time(NULL);
-
-    uint64_t diff = ts > now ? ts - now : now - ts;
-
-    if (diff > 24*3600)
-        strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
-    else
-        strftime(buffer, sizeof(buffer), "%I:%M:%S %p", &tm);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %I:%M:%S ", &tm);
 
     return std::string(buffer);
 }
