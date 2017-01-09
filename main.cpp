@@ -69,7 +69,7 @@ xmreg::MySqlConnector::dbname    = "openmonero";
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
-xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 60;
+xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
 xmreg::CurrentBlockchainStatus::import_payment_address             = address_str;
 xmreg::CurrentBlockchainStatus::import_payment_viewkey             = viewkey_str;
 xmreg::CurrentBlockchainStatus::import_fee                         = static_cast<uint64_t>(0.01e12);

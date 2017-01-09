@@ -48,6 +48,12 @@ class TxSearch
     // represents a row in mysql's Accounts table
     shared_ptr<XmrAccount> acc;
 
+    // stores known output public keys.
+    // used as a cash to fast look up of
+    // our public keys in key images. Saves a lot of
+    // mysql queries to Outputs table.
+    vector<string> known_outputs_keys;
+
     // this manages all mysql queries
     // its better to when each thread has its own mysql connection object.
     // this way if one thread crashes, it want take down
@@ -78,6 +84,9 @@ public:
 
     bool
     still_searching();
+
+    void
+    populate_known_outputs();
 
 };
 

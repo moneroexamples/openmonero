@@ -35,6 +35,8 @@ TxSearch::TxSearch(XmrAccount& _acc)
         throw TxSearchException("Cant parse private key: " + acc->viewkey);
     }
 
+    populate_known_outputs();
+
     // start searching from last block that we searched for
     // this accont
     searched_blk_no = acc->scanned_block_height;
@@ -352,6 +354,10 @@ TxSearch::search()
                         //cerr << "out_mysql_id is zero!" << endl;
                         //throw TxSearchException("out_mysql_id is zero!");
                     }
+
+                    // add the new output to our cash of known outputs
+                    known_outputs_keys.push_back(std::get<0>(out_k_idx));
+
                 } // for (auto &out_k_idx: found_mine_outputs)
 
 
@@ -404,6 +410,21 @@ TxSearch::search()
                 for (const cryptonote::output_data_t& output_data: mixin_outputs)
                 {
                     string output_public_key_str = pod_to_hex(output_data.pubkey);
+
+                    // before going to the mysql, check our known outputs cash
+                    // if the key exists. Its much faster than going to mysql
+                    // for this.
+
+                    if (std::find(
+                            known_outputs_keys.begin(),
+                            known_outputs_keys.end(),
+                            output_public_key_str)
+                        == known_outputs_keys.end())
+                    {
+                        // this mixins's output is unknown.
+                        continue;
+                    }
+
 
                     XmrOutput out;
 
@@ -562,6 +583,20 @@ TxSearch::still_searching()
     return continue_search;
 }
 
+void
+TxSearch::populate_known_outputs()
+{
+    vector<XmrOutput> outs;
+
+    if (xmr_accounts->select_outputs(acc->id, outs))
+    {
+        for (const XmrOutput& out: outs)
+        {
+            known_outputs_keys.push_back(out.out_pub_key);
+        }
+
+    }
+}
 
 
 }
