@@ -286,6 +286,9 @@ generated_payment_id()
     return crypto::rand<crypto::hash>();
 }
 
+string
+get_human_readable_timestamp(uint64_t ts);
+
 }
 
 #endif //XMREG01_TOOLS_H

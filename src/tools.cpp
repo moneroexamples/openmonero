@@ -1253,7 +1253,30 @@ make_tx_from_json(const string& json_str, transaction& tx)
     return true;
 }
 
+string
+get_human_readable_timestamp(uint64_t ts)
+{
+    char buffer[64];
+    if (ts < 1234567890)
+        return "<unknown>";
 
+    time_t tt = ts;
+
+    struct tm tm;
+
+    gmtime_r(&tt, &tm);
+
+    uint64_t now = time(NULL);
+
+    uint64_t diff = ts > now ? ts - now : now - ts;
+
+    if (diff > 24*3600)
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm);
+    else
+        strftime(buffer, sizeof(buffer), "%I:%M:%S %p", &tm);
+
+    return std::string(buffer);
+}
 
 
 }
