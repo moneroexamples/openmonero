@@ -12,6 +12,10 @@ from, and originally developed by https://mymonero.com/.
 However, unlike MyMonero's backend, Open Monero's backend is open sourced, free
 to use, host and modify. 
 
+##  Status
+
+Still under development as its not finished.
+
 ## Screenshot
 
 ![Open Monero]()
