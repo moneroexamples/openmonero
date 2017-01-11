@@ -151,12 +151,10 @@ TxSearch::search()
         // can filter out false positives.
         for (transaction& tx: blk_txs)
         {
-
-            crypto::hash tx_hash;
-            crypto::hash tx_prefix_hash;
-
-            string tx_hash_str;
-            string tx_prefix_hash_str;
+            crypto::hash tx_hash        = get_transaction_hash(tx);
+            string tx_hash_str          = pod_to_hex(tx_hash);
+            crypto::hash tx_prefix_hash = get_transaction_prefix_hash(tx);
+            string tx_prefix_hash_str   = pod_to_hex(tx_prefix_hash);
 
             bool is_coinbase_tx = is_coinbase(tx);
 
@@ -252,17 +250,14 @@ TxSearch::search()
 
                 if (mine_output)
                 {
-                    tx_hash            = get_transaction_hash(tx);
-                    tx_hash_str        = pod_to_hex(tx_hash);
-                    tx_prefix_hash     = get_transaction_prefix_hash(tx);
-                    tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
+
 
                     string out_key_str = pod_to_hex(txout_k.key);
 
                     // found an output associated with the given address and viewkey
                     string msg = fmt::format("block: {:d}, tx_hash:  {:s}, output_pub_key: {:s}\n",
                                              searched_blk_no,
-                                             pod_to_hex(tx_hash),
+                                             pod_to_hex(get_transaction_hash(tx)),
                                              out_key_str);
 
                     cout << msg << endl;
@@ -273,7 +268,7 @@ TxSearch::search()
                     found_mine_outputs.emplace_back(out_key_str,
                                                     amount,
                                                     output_idx_in_tx);
-                }
+                } //  if (mine_output)
 
             } // for (const auto& out: outputs)
 
@@ -282,6 +277,7 @@ TxSearch::search()
 
             if (!found_mine_outputs.empty())
             {
+
 
                 // before adding this tx and its outputs to mysql
                 // check if it already exists. So that we dont
@@ -464,11 +460,6 @@ TxSearch::search()
                 // seems we have some inputs found. time
                 // to write it to mysql. But first,
                 // check if this tx is written in mysql.
-
-                tx_hash            = get_transaction_hash(tx);
-                tx_hash_str        = pod_to_hex(tx_hash);
-                tx_prefix_hash     = get_transaction_prefix_hash(tx);
-                tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
                 // calculate how much we preasumply spent.
                 uint64_t total_sent {0};
