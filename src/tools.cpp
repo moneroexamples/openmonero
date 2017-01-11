@@ -1119,6 +1119,24 @@ make_tx_from_json(const string& json_str, transaction& tx)
     {
         rct::rctSig& rct_signatures = tx.rct_signatures;
 
+        if (j["rct_signatures"].find("pseudoOuts") != j["rct_signatures"].end())
+        {
+            rct::keyV& pseudoOuts = rct_signatures.pseudoOuts;
+
+            for (json& pOut: j["rct_signatures"]["pseudoOuts"])
+            {
+                rct::key pOut_key;
+
+                if (!epee::string_tools::hex_to_pod(pOut, pOut_key))
+                {
+                    cerr << "Faild to parse pOut_key of pseudoOuts from json" << endl;
+                    return false;
+                }
+
+                pseudoOuts.push_back(pOut_key);
+            }
+        }
+
         vector<rct::ecdhTuple>& ecdhInfo = rct_signatures.ecdhInfo;
 
         for (json& ecdhI: j["rct_signatures"]["ecdhInfo"])

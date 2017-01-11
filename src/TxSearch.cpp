@@ -65,7 +65,7 @@ TxSearch::search()
 
         uint64_t loop_timestamp {current_timestamp};
 
-        if (loop_idx % 2 == 0)
+        if (loop_idx % 5 == 0)
         {
             // get loop time every second iteration. no need to call it
             // all the time.
