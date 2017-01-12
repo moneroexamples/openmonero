@@ -18,7 +18,7 @@ Still under development as its not finished.
 
 ## Screenshot
 
-![Open Monero]()
+![Open Monero](https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/screenshot/screen1.png)
 
 ## Scrap notes
 
