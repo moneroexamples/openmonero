@@ -241,10 +241,8 @@ TxSearch::search()
                             throw TxSearchException("Cant decode ringCT!");
                         }
 
-                        rct_amount = amount;
+                        amount = rct_amount;
                     }
-
-                    amount = rct_amount;
 
                 } // if (mine_output && tx.version == 2)
 
