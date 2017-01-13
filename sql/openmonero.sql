@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 04, 2017 at 06:39 AM
+-- Generation Time: Jan 13, 2017 at 04:51 AM
 -- Server version: 10.1.20-MariaDB
 -- PHP Version: 7.0.14
 
@@ -171,7 +171,7 @@ ALTER TABLE `Inputs`
 --
 ALTER TABLE `Outputs`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `out_pub_key` (`out_pub_key`),
+  ADD UNIQUE KEY `account_id_2` (`account_id`,`out_pub_key`),
   ADD KEY `account_id` (`account_id`),
   ADD KEY `tx_id` (`tx_id`);
 
@@ -203,22 +203,22 @@ ALTER TABLE `Accounts`
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=487;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=300;
 --
 -- AUTO_INCREMENT for table `Payments`
 --
 ALTER TABLE `Payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=428;
 --
 -- Constraints for dumped tables
 --
