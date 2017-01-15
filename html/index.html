@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html ng-app="thinWallet">
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="X-Frame-Options" content="deny" >
+
+    <title ng-bind="$root.title + ' - Open Monero'">Open Monero</title>
+
+<link rel="apple-touch-icon" sizes="250x250" href="img/monero.png">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link href="css/screen.css" media="screen, projection" rel="stylesheet" type="text/css"/>
+    <link href="bower_components/fontawesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="css/print.css" media="print" rel="stylesheet" type="text/css"/>
+    <!--[if IE]>
+    <link href="css/ie.css" media="screen, projection" rel="stylesheet" type="text/css"/>
+    <![endif]-->
+    <link href="css_2/normalize.css" rel="stylesheet"/>
+    <link href="css_2/webflow.css" rel="stylesheet"/>
+    <link href="css_2/moncrypt.webflow.css" rel="stylesheet"/>
+
+    <style>
+        .move-text-div {
+            word-wrap: break-word;
+        }
+    </style>
+
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/fastclick/lib/fastclick.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-route/angular-route.min.js"></script>
+    <script src="bower_components/ngInfiniteScroll/build/ng-infinite-scroll.min.js"></script>
+    <script src="bower_components/ng-idle/angular-idle.min.js"></script>
+    <script src="bower_components/zeroclipboard/dist/ZeroClipboard.min.js"></script>
+    <script src="bower_components/ng-clip/dest/ng-clip.min.js"></script>
+    <script src="bower_components/moment/min/moment-with-locales.min.js"></script>
+    <script src="js/webflow.js"></script>
+
+    <script src="js/crc32.js?1"></script>
+    <script src="js/mnemonic.js?2"></script>
+    <script src="js/lib/qrcode.min.js?1"></script>
+    <script src="js/lib/biginteger.js?1"></script>
+    <script src="js/config.js?4"></script>
+    <script src="js/crypto.js?1"></script>
+    <script src="js/base58.js?1"></script>
+    <script src="js/cn_util.js?2"></script>
+    <script src="js/app.js?2"></script>
+    <script src="js/filters/money.js?1"></script>
+    <script src="js/filters/time.js?1"></script>
+    <script src="js/filters/payment_uri.js?1"></script>
+    <script src="js/services/account.js?7"></script>
+    <script src="js/services/modal.js?3"></script>
+    <script src="js/controllers/top_bar.js?1"></script>
+    <script src="js/controllers/account_overview.js?1"></script>
+    <script src="js/controllers/generate_wallet.js?1"></script>
+    <script src="js/controllers/latest_blocks.js?1"></script>
+    <script src="js/controllers/latest_transactions.js?1"></script>
+    <script src="js/controllers/login.js?2"></script>
+    <script src="js/controllers/import_wallet.js?2"></script>
+    <script src="js/controllers/receive_coins.js?1"></script>
+    <script src="js/controllers/send_coins.js?4"></script>
+    <script src="js/controllers/temp.js?1"></script>
+    <script src="js/controllers/transactions.js?1"></script>
+    <script src="js/controllers/vanity_address.js?1"></script>
+    <script src="js/controllers/account.js?1"></script>
+    <script src="js/directives/clipboard.js?1"></script>
+    <script src="js/directives/scroll.js?1"></script>
+    <script src="js/directives/qr_code.js?1"></script>
+    <script src="js/directives/modal.js?1"></script>
+    <script src="js/directives/forms.js?1"></script>
+    <script src="js/routes.js?4"></script>
+</head>
+
+<body ng-controller="AccountCtrl">
+
+<div ng-include src="getModalURL()"></div>
+
+<div class="w-nav nav" data-collapse="small" data-animation="default" data-duration="400" data-contain="1">
+    <div class="w-container">
+        <nav class="w-nav-menu nav-menu" role="navigation">
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('create-your-account')" href="#/create-your-account">CREATE A NEW ACCOUNT</a>
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('support')" href="#/support">SUPPORT</a>
+            <a class="w-nav-link nav-link pointer login" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">LOG IN</a>
+
+            <div class="w-dropdown" ng-show="loggedIn()" data-delay="0">
+                <div class="w-dropdown-toggle dropdown-toggle">
+                    <div>Account</div>
+                    <div class="w-icon-dropdown-toggle arrow-icon-style"></div>
+                </div>
+                <nav class="w-dropdown-list dropdown-rounded">
+                    <a class="w-dropdown-link dropdown-styling pointer top" data-ix="display-login-key-review" show-modal="review-login-key">Review Login Key</a>
+                    <a class="w-dropdown-link dropdown-styling pointer" show-modal="import-wallet" ng-hide="account_scan_start_height == 0">Import Transactions</a>
+                    <a class="w-dropdown-link dropdown-styling pointer bottom" data-ix="display-review-account" show-modal="review-account-details">Account Details</a>
+                </nav>
+            </div>
+            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('support')" href="#/support">Support</a>
+            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('-')" ng-click="logout()" href="#/">Logout</a>
+        </nav>
+        <div class="w-nav-button menu-btn">
+            <div class="w-icon-nav-menu"></div>
+        </div>
+        <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#/overview' : '#/'}}">
+            <span style="font-size: 32px; font-weight: bold;">OPEN MONERO</span>
+        </a>
+    </div>
+</div>
+
+<section class="main-section">
+    <div ng-view></div>
+</section>
+
+<div class="footer-section">
+    <div class="lower-footer">
+        <div class="w-container">
+            <div class="w-row">
+                <div class="w-col w-col-4 middle-footer">
+                    <div class="copyright-text"><a class="footer-link"  href="https://github.com/moneroexamples/restbed-xmr">Source code</a></div>
+                </div>
+                <div class="w-clearfix footer-link">
+                    The fontend is adapted from <a class="footer-link"  style="margin-left: 0; float: none;" href="https://mymonero.com"> MyMonero</a>
+                </div>
+                <div class="w-col w-col-4 bottom-footer-column">
+
+                    <div class="w-clearfix footer-link">
+                        <a class="footer-link" href="#/privacy-policy" ng-class="currentPage('privacy-policy')">Privacy Policy</a>
+                    </div>
+                    <div class="w-clearfix footer-link">
+                        <a class="footer-link" href="#/terms" ng-class="currentPage('terms')">Terms of Use</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

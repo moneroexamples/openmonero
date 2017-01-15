@@ -1,0 +1,80 @@
+<div ng-include src="'partials/account-nav.html'"></div>
+
+<div class="body-section">
+    <div class="w-container">
+        <div>
+            <div class="w-row">
+                <div class="w-col w-col-8 w-clearfix">
+                    <div class="header-div-block">
+                        <h1 class="heading-contained">Receive</h1>
+                        <div class="subhead-text inner">Receive funds from any Monero user.</div>
+                    </div>
+                </div>
+                <div class="w-col w-col-4">
+                    <div class="balance-div">
+                        <div class="w-clearfix">
+                            <div class="balance-header">Your Balance</div>
+                        </div>
+                        <div class="balance-text">{{balance | money:false:true}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="w-container middle-container receive">
+        <div class="middle-div receive">
+            <div class="w-form send-form receive">
+                <form id="email-form" name="email-form" data-name="Email Form" form-autofill-fix>
+                    <label class="send-label" for="Receiver-address">Address</label>
+                    <div class="move-text-div">
+                        <div class="middle-text receive">{{address}} <span copy-to-clipboard="address"></span></div>
+                    </div>
+                    <div class="w-row">
+                        <div class="w-col w-col-6 responsive-column">
+                            <label class="send-label receive" for="Receiver-address">Amount</label>
+                            <input class="w-input send-text-box receive" id="Receiver-address" type="text"
+                                   ng-model="amount" placeholder="e.g. 0.5" name="Receiver-address"
+                                   data-name="Receiver address">
+                        </div>
+                        <div class="w-col w-col-6 responsive-column">
+                            <label class="send-label receive" for="Amount">Label</label>
+                            <input class="w-input send-text-box receive" id="Amount" type="text" ng-model="label"
+                                   placeholder="e.g. payment for Alice" name="Amount" data-name="Amount">
+                        </div>
+                    </div>
+                    <label class="send-label" for="Receiver-address-3">Payment ID (Optional)</label>
+                    <input class="w-input send-text-box" id="Receiver-address-3" type="text" ng-model="payment_id"
+                           placeholder="e.g. 59af9132941ec6e9f6ba3c4867e1cd92f2bd5fbce4325fc7b19bcdb55d640de5"
+                           name="Receiver-address-3" data-name="Receiver Address 3">
+                    <input scroll-to-marker="qrcode" class="w-button send-btn" id="form-submit" type="submit"
+                           value="Receive" data-wait="Please wait...">
+                </form>
+                <div class="w-form-done">
+                    <p>Thank you! The data has been captured!</p>
+                </div>
+                <div class="w-form-fail">
+                    <p>Oops! Something went wrong while submitting the data :(</p>
+                </div>
+            </div>
+        </div>
+        <div class="qr-div" scroll-marker="qrcode">
+            <div class="w-row">
+                <div class="w-col w-col-3 responsive-column">
+                    <div qr-code value="params | paymentUri"></div>
+                    <div id="qrcode-receive-coins" style="width: 220px;"></div>
+                </div>
+                <div class="w-col w-col-9 responsive-column">
+                    <div class="monero-code"><span class="help-text">Use this QR code to quickly receive payments</span>
+                    </div>
+                    <div class="move-text-div">
+                        <a ng-href="{{params | paymentUri}}" class="qr-code-text">{{params | paymentUri}}</a> <span copy-to-clipboard="params | paymentUri"></span>
+                    </div>
+                    <div class="info-div">
+                        <div class="overview-body-head">Why do I&nbsp;need a QR&nbsp;code?</div>
+                        <div class="middle-text">This QR&nbsp;code will enable you to rapidly receive payments. Instead of emailing or typing out a Monero address, someone sending you funds merely has to scan the QR code using a Monero client that supports this system. If you have entered information in the form above, the QR code will automatically be populated with that information once you click the "Receive" button.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

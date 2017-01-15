@@ -1,0 +1,40 @@
+<div class="review-details-modal" modal-name="openalias-confirm">
+  <div class="w-container review-details-container">
+    <div class="w-clearfix review-details-div">
+      <a class="w-inline-block close-modal" data-ix="close-login-key" ng-click="openaliasDialog.cancel()">
+        <div class="close-overlay pointer" data-ix="close-overlay">+</div>
+      </a>
+      <h1 class="head-modal">Address found via <a href="https://openalias.org">OpenAlias</a></h1>
+      <div class="subhead-text modal review">Please review the address for {{openaliasDialog.domain}}</div>
+      <div class="w-form form-wrapper">
+        <form id="email-form" name="email-form" data-name="Email Form">
+          <label class="field-label review" for="Mnemonic-2">Domain</label>
+          <div class="move-text-div">
+            <div class="review-text">{{openaliasDialog.domain}}</div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2" ng-show="openaliasDialog.name">Name</label>
+          <div class="move-text-div" ng-show="openaliasDialog.name">
+            <div class="review-text">{{openaliasDialog.name}}</div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2" ng-show="openaliasDialog.description">Description</label>
+          <div class="move-text-div" ng-show="openaliasDialog.description">
+            <div class="review-text">{{openaliasDialog.description}}</div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2">Address</label>
+          <div class="move-text-div">
+            <div class="review-text address">{{openaliasDialog.address}} <span copy-to-clipboard="openaliasDialog.address"></span></div>
+          </div>
+          <div class="move-text-div" style="margin-top: 10px;">
+            <div class="review-text bold">{{openaliasDialog.dnssec_used ? 'This address passed an additional check, DNSSEC, and is most probably correct' : 'WARNING: this address could not be validated via an additional check, DNSSEC, and thus may not be correct'}}</div>
+          </div>
+          <div class="move-text-div">
+            <div class="review-text ">Please note: it is important to double-check that the details above are correct, as the <a href="https://openalias.org">OpenAlias</a> address is resolved by the MyMonero server and not by your computer.</div>
+          </div>
+          <div class="submit-div">
+            <a class="login-btn modals pointer" data-ix="close-review-details" ng-click="openaliasDialog.confirm()">Confirm address</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<div class="lower-nav-section">
+    <div class="w-container">
+        <a class="lower-nav-link" href="#/overview" ng-class="currentPage('overview')">Overview</a>
+        <a class="lower-nav-link" href="#/transactions" ng-class="currentPage('transactions')">Transactions</a>
+        <a class="lower-nav-link" href="#/send" ng-class="currentPage('send')">Send</a>
+        <a class="lower-nav-link" href="#/receive" ng-class="currentPage('receive')">Receive</a>
+    </div>
+</div>
+<div class="w-container account-catchup-alert" ng-show="isAccountCatchingUp()">
+    <div class="w-form-done success-paragraph success-box" style="display: block;">
+        Your account is catching up, your details may be out-of-date until it is finished ({{blockchain_height - account_scanned_block_height}} blocks behind)
+    </div>
+</div>

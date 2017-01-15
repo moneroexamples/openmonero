@@ -1,0 +1,43 @@
+<div class="review-account-details" modal-name="import-wallet" ng-controller="ImportWalletCtrl">
+  <div class="w-container review-details-container">
+    <div class="w-clearfix review-details-div">
+      <a class="w-inline-block close-modal" data-ix="close-review-details" hide-modal>
+        <div class="close-overlay pointer" data-ix="close-overlay">+</div>
+      </a>
+      <h1 class="head-modal">Import transactions</h1>
+      <div class="subhead-text modal review">Import your transactions from the entire blockchain</div>
+      <div class="w-form form-wrapper">
+        <form id="email-form" name="email-form" data-name="Email Form">
+          <div class="move-text-div">
+            <div class="review-text">To import all your previous transactions and account
+              balance you have to pay a once-off import fee of <strong>{{import_fee | money:false:true}}</strong> to the
+              account listed below. The command to make the payment has already been prepared to make it
+              easy for you to copy and paste it into simplewallet.</div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2">Payment command</label>
+            <div class="review-text address">{{command}} <span copy-to-clipboard="command"></span></div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2">Payment address</label>
+          <div class="move-text-div">
+            <div class="review-text">import.mymonero.com (or use the full address below)</div>
+            <div class="review-text address">({{payment_address}} <span copy-to-clipboard="payment_address"></span>)</div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2">Payment ID (make sure to use this)</label>
+          <div class="move-text-div">
+            <div class="review-text">{{payment_id}} <span copy-to-clipboard="payment_id"></span></div>
+          </div>
+          <label class="field-label review" for="Mnemonic-2">Payment status</label>
+          <div class="move-text-div">
+            <div class="review-text">{{status}}</div>
+          </div>
+          <div class="submit-div">
+            <a class="login-btn modals pointer" data-ix="close-review-details" hide-modal>Ok, thanks!</a>
+          </div>
+        </form>
+      </div>
+      <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+        <p>{{error}}</p>
+      </div>
+    </div>
+  </div>
+</div>
