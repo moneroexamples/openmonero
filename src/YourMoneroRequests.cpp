@@ -123,7 +123,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     // to do anything except looking for tx and updating mysql
     // with relative tx information
 
-    if (MySqlAccounts::start_tx_search_thread(acc))
+    if (CurrentBlockchainStatus::start_tx_search_thread(acc))
     {
         cout << "Search thread started" << endl;
     }
@@ -258,7 +258,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     {
         // ping the search thread that we still need it.
         // otherwise it will finish after some time.
-        MySqlAccounts::ping_search_thread(xmr_address);
+        CurrentBlockchainStatus::ping_search_thread(xmr_address);
 
         j_response["total_received"]       = acc.total_received;
         j_response["start_height"]         = acc.start_height;
@@ -549,7 +549,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                         request_fulfilled = true;
 
                         // change search blk number in the search thread
-                        if (!MySqlAccounts::set_new_searched_blk_no(xmr_address, 0))
+                        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
                         {
                             cerr << "Updating searched_blk_no failed!" << endl;
                             j_response["status"] = "Updating searched_blk_no failed!";

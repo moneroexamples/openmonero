@@ -10,6 +10,8 @@
 
 #include "ssqlses.h"
 
+#include "CurrentBlockchainStatus.h"
+
 namespace xmreg
 {
 

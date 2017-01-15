@@ -8,6 +8,8 @@
 #include "tools.h"
 #include "mylmdb.h"
 #include "rpccalls.h"
+#include "MySqlAccounts.h"
+#include "TxSearch.h"
 
 namespace xmreg
 {
@@ -30,6 +32,7 @@ string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
+map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
@@ -72,8 +75,10 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                                        cout << "Check block height: " << current_height;
                                        cout << " no of mempool txs: " << mempool_txs.size();
                                        cout << endl;
-                                       //clean_search_thread_map();
-                                       std::this_thread::sleep_for(std::chrono::seconds(refresh_block_status_every_seconds));
+                                       clean_search_thread_map();
+                                       std::this_thread::sleep_for(
+                                               std::chrono::seconds(
+                                                       refresh_block_status_every_seconds));
                                    }
                                }};
 
@@ -429,6 +434,80 @@ CurrentBlockchainStatus::get_payment_id_as_string(const transaction& tx)
     }
 
     return payment_id_str;
+}
+
+
+
+bool
+CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(acc.address) > 0)
+    {
+        // thread for this address exist, dont make new one
+        cout << "Thread exisist, dont make new one" << endl;
+        return false;
+    }
+
+    // make a tx_search object for the given xmr account
+    searching_threads[acc.address] = make_shared<TxSearch>(acc);
+
+    // start the thread for the created object
+    std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
+    t1.detach();
+
+    return true;
+}
+
+bool
+CurrentBlockchainStatus::ping_search_thread(const string& address)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address) == 0)
+    {
+        // thread does not exist
+        cout << "does not exist" << endl;
+        return false;
+    }
+
+    searching_threads[address].get()->ping();
+
+    return true;
+}
+
+bool
+CurrentBlockchainStatus::set_new_searched_blk_no(const string& address, uint64_t new_value)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address) == 0)
+    {
+        // thread does not exist
+        cout << " thread does not exist" << endl;
+        return false;
+    }
+
+    searching_threads[address].get()->set_searched_blk_no(new_value);
+
+    return true;
+}
+
+
+void
+CurrentBlockchainStatus::clean_search_thread_map()
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto st: searching_threads)
+    {
+        if (st.second->still_searching() == false)
+        {
+            cout << st.first << " still searching: " << st.second->still_searching() << endl;
+            searching_threads.erase(st.first);
+        }
+    }
 }
 
 

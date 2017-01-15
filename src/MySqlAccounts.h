@@ -7,13 +7,12 @@
 
 #include "tools.h"
 #include "MySqlConnector.h"
-#include "CurrentBlockchainStatus.h"
+
 
 
 #include <iostream>
 #include <memory>
-#include <mutex>
-#include <thread>
+
 
 
 namespace xmreg
@@ -32,8 +31,6 @@ class XmrPayment;
 class XmrAccount;
 class TxSearch;
 
-
-static mutex searching_threads_map_mtx;
 
 
 class MysqlTransactionWithOutsAndIns
@@ -179,10 +176,6 @@ class MySqlAccounts
 
     shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
 
-    // map that will keep track of search threads. In the
-    // map, key is address to which a running thread belongs to.
-    // make it static to guarantee only one such map exist.
-    static map<string, shared_ptr<TxSearch>> searching_threads;
 
 public:
 
@@ -213,11 +206,9 @@ public:
     bool
     select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs);
 
-
     bool
     select_txs_with_inputs_and_outputs(const uint64_t& account_id,
                                        vector<XmrTransactionWithOutsAndIns>& txs);
-
 
     bool
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs);
@@ -257,25 +248,9 @@ public:
     uint64_t
     get_total_recieved(const uint64_t& account_id);
 
-
     bool
     update(XmrAccount& acc_orginal, XmrAccount& acc_new);
 
-
-    // definitions of these function are at the end of this file
-    // due to forward declaraions of TxSearch
-    static bool
-    start_tx_search_thread(XmrAccount acc);
-
-    static bool
-    ping_search_thread(const string& address);
-
-    static bool
-    set_new_searched_blk_no(const string& address, uint64_t new_value);
-
-    //@TODO: Need to use it somewhere
-    static void
-    clean_search_thread_map();
 
 };
 

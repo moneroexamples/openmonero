@@ -5,8 +5,10 @@
 #ifndef RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
 #define RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
 
+#define MYSQLPP_SSQLS_NO_STATICS 1
 
 #include "MicroCore.h"
+#include "ssqlses.h"
 
 #include <iostream>
 #include <memory>
@@ -17,12 +19,14 @@
 
 namespace xmreg {
 
+using namespace std;
 
 class TxSearch;
 class XmrAccount;
 class MySqlAccounts;
 
 
+static mutex searching_threads_map_mtx;
 static mutex getting_mempool_txs;
 
 /*
@@ -55,6 +59,11 @@ struct CurrentBlockchainStatus
     // vector of mempool transactions that all threads
     // can refer to
     static vector<transaction> mempool_txs;
+
+    // map that will keep track of search threads. In the
+    // map, key is address to which a running thread belongs to.
+    // make it static to guarantee only one such map exist.
+    static map<string, shared_ptr<TxSearch>> searching_threads;
 
     // since this class monitors current status
     // of the blockchain, its seems logical to
@@ -118,6 +127,20 @@ struct CurrentBlockchainStatus
     get_payment_id_as_string(const transaction& tx);
 
 
+
+    // definitions of these function are at the end of this file
+    // due to forward declaraions of TxSearch
+    static bool
+    start_tx_search_thread(XmrAccount acc);
+
+    static bool
+    ping_search_thread(const string& address);
+
+    static bool
+    set_new_searched_blk_no(const string& address, uint64_t new_value);
+
+    static void
+    clean_search_thread_map();
 
 };
 

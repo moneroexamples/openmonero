@@ -6,6 +6,7 @@
 
 #include "MySqlAccounts.h"
 #include "TxSearch.h"
+#include "CurrentBlockchainStatus.h"
 
 #include "ssqlses.h"
 
@@ -612,8 +613,6 @@ MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
 }
 
 
-map<string, shared_ptr<TxSearch>> MySqlAccounts::searching_threads;
-
 MySqlAccounts::MySqlAccounts()
 {
     // create connection to the mysql
@@ -918,80 +917,6 @@ MySqlAccounts::update(XmrAccount& acc_orginal, XmrAccount& acc_new)
     }
 
     return false;
-}
-
-
-
-bool
-MySqlAccounts::start_tx_search_thread(XmrAccount acc)
-{
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
-
-    if (searching_threads.count(acc.address) > 0)
-    {
-        // thread for this address exist, dont make new one
-        cout << "Thread exisist, dont make new one" << endl;
-        return false;
-    }
-
-    // make a tx_search object for the given xmr account
-    searching_threads[acc.address] = make_shared<TxSearch>(acc);
-
-    // start the thread for the created object
-    std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
-    t1.detach();
-
-    return true;
-}
-
-bool
-MySqlAccounts::ping_search_thread(const string& address)
-{
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
-
-    if (searching_threads.count(address) == 0)
-    {
-        // thread does not exist
-        cout << "does not exist" << endl;
-        return false;
-    }
-
-    searching_threads[address].get()->ping();
-
-    return true;
-}
-
-bool
-MySqlAccounts::set_new_searched_blk_no(const string& address, uint64_t new_value)
-{
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
-
-    if (searching_threads.count(address) == 0)
-    {
-        // thread does not exist
-        cout << " thread does not exist" << endl;
-        return false;
-    }
-
-    searching_threads[address].get()->set_searched_blk_no(new_value);
-
-    return true;
-}
-
-
-void
-MySqlAccounts::clean_search_thread_map()
-{
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
-
-    for (auto st: searching_threads)
-    {
-        if (st.second->still_searching() == false)
-        {
-            cout << st.first << " still searching: " << st.second->still_searching() << endl;
-            searching_threads.erase(st.first);
-        }
-    }
 }
 
 
