@@ -58,6 +58,8 @@ TxSearch::search()
     uint64_t current_timestamp = chrono::duration_cast<chrono::seconds>(
             chrono::system_clock::now().time_since_epoch()).count();
 
+    last_ping_timestamp = current_timestamp;
+
 
     uint64_t loop_idx {0};
 
