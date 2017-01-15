@@ -15,10 +15,10 @@
 namespace xmreg
 {
 
+using namespace std;
+
 class XmrAccount;
 class MySqlAccounts;
-
-
 
 class TxSearchException: public std::runtime_error
 {
