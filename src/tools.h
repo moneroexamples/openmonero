@@ -163,8 +163,8 @@ get_payment_id(const transaction& tx,
 inline void
 enable_monero_log() {
     uint32_t log_level = 0;
-    epee::log_space::get_set_log_detalisation_level(true, log_level);
-    epee::log_space::log_singletone::add_logger(LOGGER_CONSOLE, NULL, NULL);
+    log_space::log_singletone::get_set_log_detalisation_level(true, log_level);
+    log_space::log_singletone::log_singletone::add_logger(LOGGER_CONSOLE, NULL, NULL);
 }
 
 

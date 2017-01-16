@@ -154,7 +154,28 @@ CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk
     return true;
 }
 
+
 bool
+CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash)
+{
+    return core_storage->have_tx(tx_hash);
+}
+
+bool
+CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
+{
+    crypto::hash tx_hash;
+
+    if (hex_to_pod(tx_hash_str, tx_hash))
+    {
+        return tx_exist(tx_hash);
+    }
+
+    throw runtime_error("(hex_to_pod(tx_hash_str, tx_hash) failed!");
+}
+
+
+    bool
 CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
             const vector<uint64_t>& absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)

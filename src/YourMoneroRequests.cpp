@@ -180,10 +180,22 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 for (XmrTransaction tx: txs)
                 {
+
+                    // first we check if txs stored in db are already spendable
+                    // it means if they are older than 10 blocks. If  yes,
+                    // we mark them as spendable, as we assumet that blocks
+                    // older than 10 blocks are permanent, i.e, they wont get
+                    // orphaned.
+
                     if (bool {tx.spendable} == false)
                     {
                         if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
                         {
+
+                            // this tx was before marked as unspendable, but now
+                            // it is spendable. Meaning, that its older than 10 blocks.
+                            // so mark it as spendable, so that its permanet.
+
                             uint64_t no_row_updated = xmr_accounts->mark_tx_spendable(tx.id);
 
                             if (no_row_updated != 1)
@@ -192,6 +204,15 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                             }
 
                             tx.spendable = true;
+                        }
+                        else
+                        {
+                            // tx was marked as non-spendable, i.e., youger than 10 blocks
+                            // so we still are going to use this txs, but we need to double
+                            // check if its still valid, i.e., it's block did not get orphaned.
+                            // we do this by checking if txs still exists in the blockchain
+                            // and if its in the same block as noted in the database.
+
                         }
                     }
 

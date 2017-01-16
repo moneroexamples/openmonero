@@ -98,6 +98,12 @@ struct CurrentBlockchainStatus
     get_block_txs(const block &blk, list <transaction> &blk_txs);
 
     static bool
+    tx_exist(const crypto::hash& tx_hash);
+
+    static bool
+    tx_exist(const string& tx_hash_str);
+
+    static bool
     get_output_keys(const uint64_t& amount,
                     const vector<uint64_t>& absolute_offsets,
                     vector<cryptonote::output_data_t>& outputs);
