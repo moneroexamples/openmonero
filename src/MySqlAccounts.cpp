@@ -417,6 +417,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
                                         tx_data.unlock_time,
                                         tx_data.height,
                                         tx_data.coinbase,
+                                        tx_data.spendable,
                                         tx_data.payment_id,
                                         tx_data.mixin,
                                         tx_data.timestamp);

@@ -30,6 +30,7 @@ vector<transaction>     CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;
 string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
+uint64_t                CurrentBlockchainStatus::spendable_age {10}; // default number in monero
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
 map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
@@ -120,6 +121,13 @@ CurrentBlockchainStatus::init_monero_blockchain()
     }
 
     return true;
+}
+
+
+bool
+CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height)
+{
+    return (tx_blk_height + spendable_age > get_current_blockchain_height());
 }
 
 bool

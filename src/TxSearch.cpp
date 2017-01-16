@@ -134,6 +134,10 @@ TxSearch::search()
                        searched_blk_no, pod_to_hex(get_block_hash(blk)));
         }
 
+        // flag indicating whether the txs in the given block are spendable.
+        // this is true when block number is more than 10 blocks from current
+        // blockchain height.
+        bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(searched_blk_no);
 
         DateTime blk_timestamp_mysql_format
                 = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
@@ -296,7 +300,6 @@ TxSearch::search()
                     continue;
                 }
 
-
                 tx_data.hash           = tx_hash_str;
                 tx_data.prefix_hash    = tx_prefix_hash_str;
                 tx_data.account_id     = acc->id;
@@ -306,6 +309,7 @@ TxSearch::search()
                 tx_data.unlock_time    = 0;
                 tx_data.height         = searched_blk_no;
                 tx_data.coinbase       = is_coinbase_tx;
+                tx_data.spendable      = is_spendable;
                 tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                 tx_data.mixin          = get_mixin_no(tx) - 1;
                 tx_data.timestamp      = blk_timestamp_mysql_format;

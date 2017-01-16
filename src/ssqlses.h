@@ -58,7 +58,7 @@ struct XmrAccount : public Accounts
 
 };
 
-sql_create_12(Transactions, 1, 2,
+sql_create_13(Transactions, 1, 2,
               sql_bigint_unsigned, id,
               sql_varchar        , hash,
               sql_varchar        , prefix_hash,
@@ -68,6 +68,7 @@ sql_create_12(Transactions, 1, 2,
               sql_bigint_unsigned, unlock_time,
               sql_bigint_unsigned, height,
               sql_bool           , coinbase,
+              sql_bool           , spendable,
               sql_varchar        , payment_id,
               sql_bigint_unsigned, mixin,
               sql_timestamp      , timestamp);
@@ -92,12 +93,12 @@ struct XmrTransaction : public Transactions
         INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash` ,
                                      `account_id`, `total_received`,
                                     `total_sent`, `unlock_time`, `height`,
-                                    `coinbase`, `payment_id`, `mixin`,
+                                    `coinbase`, `spendable`, `payment_id`, `mixin`,
                                     `timestamp`)
                                 VALUES (%0q, %1q, %2q,
                                         %3q, %4q, %5q,
                                         %6q, %7q, %8q,
-                                        %9q, %10q);
+                                        %9q, %10q, , %11q);
     )";
 
     static constexpr const char* SUM_XMR_RECIEVED = R"(

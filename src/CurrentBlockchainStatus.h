@@ -52,6 +52,7 @@ struct CurrentBlockchainStatus
     static string   import_payment_address;
     static string   import_payment_viewkey;
     static uint64_t import_fee;
+    static uint64_t spendable_age;
 
     static account_public_address address;
     static secret_key             viewkey;
@@ -86,6 +87,9 @@ struct CurrentBlockchainStatus
 
     static bool
     init_monero_blockchain();
+
+    static bool
+    is_tx_unlocked(uint64_t tx_blk_height);
 
     static bool
     get_block(uint64_t height, block &blk);
