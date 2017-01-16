@@ -100,6 +100,11 @@ struct XmrTransaction : public Transactions
                                         %9q, %10q, %11q);
     )";
 
+    static constexpr const char* MARK_AS_SPENDABLE_STMT = R"(
+       UPDATE `Transactions` SET `spendable` = 1,  `timestamp` = CURRENT_TIMESTAMP
+                             WHERE `id` = %0q;
+    )";
+
     static constexpr const char* SUM_XMR_RECIEVED = R"(
         SELECT SUM(`total_received`) AS total_received
                FROM `Transactions`

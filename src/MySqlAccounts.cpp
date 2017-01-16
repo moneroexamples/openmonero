@@ -435,6 +435,26 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     return 0;
 }
 
+uint64_t
+MysqlTransactions::mark_spendable(const uint64_t tx_id_no)
+{
+    Query query = conn->query(XmrTransaction::MARK_AS_SPENDABLE_STMT);
+    query.parse();
+
+    try
+    {
+        SimpleResult sr = query.execute(tx_id_no);
+
+        if (sr.rows() == 1)
+            return sr.rows();
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        return 0;
+    }
+}
+
 
 bool
 MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
@@ -839,6 +859,12 @@ bool
 MySqlAccounts::tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
 {
     return mysql_tx->exist(account_id, tx_hash_str, tx);
+}
+
+uint64_t
+MySqlAccounts::mark_tx_spendable(uint64_t tx_id_no)
+{
+    return mysql_tx->mark_spendable(tx_id_no);
 }
 
 uint64_t

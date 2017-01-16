@@ -122,6 +122,9 @@ public:
     uint64_t
     insert(const XmrTransaction& tx_data);
 
+    uint64_t
+    mark_spendable(const uint64_t tx_id_no);
+
 
     bool
     exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx);
@@ -229,6 +232,9 @@ public:
 
     bool
     tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx);
+
+    uint64_t
+    mark_tx_spendable(uint64_t tx_id_no);
 
     uint64_t
     insert_payment(const XmrPayment& payment);

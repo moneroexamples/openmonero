@@ -180,6 +180,21 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 for (XmrTransaction tx: txs)
                 {
+                    if (bool {tx.spendable} == false)
+                    {
+                        if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
+                        {
+                            uint64_t no_row_updated = xmr_accounts->mark_tx_spendable(tx.id);
+
+                            if (no_row_updated != 1)
+                            {
+                                throw runtime_error("no_row_updated != 1");
+                            }
+
+                            tx.spendable = true;
+                        }
+                    }
+
                     // get inputs associated with a given
                     // transaction, if any.
 
