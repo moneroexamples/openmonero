@@ -127,7 +127,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
 bool
 CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height)
 {
-    return (tx_blk_height + spendable_age > get_current_blockchain_height());
+    return (tx_blk_height + spendable_age < get_current_blockchain_height());
 }
 
 bool
