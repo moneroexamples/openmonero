@@ -492,7 +492,8 @@ TxSearch::search()
                     tx_data.total_sent     = total_sent;
                     tx_data.unlock_time    = 0;
                     tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase(tx);
+                    tx_data.coinbase       = is_coinbase;
+                    tx_data.spendable      = is_spendable;
                     tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;
                     tx_data.timestamp      = blk_timestamp_mysql_format;

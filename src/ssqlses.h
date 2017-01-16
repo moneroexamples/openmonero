@@ -90,15 +90,14 @@ struct XmrTransaction : public Transactions
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash` ,
-                                     `account_id`, `total_received`,
-                                    `total_sent`, `unlock_time`, `height`,
-                                    `coinbase`, `spendable`, `payment_id`, `mixin`,
-                                    `timestamp`)
+        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `account_id`,
+                                           `total_received`, `total_sent`, `unlock_time`,
+                                           `height`, `coinbase`, `spendable`,
+                                           `payment_id`, `mixin`, `timestamp`)
                                 VALUES (%0q, %1q, %2q,
                                         %3q, %4q, %5q,
                                         %6q, %7q, %8q,
-                                        %9q, %10q, , %11q);
+                                        %9q, %10q, %11q);
     )";
 
     static constexpr const char* SUM_XMR_RECIEVED = R"(
