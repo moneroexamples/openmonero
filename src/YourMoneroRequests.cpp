@@ -180,12 +180,14 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 vector<XmrTransactionWithOutsAndIns> inputs;
 
-                if (xmr_accounts->select_inputs_for_tx(tx.id, inputs)) {
+                if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+                {
                     json j_spent_outputs = json::array();
 
-                    uint64_t total_spent{0};
+                    uint64_t total_spent {0};
 
-                    for (XmrTransactionWithOutsAndIns input: inputs) {
+                    for (XmrTransactionWithOutsAndIns input: inputs)
+                    {
                         total_spent += input.amount;
                         j_spent_outputs.push_back(input.spent_output());
                     }
@@ -249,8 +251,6 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc))
     {
-
-        //@todo: this needs to be set in the loop as in earlier function
         uint64_t total_received {0};
 
         // ping the search thread that we still need it.
@@ -264,31 +264,76 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
         uint64_t total_sent {0};
 
-        vector<XmrTransactionWithOutsAndIns> txs;
+        vector<XmrTransaction> txs;
 
-        // retrieve txs from mysql associated with the given address
-        if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
         {
             json j_spent_outputs = json::array();
 
-            for (XmrTransactionWithOutsAndIns tx: txs)
+            for (XmrTransaction tx: txs)
             {
+                vector<XmrOutput> outs;
 
-                if (tx.key_image.is_null)
+                if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
                 {
-                    continue;
+                    for (XmrOutput &out: outs)
+                    {
+                        // check if the output, has been spend
+                        vector<XmrInput> ins;
+
+                        if (xmr_accounts->select_inputs_for_out(out.id, ins))
+                        {
+                            for (XmrInput& in: ins)
+                            {
+                                j_spent_outputs.push_back({
+                                    {"amount"     , in.amount},
+                                    {"key_image"  , in.key_image},
+                                    {"tx_pub_key" , out.tx_pub_key},
+                                    {"out_index"  , out.out_index},
+                                    {"mixin"      , out.mixin},
+                                });
+
+                                total_sent += in.amount;
+                            }
+                        }
+
+                        total_received += out.amount;
+                    }
                 }
-
-                j_spent_outputs.push_back(tx.spent_output());
-
-                total_sent += tx.amount;
             }
 
-            j_response["spent_outputs"] = j_spent_outputs;
+            j_response["total_received"] = total_received;
+            j_response["total_sent"]     = total_sent;
 
-            j_response["total_sent"]    = total_sent;
+            j_response["spent_outputs"]  = j_spent_outputs;
+        }
 
-        } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+
+//        vector<XmrTransactionWithOutsAndIns> txs;
+//
+//        // retrieve txs from mysql associated with the given address
+//        if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
+//        {
+//            json j_spent_outputs = json::array();
+//
+//            for (XmrTransactionWithOutsAndIns tx: txs)
+//            {
+//
+//                if (tx.key_image.is_null)
+//                {
+//                    continue;
+//                }
+//
+//                j_spent_outputs.push_back(tx.spent_output());
+//
+//                total_sent += tx.amount;
+//            }
+//
+//            j_response["spent_outputs"] = j_spent_outputs;
+//
+//            j_response["total_sent"]    = total_sent;
+//
+//        } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
 
     } // if (xmr_accounts->select(xmr_address, acc))
 

@@ -408,7 +408,7 @@ TxSearch::search()
                 }
 
 
-                // for each found output public key find check if its ours or not
+                // for each found output public key check if its ours or not
                 for (const cryptonote::output_data_t& output_data: mixin_outputs)
                 {
                     string output_public_key_str = pod_to_hex(output_data.pubkey);
@@ -444,7 +444,7 @@ TxSearch::search()
                         in_data.tx_id       = 0; // for now zero, later we set it
                         in_data.output_id   = out.id;
                         in_data.key_image   = pod_to_hex(in_key.k_image);
-                        in_data.amount      = in_key.amount;
+                        in_data.amount      = out.amount; // must match corresponding output's amount
                         in_data.timestamp   = blk_timestamp_mysql_format;
 
                         inputs_found.push_back(in_data);
@@ -488,9 +488,9 @@ TxSearch::search()
                     tx_data.hash           = tx_hash_str;
                     tx_data.prefix_hash    = tx_prefix_hash_str;
                     tx_data.account_id     = acc->id;
-                    tx_data.total_received = 0;
+                    tx_data.total_received = 0; // because this is spending, total_recieved is 0
                     tx_data.total_sent     = total_sent;
-                    tx_data.unlock_time    = 0;
+                    tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
                     tx_data.height         = searched_blk_no;
                     tx_data.coinbase       = is_coinbase_tx;
                     tx_data.spendable      = is_spendable;
