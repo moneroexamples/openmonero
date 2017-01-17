@@ -109,8 +109,10 @@ CurrentBlockchainStatus::set_testnet(bool is_testnet)
 bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
-    // enable basic monero log output
-    xmreg::enable_monero_log();
+
+    // set  monero log output level
+    uint32_t log_level = 0;
+    mlog_configure("", true);
 
     // initialize mcore and core_storage
     if (!xmreg::init_blockchain(blockchain_path,
