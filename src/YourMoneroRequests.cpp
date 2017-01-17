@@ -160,97 +160,54 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
-    {
-        j_response["total_received"]       = acc.total_received;
-        j_response["start_height"]         = acc.start_height;
+    if (xmr_accounts->select(xmr_address, acc)) {
+        uint64_t total_received{0};
+
+        j_response["total_received"] = total_received;
+        j_response["start_height"] = acc.start_height;
         j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
+        j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
-        // retrieve txs from mysql associated with the given address
-        if (xmr_accounts->select_txs(acc.id, txs))
-        {
-            if (!txs.empty())
+        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs)) {
+
+            json j_txs = json::array();
+
+            for (XmrTransaction tx: txs)
             {
-                // we found some txs.
+                json j_tx = tx.to_json();
 
-                json j_txs = json::array();
+                vector<XmrTransactionWithOutsAndIns> inputs;
 
-                for (XmrTransaction tx: txs)
-                {
+                if (xmr_accounts->select_inputs_for_tx(tx.id, inputs)) {
+                    json j_spent_outputs = json::array();
 
-                    // first we check if txs stored in db are already spendable
-                    // it means if they are older than 10 blocks. If  yes,
-                    // we mark them as spendable, as we assumet that blocks
-                    // older than 10 blocks are permanent, i.e, they wont get
-                    // orphaned.
+                    uint64_t total_spent{0};
 
-                    if (bool {tx.spendable} == false)
-                    {
-                        if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
-                        {
-
-                            // this tx was before marked as unspendable, but now
-                            // it is spendable. Meaning, that its older than 10 blocks.
-                            // so mark it as spendable, so that its permanet.
-
-                            uint64_t no_row_updated = xmr_accounts->mark_tx_spendable(tx.id);
-
-                            if (no_row_updated != 1)
-                            {
-                                throw runtime_error("no_row_updated != 1");
-                            }
-
-                            tx.spendable = true;
-                        }
-                        else
-                        {
-                            // tx was marked as non-spendable, i.e., youger than 10 blocks
-                            // so we still are going to use this txs, but we need to double
-                            // check if its still valid, i.e., it's block did not get orphaned.
-                            // we do this by checking if txs still exists in the blockchain
-                            // and if its in the same block as noted in the database.
-
-                        }
+                    for (XmrTransactionWithOutsAndIns input: inputs) {
+                        total_spent += input.amount;
+                        j_spent_outputs.push_back(input.spent_output());
                     }
 
-                    // get inputs associated with a given
-                    // transaction, if any.
+                    j_tx["total_sent"] = total_spent;
 
-                    json j_tx = tx.to_json();
+                    j_tx["spent_outputs"] = j_spent_outputs;
 
-                    vector<XmrTransactionWithOutsAndIns> inputs;
-
-                    if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
-                    {
-                        json j_spent_outputs = json::array();
-
-                        uint64_t total_spent {0};
-
-                        for (XmrTransactionWithOutsAndIns input: inputs)
-                        {
-                            total_spent += input.amount;
-                            j_spent_outputs.push_back(input.spent_output());
-                        }
-
-                        j_tx["total_sent"]    = total_spent;
-
-                        j_tx["spent_outputs"] = j_spent_outputs;
-                    }
-
-                    j_txs.push_back(j_tx);
+                    total_received += total_spent;
                 }
 
-                j_response["transactions"] = j_txs;
+                j_txs.push_back(j_tx);
 
-            } // if (!txs.empty())
+            } // for (XmrTransaction tx: txs)
 
-        } // if (xmr_accounts->select_txs(acc.id, txs))
+            j_response["total_received"] = total_received;
 
-    } // if (xmr_accounts->select(xmr_address, acc))
+            j_response["transactions"] = j_txs;
 
+        } // if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
+
+    } //  if (xmr_accounts->select(xmr_address, acc))
 
     string response_body = j_response.dump();
 
@@ -292,11 +249,15 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc))
     {
+
+        //@todo: this needs to be set in the loop as in earlier function
+        uint64_t total_received {0};
+
         // ping the search thread that we still need it.
         // otherwise it will finish after some time.
         CurrentBlockchainStatus::ping_search_thread(xmr_address);
 
-        j_response["total_received"]       = acc.total_received;
+        j_response["total_received"]       = total_received;
         j_response["start_height"]         = acc.start_height;
         j_response["scanned_block_height"] = acc.scanned_block_height;
         j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
@@ -308,31 +269,24 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
         // retrieve txs from mysql associated with the given address
         if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
         {
-            // we found some txs.
+            json j_spent_outputs = json::array();
 
-            if (!txs.empty())
+            for (XmrTransactionWithOutsAndIns tx: txs)
             {
-                //
-                json j_spent_outputs = json::array();
 
-                for (XmrTransactionWithOutsAndIns tx: txs)
+                if (tx.key_image.is_null)
                 {
-
-                    if (tx.key_image.is_null)
-                    {
-                        continue;
-                    }
-
-                    j_spent_outputs.push_back(tx.spent_output());
-
-                    total_sent += tx.amount;
+                    continue;
                 }
 
-                j_response["spent_outputs"] = j_spent_outputs;
+                j_spent_outputs.push_back(tx.spent_output());
 
-                j_response["total_sent"]    = total_sent;
+                total_sent += tx.amount;
+            }
 
-            } // if (!txs.empty())
+            j_response["spent_outputs"] = j_spent_outputs;
+
+            j_response["total_sent"]    = total_sent;
 
         } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
 

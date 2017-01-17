@@ -123,7 +123,10 @@ public:
     insert(const XmrTransaction& tx_data);
 
     uint64_t
-    mark_spendable(const uint64_t tx_id_no);
+    mark_spendable(const uint64_t& tx_id_no);
+
+    uint64_t
+    delete_tx(const uint64_t& tx_id_no);
 
 
     bool
@@ -210,6 +213,10 @@ public:
     select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs);
 
     bool
+    select_txs_for_account_spendability_check(const uint64_t& account_id,
+                                              vector<XmrTransaction>& txs);
+
+    bool
     select_txs_with_inputs_and_outputs(const uint64_t& account_id,
                                        vector<XmrTransactionWithOutsAndIns>& txs);
 
@@ -234,7 +241,10 @@ public:
     tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx);
 
     uint64_t
-    mark_tx_spendable(uint64_t tx_id_no);
+    mark_tx_spendable(const uint64_t& tx_id_no);
+
+    uint64_t
+    delete_tx(const uint64_t& tx_id_no);
 
     uint64_t
     insert_payment(const XmrPayment& payment);

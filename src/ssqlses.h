@@ -89,6 +89,10 @@ struct XmrTransaction : public Transactions
         SELECT * FROM `Transactions` WHERE `account_id` = (%0q) AND `hash` = (%1q)
     )";
 
+    static constexpr const char* DELETE_STMT = R"(
+       DELETE FROM `Transactions` WHERE `id` = (%0q)
+    )";
+
     static constexpr const char* INSERT_STMT = R"(
         INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `account_id`,
                                            `total_received`, `total_sent`, `unlock_time`,
