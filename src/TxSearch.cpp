@@ -276,7 +276,6 @@ TxSearch::search()
 
             } // for (const auto& out: outputs)
 
-
             uint64_t tx_mysql_id {0};
 
             if (!found_mine_outputs.empty())
@@ -310,6 +309,8 @@ TxSearch::search()
                 tx_data.mixin          = get_mixin_no(tx) - 1;
                 tx_data.timestamp      = blk_timestamp_mysql_format;
 
+
+
                 // insert tx_data into mysql's Transactions table
                 tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
@@ -329,7 +330,6 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-
                 for (auto &out_k_idx: found_mine_outputs)
                 {
                     XmrOutput out_data;
@@ -510,17 +510,19 @@ TxSearch::search()
                         //cerr << "tx_mysql_id is zero!" << endl;
                         //throw TxSearchException("tx_mysql_id is zero!");
                     }
+
+                } //   if (tx_mysql_id == 0)
+
+                // save all input found into database
+                for (XmrInput& in_data: inputs_found)
+                {
+                    in_data.tx_id = tx_mysql_id;
+                    uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
                 }
+
 
             } //  if (!inputs_found.empty())
 
-
-            // save all input found into database
-            for (XmrInput& in_data: inputs_found)
-            {
-                in_data.tx_id = tx_mysql_id;
-                uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
-            }
 
 
         } // for (const transaction& tx: blk_txs)
