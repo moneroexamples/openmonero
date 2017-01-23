@@ -161,6 +161,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc)) {
+
         uint64_t total_received{0};
 
         j_response["total_received"] = total_received;
@@ -195,9 +196,9 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                     j_tx["total_sent"] = total_spent;
 
                     j_tx["spent_outputs"] = j_spent_outputs;
-
-                    total_received += total_spent;
                 }
+
+                total_received += tx.total_received;
 
                 j_txs.push_back(j_tx);
 

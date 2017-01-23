@@ -256,8 +256,6 @@ TxSearch::search()
 
                 if (mine_output)
                 {
-
-
                     string out_key_str = pod_to_hex(txout_k.key);
 
                     // found an output associated with the given address and viewkey
@@ -283,8 +281,6 @@ TxSearch::search()
 
             if (!found_mine_outputs.empty())
             {
-
-
                 // before adding this tx and its outputs to mysql
                 // check if it already exists. So that we dont
                 // do it twice.
@@ -408,9 +404,15 @@ TxSearch::search()
                 }
 
 
+                // mixin counter
+                size_t count = 0;
+
                 // for each found output public key check if its ours or not
-                for (const cryptonote::output_data_t& output_data: mixin_outputs)
+                for (const uint64_t& abs_offset: absolute_offsets)
                 {
+                    // get basic information about mixn's output
+                    cryptonote::output_data_t output_data = mixin_outputs.at(count);
+
                     string output_public_key_str = pod_to_hex(output_data.pubkey);
 
                     // before going to the mysql, check our known outputs cash
@@ -455,6 +457,8 @@ TxSearch::search()
                         // break;
 
                     } // if (xmr_accounts->output_exists(output_public_key_str, out))
+
+                    count++;
 
                 } // for (const cryptonote::output_data_t& output_data: outputs)
 
