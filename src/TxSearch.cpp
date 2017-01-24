@@ -292,7 +292,7 @@ TxSearch::search()
                          << " already present in mysql"
                          << endl;
 
-                    continue;
+
                 }
 
                 tx_data.hash           = tx_hash_str;
@@ -403,6 +403,8 @@ TxSearch::search()
                     continue;
                 }
 
+                //cout << "in_key.k_image): " << pod_to_hex(in_key.k_image) << endl;
+
 
                 // mixin counter
                 size_t count = 0;
@@ -415,6 +417,8 @@ TxSearch::search()
 
                     string output_public_key_str = pod_to_hex(output_data.pubkey);
 
+                    //cout << " - output_public_key_str: " << output_public_key_str << endl;
+
                     // before going to the mysql, check our known outputs cash
                     // if the key exists. Its much faster than going to mysql
                     // for this.
@@ -426,6 +430,7 @@ TxSearch::search()
                         == known_outputs_keys.end())
                     {
                         // this mixins's output is unknown.
+                        ++count;
                         continue;
                     }
 
