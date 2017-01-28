@@ -27,7 +27,7 @@
                 <form id="email-form" name="email-form" data-name="Email Form" form-autofill-fix>
                     <label class="send-label" for="Receiver-address">Address</label>
                     <div class="move-text-div">
-                        <div class="middle-text receive">{{address}} <span copy-to-clipboard="address"></span></div>
+                        <div class="middle-text receive">{{address}} </div>
                     </div>
                     <div class="w-row">
                         <div class="w-col w-col-6 responsive-column">
@@ -67,7 +67,7 @@
                     <div class="monero-code"><span class="help-text">Use this QR code to quickly receive payments</span>
                     </div>
                     <div class="move-text-div">
-                        <a ng-href="{{params | paymentUri}}" class="qr-code-text">{{params | paymentUri}}</a> <span copy-to-clipboard="params | paymentUri"></span>
+                        <a ng-href="{{params | paymentUri}}" class="qr-code-text">{{params | paymentUri}}</a> </span>
                     </div>
                     <div class="info-div">
                         <div class="overview-body-head">Why do I&nbsp;need a QR&nbsp;code?</div>

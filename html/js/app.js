@@ -45,7 +45,6 @@ var thinwalletDirectives = angular.module('thinWallet.Directives', [
 
 var thinwalletApp = angular.module('thinWallet', [
     'ngRoute',
-    'ngClipboard',
     'thinWallet.Controllers',
     'thinWallet.Services',
     'thinWallet.Filters',
@@ -58,13 +57,12 @@ thinwalletApp.config(['$httpProvider', function($httpProvider) {
      delete $httpProvider.defaults.headers.common['X-Requested-With'];
 }]);
 
-thinwalletApp.config(function ($idleProvider, $keepaliveProvider, ngClipProvider) {
+thinwalletApp.config(function ($idleProvider, $keepaliveProvider) {
     "use strict";
     $idleProvider.idleDuration(config.idleTimeout * 60);
     $idleProvider.warningDuration(config.idleWarningDuration);
     $keepaliveProvider.interval(10);
 
-    ngClipProvider.setPath("../bower_components/zeroclipboard/dist/ZeroClipboard.swf");
 });
 
 thinwalletApp.run(function ($rootScope, $route, $location, $http, $timeout, $idle, EVENT_CODES, AccountService, ModalService) {
