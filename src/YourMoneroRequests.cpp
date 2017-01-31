@@ -309,33 +309,6 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
             j_response["spent_outputs"]  = j_spent_outputs;
         }
 
-
-//        vector<XmrTransactionWithOutsAndIns> txs;
-//
-//        // retrieve txs from mysql associated with the given address
-//        if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
-//        {
-//            json j_spent_outputs = json::array();
-//
-//            for (XmrTransactionWithOutsAndIns tx: txs)
-//            {
-//
-//                if (tx.key_image.is_null)
-//                {
-//                    continue;
-//                }
-//
-//                j_spent_outputs.push_back(tx.spent_output());
-//
-//                total_sent += tx.amount;
-//            }
-//
-//            j_response["spent_outputs"] = j_spent_outputs;
-//
-//            j_response["total_sent"]    = total_sent;
-//
-//        } //  if (xmr_accounts->select_txs_with_inputs_and_outputs(acc.id, txs))
-
     } // if (xmr_accounts->select(xmr_address, acc))
 
     string response_body = j_response.dump();
