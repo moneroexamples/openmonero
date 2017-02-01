@@ -11,12 +11,6 @@ using namespace restbed;
 
 using boost::filesystem::path;
 
-// needed for log system of momero
-namespace epee {
-    unsigned int g_test_dbg_lock_sleep = 0;
-}
-
-
 int
 main(int ac, const char* av[])
 {

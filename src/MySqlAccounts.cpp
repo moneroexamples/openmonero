@@ -105,6 +105,9 @@ MysqlInputs::select(const uint64_t& address_id, vector<XmrInput>& ins)
     return false;
 }
 
+
+
+
 bool
 MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
 {
@@ -235,6 +238,39 @@ MysqlOutpus::select(const uint64_t& address_id, vector<XmrOutput>& outs)
 
     return false;
 }
+
+
+bool
+MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
+{
+    Query query = conn->query(XmrOutput::SELECT_STMT3);
+    query.parse();
+
+    try
+    {
+        vector<XmrOutput> outs;
+
+        query.storein(outs, out_id);
+
+        if (!outs.empty())
+        {
+            out = outs.at(0);
+            return true;
+        }
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+    }
+
+    return false;
+}
+
+
 
 bool
 MysqlOutpus::select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
@@ -417,6 +453,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
                                         tx_data.unlock_time,
                                         tx_data.height,
                                         tx_data.coinbase,
+                                        tx_data.spendable,
                                         tx_data.payment_id,
                                         tx_data.mixin,
                                         tx_data.timestamp);
@@ -432,6 +469,45 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     }
 
     return 0;
+}
+
+uint64_t
+MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
+{
+    Query query = conn->query(XmrTransaction::MARK_AS_SPENDABLE_STMT);
+    query.parse();
+
+    try
+    {
+        SimpleResult sr = query.execute(tx_id_no);
+
+        return sr.rows();
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        return 0;
+    }
+}
+
+
+uint64_t
+MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
+{
+    Query query = conn->query(XmrTransaction::DELETE_STMT);
+    query.parse();
+
+    try
+    {
+        SimpleResult sr = query.execute(tx_id_no);
+
+        return sr.rows();
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        return 0;
+    }
 }
 
 
@@ -791,6 +867,83 @@ MySqlAccounts::select_txs(const uint64_t& account_id, vector<XmrTransaction>& tx
 
 
 bool
+MySqlAccounts::select_txs_for_account_spendability_check(
+        const uint64_t& account_id,
+        vector<XmrTransaction>& txs)
+{
+    vector<XmrTransaction> txs_tmp;
+
+    if (!select_txs(account_id, txs))
+    {
+        return false;
+    }
+
+    for (XmrTransaction& tx: txs_tmp)
+    {
+        // first we check if txs stored in db are already spendable
+        // it means if they are older than 10 blocks. If  yes,
+        // we mark them as spendable, as we assumet that blocks
+        // older than 10 blocks are permanent, i.e, they wont get
+        // orphaned.
+
+        if (bool {tx.spendable} == false)
+        {
+            if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
+            {
+
+                // this tx was before marked as unspendable, but now
+                // it is spendable. Meaning, that its older than 10 blocks.
+                // so mark it as spendable, so that its permanet.
+
+                uint64_t no_row_updated = mark_tx_spendable(tx.id);
+
+                if (no_row_updated != 1)
+                {
+                    throw runtime_error("no_row_updated != 1 "
+                                                "due to "
+                                                "xmr_accounts->mark_tx_spendable(tx.id)");
+                }
+
+                tx.spendable = true;
+            }
+            else
+            {
+                // tx was marked as non-spendable, i.e., younger than 10 blocks
+                // so we still are going to use this txs, but we need to double
+                // check if its still valid, i.e., it's block did not get orphaned.
+                // we do this by checking if txs still exists in the blockchain
+                // and if its in the same block as noted in the database.
+
+                if (!CurrentBlockchainStatus::tx_exist(tx.hash))
+                {
+                    // tx does not exist in blockchain, but it was there before.
+                    // probably was in orphaned block. So remove it from the
+                    // mysql database.
+                    uint64_t no_row_updated = delete_tx(tx.id);
+
+                    if (no_row_updated != 1)
+                    {
+                        throw runtime_error("no_row_updated != 1 "
+                                                    "due to "
+                                                    "xmr_accounts->delete_tx(tx.id)");
+                    }
+
+                    continue;
+                }
+
+            } // else
+
+        } // if (bool {tx.spendable} == false)
+
+        txs.push_back(tx);
+
+    } //for (XmrTransaction& tx: txs_tmp)
+
+    return true;
+}
+
+
+bool
 MySqlAccounts::select_txs_with_inputs_and_outputs(const uint64_t& account_id,
                                    vector<XmrTransactionWithOutsAndIns>& txs)
 {
@@ -802,6 +955,12 @@ bool
 MySqlAccounts::select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
 {
     return mysql_out->select(account_id, outs);
+}
+
+bool
+MySqlAccounts::select_output_with_id(const uint64_t& out_id, XmrOutput& out)
+{
+    return mysql_out->select(out_id, out);
 }
 
 bool
@@ -823,6 +982,14 @@ MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransaction
 }
 
 bool
+MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins)
+{
+    return mysql_in->select_for_tx(tx_id, ins);
+}
+
+
+
+bool
 MySqlAccounts::select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 {
     return mysql_in->select_for_out(output_id, ins);
@@ -838,6 +1005,18 @@ bool
 MySqlAccounts::tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
 {
     return mysql_tx->exist(account_id, tx_hash_str, tx);
+}
+
+uint64_t
+MySqlAccounts::mark_tx_spendable(const uint64_t& tx_id_no)
+{
+    return mysql_tx->mark_spendable(tx_id_no);
+}
+
+uint64_t
+MySqlAccounts::delete_tx(const uint64_t& tx_id_no)
+{
+    return mysql_tx->delete_tx(tx_id_no);
 }
 
 uint64_t

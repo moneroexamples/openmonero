@@ -30,6 +30,7 @@ vector<transaction>     CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;
 string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
+uint64_t                CurrentBlockchainStatus::spendable_age {10}; // default number in monero
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
 map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
@@ -108,8 +109,10 @@ CurrentBlockchainStatus::set_testnet(bool is_testnet)
 bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
-    // enable basic monero log output
-    xmreg::enable_monero_log();
+
+    // set  monero log output level
+    uint32_t log_level = 0;
+    mlog_configure("", true);
 
     // initialize mcore and core_storage
     if (!xmreg::init_blockchain(blockchain_path,
@@ -120,6 +123,13 @@ CurrentBlockchainStatus::init_monero_blockchain()
     }
 
     return true;
+}
+
+
+bool
+CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height)
+{
+    return (tx_blk_height + spendable_age < get_current_blockchain_height());
 }
 
 bool
@@ -146,7 +156,28 @@ CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk
     return true;
 }
 
+
 bool
+CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash)
+{
+    return core_storage->have_tx(tx_hash);
+}
+
+bool
+CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
+{
+    crypto::hash tx_hash;
+
+    if (hex_to_pod(tx_hash_str, tx_hash))
+    {
+        return tx_exist(tx_hash);
+    }
+
+    throw runtime_error("(hex_to_pod(tx_hash_str, tx_hash) failed!");
+}
+
+
+    bool
 CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
             const vector<uint64_t>& absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)

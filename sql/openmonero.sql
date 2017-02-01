@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 13, 2017 at 04:51 AM
+-- Generation Time: Jan 23, 2017 at 12:11 AM
 -- Server version: 10.1.20-MariaDB
--- PHP Version: 7.0.14
+-- PHP Version: 7.1.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -111,6 +111,7 @@ CREATE TABLE `Transactions` (
   `total_sent` bigint(20) UNSIGNED NOT NULL,
   `unlock_time` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `height` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `spendable` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Has 10 blocks pasted since it was indexed?',
   `coinbase` tinyint(1) NOT NULL DEFAULT '0',
   `payment_id` varchar(64) NOT NULL DEFAULT '',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
@@ -203,12 +204,12 @@ ALTER TABLE `Accounts`
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=487;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=300;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 --
 -- AUTO_INCREMENT for table `Payments`
 --
@@ -218,7 +219,7 @@ ALTER TABLE `Payments`
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=428;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
 --
 -- Constraints for dumped tables
 --

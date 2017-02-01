@@ -134,6 +134,10 @@ TxSearch::search()
                        searched_blk_no, pod_to_hex(get_block_hash(blk)));
         }
 
+        // flag indicating whether the txs in the given block are spendable.
+        // this is true when block number is more than 10 blocks from current
+        // blockchain height.
+        bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(searched_blk_no);
 
         DateTime blk_timestamp_mysql_format
                 = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
@@ -252,8 +256,6 @@ TxSearch::search()
 
                 if (mine_output)
                 {
-
-
                     string out_key_str = pod_to_hex(txout_k.key);
 
                     // found an output associated with the given address and viewkey
@@ -274,13 +276,10 @@ TxSearch::search()
 
             } // for (const auto& out: outputs)
 
-
             uint64_t tx_mysql_id {0};
 
             if (!found_mine_outputs.empty())
             {
-
-
                 // before adding this tx and its outputs to mysql
                 // check if it already exists. So that we dont
                 // do it twice.
@@ -293,9 +292,8 @@ TxSearch::search()
                          << " already present in mysql"
                          << endl;
 
-                    continue;
-                }
 
+                }
 
                 tx_data.hash           = tx_hash_str;
                 tx_data.prefix_hash    = tx_prefix_hash_str;
@@ -306,9 +304,12 @@ TxSearch::search()
                 tx_data.unlock_time    = 0;
                 tx_data.height         = searched_blk_no;
                 tx_data.coinbase       = is_coinbase_tx;
+                tx_data.spendable      = is_spendable;
                 tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                 tx_data.mixin          = get_mixin_no(tx) - 1;
                 tx_data.timestamp      = blk_timestamp_mysql_format;
+
+
 
                 // insert tx_data into mysql's Transactions table
                 tx_mysql_id = xmr_accounts->insert_tx(tx_data);
@@ -329,7 +330,6 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-
                 for (auto &out_k_idx: found_mine_outputs)
                 {
                     XmrOutput out_data;
@@ -403,11 +403,21 @@ TxSearch::search()
                     continue;
                 }
 
+                //cout << "in_key.k_image): " << pod_to_hex(in_key.k_image) << endl;
 
-                // for each found output public key find check if its ours or not
-                for (const cryptonote::output_data_t& output_data: mixin_outputs)
+
+                // mixin counter
+                size_t count = 0;
+
+                // for each found output public key check if its ours or not
+                for (const uint64_t& abs_offset: absolute_offsets)
                 {
+                    // get basic information about mixn's output
+                    cryptonote::output_data_t output_data = mixin_outputs.at(count);
+
                     string output_public_key_str = pod_to_hex(output_data.pubkey);
+
+                    //cout << " - output_public_key_str: " << output_public_key_str << endl;
 
                     // before going to the mysql, check our known outputs cash
                     // if the key exists. Its much faster than going to mysql
@@ -420,6 +430,7 @@ TxSearch::search()
                         == known_outputs_keys.end())
                     {
                         // this mixins's output is unknown.
+                        ++count;
                         continue;
                     }
 
@@ -440,7 +451,7 @@ TxSearch::search()
                         in_data.tx_id       = 0; // for now zero, later we set it
                         in_data.output_id   = out.id;
                         in_data.key_image   = pod_to_hex(in_key.k_image);
-                        in_data.amount      = in_key.amount;
+                        in_data.amount      = out.amount; // must match corresponding output's amount
                         in_data.timestamp   = blk_timestamp_mysql_format;
 
                         inputs_found.push_back(in_data);
@@ -451,6 +462,8 @@ TxSearch::search()
                         // break;
 
                     } // if (xmr_accounts->output_exists(output_public_key_str, out))
+
+                    count++;
 
                 } // for (const cryptonote::output_data_t& output_data: outputs)
 
@@ -484,11 +497,12 @@ TxSearch::search()
                     tx_data.hash           = tx_hash_str;
                     tx_data.prefix_hash    = tx_prefix_hash_str;
                     tx_data.account_id     = acc->id;
-                    tx_data.total_received = 0;
+                    tx_data.total_received = 0; // because this is spending, total_recieved is 0
                     tx_data.total_sent     = total_sent;
-                    tx_data.unlock_time    = 0;
+                    tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
                     tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase(tx);
+                    tx_data.coinbase       = is_coinbase_tx;
+                    tx_data.spendable      = is_spendable;
                     tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;
                     tx_data.timestamp      = blk_timestamp_mysql_format;
@@ -501,17 +515,19 @@ TxSearch::search()
                         //cerr << "tx_mysql_id is zero!" << endl;
                         //throw TxSearchException("tx_mysql_id is zero!");
                     }
+
+                } //   if (tx_mysql_id == 0)
+
+                // save all input found into database
+                for (XmrInput& in_data: inputs_found)
+                {
+                    in_data.tx_id = tx_mysql_id;
+                    uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
                 }
+
 
             } //  if (!inputs_found.empty())
 
-
-            // save all input found into database
-            for (XmrInput& in_data: inputs_found)
-            {
-                in_data.tx_id = tx_mysql_id;
-                uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
-            }
 
 
         } // for (const transaction& tx: blk_txs)
