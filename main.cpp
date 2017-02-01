@@ -23,6 +23,7 @@ auto viewkey_opt      = opts.get_option<string>("viewkey");
 auto help_opt         = opts.get_option<bool>("help");
 auto testnet_opt      = opts.get_option<bool>("testnet");
 auto use_ssl_opt      = opts.get_option<bool>("use-ssl");
+auto deamon_url_opt   = opts.get_option<string>("deamon-url");
 
 // if help was chosen, display help text and finish
 if (*help_opt)
@@ -52,8 +53,12 @@ if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
     return EXIT_FAILURE;
 }
 
-cout << "Blockchain path: " << blockchain_path.string() << endl;
+string deamon_url {*deamon_url_opt};
 
+if (testnet && deamon_url == "http:://127.0.0.1:18081")
+    deamon_url = "http:://127.0.0.1:28081";
+
+cout << "Blockchain path: " << blockchain_path.string() << endl;
 
 xmreg::MySqlConnector::url       = "127.0.0.1";
 xmreg::MySqlConnector::username  = "root";
@@ -63,6 +68,7 @@ xmreg::MySqlConnector::dbname    = "openmonero";
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
+xmreg::CurrentBlockchainStatus::deamon_url                         = deamon_url;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 30;
 xmreg::CurrentBlockchainStatus::import_payment_address             = address_str;
 xmreg::CurrentBlockchainStatus::import_payment_viewkey             = viewkey_str;
