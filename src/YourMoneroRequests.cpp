@@ -68,8 +68,8 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 {
     json j_request = body_to_json(body);
 
-    if (show_logs)
-        print_json_log("login request: ", j_request);
+//    if (show_logs)
+//        print_json_log("login request: ", j_request);
 
     string xmr_address  = j_request["address"];
 
