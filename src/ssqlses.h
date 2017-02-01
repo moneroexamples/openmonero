@@ -154,6 +154,10 @@ struct XmrOutput : public Outputs
       SELECT * FROM `Outputs` WHERE `tx_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT3 = R"(
+      SELECT * FROM `Outputs` WHERE `id` = (%0q)
+    )";
+
     static constexpr const char* EXIST_STMT = R"(
       SELECT * FROM `Outputs` WHERE `out_pub_key` = (%0q)
     )";

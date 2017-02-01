@@ -105,6 +105,9 @@ MysqlInputs::select(const uint64_t& address_id, vector<XmrInput>& ins)
     return false;
 }
 
+
+
+
 bool
 MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
 {
@@ -235,6 +238,39 @@ MysqlOutpus::select(const uint64_t& address_id, vector<XmrOutput>& outs)
 
     return false;
 }
+
+
+bool
+MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
+{
+    Query query = conn->query(XmrOutput::SELECT_STMT3);
+    query.parse();
+
+    try
+    {
+        vector<XmrOutput> outs;
+
+        query.storein(outs, out_id);
+
+        if (!outs.empty())
+        {
+            out = outs.at(0);
+            return true;
+        }
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+    }
+
+    return false;
+}
+
+
 
 bool
 MysqlOutpus::select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
@@ -922,6 +958,12 @@ MySqlAccounts::select_outputs(const uint64_t& account_id, vector<XmrOutput>& out
 }
 
 bool
+MySqlAccounts::select_output_with_id(const uint64_t& out_id, XmrOutput& out)
+{
+    return mysql_out->select(out_id, out);
+}
+
+bool
 MySqlAccounts::select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
 {
     return mysql_out->select_for_tx(tx_id, outs);
@@ -938,6 +980,14 @@ MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransaction
 {
     return mysql_tx_inout->select_for_tx(tx_id, ins);
 }
+
+bool
+MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins)
+{
+    return mysql_in->select_for_tx(tx_id, ins);
+}
+
+
 
 bool
 MySqlAccounts::select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins)

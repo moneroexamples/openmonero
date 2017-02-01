@@ -93,6 +93,8 @@ public:
     bool
     select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs);
 
+    bool
+    select(const uint64_t& out_id, XmrOutput& out);
 
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
@@ -221,6 +223,9 @@ public:
                                        vector<XmrTransactionWithOutsAndIns>& txs);
 
     bool
+    select_output_with_id(const uint64_t& out_id, XmrOutput& out);
+
+    bool
     select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs);
 
     bool
@@ -233,7 +238,11 @@ public:
     select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransactionWithOutsAndIns>& ins);
 
     bool
+    select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins);
+
+    bool
     select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
+
     bool
     output_exists(const string& output_public_key_str, XmrOutput& out);
 
