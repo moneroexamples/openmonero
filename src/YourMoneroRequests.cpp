@@ -193,43 +193,23 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                         if (!xmr_accounts->select_output_with_id(input.output_id, out))
                         {
+                            total_spent += input.amount;
+
+                            j_spent_outputs.push_back({
+                                    {"amount"     , input.amount},
+                                    {"key_image"  , input.key_image},
+                                    {"tx_pub_key" , out.tx_pub_key},
+                                    {"out_index"  , out.out_index},
+                                    {"mixin"      , out.mixin}});
 
                         }
-
-                        total_spent += input.amount;
-
-                        j_spent_outputs.push_back({
-                                {"amount"     , input.amount},
-                                {"key_image"  , input.key_image},
-                                {"tx_pub_key" , out.tx_pub_key},
-                                {"out_index"  , out.out_index},
-                                {"mixin"      , out.mixin}});
                     }
 
                     j_tx["total_sent"] = total_spent;
 
                     j_tx["spent_outputs"] = j_spent_outputs;
 
-                }
-
-//                vector<XmrTransactionWithOutsAndIns> inputs;
-//
-//                if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
-//                {
-//                    json j_spent_outputs = json::array();
-//
-//                    uint64_t total_spent {0};
-//
-//                    for (XmrTransactionWithOutsAndIns input: inputs)
-//                    {
-//                        total_spent += input.amount;
-//                        j_spent_outputs.push_back(input.spent_output());
-//                    }
-//
-//                    j_tx["total_sent"] = total_spent;
-//
-//                    j_tx["spent_outputs"] = j_spent_outputs;
-//                }
+                } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
 
                 total_received += tx.total_received;
 
