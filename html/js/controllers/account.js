@@ -40,6 +40,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.spend_key = AccountService.getSpendKey();
     $scope.mnemonic = AccountService.getMnemonic();
 
+    $scope.testnet = config.testnet;
+
     $scope.transactions = [];
     $scope.blockchain_height = 0;
 
