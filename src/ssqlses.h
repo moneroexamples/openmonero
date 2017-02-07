@@ -131,11 +131,14 @@ struct XmrTransaction : public Transactions
 
 };
 
-sql_create_10(Outputs, 1, 3,
+sql_create_13(Outputs, 1, 3,
               sql_bigint_unsigned, id,
               sql_bigint_unsigned, account_id,
               sql_bigint_unsigned, tx_id,
               sql_varchar        , out_pub_key,
+              sql_varchar        , rct_outpk,
+              sql_varchar        , rct_mask,
+              sql_varchar        , rct_amount,
               sql_varchar        , tx_pub_key,
               sql_bigint_unsigned, amount,
               sql_bigint_unsigned, global_index,
@@ -163,10 +166,16 @@ struct XmrOutput : public Outputs
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-      INSERT IGNORE INTO `Outputs` (`account_id`, `tx_id`, `out_pub_key`, `tx_pub_key`,
-                                     `amount`, `global_index`, `out_index`, `mixin`, `timestamp`)
-                            VALUES (%0q, %1q, %2q, %3q,
-                                    %4q, %5q, %6q, %7q, %8q);
+      INSERT IGNORE INTO `Outputs` (`account_id`, `tx_id`, `out_pub_key`,
+                                     `tx_pub_key`,
+                                     `rct_outpk`, `rct_mask`, `rct_amount`,
+                                     `amount`, `global_index`,
+                                     `out_index`, `mixin`, `timestamp`)
+                            VALUES (%0q, %1q, %2q,
+                                    %3q,
+                                    %4q, %5q, %6q,
+                                    %7q, %8q,
+                                    %9q, %10q, %11q);
     )";
 
 
