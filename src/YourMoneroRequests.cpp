@@ -191,7 +191,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                     {
                         XmrOutput out;
 
-                        if (!xmr_accounts->select_output_with_id(input.output_id, out))
+                        if (xmr_accounts->select_output_with_id(input.output_id, out))
                         {
                             total_spent += input.amount;
 
