@@ -583,7 +583,7 @@ var cnUtil = (function(initConfig) {
     this.get_tx_hash = function(tx) {
         if (typeof(tx) === 'string') {
             return this.cn_fast_hash(tx);
-        } else {error ringing beware bogeys lumber nirvana daytime orbit edgy girth earth pairing ringing
+        } else {
             return this.cn_fast_hash(this.serialize_tx(tx));
         }
     };
