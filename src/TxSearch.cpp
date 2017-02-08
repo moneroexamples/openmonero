@@ -196,8 +196,19 @@ TxSearch::search()
 
             // FIRST component: Checking for our outputs.
 
-            //     <out_pub_key, amount  , index in tx>
-            vector<tuple<string, uint64_t, uint64_t>> found_mine_outputs;
+            // define local structure to keep information about found
+            // ouputs that we can need in later parts.
+            struct output_info
+            {
+                string    pub_key;
+                uint64_t  amount;
+                uint64_t  idx_in_tx;
+                string    rtc_outpk;
+                string    rtc_mask;
+                string    rtc_amount;
+            };
+
+            vector<output_info> found_mine_outputs;
 
             for (auto& out: outputs)
             {
@@ -223,12 +234,19 @@ TxSearch::search()
                 //      << "mine_output: " << mine_output << endl;
 
 
+                // placeholder variable for ringct outputs info
+                // that we need to save in database
+                string rtc_outpk;
+                string rtc_mask;
+                string rtc_amount;
+
                 // if mine output has RingCT, i.e., tx version is 2
                 // need to decode its amount. otherwise its zero.
                 if (mine_output && tx.version == 2)
                 {
-                    // initialize with regular amount
-                    uint64_t rct_amount = amount;
+                    // initialize with regular amount value
+                    // for ringct, except coinbase, it will be 0
+                    uint64_t rct_amount_val = amount;
 
                     // cointbase txs have amounts in plain sight.
                     // so use amount from ringct, only for non-coinbase txs
@@ -241,7 +259,7 @@ TxSearch::search()
                                           viewkey,
                                           output_idx_in_tx,
                                           tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                          rct_amount);
+                                          rct_amount_val);
 
                         if (!r)
                         {
@@ -249,7 +267,11 @@ TxSearch::search()
                             throw TxSearchException("Cant decode ringCT!");
                         }
 
-                        amount = rct_amount;
+                        rtc_outpk  = pod_to_hex(tx.rct_signatures.outPk[output_idx_in_tx]);
+                        rtc_mask   = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
+                        rtc_amount = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
+
+                        amount = rct_amount_val;
                     }
 
                 } // if (mine_output && tx.version == 2)
@@ -269,9 +291,12 @@ TxSearch::search()
 
                     total_received += amount;
 
-                    found_mine_outputs.emplace_back(out_key_str,
-                                                    amount,
-                                                    output_idx_in_tx);
+                    found_mine_outputs.emplace_back(
+                            output_info{
+                                out_key_str, amount, output_idx_in_tx,
+                                rtc_outpk, rtc_mask, rtc_amount
+                            });
+
                 } //  if (mine_output)
 
             } // for (const auto& out: outputs)
@@ -330,16 +355,19 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-                for (auto &out_k_idx: found_mine_outputs)
+                for (auto &out_info: found_mine_outputs)
                 {
                     XmrOutput out_data;
 
                     out_data.account_id   = acc->id;
                     out_data.tx_id        = tx_mysql_id;
-                    out_data.out_pub_key  = std::get<0>(out_k_idx);
+                    out_data.out_pub_key  = out_info.pub_key;
                     out_data.tx_pub_key   = pod_to_hex(tx_pub_key);
-                    out_data.amount       = std::get<1>(out_k_idx);
-                    out_data.out_index    = std::get<2>(out_k_idx);
+                    out_data.amount       = out_info.amount;
+                    out_data.out_index    = out_info.idx_in_tx;
+                    out_data.rct_outpk    = out_info.rtc_outpk;
+                    out_data.rct_mask     = out_info.rtc_mask;
+                    out_data.rct_amount   = out_info.rtc_amount;
                     out_data.global_index = amount_specific_indices.at(out_data.out_index);
                     out_data.mixin        = tx_data.mixin;
                     out_data.timestamp    = tx_data.timestamp;
@@ -354,7 +382,7 @@ TxSearch::search()
                     }
 
                     // add the new output to our cash of known outputs
-                    known_outputs_keys.push_back(std::get<0>(out_k_idx));
+                    known_outputs_keys.push_back(out_info.pub_key);
 
                 } // for (auto &out_k_idx: found_mine_outputs)
 
