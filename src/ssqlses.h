@@ -185,6 +185,12 @@ struct XmrOutput : public Outputs
     json
     to_json() const;
 
+    string
+    get_rct() const
+    {
+        return rct_outpk + rct_mask + rct_amount;
+    }
+
 
     friend std::ostream& operator<< (std::ostream& stream, const XmrOutput& out);
 

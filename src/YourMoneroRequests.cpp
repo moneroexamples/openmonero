@@ -382,6 +382,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                 {"public_key",       out.out_pub_key},
                                 {"index",            out.out_index},
                                 {"global_index",     out.global_index},
+                                {"rct"         ,     out.get_rct()},
                                 {"tx_id",            out.tx_id},
                                 {"tx_hash",          tx.hash},
                                 {"tx_prefix_hash",   tx.prefix_hash},

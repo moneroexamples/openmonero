@@ -248,6 +248,10 @@ TxSearch::search()
                     // for ringct, except coinbase, it will be 0
                     uint64_t rct_amount_val = amount;
 
+                    rtc_outpk  = pod_to_hex(tx.rct_signatures.outPk[output_idx_in_tx].mask);
+                    rtc_mask   = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
+                    rtc_amount = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
+
                     // cointbase txs have amounts in plain sight.
                     // so use amount from ringct, only for non-coinbase txs
                     if (!is_coinbase_tx)
@@ -266,10 +270,6 @@ TxSearch::search()
                             cerr << "Cant decode ringCT!" << endl;
                             throw TxSearchException("Cant decode ringCT!");
                         }
-
-                        rtc_outpk  = pod_to_hex(tx.rct_signatures.outPk[output_idx_in_tx]);
-                        rtc_mask   = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-                        rtc_amount = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
 
                         amount = rct_amount_val;
                     }
