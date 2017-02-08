@@ -462,6 +462,9 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
             for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry& out: outs.outs)
             {
+
+                uint64_t global_amount_index = out.global_amount_index;
+
                 j_outputs.push_back(json {
                         {"global_index", out.global_amount_index},
                         {"public_key"  , pod_to_hex(out.out_key)}
