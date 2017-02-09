@@ -176,8 +176,47 @@ CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
     throw runtime_error("(hex_to_pod(tx_hash_str, tx_hash) failed!");
 }
 
+bool
+CurrentBlockchainStatus::get_tx_with_output(
+        uint64_t output_idx, uint64_t amount,
+        transaction& tx, uint64_t& output_idx_in_tx)
+{
 
-    bool
+    tx_out_index tx_out_idx;
+
+    try
+    {
+        // get pair pair<crypto::hash, uint64_t> where first is tx hash
+        // and second is local index of the output i in that tx
+        tx_out_idx = core_storage->get_db()
+                .get_output_tx_and_index(amount, output_idx);
+    }
+    catch (const OUTPUT_DNE &e)
+    {
+
+        string out_msg = fmt::format(
+                "Output with amount {:d} and index {:d} does not exist!",
+                amount, output_idx
+        );
+
+        cerr << out_msg << endl;
+
+        return false;
+    }
+
+    output_idx_in_tx = tx_out_idx.second;
+
+    if (!mcore.get_tx(tx_out_idx.first, tx))
+    {
+        cerr << "Cant get tx: " << tx_out_idx.first << endl;
+
+        return false;
+    }
+
+    return true;
+}
+
+bool
 CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
             const vector<uint64_t>& absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)

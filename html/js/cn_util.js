@@ -1754,7 +1754,9 @@ var cnUtil = (function(initConfig) {
         }
         var found_money = JSBigInt.ZERO;
         var sources = [];
-        console.log('Selected transfers: ', outputs);
+
+        //console.log('Selected transfers: ', outputs);
+
         for (i = 0; i < outputs.length; ++i) {
             found_money = found_money.add(outputs[i].amount);
             if (found_money.compare(UINT64_MAX) !== -1) {
@@ -1780,6 +1782,9 @@ var cnUtil = (function(initConfig) {
                     var oe = {};
                     oe.index = out.global_index.toString();
                     oe.key = out.public_key;
+
+                    console.log('outputs[',i,']: ', outputs[i]);
+
                     if (rct){
                         if (out.rct){
                             oe.commit = out.rct.slice(0,64); //add commitment from rct mix outs
