@@ -502,6 +502,15 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                     rtc_outpk = pod_to_hex(rct::pk2rct(out.out_key));
                 }
 
+                string pks {"ee8624b194bb2c5ee87408c8ceb3aa482ef9246b21082387d58356c26bbde65b"};
+
+                public_key pk;
+
+                hex_to_pod(pks, pk);
+
+                cout << pod_to_hex(pk) << endl;
+                cout << pod_to_hex(rct::pk2rct(pk)) << endl;
+
                 out_details["rct"]=  rtc_outpk + rtc_mask + rtc_amount;
 
                 j_outputs.push_back(out_details);

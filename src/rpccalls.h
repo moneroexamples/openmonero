@@ -149,8 +149,6 @@ namespace xmreg
 
             if (!r || res.status == "Failed")
             {
-                error_msg = "rpc call to /getrandom_outs.bin failed for some reason";
-
                 cerr << "rpc call to /getrandom_outs.bin failed for some reason" << endl;
                 return false;
             }
