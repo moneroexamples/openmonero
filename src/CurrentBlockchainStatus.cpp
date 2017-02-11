@@ -279,6 +279,7 @@ CurrentBlockchainStatus::get_random_outputs(const vector<uint64_t>& amounts,
     return true;
 }
 
+
 bool
 CurrentBlockchainStatus::commit_tx(const string& tx_blob)
 {
@@ -540,6 +541,11 @@ CurrentBlockchainStatus::get_payment_id_as_string(const transaction& tx)
 }
 
 
+output_data_t
+CurrentBlockchainStatus::get_output_key(uint64_t amount, uint64_t global_amount_index)
+{
+    return core_storage->get_db().get_output_key(amount, global_amount_index);
+}
 
 bool
 CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)

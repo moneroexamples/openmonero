@@ -140,7 +140,8 @@ struct CurrentBlockchainStatus
     static string
     get_payment_id_as_string(const transaction& tx);
 
-
+    static output_data_t
+    get_output_key(uint64_t amount, uint64_t global_amount_index);
 
     // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch

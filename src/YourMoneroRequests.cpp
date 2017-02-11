@@ -449,6 +449,12 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
 
+
+//    if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
+//    {
+//
+//    }
+
     if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
     {
         json& j_amount_outs = j_response["amount_outs"];
@@ -482,8 +488,8 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                 // placeholder variable for ringct outputs info
                 // that we need to save in database
                 string rtc_outpk;
-                string rtc_mask("0", 64);
-                string rtc_amount("0", 64);
+                string rtc_mask(64, '0');
+                string rtc_amount(64, '0');
 
                 json out_details {
                         {"global_index", out.global_amount_index},
@@ -496,22 +502,17 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                     rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures.outPk[output_idx_in_tx].mask);
                     rtc_mask   = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
                     rtc_amount = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
+
+                    out_details["rct"]=  rtc_outpk + rtc_mask + rtc_amount;
                 }
                 else
                 {
-                    rtc_outpk = pod_to_hex(rct::pk2rct(out.out_key));
+                    output_data_t od = CurrentBlockchainStatus::get_output_key(outs.amount, global_amount_index);
+
+                    rtc_outpk =  pod_to_hex(od.commitment);
                 }
 
-                string pks {"ee8624b194bb2c5ee87408c8ceb3aa482ef9246b21082387d58356c26bbde65b"};
-
-                public_key pk;
-
-                hex_to_pod(pks, pk);
-
-                cout << pod_to_hex(pk) << endl;
-                cout << pod_to_hex(rct::pk2rct(pk)) << endl;
-
-                out_details["rct"]=  rtc_outpk + rtc_mask + rtc_amount;
+                out_details["rct"] =  rtc_outpk + rtc_mask + rtc_amount;
 
                 j_outputs.push_back(out_details);
 
