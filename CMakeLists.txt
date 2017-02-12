@@ -39,6 +39,7 @@ include_directories(/usr/include/mysql)
 # get individual monero static libraries
 # that are needed in this project
 
+
 add_library(common STATIC IMPORTED)
 set_property(TARGET common PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcommon.a)
 
@@ -49,6 +50,10 @@ add_library(cryptoxmr STATIC IMPORTED)
 set_property(TARGET cryptoxmr
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcrypto.a)
 
+add_library(cryptonote_basic STATIC IMPORTED)
+set_property(TARGET cryptonote_basic
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_basic.a)
+
 add_library(cryptonote_core STATIC IMPORTED)
 set_property(TARGET cryptonote_core
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_core.a)
@@ -56,6 +61,10 @@ set_property(TARGET cryptonote_core
 add_library(cryptonote_protocol STATIC IMPORTED)
 set_property(TARGET cryptonote_protocol
         PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libcryptonote_protocol.a)
+
+add_library(daemonizer STATIC IMPORTED)
+set_property(TARGET daemonizer
+        PROPERTY IMPORTED_LOCATION ${MONERO_LIBS_DIR}/libdaemonizer.a)
 
 add_library(mnemonics STATIC IMPORTED)
 set_property(TARGET mnemonics
@@ -106,9 +115,11 @@ target_link_libraries(restbed_xmr
         myext
         restbed
         wallet
+        blockchain_db
         cryptonote_core
         cryptonote_protocol
-        blockchain_db
+        cryptonote_basic
+        daemonizer
         cryptoxmr
         blocks
         lmdb
