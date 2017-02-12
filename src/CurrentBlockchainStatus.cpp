@@ -91,7 +91,19 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 uint64_t
 CurrentBlockchainStatus::get_current_blockchain_height()
 {
-    return xmreg::MyLMDB::get_blockchain_height(blockchain_path) - 1;
+
+    uint64_t previous_height = current_height;
+
+    try
+    {
+        return xmreg::MyLMDB::get_blockchain_height(blockchain_path) - 1;
+    }
+    catch(std::exception& e)
+    {
+        cerr << "xmreg::MyLMDB::get_blockchain_height: " << e.what() << endl;
+        return previous_height;
+    }
+
 }
 
 void
