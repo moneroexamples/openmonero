@@ -815,7 +815,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 {
     vector<XmrTransaction> txs_tmp;
 
-    if (!select_txs(account_id, txs))
+    if (!select_txs(account_id, txs_tmp))
     {
         return false;
     }
