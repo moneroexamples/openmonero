@@ -22,7 +22,7 @@ to use, host and modify. Additionally, the following features were added/changed
    
 ##  Status
 
-Still under development as its not finished.
+Still under development.
 
 ## Host it yourself
 
@@ -35,8 +35,8 @@ The Open Monero consists of four components that need to be setup for it to work
  - Monero daemon - daemon must be running and fully sync, as this is 
  where all transaction data is fetched from and used. Daemon also commits txs 
  from the Open Monero into the Monero network.
- - Backend - fully written in C++. It uses restbed to serve JSON REST to the frontend 
- and mysql++ to interface the database. It also accesses Monero blockchain and "talks"
+ - Backend - fully written in C++. It uses [restbed](https://github.com/Corvusoft/restbed/) to serve JSON REST to the frontend 
+ and [mysql++](http://www.tangentsoft.net/mysql++/) to interface the database. It also accesses Monero blockchain and "talks"
  with Monero deamon.
  
 
@@ -81,15 +81,6 @@ Example of curl https request to the service
 curl -k -X POST -d '{"withCredentials":true,"address":"41pJD13rU5r3KZsxzS65tL9zLMpZZCer8aWSi7wj8Xm99BAgXthcj2wgazxdTX9auFAmp3czfJUGH2S3UJfLwDWXUxc3ooC","view_key":"06d1f0f0fd766c75b52b9c597592d06f4bca5cd6dcd3e9bf1859bc78d0d5f80e","create_account":true}' https://localhost:1984/login
 ```
 
-### Compile mysql c++ connector 
-```
-git clone https://github.com/mysql/mysql-connector-cpp.git
-cd mysql-connector-cpp && mkdir build && cd build 
-cmake .. -DBUILD_STATIC=1
-make
-```
-
-
 ## Other examples
 
 Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
@@ -99,8 +90,3 @@ finished and may not work as intended.
 ## How can you help?
 
 Constructive criticism, code and website edits are always good. They can be made through github.
-
-Some Monero are also welcome:
-```
-48daf1rG3hE1Txapcsxh6WXNe9MLNKtu7W7tKTivtSoVLHErYzvdcpea2nSTgGkz66RFP4GKVAsTV14v6G3oddBTHfxP6tU
-```

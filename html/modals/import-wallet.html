@@ -11,17 +11,22 @@
           <div class="move-text-div">
             <div class="review-text">To import all your previous transactions and account
               balance you have to pay a once-off import fee of <strong>{{import_fee | money:false:true}}</strong> to the
-              account listed below. The command to make the payment has already been prepared to make it
-              easy for you to copy and paste it into simplewallet.</div>
+              account listed below. An example command to make the payment in monero-wallet-cli program
+              is shown below.
+              <br/>
+              As soon as the transfer is detected in mempool, import process will begin.
+            </div>
           </div>
           <label class="field-label review" for="Mnemonic-2">Payment command</label>
             <div class="review-text address">{{command}} </div>
           </div>
           <label class="field-label review" for="Mnemonic-2">Payment address</label>
+
           <div class="move-text-div">
-            <div class="review-text">import.mymonero.com (or use the full address below)</div>
-            <div class="review-text address">({{payment_address}} )</div>
+            <!--<div class="review-text">import.mymonero.com (or use the full address below)</div>-->
+           <div class="review-text address">({{payment_address}} )</div>
           </div>
+
           <label class="field-label review" for="Mnemonic-2">Payment ID (make sure to use this)</label>
           <div class="move-text-div">
             <div class="review-text">{{payment_id}}</div>
