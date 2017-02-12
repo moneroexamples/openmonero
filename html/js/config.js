@@ -16,7 +16,7 @@ var config = {
     txChargeRatio: 0.5,
     defaultMixin: 3,
     txChargeAddress: '',
-    idleTimeout: 10,
+    idleTimeout: 30,
     idleWarningDuration: 20,
     maxBlockNumber: 500000000,
     avgBlockTime: 60,

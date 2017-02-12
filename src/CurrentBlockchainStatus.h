@@ -104,6 +104,10 @@ struct CurrentBlockchainStatus
     tx_exist(const string& tx_hash_str);
 
     static bool
+    get_tx_with_output(uint64_t output_idx, uint64_t amount,
+                       transaction& tx, uint64_t& output_idx_in_tx);
+
+    static bool
     get_output_keys(const uint64_t& amount,
                     const vector<uint64_t>& absolute_offsets,
                     vector<cryptonote::output_data_t>& outputs);
@@ -136,7 +140,8 @@ struct CurrentBlockchainStatus
     static string
     get_payment_id_as_string(const transaction& tx);
 
-
+    static output_data_t
+    get_output_key(uint64_t amount, uint64_t global_amount_index);
 
     // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch

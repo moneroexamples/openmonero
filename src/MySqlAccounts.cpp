@@ -13,66 +13,6 @@
 namespace xmreg
 {
 
-MysqlTransactionWithOutsAndIns::MysqlTransactionWithOutsAndIns(shared_ptr<MySqlConnector> _conn)
-        : conn{_conn}
-{}
-
-bool
-MysqlTransactionWithOutsAndIns::select(
-        const uint64_t &address_id,
-        vector<XmrTransactionWithOutsAndIns>& txs)
-{
-
-    Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        query.storein(txs, address_id);
-
-        if (!txs.empty())
-        {
-            return true;
-        }
-    }
-    catch (mysqlpp::Exception &e) {
-        MYSQL_EXCEPTION_MSG(e);
-    }
-    catch (std::exception &e) {
-        MYSQL_EXCEPTION_MSG(e);
-    }
-
-    return false;
-}
-
-bool
-MysqlTransactionWithOutsAndIns::select_for_tx(
-        const uint64_t &tx_id,
-        vector<XmrTransactionWithOutsAndIns>& txs)
-{
-
-    Query query = conn->query(XmrTransactionWithOutsAndIns::SELECT_STMT2);
-    query.parse();
-
-    try
-    {
-        query.storein(txs, tx_id);
-
-        if (!txs.empty())
-        {
-            return true;
-        }
-    }
-    catch (mysqlpp::Exception &e) {
-        MYSQL_EXCEPTION_MSG(e);
-    }
-    catch (std::exception &e) {
-        MYSQL_EXCEPTION_MSG(e);
-    }
-
-    return false;
-}
-
 
 MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
@@ -702,7 +642,6 @@ MySqlAccounts::MySqlAccounts()
     mysql_out       = make_shared<MysqlOutpus>(conn);
     mysql_in        = make_shared<MysqlInputs>(conn);
     mysql_payment   = make_shared<MysqlPayments>(conn);
-    mysql_tx_inout  = make_shared<MysqlTransactionWithOutsAndIns>(conn);
 
 }
 
@@ -946,13 +885,6 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 }
 
 
-bool
-MySqlAccounts::select_txs_with_inputs_and_outputs(const uint64_t& account_id,
-                                   vector<XmrTransactionWithOutsAndIns>& txs)
-{
-    return mysql_tx_inout->select(account_id, txs);
-}
-
 
 bool
 MySqlAccounts::select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
@@ -978,11 +910,6 @@ MySqlAccounts::select_inputs(const uint64_t& account_id, vector<XmrInput>& ins)
     return mysql_in->select(account_id, ins);
 }
 
-bool
-MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransactionWithOutsAndIns>& ins)
-{
-    return mysql_tx_inout->select_for_tx(tx_id, ins);
-}
 
 bool
 MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins)

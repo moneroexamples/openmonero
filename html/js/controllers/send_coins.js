@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015, MyMonero.com
+// Copyright (c) 2014-2017, MyMonero.com
 // 
 // All rights reserved.
 // 
@@ -99,6 +99,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         $scope.error = "";
         $scope.submitting = true;
         mixin = parseInt(mixin);
+        var rct = true; //maybe want to set this later based on inputs (?)
         var realDsts = [];
         var targetPromises = [];
         for (var i = 0; i < targets.length; ++i) {
@@ -185,8 +186,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 }
             })(deferred, target);
         }
-        // Transaction will need at least 1KB fee
-        var neededFee = config.feePerKB;
+        // Transaction will need at least 1KB fee (13KB for RingCT)
+        var neededFee = rct ? config.feePerKB.multiply(13) : config.feePerKB;
         var totalAmountWithoutFee;
         var unspentOuts;
         var pid_encrypt = false; //don't encrypt payment ID unless we find an integrated one
@@ -203,6 +204,11 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $scope.error = "You need to enter a valid destination";
                 return;
             }
+            if (payment_id && (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id)))) {
+                $scope.submitting = false;
+                $scope.error = "The payment ID you've entered is not valid";
+                return;
+            }
             if (realDsts.length === 1) {//multiple destinations aren't supported by MyMonero, but don't include integrated ID anyway (possibly should error in the future)
                 var decode_result = cnUtil.decode_address(realDsts[0].address);
                 if (decode_result.intPaymentId && payment_id) {
@@ -213,11 +219,6 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     payment_id = decode_result.intPaymentId;
                     pid_encrypt = true; //encrypt if using an integrated address
                 }
-            }
-            if (payment_id && (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id))) && (payment_id.length !== 16)) {
-                $scope.submitting = false;
-                $scope.error = "The payment ID you've entered is not valid";
-                return;
             }
             if (totalAmountWithoutFee.compare(0) <= 0) {
                 $scope.submitting = false;
@@ -285,8 +286,10 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             return outputs;
         }
 
-        function transferSuccess(raw_tx) {
+        function transferSuccess(tx_h) {
             var prevFee = neededFee;
+            var raw_tx = tx_h.raw;
+            var tx_hash = tx_h.hash;
             // work out per-kb fee for transaction
             var txBlobBytes = raw_tx.length / 2;
             var numKB = Math.floor(txBlobBytes / 1024);
@@ -304,7 +307,6 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
             // generated with correct per-kb fee
             console.log("Successful tx generation, submitting tx");
-            var tx_hash = cnUtil.cn_fast_hash(raw_tx, raw_tx.length / 2);
             console.log("Tx hash: " + tx_hash);
             $scope.status = "Submitting...";
             var request = {
@@ -322,7 +324,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         amount: realDsts[0].amount,
                         payment_id: payment_id,
                         tx_id: tx_hash,
-                        tx_fee: neededFee.add(getTxCharge(neededFee))
+                        tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
                     };
                     $scope.success_page = true;
                     $scope.status = "";
@@ -361,6 +363,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             console.log("Selecting outputs to use. Current total: " + cnUtil.formatMoney(using_outs_amount) + " target: " + cnUtil.formatMoney(target_amount));
             while (using_outs_amount.compare(target_amount) < 0 && unused_outs.length > 0) {
                 var out = pop_random_value(unused_outs);
+                if (!rct && out.rct) {continue;} //skip rct outs if not creating rct tx
                 using_outs.push(out);
                 using_outs_amount = using_outs_amount.add(out.amount);
                 console.log("Using output: " + cnUtil.formatMoney(out.amount) + " - " + JSON.stringify(out));
@@ -372,47 +375,77 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             (function() {
                 var dsts = realDsts.slice(0);
                 // Calculate service charge and add to tx destinations
-                var chargeAmount = getTxCharge(neededFee);
-
-                if (config.txChargeAddress)
-                {
-                    dsts.push({
-                        address: config.txChargeAddress,
-                        amount: chargeAmount
-                    });
-                }
+                //var chargeAmount = getTxCharge(neededFee);
+                //dsts.push({
+                //    address: config.txChargeAddress,
+                //    amount: chargeAmount
+                //});
                 // Add fee to total amount
-                var totalAmount = totalAmountWithoutFee.add(neededFee).add(chargeAmount);
+                var totalAmount = totalAmountWithoutFee.add(neededFee)/*.add(chargeAmount)*/;
                 console.log("Balance required: " + cnUtil.formatMoneySymbol(totalAmount));
 
                 select_outputs(totalAmount);
+
+                //compute fee as closely as possible before hand
+                if (using_outs.length > 1 && rct) {
+                    var newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(config.feePerKB);
+                    totalAmount = totalAmountWithoutFee.add(newNeededFee);
+                    //add outputs 1 at a time till we either have them all or can meet the fee
+                    while (using_outs_amount.compare(totalAmount) < 0 && unused_outs.length > 0) {
+                        var out = pop_random_value(unused_outs);
+                        using_outs.push(out);
+                        using_outs_amount = using_outs_amount.add(out.amount);
+                        console.log("Using output: " + cnUtil.formatMoney(out.amount) + " - " + JSON.stringify(out));
+                        newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(config.feePerKB);
+                        totalAmount = totalAmountWithoutFee.add(newNeededFee);
+                    }
+                    console.log("New fee: " + cnUtil.formatMoneySymbol(newNeededFee) + " for " + using_outs.length + " inputs");
+                    neededFee = newNeededFee;
+                }
 
                 if (using_outs_amount.compare(totalAmount) < 0) {
                     deferred.reject("Not enough spendable outputs / balance too low (have: " + cnUtil.formatMoneyFull(using_outs_amount) + " need: " + cnUtil.formatMoneyFull(totalAmount) + ")");
                     return;
                 } else if (using_outs_amount.compare(totalAmount) > 0) {
                     var changeAmount = using_outs_amount.subtract(totalAmount);
-                    //do not give ourselves change < dust threshold
-                    var changeAmountDivRem = changeAmount.divRem(config.dustThreshold);
-                    if (changeAmountDivRem[1].toString() !== "0") {
-                        // add dusty change to fee
-                        console.log("Adding change of " + cnUtil.formatMoneyFullSymbol(changeAmountDivRem[1]) + " to transaction fee (below dust threshold)");
-                    }
-                    if (changeAmountDivRem[0].toString() !== "0") {
-                        // send non-dusty change to our address
-                        var usableChange = changeAmountDivRem[0].multiply(config.dustThreshold);
-                        console.log("Sending change of " + cnUtil.formatMoneySymbol(usableChange) + " to " + AccountService.getAddress());
+                    if (!rct) { //for rct we don't presently care about dustiness
+                        //do not give ourselves change < dust threshold
+                        var changeAmountDivRem = changeAmount.divRem(config.dustThreshold);
+                        if (changeAmountDivRem[1].toString() !== "0") {
+                            // add dusty change to fee
+                            console.log("Adding change of " + cnUtil.formatMoneyFullSymbol(changeAmountDivRem[1]) + " to transaction fee (below dust threshold)");
+                        }
+                        if (changeAmountDivRem[0].toString() !== "0") {
+                            // send non-dusty change to our address
+                            var usableChange = changeAmountDivRem[0].multiply(config.dustThreshold);
+                            console.log("Sending change of " + cnUtil.formatMoneySymbol(usableChange) + " to " + AccountService.getAddress());
+                            dsts.push({
+                                address: AccountService.getAddress(),
+                                amount: usableChange
+                            });
+                        }
+                    } else {
+                        //add entire change for rct
+                        console.log("Sending change of " + cnUtil.formatMoneySymbol(changeAmount) + " to " + AccountService.getAddress());
                         dsts.push({
                             address: AccountService.getAddress(),
-                            amount: usableChange
+                            amount: changeAmount
                         });
                     }
+                } else if (using_outs_amount.compare(totalAmount) === 0 && rct) {
+                    //create random destination to keep 2 outputs always in case of 0 change
+                    var fakeAddress = cnUtil.create_address(cnUtil.random_scalar()).public_addr;
+                    console.log("Sending 0 XMR to a fake address to keep tx uniform (no change exists): " + fakeAddress);
+                    dsts.push({
+                        address: fakeAddress,
+                        amount: 0
+                    });
                 }
 
                 if (mixin > 0) {
                     var amounts = [];
                     for (var l = 0; l < using_outs.length; l++) {
-                        amounts.push(using_outs[l].amount.toString());
+                        amounts.push(using_outs[l].rct ? "0" : using_outs[l].amount.toString());
                     }
                     var request = {
                         amounts: amounts,
@@ -446,18 +479,26 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         if (pid_encrypt) {
                             var realDestViewKey = cnUtil.decode_address(dsts[0].address).view;
                         }
-                        var splittedDsts = cnUtil.decompose_tx_destinations(dsts);
+                        var splittedDsts = cnUtil.decompose_tx_destinations(dsts, rct);
                         console.log('Decomposed destinations:');
                         cnUtil.printDsts(splittedDsts);
-                        signed = cnUtil.create_transaction(AccountService.getPublicKeys(), AccountService.getSecretKeys(), splittedDsts, using_outs, mix_outs, mixin, neededFee, payment_id, pid_encrypt, realDestViewKey, 0);
+                        signed = cnUtil.create_transaction(AccountService.getPublicKeys(), AccountService.getSecretKeys(), splittedDsts, using_outs, mix_outs, mixin, neededFee, payment_id, pid_encrypt, realDestViewKey, 0, rct);
                     } catch (e) {
                         deferred.reject("Failed to create transaction: " + e);
                         return;
                     }
                     console.log("signed tx: ", JSON.stringify(signed));
-                    var raw_tx = cnUtil.serialize_tx(signed);
-                    console.log("tx serialized: " + raw_tx);
-                    deferred.resolve(raw_tx);
+                    //move some stuff here to normalize rct vs non
+                    var raw_tx_and_hash = {};
+                    if (signed.version === 1) {
+                        raw_tx_and_hash.raw = cnUtil.serialize_tx(signed);
+                        raw_tx_and_hash.hash = cnUtil.cn_fast_hash(raw_tx);
+                    } else {
+                        raw_tx_and_hash = cnUtil.serialize_rct_tx_with_hash(signed);
+                    }
+                    console.log("raw_tx and hash:");
+                    console.log(raw_tx_and_hash);
+                    deferred.resolve(raw_tx_and_hash);
                 }
             })();
             return deferred.promise;

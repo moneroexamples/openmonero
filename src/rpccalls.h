@@ -44,7 +44,9 @@ namespace xmreg
 
             timeout_time_ms = std::chrono::milliseconds {timeout_time};
 
-            m_http_client.set_server(deamon_url);
+            m_http_client.set_server(
+                    deamon_url,
+                    boost::optional<epee::net_utils::http::login>{});
         }
 
         bool
@@ -149,8 +151,6 @@ namespace xmreg
 
             if (!r || res.status == "Failed")
             {
-                error_msg = "rpc call to /getrandom_outs.bin failed for some reason";
-
                 cerr << "rpc call to /getrandom_outs.bin failed for some reason" << endl;
                 return false;
             }
@@ -162,6 +162,89 @@ namespace xmreg
             }
 
             return false;
+
+        }
+
+        /*
+         * Not finished. get_random_outs_for_amounts is used instead of this.
+         */
+        bool
+        get_random_outs(const vector<uint64_t>& amounts,
+                        const uint64_t& outs_count)
+        {
+
+
+            // get histogram for the amounts we need
+            epee::json_rpc::request<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request>
+                    req_t = AUTO_VAL_INIT(req_t);
+            epee::json_rpc::response<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response, std::string>
+                    resp_t = AUTO_VAL_INIT(resp_t);
+
+            req_t.jsonrpc = "2.0";
+            req_t.id = epee::serialization::storage_entry(0);
+            req_t.method = "get_output_histogram";
+
+            req_t.params.amounts = amounts;
+
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            if (!connect_to_monero_deamon())
+            {
+                cerr << "get_current_height: not connected to deamon" << endl;
+                return false;
+            }
+
+            bool r = epee::net_utils::invoke_http_json("/json_rpc",
+                                                 req_t, resp_t,
+                                                 m_http_client);
+
+
+            if (!r || resp_t.result.status == "Failed")
+            {
+                //error_msg = res.reason;
+
+                cerr << "Error get_output_histogram: " << resp_t.result.status << endl;
+                return false;
+            }
+
+
+            // generate output indices to request
+            COMMAND_RPC_GET_OUTPUTS_BIN::request req = AUTO_VAL_INIT(req);
+            COMMAND_RPC_GET_OUTPUTS_BIN::response res = AUTO_VAL_INIT(res);
+
+            for (auto hist: resp_t.result.histogram)
+            {
+               cout << hist.total_instances << endl;
+               req.outputs.push_back({hist.amount, 2});
+            }
+
+            r = epee::net_utils::invoke_http_bin("/get_outs.bin",
+                                                 req, res, m_http_client,
+                                                 timeout_time_ms);
+
+            if (!r || res.status == "Failed")
+            {
+                //error_msg = res.reason;
+
+                cerr << "Error /get_outs.bin: " << res.status << endl;
+                return false;
+            }
+
+
+            for (auto o: res.outs)
+            {
+
+                cout << "\no.key: " << pod_to_hex(o.key) << endl;
+                cout << "o.mask: " << pod_to_hex(o.mask) << endl;
+                cout << "o.txid: " << pod_to_hex(o.txid) << endl;
+                cout << "o.height: " << pod_to_hex(o.height) << endl;
+
+                //rct::key mask = td.is_rct() ? rct::commit(td.amount(), td.m_mask) : rct::zeroCommit(td.amount());
+                rct::key rct_commitment = rct::zeroCommit(0);
+            }
+
+            r;
+
 
         }
 
