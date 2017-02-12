@@ -387,7 +387,6 @@ TxSearch::search()
                 } // for (auto &out_k_idx: found_mine_outputs)
 
 
-
                 // once tx and outputs were added, update Accounts table
 
                 XmrAccount updated_acc = *acc;
@@ -401,7 +400,6 @@ TxSearch::search()
                 }
 
             } // if (!found_mine_outputs.empty())
-
 
 
             // SECOND component: Checking for our key images, i.e., inputs.
