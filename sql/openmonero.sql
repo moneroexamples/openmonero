@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 23, 2017 at 12:11 AM
--- Server version: 10.1.20-MariaDB
+-- Generation Time: Feb 12, 2017 at 04:17 AM
+-- Server version: 10.1.21-MariaDB
 -- PHP Version: 7.1.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -121,35 +121,6 @@ CREATE TABLE `Transactions` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Stand-in structure for view `TransactionsWithOutsAndIns`
--- (See below for the actual view)
---
-DROP VIEW IF EXISTS `TransactionsWithOutsAndIns`;
-CREATE TABLE `TransactionsWithOutsAndIns` (
-`tx_id` bigint(20) unsigned
-,`account_id` bigint(20) unsigned
-,`out_pub_key` varchar(64)
-,`amount` bigint(20) unsigned
-,`out_index` bigint(20) unsigned
-,`global_index` bigint(20) unsigned
-,`tx_pub_key` varchar(64)
-,`timestamp` timestamp
-,`key_image` varchar(64)
-,`mixin` bigint(20) unsigned
-);
-
--- --------------------------------------------------------
-
---
--- Structure for view `TransactionsWithOutsAndIns`
---
-DROP TABLE IF EXISTS `TransactionsWithOutsAndIns`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `TransactionsWithOutsAndIns`  AS  select `Inputs`.`tx_id` AS `tx_id`,`Outputs`.`account_id` AS `account_id`,`Outputs`.`out_pub_key` AS `out_pub_key`,`Outputs`.`amount` AS `amount`,`Outputs`.`out_index` AS `out_index`,`Outputs`.`global_index` AS `global_index`,`Outputs`.`tx_pub_key` AS `tx_pub_key`,`Outputs`.`timestamp` AS `timestamp`,`Inputs`.`key_image` AS `key_image`,`Outputs`.`mixin` AS `mixin` from (`Inputs` join `Outputs` on((`Inputs`.`output_id` = `Outputs`.`id`))) ;
-
 --
 -- Indexes for dumped tables
 --
@@ -202,17 +173,17 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 --
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=766;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=384;
 --
 -- AUTO_INCREMENT for table `Payments`
 --
@@ -222,7 +193,7 @@ ALTER TABLE `Payments`
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=701;
 --
 -- Constraints for dumped tables
 --

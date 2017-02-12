@@ -280,49 +280,6 @@ struct XmrPayment : public Payments
 
 };
 
-sql_create_10(TransactionsWithOutsAndIns, 1, 2,
-              sql_bigint_unsigned, tx_id,
-              sql_bigint_unsigned, account_id,
-              sql_varchar        , out_pub_key,
-              sql_bigint_unsigned, amount,
-              sql_bigint_unsigned, out_index,
-              sql_bigint_unsigned, global_index,
-              sql_varchar        , tx_pub_key,
-              sql_timestamp      , timestamp,
-              sql_varchar_null   , key_image,
-              sql_bigint_unsigned, mixin);
-
-struct XmrTransactionWithOutsAndIns : public TransactionsWithOutsAndIns
-{
-
-    static constexpr const char* SELECT_STMT = R"(
-       SELECT * FROM `TransactionsWithOutsAndIns` WHERE `account_id` = (%0q)
-    )";
-
-    static constexpr const char* SELECT_STMT2 = R"(
-       SELECT * FROM `TransactionsWithOutsAndIns` WHERE `tx_id` = (%0q)
-    )";
-
-
-    using TransactionsWithOutsAndIns::TransactionsWithOutsAndIns;
-
-    json
-    to_json() const;
-
-    json
-    spent_output() const;
-
-    string
-    key_image_to_string() const;
-
-    friend std::ostream& operator<< (std::ostream& stream,
-                                     const XmrTransactionWithOutsAndIns& out);
-
-};
-
-
-
-
 
 }
 

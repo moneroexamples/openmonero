@@ -450,11 +450,6 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
 
 
-//    if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
-//    {
-//
-//    }
-
     if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
     {
         json& j_amount_outs = j_response["amount_outs"];
@@ -472,6 +467,9 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
                 transaction random_output_tx;
                 uint64_t output_idx_in_tx;
+
+                // we got random outputs, but now we need to get rct data of those
+                // outputs, because by default frontend created ringct txs.
 
                 if (!CurrentBlockchainStatus::get_tx_with_output(
                         global_amount_index, outs.amount,
@@ -507,6 +505,9 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                 }
                 else
                 {
+                    // for non ringct txs, we need to take it rct amount acommitment
+                    // and sent to the frontend.
+
                     output_data_t od = CurrentBlockchainStatus::get_output_key(outs.amount, global_amount_index);
 
                     rtc_outpk =  pod_to_hex(od.commitment);

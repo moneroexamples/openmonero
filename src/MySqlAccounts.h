@@ -33,24 +33,6 @@ class TxSearch;
 
 
 
-class MysqlTransactionWithOutsAndIns
-{
-
-    shared_ptr<MySqlConnector> conn;
-
-public:
-
-    MysqlTransactionWithOutsAndIns(shared_ptr<MySqlConnector> _conn);
-
-    bool
-    select(const uint64_t &address_id, vector<XmrTransactionWithOutsAndIns>& txs);
-
-    bool
-    select_for_tx(const uint64_t &tx_id, vector<XmrTransactionWithOutsAndIns>& txs);
-};
-
-
-
 class MysqlInputs
 {
 
@@ -182,8 +164,6 @@ class MySqlAccounts
 
     shared_ptr<MysqlPayments> mysql_payment;
 
-    shared_ptr<MysqlTransactionWithOutsAndIns> mysql_tx_inout;
-
 
 public:
 
@@ -219,10 +199,6 @@ public:
                                               vector<XmrTransaction>& txs);
 
     bool
-    select_txs_with_inputs_and_outputs(const uint64_t& account_id,
-                                       vector<XmrTransactionWithOutsAndIns>& txs);
-
-    bool
     select_output_with_id(const uint64_t& out_id, XmrOutput& out);
 
     bool
@@ -233,9 +209,6 @@ public:
 
     bool
     select_inputs(const uint64_t& account_id, vector<XmrInput>& ins);
-
-    bool
-    select_inputs_for_tx(const uint64_t& tx_id, vector<XmrTransactionWithOutsAndIns>& ins);
 
     bool
     select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins);
@@ -278,9 +251,6 @@ public:
 
 
 };
-
-
-
 
 
 }
