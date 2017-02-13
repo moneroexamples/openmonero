@@ -11,6 +11,7 @@
 #include <thread>
 #include <atomic>
 #include "MySqlAccounts.h"
+#include "OutputInputIdentification.h"
 
 namespace xmreg
 {

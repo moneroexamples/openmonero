@@ -159,151 +159,19 @@ TxSearch::search()
         // can filter out false positives.
         for (transaction& tx: blk_txs)
         {
-            crypto::hash tx_hash        = get_transaction_hash(tx);
-            string tx_hash_str          = pod_to_hex(tx_hash);
-            crypto::hash tx_prefix_hash = get_transaction_prefix_hash(tx);
-            string tx_prefix_hash_str   = pod_to_hex(tx_prefix_hash);
 
-            bool is_coinbase_tx = is_coinbase(tx);
+            OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+            // FIRSt step.
+            oi_identification.identify_outputs();
 
             vector<uint64_t> amount_specific_indices;
 
-            public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
-
-            //          <public_key  , amount  , out idx>
-            vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
-
-            outputs = get_ouputs_tuple(tx);
-
-            // for each output, in a tx, check if it belongs
-            // to the given account of specific address and viewkey
-
-            // public transaction key is combined with our viewkey
-            // to create, so called, derived key.
-            key_derivation derivation;
-
-            if (!generate_key_derivation(tx_pub_key, viewkey, derivation))
-            {
-                cerr << "Cant get derived key for: "  << "\n"
-                     << "pub_tx_key: " << tx_pub_key << " and "
-                     << "prv_view_key" << viewkey << endl;
-
-                throw TxSearchException("");
-            }
-
-            uint64_t total_received {0};
-
-
-            // FIRST component: Checking for our outputs.
-
-            // define local structure to keep information about found
-            // ouputs that we can need in later parts.
-            struct output_info
-            {
-                string    pub_key;
-                uint64_t  amount;
-                uint64_t  idx_in_tx;
-                string    rtc_outpk;
-                string    rtc_mask;
-                string    rtc_amount;
-            };
-
-            vector<output_info> found_mine_outputs;
-
-            for (auto& out: outputs)
-            {
-                txout_to_key txout_k      = std::get<0>(out);
-                uint64_t amount           = std::get<1>(out);
-                uint64_t output_idx_in_tx = std::get<2>(out);
-
-                // get the tx output public key
-                // that normally would be generated for us,
-                // if someone had sent us some xmr.
-                public_key generated_tx_pubkey;
-
-                derive_public_key(derivation,
-                                  output_idx_in_tx,
-                                  address.m_spend_public_key,
-                                  generated_tx_pubkey);
-
-                // check if generated public key matches the current output's key
-                bool mine_output = (txout_k.key == generated_tx_pubkey);
-
-
-                //cout  << "Chekcing output: "  << pod_to_hex(txout_k.key) << " "
-                //      << "mine_output: " << mine_output << endl;
-
-
-                // placeholder variable for ringct outputs info
-                // that we need to save in database
-                string rtc_outpk;
-                string rtc_mask;
-                string rtc_amount;
-
-                // if mine output has RingCT, i.e., tx version is 2
-                // need to decode its amount. otherwise its zero.
-                if (mine_output && tx.version == 2)
-                {
-                    // initialize with regular amount value
-                    // for ringct, except coinbase, it will be 0
-                    uint64_t rct_amount_val = amount;
-
-                    rtc_outpk  = pod_to_hex(tx.rct_signatures.outPk[output_idx_in_tx].mask);
-                    rtc_mask   = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-                    rtc_amount = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
-
-                    // cointbase txs have amounts in plain sight.
-                    // so use amount from ringct, only for non-coinbase txs
-                    if (!is_coinbase_tx)
-                    {
-                        bool r;
-
-                        r = decode_ringct(tx.rct_signatures,
-                                          tx_pub_key,
-                                          viewkey,
-                                          output_idx_in_tx,
-                                          tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                          rct_amount_val);
-
-                        if (!r)
-                        {
-                            cerr << "Cant decode ringCT!" << endl;
-                            throw TxSearchException("Cant decode ringCT!");
-                        }
-
-                        amount = rct_amount_val;
-                    }
-
-                } // if (mine_output && tx.version == 2)
-
-                if (mine_output)
-                {
-                    string out_key_str = pod_to_hex(txout_k.key);
-
-                    // found an output associated with the given address and viewkey
-                    string msg = fmt::format("block: {:d}, tx_hash:  {:s}, output_pub_key: {:s}\n",
-                                             searched_blk_no,
-                                             pod_to_hex(get_transaction_hash(tx)),
-                                             out_key_str);
-
-                    cout << msg << endl;
-
-
-                    total_received += amount;
-
-                    found_mine_outputs.emplace_back(
-                            output_info{
-                                out_key_str, amount, output_idx_in_tx,
-                                rtc_outpk, rtc_mask, rtc_amount
-                            });
-
-                } //  if (mine_output)
-
-            } // for (const auto& out: outputs)
-
             uint64_t tx_mysql_id {0};
 
-            if (!found_mine_outputs.empty())
+            // if we identified some outputs as ours,
+            // save them into mysql.
+            if (!oi_identification.identified_outputs.empty())
             {
                 // before adding this tx and its outputs to mysql
                 // check if it already exists. So that we dont
@@ -311,38 +179,36 @@ TxSearch::search()
 
                 XmrTransaction tx_data;
 
-                if (xmr_accounts->tx_exists(acc->id, tx_hash_str, tx_data))
+                if (xmr_accounts->tx_exists(acc->id,
+                                            oi_identification.tx_hash_str,
+                                            tx_data))
                 {
-                    cout << "\nTransaction " << tx_hash_str
+                    cout << "\nTransaction " << oi_identification.tx_hash_str
                          << " already present in mysql"
                          << endl;
-
-
                 }
 
-                tx_data.hash           = tx_hash_str;
-                tx_data.prefix_hash    = tx_prefix_hash_str;
+                tx_data.hash           = oi_identification.tx_hash_str;
+                tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
                 tx_data.account_id     = acc->id;
-                tx_data.total_received = total_received;
+                tx_data.total_received = oi_identification.total_received;
                 tx_data.total_sent     = 0; // at this stage we don't have any
                 // info about spendings
                 tx_data.unlock_time    = 0;
                 tx_data.height         = searched_blk_no;
-                tx_data.coinbase       = is_coinbase_tx;
+                tx_data.coinbase       = oi_identification.tx_is_coinbase;
                 tx_data.spendable      = is_spendable;
                 tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                 tx_data.mixin          = get_mixin_no(tx) - 1;
                 tx_data.timestamp      = blk_timestamp_mysql_format;
 
 
-
                 // insert tx_data into mysql's Transactions table
                 tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
                 // get amount specific (i.e., global) indices of outputs
-
-                if (!CurrentBlockchainStatus::get_amount_specific_indices(tx_hash,
-                                                                          amount_specific_indices))
+                if (!CurrentBlockchainStatus::get_amount_specific_indices(
+                        oi_identification.tx_hash, amount_specific_indices))
                 {
                     cerr << "cant get_amount_specific_indices!" << endl;
                     throw TxSearchException("cant get_amount_specific_indices!");
@@ -355,14 +221,14 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-                for (auto &out_info: found_mine_outputs)
+                for (auto &out_info: oi_identification.identified_outputs)
                 {
                     XmrOutput out_data;
 
                     out_data.account_id   = acc->id;
                     out_data.tx_id        = tx_mysql_id;
                     out_data.out_pub_key  = out_info.pub_key;
-                    out_data.tx_pub_key   = pod_to_hex(tx_pub_key);
+                    out_data.tx_pub_key   = oi_identification.tx_pub_key_str;
                     out_data.amount       = out_info.amount;
                     out_data.out_index    = out_info.idx_in_tx;
                     out_data.rct_outpk    = out_info.rtc_outpk;
@@ -520,14 +386,14 @@ TxSearch::search()
 
                     XmrTransaction tx_data;
 
-                    tx_data.hash           = tx_hash_str;
-                    tx_data.prefix_hash    = tx_prefix_hash_str;
+                    tx_data.hash           = oi_identification.tx_hash_str;
+                    tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
                     tx_data.account_id     = acc->id;
                     tx_data.total_received = 0; // because this is spending, total_recieved is 0
                     tx_data.total_sent     = total_sent;
                     tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
                     tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase_tx;
+                    tx_data.coinbase       = oi_identification.tx_is_coinbase;
                     tx_data.spendable      = is_spendable;
                     tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                     tx_data.mixin          = get_mixin_no(tx) - 1;

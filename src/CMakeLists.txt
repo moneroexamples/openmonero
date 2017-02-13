@@ -10,7 +10,9 @@ set(SOURCE_FILES
 		MySqlConnector.cpp
 		MySqlAccounts.cpp
 		ssqlses.cpp
-		YourMoneroRequests.cpp TxSearch.cpp TxSearch.h)
+		YourMoneroRequests.cpp
+		TxSearch.cpp
+		OutputInputIdentification.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to
