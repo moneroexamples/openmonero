@@ -451,11 +451,62 @@ TxSearch::populate_known_outputs()
         {
             known_outputs_keys.push_back(make_pair(out.out_pub_key, out.amount));
         }
-
     }
 }
 
-pair<account_public_address, secret_key>
+
+json
+TxSearch::find_txs_in_mempool(vector<transaction> mempool_txs)
+{
+    json j_transactions = json::array();
+
+    uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
+
+    for (const transaction& tx: mempool_txs)
+    {
+        // Class that is resposnible for idenficitaction of our outputs
+        // and inputs in a given tx.
+        OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+        // FIRSt step. to search for the incoming xmr, we use address, viewkey and
+        // outputs public key.
+        oi_identification.identify_outputs();
+
+        //vector<uint64_t> amount_specific_indices;
+
+        // if we identified some outputs as ours,
+        // save them into json to be returned.
+        if (!oi_identification.identified_outputs.empty())
+        {
+            json j_tx;
+
+            j_tx["id"]             = 0;
+            j_tx["hash"]           = oi_identification.tx_hash_str;
+            j_tx["timestamp"]      = "";
+            j_tx["total_received"] = oi_identification.total_received;
+            j_tx["total_sent"]     = 0;
+            j_tx["unlock_time"]    = 0;
+            j_tx["height"]         = current_height; // put large value of height,
+                                    // just to indicate that we dont have
+                                    // height and that in frontend it will
+                                    // appear us unconfirmed.
+            j_tx["payment_id"]     = "";
+            j_tx["coinbase"]       = false;
+            j_tx["mixin"]          = get_mixin_no(tx) - 1;
+
+            j_transactions.push_back(j_tx);
+        }
+
+    } // for (const transaction& tx: txs_to_check)
+
+    return j_transactions;
+
+}
+
+
+
+
+    pair<account_public_address, secret_key>
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);

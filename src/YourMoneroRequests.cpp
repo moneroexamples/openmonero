@@ -231,14 +231,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     // append txs found in mempool to the json returned
 
-    account_public_address address_parsed;
-    secret_key viewkey_parsed;
+    json j_mempool_tx;
 
-    if (CurrentBlockchainStatus::get_xmr_address_viewkey(
-             xmr_address, address_parsed, viewkey_parsed))
+    if (CurrentBlockchainStatus::find_txs_in_mempool(
+            xmr_address, j_mempool_tx))
     {
-        json j_mempool_tx = find_txs_in_mempool(&address_parsed, &viewkey_parsed);
-
         if(!j_mempool_tx.empty())
         {
             uint64_t total_received_mempool {0};
@@ -776,59 +773,6 @@ uint64_t
 YourMoneroRequests::get_current_blockchain_height()
 {
     return CurrentBlockchainStatus::get_current_blockchain_height();
-}
-
-
-json
-YourMoneroRequests::find_txs_in_mempool(
-        const account_public_address* address,
-        const secret_key* viewkey)
-{
-    vector<transaction> txs_to_check = CurrentBlockchainStatus::get_mempool_txs();
-
-    json j_transactions = json::array();
-
-    uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
-
-    for (const transaction& tx: txs_to_check)
-    {
-        // Class that is resposnible for idenficitaction of our outputs
-        // and inputs in a given tx.
-        OutputInputIdentification oi_identification {address, viewkey, &tx};
-
-        // FIRSt step. to search for the incoming xmr, we use address, viewkey and
-        // outputs public key.
-        oi_identification.identify_outputs();
-
-        //vector<uint64_t> amount_specific_indices;
-
-        // if we identified some outputs as ours,
-        // save them into json to be returned.
-        if (!oi_identification.identified_outputs.empty())
-        {
-            json j_tx;
-
-            j_tx["id"]             = 0;
-            j_tx["hash"]           = oi_identification.tx_hash_str;
-            j_tx["timestamp"]      = get_current_time();
-            j_tx["total_received"] = oi_identification.total_received;
-            j_tx["total_sent"]     = 0;
-            j_tx["unlock_time"]    = 0;
-            j_tx["height"]         = current_height; // put large value of height,
-                                                     // just to indicate that we dont have
-                                                     // height and that in frontend it will
-                                                     // appear us unconfirmed.
-            j_tx["payment_id"]       = "";
-            j_tx["coinbase"]       = false;
-            j_tx["mixin"]          = get_mixin_no(tx) - 1;
-
-            j_transactions.push_back(j_tx);
-        }
-
-    } // for (const transaction& tx: txs_to_check)
-
-    return j_transactions;
-
 }
 
 

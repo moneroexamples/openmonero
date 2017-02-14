@@ -91,6 +91,34 @@ public:
     void
     populate_known_outputs();
 
+
+    /**
+     * Search for our txs in the mempool
+     *
+     * The method searches for our txs (outputs and inputs)
+     * in the mempool. It does basically same what search method
+     * The difference is that search method searches in a thread
+     * in a blockchain. It does not scan for tx in mempool. This is because
+     * it writes what it finds into database for permament storage.
+     * However txs in mempool are not permament. Also since we want to
+     * give the end user quick update on incoming/outging tx, this method
+     * will be executed whenever frontend wants. By default it is every
+     * 10 seconds. TxSearch class is timed independetly of the frontend.
+     * Also since we dont write here anything to the database, we
+     * return a json that will be appended to json produced by get_address_tx
+     * and similar function. The outputs here cant be spent anyway. This is
+     * only for end user information. The txs found here will be written
+     * to database later on by TxSearch thread when they will be added
+     * to the blockchain.
+     *
+     * we pass mempool_txs by copy because we want copy of mempool txs.
+     * to avoid worrying about synchronizing threads
+     *
+     * @return json
+     */
+    json
+    find_txs_in_mempool(vector<transaction> mempool_txs);
+
     pair<account_public_address, secret_key>
     get_xmr_address_viewkey() const;
 

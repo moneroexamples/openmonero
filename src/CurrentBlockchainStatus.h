@@ -156,6 +156,9 @@ struct CurrentBlockchainStatus
     get_xmr_address_viewkey(const string& address_str,
                             account_public_address& address,
                             secret_key& viewkey);
+    static bool
+    find_txs_in_mempool(const string& address_str,
+                        json& transactions);
 
     static bool
     set_new_searched_blk_no(const string& address,

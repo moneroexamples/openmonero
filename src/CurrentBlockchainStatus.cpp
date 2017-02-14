@@ -621,8 +621,28 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
     return true;
 };
 
-
 bool
+CurrentBlockchainStatus::find_txs_in_mempool(
+        const string& address_str,
+        json& transactions)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address_str) == 0)
+    {
+        // thread does not exist
+        cout << "thread for " << address_str << " does not exist" << endl;
+        return false;
+    }
+
+    transactions = searching_threads[address_str].get()
+            ->find_txs_in_mempool(mempool_txs);
+
+    return true;
+};
+
+
+    bool
 CurrentBlockchainStatus::set_new_searched_blk_no(const string& address, uint64_t new_value)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
