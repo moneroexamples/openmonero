@@ -68,20 +68,20 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
     if (!is_running)
     {
         m_thread = std::thread{[]()
-                               {
-                                   while (true)
-                                   {
-                                       current_height = get_current_blockchain_height();
-                                       read_mempool();
-                                       cout << "Check block height: " << current_height;
-                                       cout << " no of mempool txs: " << mempool_txs.size();
-                                       cout << endl;
-                                       clean_search_thread_map();
-                                       std::this_thread::sleep_for(
-                                               std::chrono::seconds(
-                                                       refresh_block_status_every_seconds));
-                                   }
-                               }};
+               {
+                   while (true)
+                   {
+                       current_height = get_current_blockchain_height();
+                       read_mempool();
+                       cout << "Check block height: " << current_height;
+                       cout << " no of mempool txs: " << mempool_txs.size();
+                       cout << endl;
+                       clean_search_thread_map();
+                       std::this_thread::sleep_for(
+                               std::chrono::seconds(
+                                       refresh_block_status_every_seconds));
+                   }
+               }};
 
         is_running = true;
     }
