@@ -221,7 +221,7 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-                for (auto &out_info: oi_identification.identified_outputs)
+                for (auto& out_info: oi_identification.identified_outputs)
                 {
                     XmrOutput out_data;
 
@@ -248,7 +248,7 @@ TxSearch::search()
                     }
 
                     // add the new output to our cash of known outputs
-                    known_outputs_keys.push_back(out_info.pub_key);
+                    known_outputs_keys.push_back(make_pair(out_info.pub_key, out_info.amount));
 
                 } // for (auto &out_k_idx: found_mine_outputs)
 
@@ -270,79 +270,37 @@ TxSearch::search()
 
             // SECOND component: Checking for our key images, i.e., inputs.
 
-            vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+            oi_identification.identify_inputs(known_outputs_keys);
 
-            // here we will keep what we find.
-            vector<XmrInput> inputs_found;
 
-            // make timescale maps for mixins in input
-            for (const txin_to_key& in_key: input_key_imgs)
+            if (!oi_identification.identified_inputs.empty())
             {
-                // get absolute offsets of mixins
-                std::vector<uint64_t> absolute_offsets
-                        = cryptonote::relative_output_offsets_to_absolute(
-                                in_key.key_offsets);
+                // some inputs were identified as ours in a given tx.
+                // so now, go over those inputs, and check if
+                // get detail info for each found mixin output from database
 
-                // get public keys of outputs used in the mixins that match to the offests
-                std::vector<cryptonote::output_data_t> mixin_outputs;
+                vector<XmrInput> inputs_found;
 
-
-                if (!CurrentBlockchainStatus::get_output_keys(in_key.amount,
-                                                              absolute_offsets,
-                                                              mixin_outputs))
+                for (auto& in_info: oi_identification.identified_inputs)
                 {
-                    cerr << "Mixins key images not found" << endl;
-                    continue;
-                }
-
-                //cout << "in_key.k_image): " << pod_to_hex(in_key.k_image) << endl;
-
-
-                // mixin counter
-                size_t count = 0;
-
-                // for each found output public key check if its ours or not
-                for (const uint64_t& abs_offset: absolute_offsets)
-                {
-                    // get basic information about mixn's output
-                    cryptonote::output_data_t output_data = mixin_outputs.at(count);
-
-                    string output_public_key_str = pod_to_hex(output_data.pubkey);
-
-                    //cout << " - output_public_key_str: " << output_public_key_str << endl;
-
-                    // before going to the mysql, check our known outputs cash
-                    // if the key exists. Its much faster than going to mysql
-                    // for this.
-
-                    if (std::find(
-                            known_outputs_keys.begin(),
-                            known_outputs_keys.end(),
-                            output_public_key_str)
-                        == known_outputs_keys.end())
-                    {
-                        // this mixins's output is unknown.
-                        ++count;
-                        continue;
-                    }
-
-
                     XmrOutput out;
 
-                    if (xmr_accounts->output_exists(output_public_key_str, out))
+                    if (xmr_accounts->output_exists(in_info.out_pub_key, out))
                     {
                         cout << "input uses some mixins which are our outputs"
                              << out << endl;
 
                         // seems that this key image is ours.
-                        // so save it to database for later use.
+                        // so get it infromatoin from database into XmrInput
+                        // database structure that will be written later
+                        // on into database.
 
                         XmrInput in_data;
 
                         in_data.account_id  = acc->id;
                         in_data.tx_id       = 0; // for now zero, later we set it
                         in_data.output_id   = out.id;
-                        in_data.key_image   = pod_to_hex(in_key.k_image);
+                        in_data.key_image   = in_info.key_img;
                         in_data.amount      = out.amount; // must match corresponding output's amount
                         in_data.timestamp   = blk_timestamp_mysql_format;
 
@@ -355,71 +313,68 @@ TxSearch::search()
 
                     } // if (xmr_accounts->output_exists(output_public_key_str, out))
 
-                    count++;
-
-                } // for (const cryptonote::output_data_t& output_data: outputs)
-
-            } // for (const txin_to_key& in_key: input_key_imgs)
+                } // for (auto& in_info: oi_identification.identified_inputs)
 
 
-            if (!inputs_found.empty())
-            {
-                // seems we have some inputs found. time
-                // to write it to mysql. But first,
-                // check if this tx is written in mysql.
-
-                // calculate how much we preasumply spent.
-                uint64_t total_sent {0};
-
-                for (const XmrInput& in_data: inputs_found)
+                if (!inputs_found.empty())
                 {
-                    total_sent += in_data.amount;
-                }
+                    // seems we have some inputs found. time
+                    // to write it to mysql. But first,
+                    // check if this tx is written in mysql.
 
-                if (tx_mysql_id == 0)
-                {
-                    // this txs hasnt been seen in step first.
-                    // it means that it only contains potentially our
-                    // key images. It does not have our outputs.
-                    // so write it to mysql as ours, with
-                    // total received of 0.
+                    // calculate how much we preasumply spent.
+                    uint64_t total_sent {0};
 
-                    XmrTransaction tx_data;
-
-                    tx_data.hash           = oi_identification.tx_hash_str;
-                    tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
-                    tx_data.account_id     = acc->id;
-                    tx_data.total_received = 0; // because this is spending, total_recieved is 0
-                    tx_data.total_sent     = total_sent;
-                    tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
-                    tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = oi_identification.tx_is_coinbase;
-                    tx_data.spendable      = is_spendable;
-                    tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                    tx_data.mixin          = get_mixin_no(tx) - 1;
-                    tx_data.timestamp      = blk_timestamp_mysql_format;
-
-                    // insert tx_data into mysql's Transactions table
-                    tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+                    for (const XmrInput& in_data: inputs_found)
+                    {
+                        total_sent += in_data.amount;
+                    }
 
                     if (tx_mysql_id == 0)
                     {
-                        //cerr << "tx_mysql_id is zero!" << endl;
-                        //throw TxSearchException("tx_mysql_id is zero!");
+                        // this txs hasnt been seen in step first.
+                        // it means that it only contains potentially our
+                        // key images. It does not have our outputs.
+                        // so write it to mysql as ours, with
+                        // total received of 0.
+
+                        XmrTransaction tx_data;
+
+                        tx_data.hash           = oi_identification.tx_hash_str;
+                        tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
+                        tx_data.account_id     = acc->id;
+                        tx_data.total_received = 0; // because this is spending, total_recieved is 0
+                        tx_data.total_sent     = total_sent;
+                        tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
+                        tx_data.height         = searched_blk_no;
+                        tx_data.coinbase       = oi_identification.tx_is_coinbase;
+                        tx_data.spendable      = is_spendable;
+                        tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                        tx_data.mixin          = get_mixin_no(tx) - 1;
+                        tx_data.timestamp      = blk_timestamp_mysql_format;
+
+                        // insert tx_data into mysql's Transactions table
+                        tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+
+                        if (tx_mysql_id == 0)
+                        {
+                            //cerr << "tx_mysql_id is zero!" << endl;
+                            //throw TxSearchException("tx_mysql_id is zero!");
+                        }
+
+                    } //   if (tx_mysql_id == 0)
+
+                    // save all input found into database
+                    for (XmrInput& in_data: inputs_found)
+                    {
+                        in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
+                        uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
                     }
 
-                } //   if (tx_mysql_id == 0)
-
-                // save all input found into database
-                for (XmrInput& in_data: inputs_found)
-                {
-                    in_data.tx_id = tx_mysql_id;
-                    uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
-                }
+                } //  if (!inputs_found.empty())
 
 
-            } //  if (!inputs_found.empty())
-
+            } //  if (!oi_identification.identified_inputs.empty())
 
 
         } // for (const transaction& tx: blk_txs)
@@ -493,7 +448,7 @@ TxSearch::populate_known_outputs()
     {
         for (const XmrOutput& out: outs)
         {
-            known_outputs_keys.push_back(out.out_pub_key);
+            known_outputs_keys.push_back(make_pair(out.out_pub_key, out.amount));
         }
 
     }

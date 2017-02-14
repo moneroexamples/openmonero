@@ -53,7 +53,9 @@ class TxSearch
     // used as a cash to fast look up of
     // our public keys in key images. Saves a lot of
     // mysql queries to Outputs table.
-    vector<string> known_outputs_keys;
+    //
+    //          out_pk, amount
+    vector<pair<string, uint64_t>> known_outputs_keys;
 
     // this manages all mysql queries
     // its better to when each thread has its own mysql connection object.

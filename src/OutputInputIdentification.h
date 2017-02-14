@@ -5,6 +5,7 @@
 #ifndef RESTBED_XMR_OUTPUTINPUTIDENTIFICATION_H
 #define RESTBED_XMR_OUTPUTINPUTIDENTIFICATION_H
 
+#include "CurrentBlockchainStatus.h"
 #include "tools.h"
 
 namespace xmreg
@@ -89,12 +90,13 @@ public:
     uint64_t total_received;
 
     vector<output_info> identified_outputs;
+    vector<input_info>  identified_inputs;
 
     OutputInputIdentification(const account_public_address* _a,
                               const secret_key* _v,
                               const transaction* _tx);
 
-    /*
+    /**
      * FIRST step. search for the incoming xmr using address, viewkey and
      * outputs public keys.
      */
@@ -104,10 +106,22 @@ public:
     /**
      * SECOND step. search for possible our inputs.
      * We do this by comparing mixin public keys with
-     * our output keys. If a metch is found, we assume
+     * our known output keys. If a metch is found, we assume
      * that associated input is ours
+     *
+     * The known_outputs_keys parameter is optional. But when we have
+     * it, the identification is faster as we just check mixins public keys
+     * if they are in known_outputs_keys.
+     *
+     * searching without known_outputs_keys is not implemented yet here
+     * but it was done for the onion explorer. so later basically just
+     * copy and past here.
+     *
+     * known_outputs_keys is pair of <output public key, output amount>
+     *
      */
-    void identify_inputs(const vector<string>& known_outputs_keys);
+    void identify_inputs(
+            const vector<pair<string, uint64_t>>& known_outputs_keys);
 
 private:
 

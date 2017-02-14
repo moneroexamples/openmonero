@@ -143,7 +143,7 @@ OutputInputIdentification::identify_outputs()
 
 void
 OutputInputIdentification::identify_inputs(
-        const vector<string>& known_outputs_keys)
+        const vector<pair<string, uint64_t>>& known_outputs_keys)
 {
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(*tx);
 
@@ -187,53 +187,35 @@ OutputInputIdentification::identify_inputs(
             // if the key exists. Its much faster than going to mysql
             // for this.
 
-            if (std::find(
+
+            auto it =  std::find_if(
                     known_outputs_keys.begin(),
                     known_outputs_keys.end(),
-                    output_public_key_str)
-                == known_outputs_keys.end())
+                    [&](const pair<string, uint64_t>& known_output)
+                    {
+                        return output_public_key_str == known_output.first;
+                    });
+
+            if (it == known_outputs_keys.end())
             {
                 // this mixins's output is unknown.
                 ++count;
                 continue;
             }
 
+            // this seems to be our mixin.
+            // save it into identified_inputs vector
 
-            XmrOutput out;
-
-            if (xmr_accounts->output_exists(output_public_key_str, out))
-            {
-                cout << "input uses some mixins which are our outputs"
-                     << out << endl;
-
-                // seems that this key image is ours.
-                // so save it to database for later use.
-
-                XmrInput in_data;
-
-                in_data.account_id  = acc->id;
-                in_data.tx_id       = 0; // for now zero, later we set it
-                in_data.output_id   = out.id;
-                in_data.key_image   = pod_to_hex(in_key.k_image);
-                in_data.amount      = out.amount; // must match corresponding output's amount
-                in_data.timestamp   = blk_timestamp_mysql_format;
-
-                inputs_found.push_back(in_data);
-
-                // a key image has only one real mixin. Rest is fake.
-                // so if we find a candidate, break the search.
-
-                // break;
-
-            } // if (xmr_accounts->output_exists(output_public_key_str, out))
+            identified_inputs.push_back(input_info {
+                    pod_to_hex(in_key.k_image),
+                    (*it).second, // amount
+                    output_public_key_str});
 
             count++;
 
         } // for (const cryptonote::output_data_t& output_data: outputs)
 
     } // for (const txin_to_key& in_key: input_key_imgs)
-
-
 
 }
 
