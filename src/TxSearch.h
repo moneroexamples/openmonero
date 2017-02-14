@@ -103,7 +103,7 @@ public:
      * However txs in mempool are not permament. Also since we want to
      * give the end user quick update on incoming/outging tx, this method
      * will be executed whenever frontend wants. By default it is every
-     * 10 seconds. TxSearch class is timed independetly of the frontend.
+     * 10 seconds.
      * Also since we dont write here anything to the database, we
      * return a json that will be appended to json produced by get_address_tx
      * and similar function. The outputs here cant be spent anyway. This is
