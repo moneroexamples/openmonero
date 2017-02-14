@@ -141,7 +141,8 @@ struct CurrentBlockchainStatus
     get_payment_id_as_string(const transaction& tx);
 
     static output_data_t
-    get_output_key(uint64_t amount, uint64_t global_amount_index);
+    get_output_key(uint64_t amount,
+                   uint64_t global_amount_index);
 
     // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch
@@ -152,7 +153,13 @@ struct CurrentBlockchainStatus
     ping_search_thread(const string& address);
 
     static bool
-    set_new_searched_blk_no(const string& address, uint64_t new_value);
+    get_xmr_address_viewkey(const string& address_str,
+                            account_public_address& address,
+                            secret_key& viewkey);
+
+    static bool
+    set_new_searched_blk_no(const string& address,
+                            uint64_t new_value);
 
     static void
     clean_search_thread_map();

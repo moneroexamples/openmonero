@@ -40,6 +40,11 @@ var cnUtil = (function(initConfig) {
     var ENCRYPTED_PAYMENT_ID_TAIL = 141;
     var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
     var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
+    if (config.testnet === true)
+    {
+        CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixTestnet;
+        CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixTestnet;
+    }
     var UINT64_MAX = new JSBigInt(2).pow(64);
     var CURRENT_TX_VERSION = 2;
     var OLD_TX_VERSION = 1;

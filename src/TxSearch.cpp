@@ -159,7 +159,8 @@ TxSearch::search()
         // can filter out false positives.
         for (transaction& tx: blk_txs)
         {
-
+            // Class that is resposnible for idenficitaction of our outputs
+            // and inputs in a given tx.
             OutputInputIdentification oi_identification {&address, &viewkey, &tx};
 
             // FIRSt step.
@@ -454,5 +455,10 @@ TxSearch::populate_known_outputs()
     }
 }
 
+pair<account_public_address, secret_key>
+TxSearch::get_xmr_address_viewkey() const
+{
+    return make_pair(address, viewkey);
+}
 
 }

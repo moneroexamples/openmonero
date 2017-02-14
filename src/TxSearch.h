@@ -64,7 +64,7 @@ class TxSearch
     shared_ptr<MySqlAccounts> xmr_accounts;
 
     // address and viewkey for this search thread.
-    cryptonote::account_public_address address;
+    account_public_address address;
     secret_key viewkey;
 
 public:
@@ -90,6 +90,9 @@ public:
 
     void
     populate_known_outputs();
+
+    pair<account_public_address, secret_key>
+    get_xmr_address_viewkey() const;
 
 };
 

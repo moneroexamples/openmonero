@@ -581,6 +581,8 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     return true;
 }
 
+
+
 bool
 CurrentBlockchainStatus::ping_search_thread(const string& address)
 {
@@ -589,7 +591,7 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
     if (searching_threads.count(address) == 0)
     {
         // thread does not exist
-        cout << "does not exist" << endl;
+        cout << "thread for " << address << " does not exist" << endl;
         return false;
     }
 
@@ -597,6 +599,28 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
 
     return true;
 }
+
+bool
+CurrentBlockchainStatus::get_xmr_address_viewkey(
+        const string& address_str,
+        account_public_address& address,
+        secret_key& viewkey)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address_str) == 0)
+    {
+        // thread does not exist
+        cout << "thread for " << address_str << " does not exist" << endl;
+        return false;
+    }
+
+    address = searching_threads[address_str].get()->get_xmr_address_viewkey().first;
+    viewkey = searching_threads[address_str].get()->get_xmr_address_viewkey().second;
+
+    return true;
+};
+
 
 bool
 CurrentBlockchainStatus::set_new_searched_blk_no(const string& address, uint64_t new_value)

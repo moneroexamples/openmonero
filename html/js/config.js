@@ -1,6 +1,6 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
-    testnet: false,
+    testnet: true,
     coinUnitPlaces: 12,
     txMinConfirms: 10,
     coinSymbol: 'XMR',
