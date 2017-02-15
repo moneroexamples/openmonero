@@ -59,7 +59,8 @@ struct CurrentBlockchainStatus
 
     // vector of mempool transactions that all threads
     // can refer to
-    static vector<transaction> mempool_txs;
+    //           <recieved_time, transaction>
+    static vector<pair<uint64_t, transaction>> mempool_txs;
 
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
@@ -127,7 +128,7 @@ struct CurrentBlockchainStatus
     static bool
     read_mempool();
 
-    static vector<transaction>
+    static vector<pair<uint64_t, transaction>>
     get_mempool_txs();
 
     static bool

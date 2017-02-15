@@ -117,7 +117,7 @@ public:
      * @return json
      */
     json
-    find_txs_in_mempool(vector<transaction> mempool_txs);
+    find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
 
     pair<account_public_address, secret_key>
     get_xmr_address_viewkey() const;

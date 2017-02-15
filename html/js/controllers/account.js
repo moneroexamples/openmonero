@@ -151,8 +151,14 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
                         transactions[i].timestamp = new Date(transactions[i].timestamp);
                     }
-                    transactions.sort(function(a, b) {
-                        return b.id - a.id;
+                    transactions.sort(function(a, b)
+                    {
+                        // return b.id - a.id; // dont sort by id, better by timestamp
+
+                        var t1 = b.timestamp;
+                        var t2 = a.timestamp;
+
+                        return ((t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0));
                     });
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);

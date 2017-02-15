@@ -79,6 +79,8 @@ public:
 
     bool tx_is_coinbase;
 
+    uint64_t mixin_no;
+
     // for each output, in a tx, check if it belongs
     // to the given account of specific address and viewkey
 

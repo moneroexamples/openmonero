@@ -12,7 +12,7 @@ OutputInputIdentification::OutputInputIdentification(
     const account_public_address* _a,
     const secret_key* _v,
     const transaction* _tx)
-    : total_received {0}
+    : total_received {0}, mixin_no {0}
 {
     address = _a;
     viewkey = _v;
@@ -36,6 +36,12 @@ OutputInputIdentification::OutputInputIdentification(
 
         throw OutputInputIdentificationException("Cant get derived key for a tx");
     }
+
+    if (!tx_is_coinbase)
+    {
+        mixin_no = get_mixin_no(*tx) - 1;
+    }
+
 }
 
 void
@@ -45,6 +51,8 @@ OutputInputIdentification::identify_outputs()
     vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
 
     outputs = get_ouputs_tuple(*tx);
+
+
 
     for (auto& out: outputs)
     {
@@ -84,15 +92,15 @@ OutputInputIdentification::identify_outputs()
             // for ringct, except coinbase, it will be 0
             uint64_t rct_amount_val = amount;
 
-            rtc_outpk  = pod_to_hex(tx->rct_signatures.outPk[output_idx_in_tx].mask);
-            rtc_mask   = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-            rtc_amount = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].amount);
-
             // cointbase txs have amounts in plain sight.
             // so use amount from ringct, only for non-coinbase txs
             if (!tx_is_coinbase)
             {
                 bool r;
+
+                rtc_outpk  = pod_to_hex(tx->rct_signatures.outPk[output_idx_in_tx].mask);
+                rtc_mask   = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask);
+                rtc_amount = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].amount);
 
                 rct::key mask =  tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask;
 

@@ -182,6 +182,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             {
                 json j_tx = tx.to_json();
 
+                // mark that this is from blockchain.
+                // tx stored in mysql/mariadb are only from blockchain
+                // and never from mempool.
+                j_tx["mempool"] = false;
+
                 vector<XmrInput> inputs;
 
                 if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
@@ -242,10 +247,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
             for (json& j_tx: j_mempool_tx)
             {
-                cout    << "mempool j_tx[\"total_received\"]:"
-                        << j_tx["total_received"]
-                        << endl;
+                //cout    << "mempool j_tx[\"total_received\"]: "
+                //        << j_tx["total_received"] << endl;
+
                 total_received_mempool += j_tx["total_received"].get<uint64_t>();
+
                 j_response["transactions"].push_back(j_tx);
             }
 

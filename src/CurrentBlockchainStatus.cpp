@@ -26,7 +26,7 @@ std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{60};
 xmreg::MicroCore        CurrentBlockchainStatus::mcore;
 cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
-vector<transaction>     CurrentBlockchainStatus::mempool_txs;
+vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;
 string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
@@ -339,6 +339,11 @@ CurrentBlockchainStatus::read_mempool()
         // get transaction info of the tx in the mempool
         tx_info _tx_info = mempool_tx_info.at(i);
 
+        if (_tx_info.do_not_relay == true)
+        {
+            continue;
+        }
+
         crypto::hash mem_tx_hash = null_hash;
 
         if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
@@ -360,7 +365,7 @@ CurrentBlockchainStatus::read_mempool()
                 return false;
             }
 
-            mempool_txs.push_back(tx);
+            mempool_txs.emplace_back(_tx_info.receive_time, tx);
 
         } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
@@ -369,7 +374,7 @@ CurrentBlockchainStatus::read_mempool()
     return true;
 }
 
-vector<transaction>
+vector<pair<uint64_t, transaction>>
 CurrentBlockchainStatus::get_mempool_txs()
 {
     std::lock_guard<std::mutex> lck (getting_mempool_txs);
@@ -383,9 +388,16 @@ CurrentBlockchainStatus::search_if_payment_made(
         string& tx_hash_with_payment)
 {
 
-    vector<transaction> txs_to_check = get_mempool_txs();
+    vector<pair<uint64_t, transaction>> mempool_transactions = get_mempool_txs();
 
     uint64_t current_blockchain_height = current_height;
+
+    vector<transaction> txs_to_check;
+
+    for (auto& mtx: mempool_transactions)
+    {
+        txs_to_check.push_back(mtx.second);
+    }
 
     // apend txs in last to blocks into the txs_to_check vector
     for (uint64_t blk_i = current_blockchain_height - 10;
@@ -408,6 +420,8 @@ CurrentBlockchainStatus::search_if_payment_made(
             return false;
         }
 
+        // combine mempool txs and txs from given number of
+        // last blocks
         txs_to_check.insert(txs_to_check.end(), blk_txs.begin(), blk_txs.end());
     }
 
