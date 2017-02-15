@@ -72,13 +72,27 @@
     <div class="received-div" ng-repeat="tx in transactions | limitTo:5">
       <div class="w-row" ng-click="toggle_tx_detail(tx)">
         <div class="w-col w-col-2 responsive-column">
+
+          <!--
           <div class="transaction-detail value-bold" ng-show="tx_is_confirmed(tx)">
             {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
           </div>
+
           <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="!tx_is_confirmed(tx)">
             {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
             <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
           </div>
+          -->
+
+          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
+            {{tx.amount | money}} (unconfirmed)
+          </div>
+
+          <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
+            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </div>
+
+
         </div>
         <div class="w-col w-col-3 responsive-column">
           <div class="transaction-detail">{{tx.timestamp | time}}</div>
@@ -100,7 +114,10 @@
         </div>
         <div class="w-col w-col-7">
           <div class="transaction-detail transaction-page move-text-div">
-            <div class="transaction-address"><span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}</div>
+            <div class="transaction-address">
+              <span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
+            </div>
           </div>
         </div>
       </div>

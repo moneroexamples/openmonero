@@ -65,11 +65,25 @@
     <div class="w-row" ng-click="toggle_tx_detail(tx)">
       <div class="w-col w-col-2">
         <div class="transaction-detail transaction-left transaction-page">
+          <!--
           <strong class="bold" ng-show="tx_is_confirmed(tx)">{{tx.amount | money}}  <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span></strong>
+
           <strong class="bold red" ng-show="!tx_is_confirmed(tx)">
             {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
             <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
           </strong>
+          -->
+
+          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
+            {{tx.amount | money}} (unconfirmed)
+          </div>
+
+          <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
+            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </div>
+
+
+
         </div>
       </div>
       <div class="w-col w-col-3">
@@ -92,7 +106,10 @@
       </div>
       <div class="w-col w-col-7">
         <div class="transaction-detail transaction-page move-text-div">
-          <div class="transaction-address transaction-page"><span class="bold">Payment ID:</span> &nbsp;&nbsp;&nbsp;&nbsp;{{tx.payment_id || "N/A"}}</div>
+          <div class="transaction-address transaction-page">
+            <span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
+          </div>
         </div>
       </div>
     </div>

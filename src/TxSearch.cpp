@@ -497,6 +497,8 @@ TxSearch::find_txs_in_mempool(
             json j_tx;
 
             j_tx["id"]             = 0; // dont have any database id for tx in mempool
+                                        // this id is used for sorting txs in the frontend.
+
             j_tx["hash"]           = oi_identification.tx_hash_str;
             j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
             j_tx["total_received"] = oi_identification.total_received;

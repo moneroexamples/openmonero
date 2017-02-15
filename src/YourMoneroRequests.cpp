@@ -245,11 +245,18 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         {
             uint64_t total_received_mempool {0};
 
+            // get last tx id (i.e., index) so that we can
+            // set some ids for the mempool txs. These ids are
+            // used for sorting in the frontend. Since we want mempool
+            // tx to be first, they need to be higher than last_tx_id_db
+            uint64_t last_tx_id_db = j_response["transactions"].back()["id"];
+
             for (json& j_tx: j_mempool_tx)
             {
                 //cout    << "mempool j_tx[\"total_received\"]: "
                 //        << j_tx["total_received"] << endl;
 
+                j_tx["id"] = ++last_tx_id_db;
                 total_received_mempool += j_tx["total_received"].get<uint64_t>();
 
                 j_response["transactions"].push_back(j_tx);

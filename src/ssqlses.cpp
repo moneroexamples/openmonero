@@ -43,6 +43,7 @@ XmrTransaction::to_json() const
             {"total_sent"          , total_sent},
             {"height"              , height},
             {"payment_id"          , payment_id},
+            {"unlock_time"         , unlock_time},
             {"coinbase"            , bool {coinbase}},
             {"spendable"           , bool {spendable}},
             {"mixin"               , mixin},

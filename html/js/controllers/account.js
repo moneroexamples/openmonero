@@ -67,7 +67,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     };
 
     $scope.tx_is_mempool = function(tx) {
-        console.log(tx.mempool);
+        //console.log(tx.mempool);
         return tx.mempool;
     };
 
@@ -171,12 +171,12 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     }
                     transactions.sort(function(a, b)
                     {
-                        // return b.id - a.id; // dont sort by id, better by timestamp
+                        return b.id - a.id; // sort by id in database
 
-                        var t1 = b.timestamp;
-                        var t2 = a.timestamp;
+                        //var t1 = b.timestamp;
+                        //var t2 = a.timestamp;
 
-                        return ((t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0));
+                        //return ((t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0));
                     });
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);
