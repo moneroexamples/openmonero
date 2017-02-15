@@ -66,7 +66,10 @@
       <div class="w-col w-col-2">
         <div class="transaction-detail transaction-left transaction-page">
           <strong class="bold" ng-show="tx_is_confirmed(tx)">{{tx.amount | money}}  <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span></strong>
-          <strong class="bold red" ng-show="!tx_is_confirmed(tx)">{{tx.amount | money}} (unconfirmed)  <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span></strong>
+          <strong class="bold red" ng-show="!tx_is_confirmed(tx)">
+            {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
+            <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </strong>
         </div>
       </div>
       <div class="w-col w-col-3">

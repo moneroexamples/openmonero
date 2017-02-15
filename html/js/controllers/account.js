@@ -53,6 +53,11 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
         return cnUtil.is_tx_unlocked(tx.unlock_time || 0, $scope.blockchain_height);
     };
 
+    $scope.tx_is_mempool = function(tx) {
+        console.log(tx.mempool);
+        return tx.mempool;
+    };
+
     $scope.tx_locked_reason = function(tx) {
         return cnUtil.tx_locked_reason(tx.unlock_time || 0, $scope.blockchain_height);
     };
