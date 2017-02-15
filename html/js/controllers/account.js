@@ -46,11 +46,24 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.blockchain_height = 0;
 
     $scope.tx_is_confirmed = function(tx) {
-        return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+       // return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+        if (!tx.coinbase)
+        {
+            // for regular txs, by defalut 10 blocks is required for it to
+            // be confirmed/spendable
+            return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+        }
+        else
+        {
+            // coinbase txs require much more blocks (default 60)
+            // for it to be confirmed/spendable
+            return ($scope.blockchain_height - tx.height) > config.txCoinbaseMinConfirms;
+        }
     };
 
     $scope.tx_is_unlocked = function(tx) {
         return cnUtil.is_tx_unlocked(tx.unlock_time || 0, $scope.blockchain_height);
+        //return false;
     };
 
     $scope.tx_is_mempool = function(tx) {

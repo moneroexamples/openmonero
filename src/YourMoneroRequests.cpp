@@ -396,6 +396,9 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
     {
         uint64_t total_outputs_amount {0};
 
+        uint64_t current_blockchain_height
+                = CurrentBlockchainStatus::get_current_blockchain_height();
+
         vector<XmrTransaction> txs;
 
         // retrieve txs from mysql associated with the given address
@@ -407,6 +410,28 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
             for (XmrTransaction& tx: txs)
             {
+                // we skip over locked outputs
+                // as they cant be spent anyway.
+                // thus no reason to return them to the frontend
+                // for constructing a tx.
+
+                int64_t time_since_unlock = current_blockchain_height - tx.unlock_time;
+
+                if (tx.coinbase)
+                {
+                    if (time_since_unlock < CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (time_since_unlock < CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE)
+                    {
+                        continue;
+                    }
+                }
+
                 vector<XmrOutput> outs;
 
                 if (xmr_accounts->select_outputs_for_tx(tx.id, outs))

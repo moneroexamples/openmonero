@@ -195,8 +195,15 @@ TxSearch::search()
                 tx_data.total_received = oi_identification.total_received;
                 tx_data.total_sent     = 0; // at this stage we don't have any
                                             // info about spendings
-                tx_data.unlock_time    = 0; // this seems to be not used at all
-                                            // in frontend
+
+                                         // this is current block + unlock time
+                                         // for regular tx, the unlock time is
+                                         // default of 10 blocks.
+                                         // for coinbase tx it is 60 blocks
+                tx_data.unlock_time    = (oi_identification.tx_is_coinbase ?
+                                          searched_blk_no + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW
+                                         : searched_blk_no + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE);
+
                 tx_data.height         = searched_blk_no;
                 tx_data.coinbase       = oi_identification.tx_is_coinbase;
                 tx_data.spendable      = is_spendable;
@@ -347,7 +354,9 @@ TxSearch::search()
                         tx_data.account_id     = acc->id;
                         tx_data.total_received = 0; // because this is spending, total_recieved is 0
                         tx_data.total_sent     = total_sent;
-                        tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
+                        tx_data.unlock_time    = 0; // spend only tx dont have unlock time
+                                                    // sicne we are not recieving any outputs
+                                                    // that we can spend
                         tx_data.height         = searched_blk_no;
                         tx_data.coinbase       = oi_identification.tx_is_coinbase;
                         tx_data.spendable      = is_spendable;
@@ -492,7 +501,8 @@ TxSearch::find_txs_in_mempool(
             j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
             j_tx["total_received"] = oi_identification.total_received;
             j_tx["total_sent"]     = 0; // to be set later when looking for key images
-            j_tx["unlock_time"]    = 0;
+            j_tx["unlock_time"]    = 0; // for mempool we set it to zero
+                                        // since we dont have block_height to work with
             j_tx["height"]         = current_height; // put current blockchain height,
                                     // just to indicate to frontend that this
                                     // tx is younger than 10 blocks so that

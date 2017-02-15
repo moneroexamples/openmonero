@@ -2002,6 +2002,20 @@ var cnUtil = (function(initConfig) {
         }
     };
 
+    this.is_tx_unlocked2 = function(unlock_time, blockchain_height) {
+        if (!config.maxBlockNumber) {
+            throw "Max block number is not set in config!";
+        }
+        if (unlock_time < config.maxBlockNumber) {
+            // unlock time is block height
+            return blockchain_height >= unlock_time;
+        } else {
+            // unlock time is timestamp
+            var current_time = Math.round(new Date().getTime() / 1000);
+            return current_time >= unlock_time;
+        }
+    };
+
     this.tx_locked_reason = function(unlock_time, blockchain_height) {
         if (unlock_time < config.maxBlockNumber) {
             // unlock time is block height
