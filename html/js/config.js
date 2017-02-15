@@ -1,8 +1,9 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
-    testnet: true,
+    testnet: false,
     coinUnitPlaces: 12,
-    txMinConfirms: 10,
+    txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
+    txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
     coinSymbol: 'XMR',
     openAliasPrefix: "xmr",
     coinName: 'Monero',
@@ -19,6 +20,6 @@ var config = {
     idleTimeout: 30,
     idleWarningDuration: 20,
     maxBlockNumber: 500000000,
-    avgBlockTime: 60,
+    avgBlockTime: 120,
     debugMode: false
 };
