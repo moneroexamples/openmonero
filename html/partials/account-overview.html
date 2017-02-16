@@ -115,7 +115,8 @@
         <div class="w-col w-col-7">
           <div class="transaction-detail transaction-page move-text-div">
             <div class="transaction-address">
-              <span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+              <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
               &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
             </div>
           </div>

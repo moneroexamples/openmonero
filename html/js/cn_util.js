@@ -1788,7 +1788,7 @@ var cnUtil = (function(initConfig) {
                     oe.index = out.global_index.toString();
                     oe.key = out.public_key;
 
-                    console.log('outputs[',i,']: ', outputs[i]);
+                    //console.log('outputs[',i,']: ', outputs[i]);
 
                     if (rct){
                         if (out.rct){
@@ -1835,7 +1835,7 @@ var cnUtil = (function(initConfig) {
             }
             sources.push(src);
         }
-        console.log('sources: ', sources);
+        //console.log('sources: ', sources);
         var change = {
             amount: JSBigInt.ZERO
         };

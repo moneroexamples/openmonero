@@ -256,8 +256,11 @@ TxSearch::search()
                         //throw TxSearchException("out_mysql_id is zero!");
                     }
 
-                    // add the new output to our cash of known outputs
-                    known_outputs_keys.push_back(make_pair(out_info.pub_key, out_info.amount));
+                    {
+                        std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
+                        known_outputs_keys.push_back(make_pair(out_info.pub_key, out_info.amount));
+                    }
+
 
                 } // for (auto &out_k_idx: found_mine_outputs)
 
@@ -279,6 +282,8 @@ TxSearch::search()
 
             // SECOND component: Checking for our key images, i.e., inputs.
 
+            // no need mutex here, as this will be exectued only after
+            // the above. there is no threads here.
             oi_identification.identify_inputs(known_outputs_keys);
 
 
@@ -473,6 +478,17 @@ TxSearch::find_txs_in_mempool(
 
     uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
 
+    vector<pair<string, uint64_t>> known_outputs_keys_copy;
+
+    {
+        // copy known ouputs. mutex is needed as known_outputs_keys can
+        // be updated at the same time as used in this here.
+        // we make its copy as to keep mutex for short time,
+        // and read only on copy safely.
+        std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
+        known_outputs_keys_copy = known_outputs_keys;
+    }
+
     for (const pair<uint64_t, transaction>& mtx: mempool_txs)
     {
 
@@ -516,6 +532,103 @@ TxSearch::find_txs_in_mempool(
 
             j_transactions.push_back(j_tx);
         }
+
+
+        // SECOND step: Checking for our key images, i.e., inputs.
+
+        // no need mutex here, as this will be exectued only after
+        // the above. there is no threads here.
+        oi_identification.identify_inputs(known_outputs_keys_copy);
+
+        if (!oi_identification.identified_inputs.empty())
+        {
+            // if we find something we need to construct spent_outputs json array
+            // that will be appended into j_tx above. or in case this is
+            // only spending tx, i.e., no outputs were found, we need to custruct
+            // new j_tx.
+
+            json spend_keys;
+            uint64_t total_sent {0};
+
+            for (auto& in_info: oi_identification.identified_inputs)
+            {
+                // need to get output info from mysql, as we need
+                // to know output's amount, its orginal
+                // tx public key and its index in that tx
+                XmrOutput out;
+
+                if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                {
+                    uint64_t output_amount = out.amount;
+                    string tx_pub_key = out.tx_pub_key;
+                    uint64_t out_index  = out.out_index;
+                    uint64_t mixin = out.mixin; // mixin not used but get it anyway
+                                                // as in mymonero
+
+                    total_sent += output_amount;
+
+                    spend_keys.push_back({
+                          {"key_image" , in_info.key_img},
+                          {"amount"    , output_amount},
+                          {"tx_pub_key", tx_pub_key},
+                          {"out_index" , out_index},
+                          {"mixin"     , mixin},
+                    });
+                }
+            }
+
+
+            if (!spend_keys.empty())
+            {
+                // check if we got outputs in this tx. if yes
+                // we use exising j_tx. If not, we need to construct new
+                // j_tx object.
+
+                if (!oi_identification.identified_outputs.empty())
+                {
+                    // we have outputs in this tx as well, so use
+                    // exisiting j_tx. we add spending info
+                    // to j_tx created before.
+
+                    json& j_tx = j_transactions.back();
+
+                    j_tx["total_sent"]    = total_sent;
+                    j_tx["spent_outputs"] = spend_keys;
+                }
+                else
+                {
+                    // we dont have any outputs in this tx as
+                    // this is spend only tx, so we need to create new
+                    // j_tx.
+
+                    json j_tx;
+
+                    j_tx["id"]             = 0; // dont have any database id for tx in mempool
+                                               // this id is used for sorting txs in the frontend.
+
+                    j_tx["hash"]           = oi_identification.tx_hash_str;
+                    j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
+                    j_tx["total_received"] = 0; // we did not recive any outputs/xmr
+                    j_tx["total_sent"]     = total_sent; // to be set later when looking for key images
+                    j_tx["unlock_time"]    = 0;          // for mempool we set it to zero
+                                                         // since we dont have block_height to work with
+                    j_tx["height"]         = current_height; // put current blockchain height,
+                                                        // just to indicate to frontend that this
+                                                        // tx is younger than 10 blocks so that
+                                                        // it shows unconfirmed message.
+                    j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                    j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+                    j_tx["mixin"]          = get_mixin_no(tx) - 1;
+                    j_tx["mempool"]        = true;
+                    j_tx["spent_outputs"]  = spend_keys;
+
+                    j_transactions.push_back(j_tx);
+
+                } // else of if (!oi_identification.identified_outputs.empty())
+
+            } //  if (!spend_keys.empty())
+
+        } // if (!oi_identification.identified_inputs.empty())
 
     } // for (const transaction& tx: txs_to_check)
 

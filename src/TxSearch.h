@@ -41,6 +41,7 @@ class TxSearch
 
     bool continue_search {true};
 
+    mutex getting_known_outputs_keys;
 
     uint64_t last_ping_timestamp;
 

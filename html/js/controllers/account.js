@@ -147,24 +147,31 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     $scope.blockchain_height = data.blockchain_height || 0;
                     var transactions = data.transactions || [];
                     for (var i = 0; i < transactions.length; ++i) {
-                        if ((transactions[i].spent_outputs || []).length > 0) {
-                            for (var j = 0; j < transactions[i].spent_outputs.length; ++j) {
+                        if ((transactions[i].spent_outputs || []).length > 0)
+                        {
+                            for (var j = 0; j < transactions[i].spent_outputs.length; ++j)
+                            {
                                 var key_image = AccountService.cachedKeyImage(
                                     transactions[i].spent_outputs[j].tx_pub_key,
                                     transactions[i].spent_outputs[j].out_index
                                 );
-                                if (transactions[i].spent_outputs[j].key_image !== key_image) {
+                                if (transactions[i].spent_outputs[j].key_image !== key_image)
+                                {
                                     transactions[i].total_sent = new JSBigInt(transactions[i].total_sent).subtract(transactions[i].spent_outputs[j].amount).toString();
                                     transactions[i].spent_outputs.splice(j, 1);
                                     j--;
                                 }
                             }
                         }
-                        if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0) {
+                        if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0)
+                        {
                             transactions.splice(i, 1);
                             i--;
                             continue;
                         }
+
+                        //console.log(transactions[i].total_received, transactions[i].total_sent);
+
                         transactions[i].amount = new JSBigInt(transactions[i].total_received || 0).subtract(transactions[i].total_sent || 0).toString();
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
                         transactions[i].timestamp = new Date(transactions[i].timestamp);
