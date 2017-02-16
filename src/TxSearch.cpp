@@ -206,6 +206,8 @@ TxSearch::search()
 
                 tx_data.height         = searched_blk_no;
                 tx_data.coinbase       = oi_identification.tx_is_coinbase;
+                tx_data.is_rct         = oi_identification.is_rct;
+                tx_data.rct_type       = oi_identification.rct_type;
                 tx_data.spendable      = is_spendable;
                 tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                 tx_data.mixin          = oi_identification.mixin_no;
@@ -364,6 +366,8 @@ TxSearch::search()
                                                     // that we can spend
                         tx_data.height         = searched_blk_no;
                         tx_data.coinbase       = oi_identification.tx_is_coinbase;
+                        tx_data.is_rct         = oi_identification.is_rct;
+                        tx_data.rct_type       = oi_identification.rct_type;
                         tx_data.spendable      = is_spendable;
                         tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                         tx_data.mixin          = get_mixin_no(tx) - 1;
@@ -527,6 +531,8 @@ TxSearch::find_txs_in_mempool(
                                     // it shows unconfirmed message.
             j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
             j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+            j_tx["is_rct"]         = oi_identification.is_rct;
+            j_tx["rct_type"]       = oi_identification.rct_type;
             j_tx["mixin"]          = get_mixin_no(tx) - 1;
             j_tx["mempool"]        = true;
 
@@ -618,6 +624,8 @@ TxSearch::find_txs_in_mempool(
                                                         // it shows unconfirmed message.
                     j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
                     j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+                    j_tx["is_rct"]         = oi_identification.is_rct;
+                    j_tx["rct_type"]       = oi_identification.rct_type;
                     j_tx["mixin"]          = get_mixin_no(tx) - 1;
                     j_tx["mempool"]        = true;
                     j_tx["spent_outputs"]  = spend_keys;

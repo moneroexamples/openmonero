@@ -28,6 +28,14 @@ OutputInputIdentification::OutputInputIdentification(
 
     tx_is_coinbase = is_coinbase(*tx);
 
+    is_rct = (tx->version == 2);
+
+    if (is_rct)
+    {
+        rct_type = tx->rct_signatures.type;
+    }
+
+
     if (!generate_key_derivation(tx_pub_key, *viewkey, derivation))
     {
         cerr << "Cant get derived key for: "  << "\n"

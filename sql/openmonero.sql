@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Feb 12, 2017 at 04:17 AM
+-- Generation Time: Feb 16, 2017 at 05:55 AM
 -- Server version: 10.1.21-MariaDB
--- PHP Version: 7.1.1
+-- PHP Version: 7.1.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -116,6 +116,8 @@ CREATE TABLE `Transactions` (
   `height` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `spendable` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Has 10 blocks pasted since it was indexed?',
   `coinbase` tinyint(1) NOT NULL DEFAULT '0',
+  `is_rct` tinyint(1) NOT NULL DEFAULT '1',
+  `rct_type` int(4) NOT NULL DEFAULT '-1',
   `payment_id` varchar(64) NOT NULL DEFAULT '',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -173,17 +175,17 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 --
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=766;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=210;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=384;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=297;
 --
 -- AUTO_INCREMENT for table `Payments`
 --
@@ -193,7 +195,7 @@ ALTER TABLE `Payments`
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=701;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=389;
 --
 -- Constraints for dumped tables
 --

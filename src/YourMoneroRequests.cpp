@@ -253,8 +253,8 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
             for (json& j_tx: j_mempool_tx)
             {
-                //cout    << "mempool j_tx[\"total_received\"]: "
-                //        << j_tx["total_received"] << endl;
+                cout    << "mempool j_tx[\"total_received\"]: "
+                        << j_tx["total_received"] << endl;
 
                 j_tx["id"] = ++last_tx_id_db;
                 total_received_mempool += j_tx["total_received"].get<uint64_t>();
@@ -445,12 +445,38 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                 {
                     for (XmrOutput &out: outs)
                     {
+                        // need to check for rct commintment
+                        // coinbase ringct txs dont have
+                        // rct filed in them. Thus
+                        // we need to make them.
+
+                        uint64_t global_amount_index = out.global_index;
+
+                        uint64_t out_amount {out.amount};
+
+                        // but if ringct tx, set it amount to zero
+                        // as in Outputs table we store decoded outputs amounts
+                        if (tx.is_rct)
+                        {
+                            out_amount = 0;
+                        }
+
+                        tuple<string, string, string>
+                                rct_field = CurrentBlockchainStatus::construct_output_rct_field(
+                                global_amount_index, out_amount);
+
+                        string rct =  std::get<0>(rct_field)    // rct_pk
+                                      + std::get<1>(rct_field)  // rct_mask
+                                      + std::get<2>(rct_field); // rct_amount
+
+                        //string rct = out.get_rct();
+
                         json j_out{
                                 {"amount",           out.amount},
                                 {"public_key",       out.out_pub_key},
                                 {"index",            out.out_index},
                                 {"global_index",     out.global_index},
-                                {"rct"         ,     out.get_rct()},
+                                {"rct"         ,     rct},
                                 {"tx_id",            out.tx_id},
                                 {"tx_hash",          tx.hash},
                                 {"tx_prefix_hash",   tx.prefix_hash},
@@ -533,55 +559,17 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
             {
                 uint64_t global_amount_index = out.global_amount_index;
 
-                transaction random_output_tx;
-                uint64_t output_idx_in_tx;
-
-                // we got random outputs, but now we need to get rct data of those
-                // outputs, because by default frontend created ringct txs.
-
-                if (!CurrentBlockchainStatus::get_tx_with_output(
-                        global_amount_index, outs.amount,
-                        random_output_tx, output_idx_in_tx))
-                {
-                    cerr << "cant get random output transaction" << endl;
-                    break;
-                }
-
-                //cout << pod_to_hex(out.out_key) << endl;
-                //cout << pod_to_hex(get_transaction_hash(random_output_tx)) << endl;
-                //cout << output_idx_in_tx << endl;
-
-                // placeholder variable for ringct outputs info
-                // that we need to save in database
-                string rtc_outpk;
-                string rtc_mask(64, '0');
-                string rtc_amount(64, '0');
+                tuple<string, string, string>
+                        rct_field = CurrentBlockchainStatus::construct_output_rct_field(
+                                    global_amount_index, outs.amount);
 
                 json out_details {
                         {"global_index", out.global_amount_index},
-                        {"public_key"  , pod_to_hex(out.out_key)}
+                        {"public_key"  , pod_to_hex(out.out_key)},
+                        {"rct"         , std::get<0>(rct_field)    // rct_pk
+                                         + std::get<1>(rct_field)  // rct_mask
+                                         + std::get<2>(rct_field)} // rct_amount
                 };
-
-
-                if (random_output_tx.version > 1 && !is_coinbase(random_output_tx))
-                {
-                    rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures.outPk[output_idx_in_tx].mask);
-                    rtc_mask   = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-                    rtc_amount = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
-
-                    out_details["rct"]=  rtc_outpk + rtc_mask + rtc_amount;
-                }
-                else
-                {
-                    // for non ringct txs, we need to take it rct amount acommitment
-                    // and sent to the frontend.
-
-                    output_data_t od = CurrentBlockchainStatus::get_output_key(outs.amount, global_amount_index);
-
-                    rtc_outpk =  pod_to_hex(od.commitment);
-                }
-
-                out_details["rct"] =  rtc_outpk + rtc_mask + rtc_amount;
 
                 j_outputs.push_back(out_details);
 

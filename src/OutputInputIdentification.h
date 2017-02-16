@@ -79,6 +79,9 @@ public:
 
     bool tx_is_coinbase;
 
+    bool is_rct;
+    uint8_t rct_type;
+
     uint64_t mixin_no;
 
     // for each output, in a tx, check if it belongs

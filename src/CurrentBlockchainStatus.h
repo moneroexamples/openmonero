@@ -168,6 +168,15 @@ struct CurrentBlockchainStatus
     static void
     clean_search_thread_map();
 
+    /*
+     * The frontend requires rct field to work
+     * the filed consisitct of rct_pk, mask, and amount.
+     */
+    static tuple<string, string, string>
+    construct_output_rct_field(
+            const uint64_t global_amount_index,
+            const uint64_t out_amount);
+
 };
 
 

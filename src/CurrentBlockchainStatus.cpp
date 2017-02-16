@@ -690,5 +690,55 @@ CurrentBlockchainStatus::clean_search_thread_map()
 }
 
 
+tuple<string, string, string>
+CurrentBlockchainStatus::construct_output_rct_field(
+        const uint64_t global_amount_index,
+        const uint64_t out_amount)
+{
+
+   transaction random_output_tx;
+    uint64_t output_idx_in_tx;
+
+    // we got random outputs, but now we need to get rct data of those
+    // outputs, because by default frontend created ringct txs.
+
+    if (!CurrentBlockchainStatus::get_tx_with_output(
+            global_amount_index, out_amount,
+            random_output_tx, output_idx_in_tx))
+    {
+        cerr << "cant get random output transaction" << endl;
+        return make_tuple(string {}, string {}, string {});
+    }
+
+    //cout << pod_to_hex(out.out_key) << endl;
+    //cout << pod_to_hex(get_transaction_hash(random_output_tx)) << endl;
+    //cout << output_idx_in_tx << endl;
+
+    // placeholder variable for ringct outputs info
+    // that we need to save in database
+    string rtc_outpk;
+    string rtc_mask(64, '0');
+    string rtc_amount(64, '0');
+
+
+    if (random_output_tx.version > 1 && !is_coinbase(random_output_tx))
+    {
+        rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures.outPk[output_idx_in_tx].mask);
+        rtc_mask   = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
+        rtc_amount = pod_to_hex(random_output_tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
+    }
+    else
+    {
+        // for non ringct txs, we need to take it rct amount acommitment
+        // and sent to the frontend.
+
+        output_data_t od = get_output_key(out_amount, global_amount_index);
+
+        rtc_outpk =  pod_to_hex(od.commitment);
+    }
+
+    return make_tuple(rtc_outpk, rtc_mask, rtc_amount);
+};
+
 
 }

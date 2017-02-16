@@ -292,7 +292,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             var tx_hash = tx_h.hash;
             // work out per-kb fee for transaction
             var txBlobBytes = raw_tx.length / 2;
-            var numKB = Math.floor(txBlobBytes / 1024);
+            var numKB = Math.floor((txBlobBytes) / 1024);
             if (txBlobBytes % 1024) {
                 numKB++;
             }
@@ -482,7 +482,14 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         var splittedDsts = cnUtil.decompose_tx_destinations(dsts, rct);
                         console.log('Decomposed destinations:');
                         cnUtil.printDsts(splittedDsts);
-                        signed = cnUtil.create_transaction(AccountService.getPublicKeys(), AccountService.getSecretKeys(), splittedDsts, using_outs, mix_outs, mixin, neededFee, payment_id, pid_encrypt, realDestViewKey, 0, rct);
+                        signed = cnUtil.create_transaction(
+                            AccountService.getPublicKeys(),
+                            AccountService.getSecretKeys(),
+                            splittedDsts, using_outs,
+                            mix_outs, mixin, neededFee,
+                            payment_id, pid_encrypt,
+                            realDestViewKey, 0, rct);
+
                     } catch (e) {
                         deferred.reject("Failed to create transaction: " + e);
                         return;
