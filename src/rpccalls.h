@@ -282,6 +282,50 @@ namespace xmreg
             return true;
         }
 
+        bool
+        get_dynamic_per_kb_fee_estimate(uint64_t grace_blocks,
+                                        uint64_t& fee,
+                                        string& error_msg)
+        {
+            epee::json_rpc::request<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::request>
+                    req_t = AUTO_VAL_INIT(req_t);
+            epee::json_rpc::response<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::response, std::string>
+                    resp_t = AUTO_VAL_INIT(resp_t);
+
+
+            req_t.jsonrpc = "2.0";
+            req_t.id = epee::serialization::storage_entry(0);
+            req_t.method = "get_fee_estimate";
+            req_t.params.grace_blocks = grace_blocks;
+
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            if (!connect_to_monero_deamon())
+            {
+                cerr << "get_current_height: not connected to deamon" << endl;
+                return false;
+            }
+
+            bool r = epee::net_utils::invoke_http_json("/json_rpc",
+                                                       req_t, resp_t,
+                                                       m_http_client);
+
+
+            if (!r || resp_t.result.status == "Failed")
+            {
+                error_msg = resp_t.error;
+
+                cerr << "Error get_dynamic_per_kb_fee_estimate: " << error_msg << endl;
+
+                return false;
+            }
+
+            fee = resp_t.result.fee;
+
+            return true;
+
+        }
+
 
         bool
         commit_tx(tools::wallet2::pending_tx& ptx, string& error_msg)

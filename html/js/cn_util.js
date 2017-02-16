@@ -1622,8 +1622,11 @@ var cnUtil = (function(initConfig) {
         var in_contexts = [];
         var inputs_money = JSBigInt.ZERO;
         var i, j;
+
         console.log('Sources: ');
-        for (i = 0; i < sources.length; i++) {
+
+        for (i = 0; i < sources.length; i++)
+        {
             console.log(i + ': ' + this.formatMoneyFull(sources[i].amount));
             if (sources[i].real_out >= sources[i].outputs.length) {
                 throw "real index >= outputs.length";
@@ -1721,7 +1724,6 @@ var cnUtil = (function(initConfig) {
         console.log(tx);
         return tx;
     };
-
     this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         unlock_time = unlock_time || 0;
         mix_outs = mix_outs || [];
@@ -1759,9 +1761,7 @@ var cnUtil = (function(initConfig) {
         }
         var found_money = JSBigInt.ZERO;
         var sources = [];
-
-        //console.log('Selected transfers: ', outputs);
-
+        console.log('Selected transfers: ', outputs);
         for (i = 0; i < outputs.length; ++i) {
             found_money = found_money.add(outputs[i].amount);
             if (found_money.compare(UINT64_MAX) !== -1) {
@@ -1787,9 +1787,6 @@ var cnUtil = (function(initConfig) {
                     var oe = {};
                     oe.index = out.global_index.toString();
                     oe.key = out.public_key;
-
-                    //console.log('outputs[',i,']: ', outputs[i]);
-
                     if (rct){
                         if (out.rct){
                             oe.commit = out.rct.slice(0,64); //add commitment from rct mix outs
@@ -1835,7 +1832,7 @@ var cnUtil = (function(initConfig) {
             }
             sources.push(src);
         }
-        //console.log('sources: ', sources);
+        console.log('sources: ', sources);
         var change = {
             amount: JSBigInt.ZERO
         };
@@ -1935,19 +1932,19 @@ var cnUtil = (function(initConfig) {
 
     this.decompose_amount_into_digits = function(amount) {
         /*if (dust_threshold === undefined) {
-            dust_threshold = config.dustThreshold;
-        }*/
+         dust_threshold = config.dustThreshold;
+         }*/
         amount = amount.toString();
         var ret = [];
         while (amount.length > 0) {
             //split all the way down since v2 fork
             /*var remaining = new JSBigInt(amount);
-            if (remaining.compare(config.dustThreshold) <= 0) {
-                if (remaining.compare(0) > 0) {
-                    ret.push(remaining);
-                }
-                break;
-            }*/
+             if (remaining.compare(config.dustThreshold) <= 0) {
+             if (remaining.compare(0) > 0) {
+             ret.push(remaining);
+             }
+             break;
+             }*/
             //check so we don't create 0s
             if (amount[0] !== "0"){
                 var digit = amount[0];
@@ -1987,12 +1984,11 @@ var cnUtil = (function(initConfig) {
             return a["amount"] - b["amount"];
         });
     };
- 
+
     this.is_tx_unlocked = function(unlock_time, blockchain_height) {
         if (!config.maxBlockNumber) {
             throw "Max block number is not set in config!";
         }
-        //console.log(blockchain_height, unlock_time);
         if (unlock_time < config.maxBlockNumber) {
             // unlock time is block height
             return blockchain_height >= unlock_time;

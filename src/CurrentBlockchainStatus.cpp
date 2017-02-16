@@ -274,9 +274,10 @@ CurrentBlockchainStatus::get_amount_specific_indices(const crypto::hash& tx_hash
 }
 
 bool
-CurrentBlockchainStatus::get_random_outputs(const vector<uint64_t>& amounts,
-                   const uint64_t& outs_count,
-                   vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs)
+CurrentBlockchainStatus::get_random_outputs(
+        const vector<uint64_t>& amounts,
+        const uint64_t& outs_count,
+        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs)
 {
     rpccalls rpc {deamon_url};
 
@@ -285,6 +286,24 @@ CurrentBlockchainStatus::get_random_outputs(const vector<uint64_t>& amounts,
     if (!rpc.get_random_outs_for_amounts(amounts, outs_count, found_outputs, error_msg))
     {
         cerr << "rpc.get_random_outs_for_amounts failed" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
+{
+    rpccalls rpc {deamon_url};
+
+    string error_msg;
+
+    if (!rpc.get_dynamic_per_kb_fee_estimate(
+            FEE_ESTIMATE_GRACE_BLOCKS,
+            fee_estimated, error_msg))
+    {
+        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
         return false;
     }
 

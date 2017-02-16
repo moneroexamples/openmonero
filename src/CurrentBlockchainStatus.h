@@ -123,6 +123,9 @@ struct CurrentBlockchainStatus
                        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs);
 
     static bool
+    get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);
+
+    static bool
     commit_tx(const string& tx_blob);
 
     static bool

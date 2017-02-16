@@ -15,7 +15,7 @@ var config = {
     feePerKB: new JSBigInt('2000000000'),//10^10
     dustThreshold: new JSBigInt('1000000000'),//10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
     txChargeRatio: 0.5,
-    defaultMixin: 3,
+    defaultMixin: 4,
     txChargeAddress: '',
     idleTimeout: 30,
     idleWarningDuration: 20,
