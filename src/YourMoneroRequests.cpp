@@ -383,10 +383,12 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 //        if (show_logs)
 //            print_json_log("get_unspent_outs request: ", j_request);
 
-    string xmr_address = j_request["address"];
-    uint64_t mixin     = j_request["mixin"];
-    bool use_dust      = j_request["use_dust"];
-    uint64_t amount    = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
+    string xmr_address      = j_request["address"];
+    uint64_t mixin          = j_request["mixin"];
+    bool use_dust           = j_request["use_dust"];
+
+    uint64_t dust_threshold = boost::lexical_cast<uint64_t>(j_request["dust_threshold"].get<string>());
+    uint64_t amount         = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
 
     json j_response  {
             {"amount" , 0},            // total value of the outputs
@@ -445,6 +447,12 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                 {
                     for (XmrOutput &out: outs)
                     {
+                        // skip outputs considered as dust
+                        if (out.amount < dust_threshold)
+                        {
+                            continue;
+                        }
+
                         // need to check for rct commintment
                         // coinbase ringct txs dont have
                         // rct filed in them. Thus
@@ -454,20 +462,38 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                         uint64_t out_amount {out.amount};
 
+                        string rct = out.get_rct();
+
                         // but if ringct tx, set it amount to zero
                         // as in Outputs table we store decoded outputs amounts
                         if (tx.is_rct)
                         {
                             out_amount = 0;
+
+                            if (tx.coinbase)
+                            {
+
+                                output_data_t od =
+                                        CurrentBlockchainStatus::get_output_key(
+                                                0, global_amount_index);
+
+                                string rtc_outpk =  pod_to_hex(od.commitment);
+                                string rtc_mask  =  pod_to_hex(rct::identity());
+                                string rtc_amount(64, '0');
+
+                                //rct = rtc_outpk + rtc_mask + rtc_amount;
+                            }
                         }
 
-                        tuple<string, string, string>
-                                rct_field = CurrentBlockchainStatus::construct_output_rct_field(
-                                global_amount_index, out_amount);
+//                        tuple<string, string, string>
+//                                rct_field = CurrentBlockchainStatus::construct_output_rct_field(
+//                                global_amount_index, out_amount);
+//
+//                        string rct =  std::get<0>(rct_field)    // rct_pk
+//                                      + std::get<1>(rct_field)  // rct_mask
+//                                      + std::get<2>(rct_field); // rct_amount
 
-                        string rct =  std::get<0>(rct_field)    // rct_pk
-                                      + std::get<1>(rct_field)  // rct_mask
-                                      + std::get<2>(rct_field); // rct_amount
+
 
                         //string rct = out.get_rct();
 
@@ -549,6 +575,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
     for (json amount: j_request["amounts"])
     {
         amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
+        //amounts.push_back(0);
     }
 
     json j_response  {
@@ -566,6 +593,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
         {
             json j_outs {{"amount", outs.amount},
                          {"outputs", json::array()}};
+
 
             json& j_outputs = j_outs["outputs"];
 

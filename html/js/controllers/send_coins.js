@@ -470,6 +470,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     for (var l = 0; l < using_outs.length; l++)
                     {
                         amounts.push(using_outs[l].rct ? "0" : using_outs[l].amount.toString());
+                        //amounts.push("0");
                     }
                     var request = {
                         amounts: amounts,
