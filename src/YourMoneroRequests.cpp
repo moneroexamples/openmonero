@@ -249,7 +249,12 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             // set some ids for the mempool txs. These ids are
             // used for sorting in the frontend. Since we want mempool
             // tx to be first, they need to be higher than last_tx_id_db
-            uint64_t last_tx_id_db = j_response["transactions"].back()["id"];
+            uint64_t last_tx_id_db {0};
+
+            if (!j_response["transactions"].empty())
+            {
+                uint64_t last_tx_id_db = j_response["transactions"].back()["id"];
+            }
 
             for (json& j_tx: j_mempool_tx)
             {
@@ -641,14 +646,17 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
 
     string raw_tx_blob     = j_request["tx"];
 
-    json j_response  {
-            {"status", "error"}
-    };
+    json j_response;
 
-    if (CurrentBlockchainStatus::commit_tx(raw_tx_blob))
+    string error_msg;
+
+    if (!CurrentBlockchainStatus::commit_tx(raw_tx_blob, error_msg))
     {
-        j_response["status"] = "OK";
+        j_response["status"] = "error";
+        j_response["error"] = error_msg + "error message";
     }
+
+    j_response["status"] = "success";
 
     string response_body = j_response.dump();
 

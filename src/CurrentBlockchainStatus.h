@@ -126,7 +126,7 @@ struct CurrentBlockchainStatus
     get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);
 
     static bool
-    commit_tx(const string& tx_blob);
+    commit_tx(const string& tx_blob, string& error_msg);
 
     static bool
     read_mempool();

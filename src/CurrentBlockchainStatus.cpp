@@ -312,11 +312,9 @@ CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated
 
 
 bool
-CurrentBlockchainStatus::commit_tx(const string& tx_blob)
+CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg)
 {
     rpccalls rpc {deamon_url};
-
-    string error_msg;
 
     if (!rpc.commit_tx(tx_blob, error_msg))
     {
