@@ -13,34 +13,12 @@
             <div class="w-clearfix">
               <div class="balance-header">Your Balance</div>
             </div>
-            <div class="balance-text">{{balance | money:false:true}}</div>
+            <div class="balance-text">{{balance | money:false:true}}<br/>
+              (unlocked: {{balance_unlocked | money:false:true}})</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="generated-results">
-      <div class="details-block top">
-        <div class="result-header">YOUR&nbsp;MNEMONIC <span class="info-text">(You’ll need this to login. Don't forget it!)</span>
-        </div>
-        <div class="tooltip-div">
-        </div>
-        <div class="result-text">tiny bubble double throw decay catch storm confidence aim gaze alas string</div>
-      </div>
-      <div class="details-block">
-        <div class="result-header">PUBLIC&nbsp;ADDRESS</div>
-        <div class="tooltip-div">
-        </div>
-        <div class="result-text">42kwuZYEchdfYAHNyuh1M72YbnZ1EcwMxNdxucqcCGK1Y5nkwNBGUyW9hmTGNjdfECUbouzhXJVYMjFeR3NVXdi7Tds6kBi</div>
-      </div>
-      <div class="details-block">
-        <div class="result-header">VIEW&nbsp;KEY</div>
-        <div class="tooltip-div">        </div>
-        <div class="result-text">9047891260162782cf955771b45b3ba8e5d240bc8ed35ced7a9cc08c12565f00</div>
-      </div>
-      <div class="login-div"><a class="button generate-btn login">Log In</a>
-      </div>
-    </div>
-  </div>
   <div class="w-container middle-container overview-page">
     <div class="middle-div">
       <div class="overview-body-head">Address</div>

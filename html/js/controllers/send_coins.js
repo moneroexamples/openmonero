@@ -323,7 +323,14 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 tx: raw_tx
             };
             $http.post(config.apiUrl + 'submit_raw_tx', request)
-                .success(function() {
+                .success(function(data) {
+                    if (data.status === "error")
+                    {
+                        $scope.status = "";
+                        $scope.submitting = false;
+                        $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
+                        return;
+                    }
                     console.log("Successfully submitted tx");
                     $scope.targets = [{}];
                     $scope.sent_tx = {

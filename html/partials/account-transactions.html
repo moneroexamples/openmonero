@@ -15,7 +15,9 @@
           <div class="w-clearfix">
             <div class="balance-header">Your Balance</div>
           </div>
-          <div class="balance-text">{{balance | money:false:true}}</div>
+          <div class="balance-text">{{balance | money:false:true}}<br/>
+            (unlocked: {{balance_unlocked | money:false:true}})</div>
+        </div>
         </div>
       </div>
     </div>
@@ -50,7 +52,7 @@
       <div class="w-col w-col-2 shift-column none" ng-click="clickedPredicate('approx_float_amount')">
         <div class="transaction-head transactions">Value (XMR) <i class="fa {{predicateIcon('approx_float_amount')}}"></i></div>
       </div>
-      <div class="w-col w-col-3 shift-column" ng-click="clickedPredicate('timestamp')">
+      <div class="w-col w-col-3 shift-column" ng-click="clickedPredicate('id')">
         <div class="transaction-head transactions">Date Received <i class="fa {{predicateIcon('timestamp')}}"></i></div>
       </div>
       <div class="w-col w-col-1 shift-column" ng-click="clickedPredicate('mixin')">

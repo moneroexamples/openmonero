@@ -148,7 +148,8 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     // initialize json response
     json j_response {
-            { "total_received", "0"},     // taken from Accounts table
+            { "total_received", "0"},           // calculated in this function
+            { "total_received_unlocked", "0"},  // calculated in this function
             { "scanned_height", 0},       // not used. it is here to match mymonero
             { "scanned_block_height", 0}, // taken from Accounts table
             { "start_height", 0},         // blockchain hieght when acc was created
@@ -164,7 +165,8 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc)) {
 
-        uint64_t total_received{0};
+        uint64_t total_received {0};
+        uint64_t total_received_unlocked {0};
 
         j_response["total_received"] = total_received;
         j_response["start_height"] = acc.start_height;
@@ -221,11 +223,17 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 total_received += tx.total_received;
 
+                if (bool {tx.spendable})
+                {
+                    total_received_unlocked += tx.total_received;
+                }
+
                 j_txs.push_back(j_tx);
 
             } // for (XmrTransaction tx: txs)
 
-            j_response["total_received"] = total_received;
+            j_response["total_received"]          = total_received;
+            j_response["total_received_unlocked"] = total_received_unlocked;
 
             j_response["transactions"] = j_txs;
 
@@ -244,6 +252,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         if(!j_mempool_tx.empty())
         {
             uint64_t total_received_mempool {0};
+            uint64_t total_sent_mempool {0};
 
             // get last tx id (i.e., index) so that we can
             // set some ids for the mempool txs. These ids are
@@ -253,7 +262,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
             if (!j_response["transactions"].empty())
             {
-                uint64_t last_tx_id_db = j_response["transactions"].back()["id"];
+                last_tx_id_db = j_response["transactions"].back()["id"];
             }
 
             for (json& j_tx: j_mempool_tx)
@@ -262,7 +271,9 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                         << j_tx["total_received"] << endl;
 
                 j_tx["id"] = ++last_tx_id_db;
+
                 total_received_mempool += j_tx["total_received"].get<uint64_t>();
+                total_sent_mempool     += j_tx["total_sent"].get<uint64_t>();
 
                 j_response["transactions"].push_back(j_tx);
             }
@@ -431,19 +442,9 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                 int64_t time_since_unlock = current_blockchain_height - tx.unlock_time;
 
-                if (tx.coinbase)
+                if (!CurrentBlockchainStatus::is_tx_unlocked(tx.height, tx.coinbase))
                 {
-                    if (time_since_unlock < CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (time_since_unlock < CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE)
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 vector<XmrOutput> outs;
@@ -473,10 +474,13 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                         // as in Outputs table we store decoded outputs amounts
                         if (tx.is_rct)
                         {
-                            out_amount = 0;
+                            // out_amount = 0;
 
                             if (tx.coinbase)
                             {
+                                // not really sure how to treet coinbase
+                                // ringct unspent txs.
+                                // // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
 
                                 output_data_t od =
                                         CurrentBlockchainStatus::get_output_key(
@@ -486,7 +490,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                 string rtc_mask  =  pod_to_hex(rct::identity());
                                 string rtc_amount(64, '0');
 
-                                //rct = rtc_outpk + rtc_mask + rtc_amount;
+                                rct = rtc_outpk + rtc_mask + rtc_amount;
                             }
                         }
 
@@ -653,10 +657,12 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
     if (!CurrentBlockchainStatus::commit_tx(raw_tx_blob, error_msg))
     {
         j_response["status"] = "error";
-        j_response["error"] = error_msg + "error message";
+        j_response["error"] = error_msg;
     }
-
-    j_response["status"] = "success";
+    else
+    {
+        j_response["status"] = "success";
+    }
 
     string response_body = j_response.dump();
 

@@ -23,14 +23,13 @@ string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:1
 bool                    CurrentBlockchainStatus::testnet{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
-uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{60};
+uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
 xmreg::MicroCore        CurrentBlockchainStatus::mcore;
 cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;
 string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
-uint64_t                CurrentBlockchainStatus::spendable_age {10}; // default number in monero
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
 map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
@@ -139,10 +138,18 @@ CurrentBlockchainStatus::init_monero_blockchain()
 
 
 bool
-CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height)
+CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height, bool is_coinbase)
 {
-    return (tx_blk_height + spendable_age < get_current_blockchain_height());
+    if (!is_coinbase)
+    {
+        return (tx_blk_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE <= get_current_blockchain_height());
+    }
+    else
+    {
+        return (tx_blk_height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW <= get_current_blockchain_height());
+    }
 }
+
 
 bool
 CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
@@ -751,7 +758,17 @@ CurrentBlockchainStatus::construct_output_rct_field(
 
         output_data_t od = get_output_key(out_amount, global_amount_index);
 
-        rtc_outpk =  pod_to_hex(od.commitment);
+        rtc_outpk  = pod_to_hex(od.commitment);
+
+        if (is_coinbase(random_output_tx))
+        {
+            // i think for ringct coinbase txs, mask is identity mask
+            // as suggested by this code:
+            // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
+            rtc_mask   = pod_to_hex(rct::identity());
+        }
+
+        //rtc_amount = pod_to_hex(rct::identity());
     }
 
     return make_tuple(rtc_outpk, rtc_mask, rtc_amount);

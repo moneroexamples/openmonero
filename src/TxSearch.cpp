@@ -134,11 +134,6 @@ TxSearch::search()
                        searched_blk_no, pod_to_hex(get_block_hash(blk)));
         }
 
-        // flag indicating whether the txs in the given block are spendable.
-        // this is true when block number is more than 10 blocks from current
-        // blockchain height.
-        bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(searched_blk_no);
-
         DateTime blk_timestamp_mysql_format
                 = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
@@ -162,6 +157,12 @@ TxSearch::search()
             // Class that is resposnible for idenficitaction of our outputs
             // and inputs in a given tx.
             OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+            // flag indicating whether the txs in the given block are spendable.
+            // this is true when block number is more than 10 blocks from current
+            // blockchain height.
+            bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(
+                    searched_blk_no, oi_identification.tx_is_coinbase);
 
             // FIRSt step.
             oi_identification.identify_outputs();

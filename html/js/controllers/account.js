@@ -187,6 +187,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     });
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);
+                    $scope.total_received_unlocked = new JSBigInt(data.total_received_unlocked || 0);
                 });
         }
     };
@@ -199,11 +200,13 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
         function(scope) {
             return {
                 sent: scope.total_sent,
-                received: scope.total_received
+                received: scope.total_received,
+                received_unlocked: scope.total_received_unlocked
             };
         },
         function(data) {
             $scope.balance = data.received.subtract(data.sent);
+            $scope.balance_unlocked = data.received_unlocked.subtract(data.sent);
         },
         true
     );

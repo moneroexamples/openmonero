@@ -832,7 +832,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
         if (bool {tx.spendable} == false)
         {
-            if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
+            if (CurrentBlockchainStatus::is_tx_unlocked(tx.height, tx.coinbase))
             {
 
                 // this tx was before marked as unspendable, but now
