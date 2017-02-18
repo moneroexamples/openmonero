@@ -4,17 +4,19 @@
   <div class="w-container">
     <div>
       <div class="w-row">
-        <div class="w-col w-col-8">
+        <div class="w-col w-col-6">
           <h1>Account Overview</h1>
           <div class="subhead-text inner overview-page">Your account overview and recent transactions.</div>
         </div>
-        <div class="w-col w-col-4">
+        <div class="w-col w-col-6">
           <div class="balance-div">
             <div class="w-clearfix">
-              <div class="balance-header">Your Balance</div>
+              <div class="balance-header">Your Balance / Unlocked Balance</div>
             </div>
-            <div class="balance-text">{{balance | money:false:true}}<br/>
-              (unlocked: {{balance_unlocked | money:false:true}})</div>
+            <div class="balance-text">
+              {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
+              Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+            </div>
           </div>
         </div>
       </div>
