@@ -134,11 +134,6 @@ TxSearch::search()
                        searched_blk_no, pod_to_hex(get_block_hash(blk)));
         }
 
-        // flag indicating whether the txs in the given block are spendable.
-        // this is true when block number is more than 10 blocks from current
-        // blockchain height.
-        bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(searched_blk_no);
-
         DateTime blk_timestamp_mysql_format
                 = XmrTransaction::timestamp_to_DateTime(blk.timestamp);
 
@@ -159,151 +154,27 @@ TxSearch::search()
         // can filter out false positives.
         for (transaction& tx: blk_txs)
         {
-            crypto::hash tx_hash        = get_transaction_hash(tx);
-            string tx_hash_str          = pod_to_hex(tx_hash);
-            crypto::hash tx_prefix_hash = get_transaction_prefix_hash(tx);
-            string tx_prefix_hash_str   = pod_to_hex(tx_prefix_hash);
+            // Class that is resposnible for idenficitaction of our outputs
+            // and inputs in a given tx.
+            OutputInputIdentification oi_identification {&address, &viewkey, &tx};
 
-            bool is_coinbase_tx = is_coinbase(tx);
+            // flag indicating whether the txs in the given block are spendable.
+            // this is true when block number is more than 10 blocks from current
+            // blockchain height.
+
+            bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(
+                    tx.unlock_time, searched_blk_no);
+
+            // FIRSt step.
+            oi_identification.identify_outputs();
 
             vector<uint64_t> amount_specific_indices;
 
-            public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
-
-            //          <public_key  , amount  , out idx>
-            vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
-
-            outputs = get_ouputs_tuple(tx);
-
-            // for each output, in a tx, check if it belongs
-            // to the given account of specific address and viewkey
-
-            // public transaction key is combined with our viewkey
-            // to create, so called, derived key.
-            key_derivation derivation;
-
-            if (!generate_key_derivation(tx_pub_key, viewkey, derivation))
-            {
-                cerr << "Cant get derived key for: "  << "\n"
-                     << "pub_tx_key: " << tx_pub_key << " and "
-                     << "prv_view_key" << viewkey << endl;
-
-                throw TxSearchException("");
-            }
-
-            uint64_t total_received {0};
-
-
-            // FIRST component: Checking for our outputs.
-
-            // define local structure to keep information about found
-            // ouputs that we can need in later parts.
-            struct output_info
-            {
-                string    pub_key;
-                uint64_t  amount;
-                uint64_t  idx_in_tx;
-                string    rtc_outpk;
-                string    rtc_mask;
-                string    rtc_amount;
-            };
-
-            vector<output_info> found_mine_outputs;
-
-            for (auto& out: outputs)
-            {
-                txout_to_key txout_k      = std::get<0>(out);
-                uint64_t amount           = std::get<1>(out);
-                uint64_t output_idx_in_tx = std::get<2>(out);
-
-                // get the tx output public key
-                // that normally would be generated for us,
-                // if someone had sent us some xmr.
-                public_key generated_tx_pubkey;
-
-                derive_public_key(derivation,
-                                  output_idx_in_tx,
-                                  address.m_spend_public_key,
-                                  generated_tx_pubkey);
-
-                // check if generated public key matches the current output's key
-                bool mine_output = (txout_k.key == generated_tx_pubkey);
-
-
-                //cout  << "Chekcing output: "  << pod_to_hex(txout_k.key) << " "
-                //      << "mine_output: " << mine_output << endl;
-
-
-                // placeholder variable for ringct outputs info
-                // that we need to save in database
-                string rtc_outpk;
-                string rtc_mask;
-                string rtc_amount;
-
-                // if mine output has RingCT, i.e., tx version is 2
-                // need to decode its amount. otherwise its zero.
-                if (mine_output && tx.version == 2)
-                {
-                    // initialize with regular amount value
-                    // for ringct, except coinbase, it will be 0
-                    uint64_t rct_amount_val = amount;
-
-                    rtc_outpk  = pod_to_hex(tx.rct_signatures.outPk[output_idx_in_tx].mask);
-                    rtc_mask   = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-                    rtc_amount = pod_to_hex(tx.rct_signatures.ecdhInfo[output_idx_in_tx].amount);
-
-                    // cointbase txs have amounts in plain sight.
-                    // so use amount from ringct, only for non-coinbase txs
-                    if (!is_coinbase_tx)
-                    {
-                        bool r;
-
-                        r = decode_ringct(tx.rct_signatures,
-                                          tx_pub_key,
-                                          viewkey,
-                                          output_idx_in_tx,
-                                          tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
-                                          rct_amount_val);
-
-                        if (!r)
-                        {
-                            cerr << "Cant decode ringCT!" << endl;
-                            throw TxSearchException("Cant decode ringCT!");
-                        }
-
-                        amount = rct_amount_val;
-                    }
-
-                } // if (mine_output && tx.version == 2)
-
-                if (mine_output)
-                {
-                    string out_key_str = pod_to_hex(txout_k.key);
-
-                    // found an output associated with the given address and viewkey
-                    string msg = fmt::format("block: {:d}, tx_hash:  {:s}, output_pub_key: {:s}\n",
-                                             searched_blk_no,
-                                             pod_to_hex(get_transaction_hash(tx)),
-                                             out_key_str);
-
-                    cout << msg << endl;
-
-
-                    total_received += amount;
-
-                    found_mine_outputs.emplace_back(
-                            output_info{
-                                out_key_str, amount, output_idx_in_tx,
-                                rtc_outpk, rtc_mask, rtc_amount
-                            });
-
-                } //  if (mine_output)
-
-            } // for (const auto& out: outputs)
-
             uint64_t tx_mysql_id {0};
 
-            if (!found_mine_outputs.empty())
+            // if we identified some outputs as ours,
+            // save them into mysql.
+            if (!oi_identification.identified_outputs.empty())
             {
                 // before adding this tx and its outputs to mysql
                 // check if it already exists. So that we dont
@@ -311,38 +182,44 @@ TxSearch::search()
 
                 XmrTransaction tx_data;
 
-                if (xmr_accounts->tx_exists(acc->id, tx_hash_str, tx_data))
+                if (xmr_accounts->tx_exists(acc->id,
+                                            oi_identification.tx_hash_str,
+                                            tx_data))
                 {
-                    cout << "\nTransaction " << tx_hash_str
+                    cout << "\nTransaction " << oi_identification.tx_hash_str
                          << " already present in mysql"
                          << endl;
-
-
                 }
 
-                tx_data.hash           = tx_hash_str;
-                tx_data.prefix_hash    = tx_prefix_hash_str;
+                tx_data.hash           = oi_identification.tx_hash_str;
+                tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
                 tx_data.account_id     = acc->id;
-                tx_data.total_received = total_received;
+                tx_data.total_received = oi_identification.total_received;
                 tx_data.total_sent     = 0; // at this stage we don't have any
-                // info about spendings
-                tx_data.unlock_time    = 0;
+                                            // info about spendings
+
+                                         // this is current block + unlock time
+                                         // for regular tx, the unlock time is
+                                         // default of 10 blocks.
+                                         // for coinbase tx it is 60 blocks
+                tx_data.unlock_time    = tx.unlock_time;
+
                 tx_data.height         = searched_blk_no;
-                tx_data.coinbase       = is_coinbase_tx;
+                tx_data.coinbase       = oi_identification.tx_is_coinbase;
+                tx_data.is_rct         = oi_identification.is_rct;
+                tx_data.rct_type       = oi_identification.rct_type;
                 tx_data.spendable      = is_spendable;
                 tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                tx_data.mixin          = get_mixin_no(tx) - 1;
+                tx_data.mixin          = oi_identification.mixin_no;
                 tx_data.timestamp      = blk_timestamp_mysql_format;
-
 
 
                 // insert tx_data into mysql's Transactions table
                 tx_mysql_id = xmr_accounts->insert_tx(tx_data);
 
                 // get amount specific (i.e., global) indices of outputs
-
-                if (!CurrentBlockchainStatus::get_amount_specific_indices(tx_hash,
-                                                                          amount_specific_indices))
+                if (!CurrentBlockchainStatus::get_amount_specific_indices(
+                        oi_identification.tx_hash, amount_specific_indices))
                 {
                     cerr << "cant get_amount_specific_indices!" << endl;
                     throw TxSearchException("cant get_amount_specific_indices!");
@@ -355,14 +232,14 @@ TxSearch::search()
                 }
 
                 // now add the found outputs into Outputs tables
-                for (auto &out_info: found_mine_outputs)
+                for (auto& out_info: oi_identification.identified_outputs)
                 {
                     XmrOutput out_data;
 
                     out_data.account_id   = acc->id;
                     out_data.tx_id        = tx_mysql_id;
                     out_data.out_pub_key  = out_info.pub_key;
-                    out_data.tx_pub_key   = pod_to_hex(tx_pub_key);
+                    out_data.tx_pub_key   = oi_identification.tx_pub_key_str;
                     out_data.amount       = out_info.amount;
                     out_data.out_index    = out_info.idx_in_tx;
                     out_data.rct_outpk    = out_info.rtc_outpk;
@@ -381,11 +258,13 @@ TxSearch::search()
                         //throw TxSearchException("out_mysql_id is zero!");
                     }
 
-                    // add the new output to our cash of known outputs
-                    known_outputs_keys.push_back(out_info.pub_key);
+                    {
+                        std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
+                        known_outputs_keys.push_back(make_pair(out_info.pub_key, out_info.amount));
+                    }
+
 
                 } // for (auto &out_k_idx: found_mine_outputs)
-
 
 
                 // once tx and outputs were added, update Accounts table
@@ -403,82 +282,41 @@ TxSearch::search()
             } // if (!found_mine_outputs.empty())
 
 
-
             // SECOND component: Checking for our key images, i.e., inputs.
 
-            vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
+            // no need mutex here, as this will be exectued only after
+            // the above. there is no threads here.
+            oi_identification.identify_inputs(known_outputs_keys);
 
-            // here we will keep what we find.
-            vector<XmrInput> inputs_found;
 
-            // make timescale maps for mixins in input
-            for (const txin_to_key& in_key: input_key_imgs)
+            if (!oi_identification.identified_inputs.empty())
             {
-                // get absolute offsets of mixins
-                std::vector<uint64_t> absolute_offsets
-                        = cryptonote::relative_output_offsets_to_absolute(
-                                in_key.key_offsets);
+                // some inputs were identified as ours in a given tx.
+                // so now, go over those inputs, and check if
+                // get detail info for each found mixin output from database
 
-                // get public keys of outputs used in the mixins that match to the offests
-                std::vector<cryptonote::output_data_t> mixin_outputs;
+                vector<XmrInput> inputs_found;
 
-
-                if (!CurrentBlockchainStatus::get_output_keys(in_key.amount,
-                                                              absolute_offsets,
-                                                              mixin_outputs))
+                for (auto& in_info: oi_identification.identified_inputs)
                 {
-                    cerr << "Mixins key images not found" << endl;
-                    continue;
-                }
-
-                //cout << "in_key.k_image): " << pod_to_hex(in_key.k_image) << endl;
-
-
-                // mixin counter
-                size_t count = 0;
-
-                // for each found output public key check if its ours or not
-                for (const uint64_t& abs_offset: absolute_offsets)
-                {
-                    // get basic information about mixn's output
-                    cryptonote::output_data_t output_data = mixin_outputs.at(count);
-
-                    string output_public_key_str = pod_to_hex(output_data.pubkey);
-
-                    //cout << " - output_public_key_str: " << output_public_key_str << endl;
-
-                    // before going to the mysql, check our known outputs cash
-                    // if the key exists. Its much faster than going to mysql
-                    // for this.
-
-                    if (std::find(
-                            known_outputs_keys.begin(),
-                            known_outputs_keys.end(),
-                            output_public_key_str)
-                        == known_outputs_keys.end())
-                    {
-                        // this mixins's output is unknown.
-                        ++count;
-                        continue;
-                    }
-
-
                     XmrOutput out;
 
-                    if (xmr_accounts->output_exists(output_public_key_str, out))
+                    if (xmr_accounts->output_exists(in_info.out_pub_key, out))
                     {
                         cout << "input uses some mixins which are our outputs"
                              << out << endl;
 
                         // seems that this key image is ours.
-                        // so save it to database for later use.
+                        // so get it infromatoin from database into XmrInput
+                        // database structure that will be written later
+                        // on into database.
 
                         XmrInput in_data;
 
                         in_data.account_id  = acc->id;
                         in_data.tx_id       = 0; // for now zero, later we set it
                         in_data.output_id   = out.id;
-                        in_data.key_image   = pod_to_hex(in_key.k_image);
+                        in_data.key_image   = in_info.key_img;
                         in_data.amount      = out.amount; // must match corresponding output's amount
                         in_data.timestamp   = blk_timestamp_mysql_format;
 
@@ -491,71 +329,70 @@ TxSearch::search()
 
                     } // if (xmr_accounts->output_exists(output_public_key_str, out))
 
-                    count++;
-
-                } // for (const cryptonote::output_data_t& output_data: outputs)
-
-            } // for (const txin_to_key& in_key: input_key_imgs)
+                } // for (auto& in_info: oi_identification.identified_inputs)
 
 
-            if (!inputs_found.empty())
-            {
-                // seems we have some inputs found. time
-                // to write it to mysql. But first,
-                // check if this tx is written in mysql.
-
-                // calculate how much we preasumply spent.
-                uint64_t total_sent {0};
-
-                for (const XmrInput& in_data: inputs_found)
+                if (!inputs_found.empty())
                 {
-                    total_sent += in_data.amount;
-                }
+                    // seems we have some inputs found. time
+                    // to write it to mysql. But first,
+                    // check if this tx is written in mysql.
 
-                if (tx_mysql_id == 0)
-                {
-                    // this txs hasnt been seen in step first.
-                    // it means that it only contains potentially our
-                    // key images. It does not have our outputs.
-                    // so write it to mysql as ours, with
-                    // total received of 0.
+                    // calculate how much we preasumply spent.
+                    uint64_t total_sent {0};
 
-                    XmrTransaction tx_data;
-
-                    tx_data.hash           = tx_hash_str;
-                    tx_data.prefix_hash    = tx_prefix_hash_str;
-                    tx_data.account_id     = acc->id;
-                    tx_data.total_received = 0; // because this is spending, total_recieved is 0
-                    tx_data.total_sent     = total_sent;
-                    tx_data.unlock_time    = 0; // unlock_time is not used for now, so whatever
-                    tx_data.height         = searched_blk_no;
-                    tx_data.coinbase       = is_coinbase_tx;
-                    tx_data.spendable      = is_spendable;
-                    tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                    tx_data.mixin          = get_mixin_no(tx) - 1;
-                    tx_data.timestamp      = blk_timestamp_mysql_format;
-
-                    // insert tx_data into mysql's Transactions table
-                    tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+                    for (const XmrInput& in_data: inputs_found)
+                    {
+                        total_sent += in_data.amount;
+                    }
 
                     if (tx_mysql_id == 0)
                     {
-                        //cerr << "tx_mysql_id is zero!" << endl;
-                        //throw TxSearchException("tx_mysql_id is zero!");
+                        // this txs hasnt been seen in step first.
+                        // it means that it only contains potentially our
+                        // key images. It does not have our outputs.
+                        // so write it to mysql as ours, with
+                        // total received of 0.
+
+                        XmrTransaction tx_data;
+
+                        tx_data.hash           = oi_identification.tx_hash_str;
+                        tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
+                        tx_data.account_id     = acc->id;
+                        tx_data.total_received = 0; // because this is spending, total_recieved is 0
+                        tx_data.total_sent     = total_sent;
+                        tx_data.unlock_time    = tx.unlock_time;
+                        tx_data.height         = searched_blk_no;
+                        tx_data.coinbase       = oi_identification.tx_is_coinbase;
+                        tx_data.is_rct         = oi_identification.is_rct;
+                        tx_data.rct_type       = oi_identification.rct_type;
+                        tx_data.spendable      = is_spendable;
+                        tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                        tx_data.mixin          = get_mixin_no(tx) - 1;
+                        tx_data.timestamp      = blk_timestamp_mysql_format;
+
+                        // insert tx_data into mysql's Transactions table
+                        tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+
+                        if (tx_mysql_id == 0)
+                        {
+                            //cerr << "tx_mysql_id is zero!" << endl;
+                            //throw TxSearchException("tx_mysql_id is zero!");
+                        }
+
+                    } //   if (tx_mysql_id == 0)
+
+                    // save all input found into database
+                    for (XmrInput& in_data: inputs_found)
+                    {
+                        in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
+                        uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
                     }
 
-                } //   if (tx_mysql_id == 0)
-
-                // save all input found into database
-                for (XmrInput& in_data: inputs_found)
-                {
-                    in_data.tx_id = tx_mysql_id;
-                    uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
-                }
+                } //  if (!inputs_found.empty())
 
 
-            } //  if (!inputs_found.empty())
-
+            } //  if (!oi_identification.identified_inputs.empty())
 
 
         } // for (const transaction& tx: blk_txs)
@@ -629,11 +466,189 @@ TxSearch::populate_known_outputs()
     {
         for (const XmrOutput& out: outs)
         {
-            known_outputs_keys.push_back(out.out_pub_key);
+            known_outputs_keys.push_back(make_pair(out.out_pub_key, out.amount));
         }
-
     }
 }
 
+
+json
+TxSearch::find_txs_in_mempool(
+        vector<pair<uint64_t, transaction>> mempool_txs)
+{
+    json j_transactions = json::array();
+
+    uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
+
+    vector<pair<string, uint64_t>> known_outputs_keys_copy;
+
+    {
+        // copy known ouputs. mutex is needed as known_outputs_keys can
+        // be updated at the same time as used in this here.
+        // we make its copy as to keep mutex for short time,
+        // and read only on copy safely.
+        std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
+        known_outputs_keys_copy = known_outputs_keys;
+    }
+
+    for (const pair<uint64_t, transaction>& mtx: mempool_txs)
+    {
+
+        uint64_t recieve_time = mtx.first;
+
+        const transaction& tx = mtx.second;
+
+        // Class that is resposnible for idenficitaction of our outputs
+        // and inputs in a given tx.
+        OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+        // FIRSt step. to search for the incoming xmr, we use address, viewkey and
+        // outputs public key.
+        oi_identification.identify_outputs();
+
+        //vector<uint64_t> amount_specific_indices;
+
+        // if we identified some outputs as ours,
+        // save them into json to be returned.
+        if (!oi_identification.identified_outputs.empty())
+        {
+            json j_tx;
+
+            j_tx["id"]             = 0; // dont have any database id for tx in mempool
+                                        // this id is used for sorting txs in the frontend.
+
+            j_tx["hash"]           = oi_identification.tx_hash_str;
+            j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
+            j_tx["total_received"] = oi_identification.total_received;
+            j_tx["total_sent"]     = 0; // to be set later when looking for key images
+            j_tx["unlock_time"]    = 0; // for mempool we set it to zero
+                                        // since we dont have block_height to work with
+            j_tx["height"]         = current_height; // put current blockchain height,
+                                    // just to indicate to frontend that this
+                                    // tx is younger than 10 blocks so that
+                                    // it shows unconfirmed message.
+            j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+            j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+            j_tx["is_rct"]         = oi_identification.is_rct;
+            j_tx["rct_type"]       = oi_identification.rct_type;
+            j_tx["mixin"]          = get_mixin_no(tx) - 1;
+            j_tx["mempool"]        = true;
+
+            j_transactions.push_back(j_tx);
+        }
+
+
+        // SECOND step: Checking for our key images, i.e., inputs.
+
+        // no need mutex here, as this will be exectued only after
+        // the above. there is no threads here.
+        oi_identification.identify_inputs(known_outputs_keys_copy);
+
+        if (!oi_identification.identified_inputs.empty())
+        {
+            // if we find something we need to construct spent_outputs json array
+            // that will be appended into j_tx above. or in case this is
+            // only spending tx, i.e., no outputs were found, we need to custruct
+            // new j_tx.
+
+            json spend_keys;
+            uint64_t total_sent {0};
+
+            for (auto& in_info: oi_identification.identified_inputs)
+            {
+                // need to get output info from mysql, as we need
+                // to know output's amount, its orginal
+                // tx public key and its index in that tx
+                XmrOutput out;
+
+                if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                {
+                    uint64_t output_amount = out.amount;
+                    string tx_pub_key = out.tx_pub_key;
+                    uint64_t out_index  = out.out_index;
+                    uint64_t mixin = out.mixin; // mixin not used but get it anyway
+                                                // as in mymonero
+
+                    total_sent += output_amount;
+
+                    spend_keys.push_back({
+                          {"key_image" , in_info.key_img},
+                          {"amount"    , output_amount},
+                          {"tx_pub_key", tx_pub_key},
+                          {"out_index" , out_index},
+                          {"mixin"     , mixin},
+                    });
+                }
+            }
+
+
+            if (!spend_keys.empty())
+            {
+                // check if we got outputs in this tx. if yes
+                // we use exising j_tx. If not, we need to construct new
+                // j_tx object.
+
+                if (!oi_identification.identified_outputs.empty())
+                {
+                    // we have outputs in this tx as well, so use
+                    // exisiting j_tx. we add spending info
+                    // to j_tx created before.
+
+                    json& j_tx = j_transactions.back();
+
+                    j_tx["total_sent"]    = total_sent;
+                    j_tx["spent_outputs"] = spend_keys;
+                }
+                else
+                {
+                    // we dont have any outputs in this tx as
+                    // this is spend only tx, so we need to create new
+                    // j_tx.
+
+                    json j_tx;
+
+                    j_tx["id"]             = 0; // dont have any database id for tx in mempool
+                                               // this id is used for sorting txs in the frontend.
+
+                    j_tx["hash"]           = oi_identification.tx_hash_str;
+                    j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
+                    j_tx["total_received"] = 0; // we did not recive any outputs/xmr
+                    j_tx["total_sent"]     = total_sent; // to be set later when looking for key images
+                    j_tx["unlock_time"]    = 0;          // for mempool we set it to zero
+                                                         // since we dont have block_height to work with
+                    j_tx["height"]         = current_height; // put current blockchain height,
+                                                        // just to indicate to frontend that this
+                                                        // tx is younger than 10 blocks so that
+                                                        // it shows unconfirmed message.
+                    j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                    j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+                    j_tx["is_rct"]         = oi_identification.is_rct;
+                    j_tx["rct_type"]       = oi_identification.rct_type;
+                    j_tx["mixin"]          = get_mixin_no(tx) - 1;
+                    j_tx["mempool"]        = true;
+                    j_tx["spent_outputs"]  = spend_keys;
+
+                    j_transactions.push_back(j_tx);
+
+                } // else of if (!oi_identification.identified_outputs.empty())
+
+            } //  if (!spend_keys.empty())
+
+        } // if (!oi_identification.identified_inputs.empty())
+
+    } // for (const transaction& tx: txs_to_check)
+
+    return j_transactions;
+
+}
+
+
+
+
+    pair<account_public_address, secret_key>
+TxSearch::get_xmr_address_viewkey() const
+{
+    return make_pair(address, viewkey);
+}
 
 }

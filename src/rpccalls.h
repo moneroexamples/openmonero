@@ -169,56 +169,19 @@ namespace xmreg
          * Not finished. get_random_outs_for_amounts is used instead of this.
          */
         bool
-        get_random_outs(const vector<uint64_t>& amounts,
-                        const uint64_t& outs_count)
+        get_out(const uint64_t amount,
+                const uint64_t global_output_index,
+                COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_key)
         {
-
-
-            // get histogram for the amounts we need
-            epee::json_rpc::request<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request>
-                    req_t = AUTO_VAL_INIT(req_t);
-            epee::json_rpc::response<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response, std::string>
-                    resp_t = AUTO_VAL_INIT(resp_t);
-
-            req_t.jsonrpc = "2.0";
-            req_t.id = epee::serialization::storage_entry(0);
-            req_t.method = "get_output_histogram";
-
-            req_t.params.amounts = amounts;
-
-            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
-
-            if (!connect_to_monero_deamon())
-            {
-                cerr << "get_current_height: not connected to deamon" << endl;
-                return false;
-            }
-
-            bool r = epee::net_utils::invoke_http_json("/json_rpc",
-                                                 req_t, resp_t,
-                                                 m_http_client);
-
-
-            if (!r || resp_t.result.status == "Failed")
-            {
-                //error_msg = res.reason;
-
-                cerr << "Error get_output_histogram: " << resp_t.result.status << endl;
-                return false;
-            }
 
 
             // generate output indices to request
             COMMAND_RPC_GET_OUTPUTS_BIN::request req = AUTO_VAL_INIT(req);
             COMMAND_RPC_GET_OUTPUTS_BIN::response res = AUTO_VAL_INIT(res);
 
-            for (auto hist: resp_t.result.histogram)
-            {
-               cout << hist.total_instances << endl;
-               req.outputs.push_back({hist.amount, 2});
-            }
+            req.outputs.push_back(get_outputs_out {amount, global_output_index});
 
-            r = epee::net_utils::invoke_http_bin("/get_outs.bin",
+            bool r = epee::net_utils::invoke_http_bin("/get_outs.bin",
                                                  req, res, m_http_client,
                                                  timeout_time_ms);
 
@@ -231,20 +194,22 @@ namespace xmreg
             }
 
 
-            for (auto o: res.outs)
-            {
 
-                cout << "\no.key: " << pod_to_hex(o.key) << endl;
-                cout << "o.mask: " << pod_to_hex(o.mask) << endl;
-                cout << "o.txid: " << pod_to_hex(o.txid) << endl;
-                cout << "o.height: " << pod_to_hex(o.height) << endl;
+//            for (auto o: res.outs)
+//            {
+//
+//                cout << "\no.key: " << pod_to_hex(o.key) << endl;
+//                cout << "o.mask: " << pod_to_hex(o.mask) << endl;
+//                cout << "o.txid: " << pod_to_hex(o.txid) << endl;
+//                cout << "o.height: " << pod_to_hex(o.height) << endl;
+//
+//                //rct::key mask = td.is_rct() ? rct::commit(td.amount(), td.m_mask) : rct::zeroCommit(td.amount());
+//                rct::key rct_commitment = rct::zeroCommit(0);
+//            }
 
-                //rct::key mask = td.is_rct() ? rct::commit(td.amount(), td.m_mask) : rct::zeroCommit(td.amount());
-                rct::key rct_commitment = rct::zeroCommit(0);
-            }
+            output_key = res.outs.at(0);
 
-            r;
-
+            return true;
 
         }
 
@@ -275,11 +240,60 @@ namespace xmreg
             {
                 error_msg = res.reason;
 
+                if (error_msg.empty())
+                {
+                    error_msg = "Reason not given by daemon. A guess is 'Failed to check ringct signatures!'.";
+                }
+
                 cerr << "Error sending tx: " << res.reason << endl;
                 return false;
             }
 
             return true;
+        }
+
+        bool
+        get_dynamic_per_kb_fee_estimate(uint64_t grace_blocks,
+                                        uint64_t& fee,
+                                        string& error_msg)
+        {
+            epee::json_rpc::request<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::request>
+                    req_t = AUTO_VAL_INIT(req_t);
+            epee::json_rpc::response<COMMAND_RPC_GET_PER_KB_FEE_ESTIMATE::response, std::string>
+                    resp_t = AUTO_VAL_INIT(resp_t);
+
+
+            req_t.jsonrpc = "2.0";
+            req_t.id = epee::serialization::storage_entry(0);
+            req_t.method = "get_fee_estimate";
+            req_t.params.grace_blocks = grace_blocks;
+
+            std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+            if (!connect_to_monero_deamon())
+            {
+                cerr << "get_current_height: not connected to deamon" << endl;
+                return false;
+            }
+
+            bool r = epee::net_utils::invoke_http_json("/json_rpc",
+                                                       req_t, resp_t,
+                                                       m_http_client);
+
+
+            if (!r || resp_t.result.status == "Failed")
+            {
+                error_msg = resp_t.error;
+
+                cerr << "Error get_dynamic_per_kb_fee_estimate: " << error_msg << endl;
+
+                return false;
+            }
+
+            fee = resp_t.result.fee;
+
+            return true;
+
         }
 
 

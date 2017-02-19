@@ -46,11 +46,29 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.blockchain_height = 0;
 
     $scope.tx_is_confirmed = function(tx) {
-        return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+       // return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+        if (!tx.coinbase)
+        {
+            // for regular txs, by defalut 10 blocks is required for it to
+            // be confirmed/spendable
+            return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
+        }
+        else
+        {
+            // coinbase txs require much more blocks (default 60)
+            // for it to be confirmed/spendable
+            return ($scope.blockchain_height - tx.height) > config.txCoinbaseMinConfirms;
+        }
     };
 
     $scope.tx_is_unlocked = function(tx) {
         return cnUtil.is_tx_unlocked(tx.unlock_time || 0, $scope.blockchain_height);
+        //return false;
+    };
+
+    $scope.tx_is_mempool = function(tx) {
+        //console.log(tx.mempool);
+        return tx.mempool;
     };
 
     $scope.tx_locked_reason = function(tx) {
@@ -129,33 +147,47 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     $scope.blockchain_height = data.blockchain_height || 0;
                     var transactions = data.transactions || [];
                     for (var i = 0; i < transactions.length; ++i) {
-                        if ((transactions[i].spent_outputs || []).length > 0) {
-                            for (var j = 0; j < transactions[i].spent_outputs.length; ++j) {
+                        if ((transactions[i].spent_outputs || []).length > 0)
+                        {
+                            for (var j = 0; j < transactions[i].spent_outputs.length; ++j)
+                            {
                                 var key_image = AccountService.cachedKeyImage(
                                     transactions[i].spent_outputs[j].tx_pub_key,
                                     transactions[i].spent_outputs[j].out_index
                                 );
-                                if (transactions[i].spent_outputs[j].key_image !== key_image) {
+                                if (transactions[i].spent_outputs[j].key_image !== key_image)
+                                {
                                     transactions[i].total_sent = new JSBigInt(transactions[i].total_sent).subtract(transactions[i].spent_outputs[j].amount).toString();
                                     transactions[i].spent_outputs.splice(j, 1);
                                     j--;
                                 }
                             }
                         }
-                        if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0) {
+                        if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0)
+                        {
                             transactions.splice(i, 1);
                             i--;
                             continue;
                         }
+
+                        //console.log(transactions[i].total_received, transactions[i].total_sent);
+
                         transactions[i].amount = new JSBigInt(transactions[i].total_received || 0).subtract(transactions[i].total_sent || 0).toString();
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
                         transactions[i].timestamp = new Date(transactions[i].timestamp);
                     }
-                    transactions.sort(function(a, b) {
-                        return b.id - a.id;
+                    transactions.sort(function(a, b)
+                    {
+                        return b.id - a.id; // sort by id in database
+
+                        //var t1 = b.timestamp;
+                        //var t2 = a.timestamp;
+
+                        //return ((t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0));
                     });
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);
+                    $scope.total_received_unlocked = new JSBigInt(data.total_received_unlocked || 0);
                 });
         }
     };
@@ -168,11 +200,13 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
         function(scope) {
             return {
                 sent: scope.total_sent,
-                received: scope.total_received
+                received: scope.total_received,
+                received_unlocked: scope.total_received_unlocked
             };
         },
         function(data) {
             $scope.balance = data.received.subtract(data.sent);
+            $scope.balance_unlocked = data.received_unlocked.subtract(data.sent);
         },
         true
     );

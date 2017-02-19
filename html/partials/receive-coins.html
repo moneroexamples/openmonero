@@ -4,18 +4,21 @@
     <div class="w-container">
         <div>
             <div class="w-row">
-                <div class="w-col w-col-8 w-clearfix">
+                <div class="w-col w-col-6 w-clearfix">
                     <div class="header-div-block">
                         <h1 class="heading-contained">Receive</h1>
                         <div class="subhead-text inner">Receive funds from any Monero user.</div>
                     </div>
                 </div>
-                <div class="w-col w-col-4">
+                <div class="w-col w-col64">
                     <div class="balance-div">
                         <div class="w-clearfix">
-                            <div class="balance-header">Your Balance</div>
+                            <div class="balance-header">Your Balance / Unlocked Balance</div>
                         </div>
-                        <div class="balance-text">{{balance | money:false:true}}</div>
+                        <div class="balance-text">
+                            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
+                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+                        </div>
                     </div>
                 </div>
             </div>

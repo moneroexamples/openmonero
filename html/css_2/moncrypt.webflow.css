@@ -789,9 +789,10 @@ p {
   color: #68717a;
 }
 .transaction-address {
-  font-family: Proximanova, sans-serif;
+  /*font-family: Proximanova, sans-serif;*/
+  font-family: Andale Mono, monospace;
   color: #6d7d8c;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 400;
 }
 .transaction-address.transaction-page {
@@ -799,9 +800,10 @@ p {
   color: #5a6a6e;
 }
 .transaction-detail {
-  font-family: Proximanova, sans-serif;
+  /*font-family: Proximanova, sans-serif;*/
+  font-family: Andale Mono, monospace;
   color: #6d7d8c;
-  font-size: 13px;
+  font-size: 10px;
 }
 .transaction-detail.transaction-left {
   padding-left: 15px;
@@ -820,8 +822,8 @@ p {
   padding-bottom: 10px;
 }
 .received-div.transaction-body.lighter {
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   border-right: 1px solid #d3e1ed;
   border-left: 1px solid #d3e1ed;
   background-color: #edf5fc;

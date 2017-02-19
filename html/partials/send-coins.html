@@ -6,7 +6,7 @@
     <div class="w-container">
         <div>
             <div class="w-row">
-                <div class="w-col w-col-8">
+                <div class="w-col w-col-6">
                     <div ng-show="!success_page">
                         <div class="header-div-block">
                             <h1 class="heading-contained">Send Funds</h1>
@@ -22,12 +22,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="w-col w-col-4">
+                <div class="w-col w-col-6">
                     <div class="balance-div">
                         <div class="w-clearfix">
-                            <div class="balance-header">Your Balance</div>
+                            <div class="balance-header">Your Balance / Unlocked Balance</div>
                         </div>
-                        <div class="balance-text">{{balance | money:false:true}}</div>
+                        <div class="balance-text">
+                            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
+                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -57,7 +60,7 @@
                     <label class="send-label" for="field4">Privacy Level (Mixin)</label>
                     <select class="w-select" id="field4" name="Select-a-number" data-name="Select a number"
                             required="required" ng-model="mixins">
-                        <option value="3">Low (mix with 3 others)</option>
+                        <option value="4">Low (mix with 4 others)</option>
                         <option value="6">Medium (mix with 6 others)</option>
                         <option value="10">High (mix with 10 others)</option>
                         <option value="20">Paranoid (mix with 20 others)</option>

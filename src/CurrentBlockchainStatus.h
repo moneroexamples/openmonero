@@ -53,13 +53,15 @@ struct CurrentBlockchainStatus
     static string   import_payment_viewkey;
     static uint64_t import_fee;
     static uint64_t spendable_age;
+    static uint64_t spendable_age_coinbase;
 
     static account_public_address address;
     static secret_key             viewkey;
 
     // vector of mempool transactions that all threads
     // can refer to
-    static vector<transaction> mempool_txs;
+    //           <recieved_time, transaction>
+    static vector<pair<uint64_t, transaction>> mempool_txs;
 
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
@@ -89,7 +91,10 @@ struct CurrentBlockchainStatus
     init_monero_blockchain();
 
     static bool
-    is_tx_unlocked(uint64_t tx_blk_height);
+    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height);
+
+    static bool
+    is_tx_spendtime_unlocked(uint64_t unlock_time, uint64_t block_height);
 
     static bool
     get_block(uint64_t height, block &blk);
@@ -113,6 +118,11 @@ struct CurrentBlockchainStatus
                     vector<cryptonote::output_data_t>& outputs);
 
     static bool
+    get_output(const uint64_t amount,
+               const uint64_t global_output_index,
+               COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info);
+
+    static bool
     get_amount_specific_indices(const crypto::hash& tx_hash,
                                 vector<uint64_t>& out_indices);
 
@@ -122,12 +132,15 @@ struct CurrentBlockchainStatus
                        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs);
 
     static bool
-    commit_tx(const string& tx_blob);
+    get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);
+
+    static bool
+    commit_tx(const string& tx_blob, string& error_msg);
 
     static bool
     read_mempool();
 
-    static vector<transaction>
+    static vector<pair<uint64_t, transaction>>
     get_mempool_txs();
 
     static bool
@@ -141,7 +154,8 @@ struct CurrentBlockchainStatus
     get_payment_id_as_string(const transaction& tx);
 
     static output_data_t
-    get_output_key(uint64_t amount, uint64_t global_amount_index);
+    get_output_key(uint64_t amount,
+                   uint64_t global_amount_index);
 
     // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch
@@ -152,10 +166,28 @@ struct CurrentBlockchainStatus
     ping_search_thread(const string& address);
 
     static bool
-    set_new_searched_blk_no(const string& address, uint64_t new_value);
+    get_xmr_address_viewkey(const string& address_str,
+                            account_public_address& address,
+                            secret_key& viewkey);
+    static bool
+    find_txs_in_mempool(const string& address_str,
+                        json& transactions);
+
+    static bool
+    set_new_searched_blk_no(const string& address,
+                            uint64_t new_value);
 
     static void
     clean_search_thread_map();
+
+    /*
+     * The frontend requires rct field to work
+     * the filed consisitct of rct_pk, mask, and amount.
+     */
+    static tuple<string, string, string>
+    construct_output_rct_field(
+            const uint64_t global_amount_index,
+            const uint64_t out_amount);
 
 };
 

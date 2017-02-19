@@ -396,6 +396,8 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
                                         tx_data.unlock_time,
                                         tx_data.height,
                                         tx_data.coinbase,
+                                        tx_data.is_rct,
+                                        tx_data.rct_type,
                                         tx_data.spendable,
                                         tx_data.payment_id,
                                         tx_data.mixin,
@@ -830,7 +832,8 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
         if (bool {tx.spendable} == false)
         {
-            if (CurrentBlockchainStatus::is_tx_unlocked(tx.height))
+
+            if (CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
             {
 
                 // this tx was before marked as unspendable, but now
@@ -871,6 +874,17 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                     }
 
                     continue;
+                }
+
+                // set unlock_time field so that frontend displies it
+                // as a locked tx, if unlock_time is zero.
+                // coinbtase txs have this set already. regular tx
+                // have unlock_time set to zero by default, but they cant
+                // be spent anyway.
+
+                if (tx.unlock_time == 0)
+                {
+                    tx.unlock_time = tx.height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
                 }
 
             } // else

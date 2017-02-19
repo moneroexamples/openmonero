@@ -60,7 +60,7 @@ public:
      * and check mysql if address/account exist. If yes,
      * it returns this account. If not, it creates new one.
      *
-     * Once this complites, a thread is tarted that looks
+     * Once this complites, a thread is started that looks
      * for txs belonging to that account.
      *
      * @param session a Restbed session
@@ -106,6 +106,7 @@ public:
 
     inline uint64_t
     get_current_blockchain_height();
+
 };
 
 

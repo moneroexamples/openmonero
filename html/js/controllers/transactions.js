@@ -32,7 +32,7 @@ thinwalletCtrls.controller('TransactionsCtrl', function ($scope, $rootScope, $ht
     $scope.pageNum = 0;
     $scope.pageSize = 10;
 
-    $scope.predicate = 'timestamp';
+    $scope.predicate = 'id';
     $scope.reverse = true;
 
     $scope.predicateIcon = function(expected) {

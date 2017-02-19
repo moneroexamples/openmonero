@@ -28,10 +28,13 @@
 
 thinwalletCtrls.controller('GenerateWalletCtrl', function ($scope, $location, AccountService) {
     "use strict";
+
     $scope.seed = '';
     $scope.mnemonic = '';
     $scope.mnemonic_confirmation = '';
     $scope.error = '';
+    $scope.testnet = config.testnet;
+
     $scope.$watch('seed', function () {
         $scope.mnemonic = mn_encode($scope.seed);
         $scope.keys = cnUtil.create_address($scope.seed);

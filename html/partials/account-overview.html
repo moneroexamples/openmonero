@@ -4,43 +4,23 @@
   <div class="w-container">
     <div>
       <div class="w-row">
-        <div class="w-col w-col-8">
+        <div class="w-col w-col-6">
           <h1>Account Overview</h1>
           <div class="subhead-text inner overview-page">Your account overview and recent transactions.</div>
         </div>
-        <div class="w-col w-col-4">
+        <div class="w-col w-col-6">
           <div class="balance-div">
             <div class="w-clearfix">
-              <div class="balance-header">Your Balance</div>
+              <div class="balance-header">Your Balance / Unlocked Balance</div>
             </div>
-            <div class="balance-text">{{balance | money:false:true}}</div>
+            <div class="balance-text">
+              {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
+              Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="generated-results">
-      <div class="details-block top">
-        <div class="result-header">YOUR&nbsp;MNEMONIC <span class="info-text">(You’ll need this to login. Don't forget it!)</span>
-        </div>
-        <div class="tooltip-div">
-        </div>
-        <div class="result-text">tiny bubble double throw decay catch storm confidence aim gaze alas string</div>
-      </div>
-      <div class="details-block">
-        <div class="result-header">PUBLIC&nbsp;ADDRESS</div>
-        <div class="tooltip-div">
-        </div>
-        <div class="result-text">42kwuZYEchdfYAHNyuh1M72YbnZ1EcwMxNdxucqcCGK1Y5nkwNBGUyW9hmTGNjdfECUbouzhXJVYMjFeR3NVXdi7Tds6kBi</div>
-      </div>
-      <div class="details-block">
-        <div class="result-header">VIEW&nbsp;KEY</div>
-        <div class="tooltip-div">        </div>
-        <div class="result-text">9047891260162782cf955771b45b3ba8e5d240bc8ed35ced7a9cc08c12565f00</div>
-      </div>
-      <div class="login-div"><a class="button generate-btn login">Log In</a>
-      </div>
-    </div>
-  </div>
   <div class="w-container middle-container overview-page">
     <div class="middle-div">
       <div class="overview-body-head">Address</div>
@@ -72,12 +52,27 @@
     <div class="received-div" ng-repeat="tx in transactions | limitTo:5">
       <div class="w-row" ng-click="toggle_tx_detail(tx)">
         <div class="w-col w-col-2 responsive-column">
+
+          <!--
           <div class="transaction-detail value-bold" ng-show="tx_is_confirmed(tx)">
             {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
           </div>
+
           <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="!tx_is_confirmed(tx)">
-            {{tx.amount | money}} (unconfirmed) <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+            {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
+            <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
           </div>
+          -->
+
+          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
+            {{tx.amount | money}} (unconfirmed)
+          </div>
+
+          <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
+            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </div>
+
+
         </div>
         <div class="w-col w-col-3 responsive-column">
           <div class="transaction-detail">{{tx.timestamp | time}}</div>
@@ -93,13 +88,17 @@
       </div>
       <div class="w-row" style="margin-bottom: 15px;" ng-show="showing_tx_detail(tx)">
         <div class="w-col w-col-5">
-          <div class="transaction-detail" style="font-size: 11px;" ng-show="!tx_is_unlocked(tx)">
+          <div class="transaction-detail" style="font-size: 10px;" ng-show="!tx_is_unlocked(tx)">
             {{tx_locked_reason(tx)}}
           </div>
         </div>
         <div class="w-col w-col-7">
           <div class="transaction-detail transaction-page move-text-div">
-            <div class="transaction-address"><span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}</div>
+            <div class="transaction-address">
+              <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
+            </div>
           </div>
         </div>
       </div>

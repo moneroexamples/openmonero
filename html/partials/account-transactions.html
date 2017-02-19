@@ -4,18 +4,22 @@
 <div class="w-container">
   <div>
     <div class="w-row">
-      <div class="w-col w-col-8 w-clearfix">
+      <div class="w-col w-col-6 w-clearfix">
         <div class="header-div-block">
           <h1 class="heading-contained">Transactions</h1>
           <div class="subhead-text inner">A complete statement of all transactions for your account.</div>
         </div>
       </div>
-      <div class="w-col w-col-4">
+      <div class="w-col w-col-6">
         <div class="balance-div">
           <div class="w-clearfix">
-            <div class="balance-header">Your Balance</div>
+            <div class="balance-header">Your Balance / Unlocked Balance</div>
           </div>
-          <div class="balance-text">{{balance | money:false:true}}</div>
+          <div class="balance-text">
+            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
+            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -50,7 +54,7 @@
       <div class="w-col w-col-2 shift-column none" ng-click="clickedPredicate('approx_float_amount')">
         <div class="transaction-head transactions">Value (XMR) <i class="fa {{predicateIcon('approx_float_amount')}}"></i></div>
       </div>
-      <div class="w-col w-col-3 shift-column" ng-click="clickedPredicate('timestamp')">
+      <div class="w-col w-col-3 shift-column" ng-click="clickedPredicate('id')">
         <div class="transaction-head transactions">Date Received <i class="fa {{predicateIcon('timestamp')}}"></i></div>
       </div>
       <div class="w-col w-col-1 shift-column" ng-click="clickedPredicate('mixin')">
@@ -65,8 +69,25 @@
     <div class="w-row" ng-click="toggle_tx_detail(tx)">
       <div class="w-col w-col-2">
         <div class="transaction-detail transaction-left transaction-page">
+          <!--
           <strong class="bold" ng-show="tx_is_confirmed(tx)">{{tx.amount | money}}  <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span></strong>
-          <strong class="bold red" ng-show="!tx_is_confirmed(tx)">{{tx.amount | money}} (unconfirmed)  <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span></strong>
+
+          <strong class="bold red" ng-show="!tx_is_confirmed(tx)">
+            {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
+            <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </strong>
+          -->
+
+          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
+            {{tx.amount | money}} (unconfirmed)
+          </div>
+
+          <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
+            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+          </div>
+
+
+
         </div>
       </div>
       <div class="w-col w-col-3">
@@ -83,13 +104,17 @@
     </div>
     <div class="w-row" ng-show="showing_tx_detail(tx)">
       <div class="w-col w-col-5">
-        <div class="transaction-detail transaction-left" style="font-size: 11px;" ng-show="!tx_is_unlocked(tx)">
+        <div class="transaction-detail transaction-left" style="font-size: 10px;" ng-show="!tx_is_unlocked(tx)">
           {{tx_locked_reason(tx)}}
         </div>
       </div>
       <div class="w-col w-col-7">
         <div class="transaction-detail transaction-page move-text-div">
-          <div class="transaction-address transaction-page"><span class="bold">Payment ID:</span> &nbsp;&nbsp;&nbsp;&nbsp;{{tx.payment_id || "N/A"}}</div>
+          <div class="transaction-address transaction-page">
+            <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
+          </div>
         </div>
       </div>
     </div>
