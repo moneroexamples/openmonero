@@ -36,7 +36,12 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
    
 Coinbase txs are not used for making transactions. Current don't know
 how to process them in the backend, so that frontend correctly uses them to construct txs.
-Maybe frontend handling of ringct coinbase txs is buggy?  
+Maybe frontend handling of ringct coinbase txs is buggy or incomplete? The following questions/issues
+  could shed some light on this:
+  
+ - https://monero.stackexchange.com/questions/3638/how-are-outpk-mask-and-amount-fields-created-when-spending-rignct-coinbase-txs
+ - https://github.com/monero-project/monero/issues/1743
+ 
    
 ##  Status
 
