@@ -445,7 +445,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                     continue;
                 }
 
-                if (bool {tx.coinbase})
+                if (!bool {tx.coinbase})
                 {
                     continue;
                 }
@@ -502,10 +502,17 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 //                                string rtc_mask   =  pod_to_hex(rct::identity());
 //                                string rtc_amount('0', 64);
 
-                                string rtc_outpk  =  pod_to_hex(od.commitment);
-                                //cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
-                                string rtc_mask   =  pod_to_hex(rct::commit(out.amount, od.commitment));
-                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
+                                string rtc_outpk  = pod_to_hex(od.commitment);
+                                string rtc_mask   = pod_to_hex(rct::identity());
+                                string rtc_amount = std::to_string(out.amount);
+
+                                cout << rtc_amount << endl;
+
+
+//                                string rtc_outpk  =  pod_to_hex(od.commitment);
+//                                //cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
+//                                string rtc_mask   =  pod_to_hex(rct::commit(out.amount, od.commitment));
+//                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
 
 //                                string rtc_outpk  =  pod_to_hex(od.commitment);
 //                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
