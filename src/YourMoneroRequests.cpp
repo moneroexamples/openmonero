@@ -445,6 +445,12 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                     continue;
                 }
 
+                if (bool {tx.coinbase})
+                {
+                    continue;
+                }
+
+
                 vector<XmrOutput> outs;
 
                 if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
@@ -484,9 +490,27 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                         CurrentBlockchainStatus::get_output_key(
                                                 0, global_amount_index);
 
-                                string rtc_outpk =  pod_to_hex(od.commitment);
-                                string rtc_mask  =  pod_to_hex(rct::identity());
-                                string rtc_amount(64, '0');
+
+//
+//
+//                                COMMAND_RPC_GET_OUTPUTS_BIN::outkey output_info;
+//
+//                                CurrentBlockchainStatus::get_output(
+//                                        0, global_amount_index, output_info);
+
+//                                string rtc_outpk  =  pod_to_hex(od.commitment);
+//                                string rtc_mask   =  pod_to_hex(rct::identity());
+//                                string rtc_amount('0', 64);
+
+                                string rtc_outpk  =  pod_to_hex(od.commitment);
+                                //cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
+                                string rtc_mask   =  pod_to_hex(rct::commit(out.amount, od.commitment));
+                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
+
+//                                string rtc_outpk  =  pod_to_hex(od.commitment);
+//                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
+//                                string rtc_mask   =  pod_to_hex(output_info.mask);
+//                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
 
                                 rct = rtc_outpk + rtc_mask + rtc_amount;
                             }

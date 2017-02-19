@@ -335,6 +335,27 @@ CurrentBlockchainStatus::get_random_outputs(
     return true;
 }
 
+
+bool
+CurrentBlockchainStatus::get_output(
+        const uint64_t amount,
+        const uint64_t global_output_index,
+        COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info)
+{
+    rpccalls rpc {deamon_url};
+
+    string error_msg;
+
+    if (!rpc.get_out(amount, global_output_index, output_info))
+    {
+        cerr << "rpc.get_out" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+
 bool
 CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
 {

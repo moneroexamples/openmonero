@@ -118,6 +118,11 @@ struct CurrentBlockchainStatus
                     vector<cryptonote::output_data_t>& outputs);
 
     static bool
+    get_output(const uint64_t amount,
+               const uint64_t global_output_index,
+               COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info);
+
+    static bool
     get_amount_specific_indices(const crypto::hash& tx_hash,
                                 vector<uint64_t>& out_indices);
 
