@@ -440,9 +440,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                 // thus no reason to return them to the frontend
                 // for constructing a tx.
 
-                int64_t time_since_unlock = current_blockchain_height - tx.unlock_time;
-
-                if (!CurrentBlockchainStatus::is_tx_unlocked(tx.height, tx.coinbase))
+                if (!CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
                 {
                     continue;
                 }

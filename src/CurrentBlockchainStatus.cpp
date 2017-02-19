@@ -138,18 +138,54 @@ CurrentBlockchainStatus::init_monero_blockchain()
 
 
 bool
-CurrentBlockchainStatus::is_tx_unlocked(uint64_t tx_blk_height, bool is_coinbase)
+CurrentBlockchainStatus::is_tx_unlocked(
+        uint64_t unlock_time,
+        uint64_t block_height)
 {
-    if (!is_coinbase)
+    if(!is_tx_spendtime_unlocked(unlock_time, block_height))
+        return false;
+
+    if(block_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > current_height + 1)
+        return false;
+
+    return true;
+}
+
+
+bool
+CurrentBlockchainStatus::is_tx_spendtime_unlocked(
+        uint64_t unlock_time,
+        uint64_t block_height)
+{
+    if(unlock_time < CRYPTONOTE_MAX_BLOCK_NUMBER)
     {
-        return (tx_blk_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE <= get_current_blockchain_height());
+        //interpret as block index
+        if(current_height + CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS >= unlock_time)
+            return true;
+        else
+            return false;
     }
     else
     {
-        return (tx_blk_height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW <= get_current_blockchain_height());
-    }
-}
+        //interpret as time
+        uint64_t current_time = static_cast<uint64_t>(time(NULL));
+        // XXX: this needs to be fast, so we'd need to get the starting heights
+        // from the daemon to be correct once voting kicks in
 
+        uint64_t v2height = testnet ? 624634 : 1009827;
+
+        uint64_t leeway = block_height < v2height
+                          ? CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1
+                          : CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2;
+
+        if(current_time + leeway >= unlock_time)
+            return true;
+        else
+            return false;
+    }
+
+    return false;
+}
 
 bool
 CurrentBlockchainStatus::get_block(uint64_t height, block &blk)

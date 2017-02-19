@@ -832,7 +832,8 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
         if (bool {tx.spendable} == false)
         {
-            if (CurrentBlockchainStatus::is_tx_unlocked(tx.height, tx.coinbase))
+
+            if (CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
             {
 
                 // this tx was before marked as unspendable, but now
@@ -873,6 +874,17 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                     }
 
                     continue;
+                }
+
+                // set unlock_time field so that frontend displies it
+                // as a locked tx, if unlock_time is zero.
+                // coinbtase txs have this set already. regular tx
+                // have unlock_time set to zero by default, but they cant
+                // be spent anyway.
+
+                if (tx.unlock_time == 0)
+                {
+                    tx.unlock_time = tx.height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
                 }
 
             } // else

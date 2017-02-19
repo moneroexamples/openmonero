@@ -161,8 +161,9 @@ TxSearch::search()
             // flag indicating whether the txs in the given block are spendable.
             // this is true when block number is more than 10 blocks from current
             // blockchain height.
+
             bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(
-                    searched_blk_no, oi_identification.tx_is_coinbase);
+                    tx.unlock_time, searched_blk_no);
 
             // FIRSt step.
             oi_identification.identify_outputs();
@@ -201,9 +202,7 @@ TxSearch::search()
                                          // for regular tx, the unlock time is
                                          // default of 10 blocks.
                                          // for coinbase tx it is 60 blocks
-                tx_data.unlock_time    = (oi_identification.tx_is_coinbase ?
-                                          searched_blk_no + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW
-                                         : searched_blk_no + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE);
+                tx_data.unlock_time    = tx.unlock_time;
 
                 tx_data.height         = searched_blk_no;
                 tx_data.coinbase       = oi_identification.tx_is_coinbase;
@@ -362,9 +361,7 @@ TxSearch::search()
                         tx_data.account_id     = acc->id;
                         tx_data.total_received = 0; // because this is spending, total_recieved is 0
                         tx_data.total_sent     = total_sent;
-                        tx_data.unlock_time    = 0; // spend only tx dont have unlock time
-                                                    // sicne we are not recieving any outputs
-                                                    // that we can spend
+                        tx_data.unlock_time    = tx.unlock_time;
                         tx_data.height         = searched_blk_no;
                         tx_data.coinbase       = oi_identification.tx_is_coinbase;
                         tx_data.is_rct         = oi_identification.is_rct;

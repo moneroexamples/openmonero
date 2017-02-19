@@ -91,7 +91,10 @@ struct CurrentBlockchainStatus
     init_monero_blockchain();
 
     static bool
-    is_tx_unlocked(uint64_t tx_blk_height, bool is_coinbase);
+    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height);
+
+    static bool
+    is_tx_spendtime_unlocked(uint64_t unlock_time, uint64_t block_height);
 
     static bool
     get_block(uint64_t height, block &blk);

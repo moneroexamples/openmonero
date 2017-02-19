@@ -461,7 +461,7 @@ var cnUtil = (function(initConfig) {
             first = seed; //only input reduced seeds or this will not give you the result you want
         }
         keys.spend = this.generate_keys(first);
-        var second = this.cn_fast_hash(first);
+        var second = this.cn_fast_hash(keys.spend.sec);
         keys.view = this.generate_keys(second);
         keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
         return keys;
@@ -2007,7 +2007,8 @@ var cnUtil = (function(initConfig) {
                 return "Transaction is unlocked";
             }
             var unlock_prediction = moment().add(numBlocks * config.avgBlockTime, 'seconds');
-            return "Will be unlocked in " + numBlocks + " blocks, ~" + unlock_prediction.fromNow(true) + ", " + unlock_prediction.calendar() + "";
+            //return "Will be unlocked in " + numBlocks + " blocks, ~" + unlock_prediction.fromNow(true) + ", " + unlock_prediction.calendar() + "";
+            return "Will be unlocked in " + numBlocks + " blocks, ~" + unlock_prediction.fromNow(true);
         } else {
             // unlock time is timestamp
             var current_time = Math.round(new Date().getTime() / 1000);
@@ -2016,7 +2017,8 @@ var cnUtil = (function(initConfig) {
                 return "Transaction is unlocked";
             }
             var unlock_moment = moment(unlock_time * 1000);
-            return "Will be unlocked " + unlock_moment.fromNow() + ", " + unlock_moment.calendar();
+            //return "Will be unlocked " + unlock_moment.fromNow() + ", " + unlock_moment.calendar();
+            return "Will be unlocked " + unlock_moment.fromNow();
         }
     };
 
