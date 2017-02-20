@@ -500,13 +500,20 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
 //                                string rtc_outpk  =  pod_to_hex(od.commitment);
 //                                string rtc_mask   =  pod_to_hex(rct::identity());
-//                                string rtc_amount('0', 64);
+//                                string rtc_amount(64, '0');
 
                                 string rtc_outpk  = pod_to_hex(od.commitment);
-                                string rtc_mask   = pod_to_hex(rct::identity());
-                                string rtc_amount = std::to_string(out.amount);
+                                string rtc_mask   =  pod_to_hex(rct::identity());
+                                string rtc_amount(64, '0');
 
-                                cout << rtc_amount << endl;
+                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
+                                cout << "rct::commit(out.amount, od.commitment): " << pod_to_hex(rct::commit(out.amount, od.commitment)) << endl;
+                                cout << "rct::commit(out.amount, rct::identity()): " << pod_to_hex(rct::commit(out.amount, rct::identity())) << endl;
+                                cout << "pod_to_hex(rct::zeroCommit(out.amount)): " << pod_to_hex(rct::zeroCommit(out.amount)) << endl;
+                                //cout << rtc_outpk << endl;
+                                //cout << rtc_mask << endl;
+                                //cout << rtc_amount << endl;
+                                cout << endl;
 
 
 //                                string rtc_outpk  =  pod_to_hex(od.commitment);

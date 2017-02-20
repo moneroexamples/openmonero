@@ -822,6 +822,7 @@ CurrentBlockchainStatus::construct_output_rct_field(
             // i think for ringct coinbase txs, mask is identity mask
             // as suggested by this code:
             // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
+            // https://github.com/monero-project/monero/blob/master/src/blockchain_db/blockchain_db.cpp#L100
             rtc_mask   = pod_to_hex(rct::identity());
         }
 

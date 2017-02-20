@@ -745,7 +745,19 @@ var cnUtil = (function(initConfig) {
     this.generate_key_image_helper_rct = function(keys, tx_pub_key, out_index, enc_mask) {
         var recv_derivation = this.generate_key_derivation(tx_pub_key, keys.view.sec);
         if (!recv_derivation) throw "Failed to generate key image";
-        var mask = enc_mask ? sc_sub(enc_mask, hash_to_scalar(derivation_to_scalar(recv_derivation, out_index))) : I; //decode mask, or d2s(1) if no mask
+        var mask;
+        if (enc_mask === I)
+        {
+            // this is for ringct coinbase txs (rct type 0). they are ringct tx that have identity mask
+            mask = enc_mask;
+        }
+        else
+        {
+            // for other ringct types or for non-ringct txs to this.
+            mask = enc_mask ? sc_sub(enc_mask, hash_to_scalar(derivation_to_scalar(recv_derivation, out_index))) : I; //decode mask, or d2s(1) if no mask
+        }
+
+        var mask = enc_mask; //decode mask, or d2s(1) if no mask
         var ephemeral_pub = this.derive_public_key(recv_derivation, out_index, keys.spend.pub);
         if (!ephemeral_pub) throw "Failed to generate key image";
         var ephemeral_sec = this.derive_secret_key(recv_derivation, out_index, keys.spend.sec);
@@ -1700,9 +1712,13 @@ var cnUtil = (function(initConfig) {
                     a: in_contexts[i].mask
                 });
                 inAmounts.push(tx.vin[i].amount);
-                if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
+
+                //if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
+
+                    // coiinbase txs also have mask === I, so I removed this if statmemt here.
                     tx.vin[i].amount = "0";
-                }
+                //}
+
                 mixRing[i] = [];
                 for (j = 0; j < sources[i].outputs.length; j++) {
                     mixRing[i].push({
@@ -1826,6 +1842,7 @@ var cnUtil = (function(initConfig) {
                 if (outputs[i].rct) {
 
                     src.mask = outputs[i].rct.slice(64,128); //encrypted
+                   // src.mask = null;
                 } else {
                     src.mask = null; //will be set by generate_key_image_helper_rct
                 }
