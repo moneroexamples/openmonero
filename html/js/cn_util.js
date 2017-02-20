@@ -745,11 +745,13 @@ var cnUtil = (function(initConfig) {
     this.generate_key_image_helper_rct = function(keys, tx_pub_key, out_index, enc_mask) {
         var recv_derivation = this.generate_key_derivation(tx_pub_key, keys.view.sec);
         if (!recv_derivation) throw "Failed to generate key image";
+
         var mask;
+
         if (enc_mask === I)
         {
             // this is for ringct coinbase txs (rct type 0). they are ringct tx that have identity mask
-            mask = enc_mask;
+            mask = enc_mask; // enc_mask is idenity mask returned by backend.
         }
         else
         {
@@ -757,7 +759,6 @@ var cnUtil = (function(initConfig) {
             mask = enc_mask ? sc_sub(enc_mask, hash_to_scalar(derivation_to_scalar(recv_derivation, out_index))) : I; //decode mask, or d2s(1) if no mask
         }
 
-        var mask = enc_mask; //decode mask, or d2s(1) if no mask
         var ephemeral_pub = this.derive_public_key(recv_derivation, out_index, keys.spend.pub);
         if (!ephemeral_pub) throw "Failed to generate key image";
         var ephemeral_sec = this.derive_secret_key(recv_derivation, out_index, keys.spend.sec);
@@ -1631,7 +1632,11 @@ var cnUtil = (function(initConfig) {
         }
         tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
 
-        var in_contexts = [];
+        var in_contexts  = [];
+
+        var is_rct_coinbases = []; // monkey patching to solve problem of
+                                   // not being able to spend coinbase ringct txs.
+
         var inputs_money = JSBigInt.ZERO;
         var i, j;
 
@@ -1644,8 +1649,20 @@ var cnUtil = (function(initConfig) {
                 throw "real index >= outputs.length";
             }
             inputs_money = inputs_money.add(sources[i].amount);
+
+            // sets res.mask among other things. mask is identity for non-rct transactions
+            // and for coinbase ringct (type = 0) txs.
             var res = this.generate_key_image_helper_rct(keys, sources[i].real_out_tx_key, sources[i].real_out_in_tx, sources[i].mask); //mask will be undefined for non-rct
+
             in_contexts.push(res.in_ephemeral);
+
+            // now we mark if this is ringct coinbase txs. such transactions
+            // will have identity mask. Non-ringct txs will have  sources[i].mask set to null.
+            // this only works if beckend will produce masks in get_unspent_outs for
+            // coinbaser ringct txs.
+            is_rct_coinbases.push((sources[i].mask ? sources[i].mask === I : 0));
+
+
             if (res.in_ephemeral.pub !== sources[i].outputs[sources[i].real_out].key) {
                 throw "in_ephemeral.pub != source.real_out.key";
             }
@@ -1714,10 +1731,16 @@ var cnUtil = (function(initConfig) {
                 inAmounts.push(tx.vin[i].amount);
 
                 //if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
-
-                    // coiinbase txs also have mask === I, so I removed this if statmemt here.
-                    tx.vin[i].amount = "0";
+                    //tx.vin[i].amount = "0";
                 //}
+
+                if (in_contexts[i].mask !== I || is_rct_coinbases[i] === true)
+                {
+                    // if input is rct (has a valid mask), 0 out amount
+                    // coinbase ringct txs also have mask === I, so their amount
+                    // must be set to zero when spending them.
+                    tx.vin[i].amount = "0";
+                }
 
                 mixRing[i] = [];
                 for (j = 0; j < sources[i].outputs.length; j++) {
@@ -1840,9 +1863,7 @@ var cnUtil = (function(initConfig) {
             src.real_out_in_tx = outputs[i].index;
             if (rct){
                 if (outputs[i].rct) {
-
-                    src.mask = outputs[i].rct.slice(64,128); //encrypted
-                   // src.mask = null;
+                    src.mask = outputs[i].rct.slice(64,128); //encrypted or idenity mask for coinbase txs.
                 } else {
                     src.mask = null; //will be set by generate_key_image_helper_rct
                 }

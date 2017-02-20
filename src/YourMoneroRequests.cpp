@@ -445,11 +445,10 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                     continue;
                 }
 
-                if (!bool {tx.coinbase})
-                {
-                    continue;
-                }
-
+//                if (!bool {tx.coinbase})
+//                {
+//                    continue;
+//                }
 
                 vector<XmrOutput> outs;
 
@@ -470,77 +469,29 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                         uint64_t global_amount_index = out.global_index;
 
-                        uint64_t out_amount {out.amount};
-
                         string rct = out.get_rct();
 
-                        // but if ringct tx, set it amount to zero
-                        // as in Outputs table we store decoded outputs amounts
-                        if (tx.is_rct)
+                        // coinbaser rct txs require speciall treatment
+                        if (tx.is_rct && tx.coinbase)
                         {
-                            // out_amount = 0;
 
-                            if (tx.coinbase)
-                            {
-                                // not really sure how to treet coinbase
-                                // ringct unspent txs.
-                                // // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
+                            output_data_t od =
+                                    CurrentBlockchainStatus::get_output_key(
+                                            0, global_amount_index);
 
-                                output_data_t od =
-                                        CurrentBlockchainStatus::get_output_key(
-                                                0, global_amount_index);
+                            string rtc_outpk  = pod_to_hex(od.commitment);
+                            string rtc_mask   =  pod_to_hex(rct::identity());
+                            string rtc_amount(64, '0');
 
-
-//
-//
-//                                COMMAND_RPC_GET_OUTPUTS_BIN::outkey output_info;
-//
-//                                CurrentBlockchainStatus::get_output(
-//                                        0, global_amount_index, output_info);
-
-//                                string rtc_outpk  =  pod_to_hex(od.commitment);
-//                                string rtc_mask   =  pod_to_hex(rct::identity());
-//                                string rtc_amount(64, '0');
-
-                                string rtc_outpk  = pod_to_hex(od.commitment);
-                                string rtc_mask   =  pod_to_hex(rct::identity());
-                                string rtc_amount(64, '0');
-
-                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
-                                cout << "rct::commit(out.amount, od.commitment): " << pod_to_hex(rct::commit(out.amount, od.commitment)) << endl;
-                                cout << "rct::commit(out.amount, rct::identity()): " << pod_to_hex(rct::commit(out.amount, rct::identity())) << endl;
-                                cout << "pod_to_hex(rct::zeroCommit(out.amount)): " << pod_to_hex(rct::zeroCommit(out.amount)) << endl;
-                                //cout << rtc_outpk << endl;
-                                //cout << rtc_mask << endl;
-                                //cout << rtc_amount << endl;
-                                cout << endl;
-
-
-//                                string rtc_outpk  =  pod_to_hex(od.commitment);
-//                                //cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
-//                                string rtc_mask   =  pod_to_hex(rct::commit(out.amount, od.commitment));
-//                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
-
-//                                string rtc_outpk  =  pod_to_hex(od.commitment);
 //                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
-//                                string rtc_mask   =  pod_to_hex(output_info.mask);
-//                                string rtc_amount =  pod_to_hex(rct::d2h(out.amount));
+//                                cout << "rct::commit(out.amount, od.commitment): " << pod_to_hex(rct::commit(out.amount, od.commitment)) << endl;
+//                                cout << "rct::commit(out.amount, rct::identity()): " << pod_to_hex(rct::commit(out.amount, rct::identity())) << endl;
+//                                cout << "pod_to_hex(rct::zeroCommit(out.amount)): " << pod_to_hex(rct::zeroCommit(out.amount)) << endl;
+//                                cout << endl;
 
-                                rct = rtc_outpk + rtc_mask + rtc_amount;
-                            }
+                            rct = rtc_outpk + rtc_mask + rtc_amount;
                         }
 
-//                        tuple<string, string, string>
-//                                rct_field = CurrentBlockchainStatus::construct_output_rct_field(
-//                                global_amount_index, out_amount);
-//
-//                        string rct =  std::get<0>(rct_field)    // rct_pk
-//                                      + std::get<1>(rct_field)  // rct_mask
-//                                      + std::get<2>(rct_field); // rct_amount
-
-
-
-                        //string rct = out.get_rct();
 
                         json j_out{
                                 {"amount",           out.amount},

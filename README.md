@@ -21,6 +21,7 @@ to use, host and modify. Additionally, the following features were added/changed
  - support of testnet network and wallets was added.
  - improved handling of mempool, coinbase, locked and unlocked transactions.
  - added dynamic fees for testnet.
+ - minimum mixin set to 4.
    
    
 ## Limitations
@@ -31,16 +32,6 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
  and straight forward implementation of the backend. Thus, it does not use any fancy catching
  of txs, blocks, complex database structures and sql queries. But adding this in the future,
  should not be a problem once all the basic operations work.
-   
-#### Coinbase tranasaction
-   
-Coinbase txs are not used for making transactions. Current don't know
-how to process them in the backend, so that frontend correctly uses them to construct txs.
-Maybe frontend handling of ringct coinbase txs is buggy or incomplete? The following questions/issues
-  could shed some light on this:
-  
- - https://monero.stackexchange.com/questions/3638/how-are-outpk-mask-and-amount-fields-created-when-spending-rignct-coinbase-txs
- - https://github.com/monero-project/monero/issues/1743
  
    
 ##  Status
