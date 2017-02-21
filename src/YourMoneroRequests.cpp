@@ -445,10 +445,10 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                     continue;
                 }
 
-                if (!bool {tx.coinbase})
-                {
-                    continue;
-                }
+//                if (!bool {tx.coinbase})
+//                {
+//                    continue;
+//                }
 
                 vector<XmrOutput> outs;
 
