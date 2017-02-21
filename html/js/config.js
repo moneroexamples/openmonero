@@ -1,6 +1,6 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
-    testnet: true,
+    testnet: false,
     coinUnitPlaces: 12,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
     txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
