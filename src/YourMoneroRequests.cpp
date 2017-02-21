@@ -472,12 +472,13 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                         string rct = out.get_rct();
 
                         // coinbaser rct txs require speciall treatment
-                        if (tx.is_rct && tx.coinbase)
+                        if (tx.coinbase)
                         {
+                            uint64_t amount  = (tx.is_rct ? 0 : out.amount);
 
                             output_data_t od =
                                     CurrentBlockchainStatus::get_output_key(
-                                            0, global_amount_index);
+                                            amount, global_amount_index);
 
                             string rtc_outpk  = pod_to_hex(od.commitment);
                             string rtc_mask   =  pod_to_hex(rct::identity());
@@ -491,7 +492,6 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                             rct = rtc_outpk + rtc_mask + rtc_amount;
                         }
-
 
                         json j_out{
                                 {"amount",           out.amount},
@@ -601,12 +601,14 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                         rct_field = CurrentBlockchainStatus::construct_output_rct_field(
                                     global_amount_index, outs.amount);
 
+                string rct = std::get<0>(rct_field)    // rct_pk
+                             + std::get<1>(rct_field)  // rct_mask
+                             + std::get<2>(rct_field); // rct_amount
+
                 json out_details {
                         {"global_index", out.global_amount_index},
                         {"public_key"  , pod_to_hex(out.out_key)},
-                        {"rct"         , std::get<0>(rct_field)    // rct_pk
-                                         + std::get<1>(rct_field)  // rct_mask
-                                         + std::get<2>(rct_field)} // rct_amount
+                        {"rct"         , rct}
                 };
 
                 j_outputs.push_back(out_details);
