@@ -810,23 +810,24 @@ CurrentBlockchainStatus::construct_output_rct_field(
     }
     else
     {
-        // for non ringct txs, we need to take it rct amount acommitment
-        // and sent to the frontend.
+        // for non ringct txs, we need to take it rct amount commitment
+        // and sent to the frontend. the mask is zero mask for those,
+        // as frontend will produce identy mask autmatically for non-ringct outputs
 
         output_data_t od = get_output_key(out_amount, global_amount_index);
 
         rtc_outpk  = pod_to_hex(od.commitment);
 
-        if (is_coinbase(random_output_tx))
-        {
-            // i think for ringct coinbase txs, mask is identity mask
+        if (is_coinbase(random_output_tx)) // commenting this out. think its not needed.
+        {                                  // as this function provides keys for mixin outputs
+                                           // not the ones we actually spend.
+            // ringct coinbase txs are special. they have identity mask.
             // as suggested by this code:
             // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
             // https://github.com/monero-project/monero/blob/master/src/blockchain_db/blockchain_db.cpp#L100
-            rtc_mask   = pod_to_hex(rct::identity());
+            // rtc_mask   = pod_to_hex(rct::identity());
         }
 
-        //rtc_amount = pod_to_hex(rct::identity());
     }
 
     return make_tuple(rtc_outpk, rtc_mask, rtc_amount);

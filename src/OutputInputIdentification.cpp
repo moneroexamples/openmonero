@@ -106,6 +106,12 @@ OutputInputIdentification::identify_outputs()
             {
                 bool r;
 
+                // for ringct non-coinbase txs, these values are provided with txs.
+                // coinbase ringctx dont have this information. we will provide
+                // them only when needed, in get_unspent_outputs. So go there
+                // to see how we deal with ringct coinbase txs when we spent them
+                // go to CurrentBlockchainStatus::construct_output_rct_field
+                // to see how we deal with coinbase ringct that are used as mixins
                 rtc_outpk  = pod_to_hex(tx->rct_signatures.outPk[output_idx_in_tx].mask);
                 rtc_mask   = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask);
                 rtc_amount = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].amount);
