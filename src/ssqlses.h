@@ -18,10 +18,9 @@ using namespace std;
 using namespace nlohmann;
 using namespace mysqlpp;
 
-sql_create_7(Accounts, 1, 2,
+sql_create_6(Accounts, 1, 2,
              sql_bigint_unsigned, id,
              sql_varchar        , address,
-             sql_bigint_unsigned, total_received,
              sql_bigint_unsigned, scanned_block_height,
              sql_bigint_unsigned, start_height,
              sql_timestamp      , created,

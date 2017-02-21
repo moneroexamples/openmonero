@@ -76,10 +76,6 @@ TxSearch::search()
             loop_timestamp = chrono::duration_cast<chrono::seconds>(
                     chrono::system_clock::now().time_since_epoch()).count();
 
-            //cout << "loop_timestamp: " <<  loop_timestamp << endl;
-            //cout << "last_ping_timestamp: " <<  last_ping_timestamp << endl;
-            //cout << "loop_timestamp - last_ping_timestamp: " <<  (loop_timestamp - last_ping_timestamp) << endl;
-
             if (loop_timestamp - last_ping_timestamp > THREAD_LIFE_DURATION)
             {
                 // also check if we caught up with current blockchain height
@@ -90,7 +86,6 @@ TxSearch::search()
                 }
             }
         }
-
 
 
         if (searched_blk_no > CurrentBlockchainStatus::current_height) {
@@ -105,20 +100,20 @@ TxSearch::search()
             continue;
         }
 
-        //
-        //cout << " - searching tx of: " << acc << endl;
-
         // get block cointaining this tx
         block blk;
-
 
         if (!CurrentBlockchainStatus::get_block(searched_blk_no, blk))
         {
             cerr << "Cant get block of height: " + to_string(searched_blk_no) << endl;
 
-            // update of current_height, as maybe top block(s)
+            // update current_height of blockchain, as maybe top block(s)
             // were dropped due to reorganization.
             CurrentBlockchainStatus::update_current_blockchain_height();
+
+            // if any txs that we already indexed got orphaned as a consequence of this
+            // MySqlAccounts::select_txs_for_account_spendability_check should
+            // update database accordingly when get_address_txs is executed.
 
             continue;
         }
@@ -134,7 +129,7 @@ TxSearch::search()
 
         if (searched_blk_no % 100 == 0)
         {
-            // print status every 10th block
+            // print status every 100th block
 
             fmt::print(" - searching block  {:d} of hash {:s} \n",
                        searched_blk_no, pod_to_hex(get_block_hash(blk)));
@@ -160,7 +155,7 @@ TxSearch::search()
         // can filter out false positives.
         for (transaction& tx: blk_txs)
         {
-            // Class that is resposnible for idenficitaction of our outputs
+            // Class that is responsible for identification of our outputs
             // and inputs in a given tx.
             OutputInputIdentification oi_identification {&address, &viewkey, &tx};
 
@@ -235,6 +230,7 @@ TxSearch::search()
                 {
                     //cerr << "tx_mysql_id is zero!" << endl;
                     //throw TxSearchException("tx_mysql_id is zero!");
+                    //todo what should be done when insert_tx fails?
                 }
 
                 // now add the found outputs into Outputs tables
@@ -261,7 +257,7 @@ TxSearch::search()
                     if (out_mysql_id == 0)
                     {
                         //cerr << "out_mysql_id is zero!" << endl;
-                        //throw TxSearchException("out_mysql_id is zero!");
+                        //todo what should be done when insert_tx fails?
                     }
 
                     {
@@ -271,19 +267,6 @@ TxSearch::search()
 
 
                 } // for (auto &out_k_idx: found_mine_outputs)
-
-
-                // once tx and outputs were added, update Accounts table
-
-                XmrAccount updated_acc = *acc;
-
-                updated_acc.total_received = acc->total_received + tx_data.total_received;
-
-                if (xmr_accounts->update(*acc, updated_acc))
-                {
-                    // if success, set acc to updated_acc;
-                    *acc = updated_acc;
-                }
 
             } // if (!found_mine_outputs.empty())
 
@@ -327,11 +310,6 @@ TxSearch::search()
                         in_data.timestamp   = blk_timestamp_mysql_format;
 
                         inputs_found.push_back(in_data);
-
-                        // a key image has only one real mixin. Rest is fake.
-                        // so if we find a candidate, break the search.
-
-                        // break;
 
                     } // if (xmr_accounts->output_exists(output_public_key_str, out))
 
@@ -384,6 +362,7 @@ TxSearch::search()
                         {
                             //cerr << "tx_mysql_id is zero!" << endl;
                             //throw TxSearchException("tx_mysql_id is zero!");
+                            //todo what should be done when insert_tx fails?
                         }
 
                     } //   if (tx_mysql_id == 0)
@@ -397,9 +376,7 @@ TxSearch::search()
 
                 } //  if (!inputs_found.empty())
 
-
             } //  if (!oi_identification.identified_inputs.empty())
-
 
         } // for (const transaction& tx: blk_txs)
 
@@ -432,7 +409,7 @@ TxSearch::search()
 void
 TxSearch::stop()
 {
-    cout << "Stoping the thread by setting continue_search=false" << endl;
+    cout << "Stopping the thread by setting continue_search=false" << endl;
     continue_search = false;
 }
 
@@ -530,9 +507,9 @@ TxSearch::find_txs_in_mempool(
             j_tx["unlock_time"]    = 0; // for mempool we set it to zero
                                         // since we dont have block_height to work with
             j_tx["height"]         = current_height; // put current blockchain height,
-                                    // just to indicate to frontend that this
-                                    // tx is younger than 10 blocks so that
-                                    // it shows unconfirmed message.
+                                        // just to indicate to frontend that this
+                                        // tx is younger than 10 blocks so that
+                                        // it shows unconfirmed message.
             j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
             j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
             j_tx["is_rct"]         = oi_identification.is_rct;
@@ -613,12 +590,12 @@ TxSearch::find_txs_in_mempool(
 
                     json j_tx;
 
-                    j_tx["id"]             = 0; // dont have any database id for tx in mempool
-                                               // this id is used for sorting txs in the frontend.
+                    j_tx["id"]             = 0;          // dont have any database id for tx in mempool
+                                                         // this id is used for sorting txs in the frontend.
 
                     j_tx["hash"]           = oi_identification.tx_hash_str;
                     j_tx["timestamp"]      = timestamp_to_str(recieve_time); // when it got into mempool
-                    j_tx["total_received"] = 0; // we did not recive any outputs/xmr
+                    j_tx["total_received"] = 0;          // we did not recive any outputs/xmr
                     j_tx["total_sent"]     = total_sent; // to be set later when looking for key images
                     j_tx["unlock_time"]    = 0;          // for mempool we set it to zero
                                                          // since we dont have block_height to work with
@@ -627,7 +604,7 @@ TxSearch::find_txs_in_mempool(
                                                         // tx is younger than 10 blocks so that
                                                         // it shows unconfirmed message.
                     j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                    j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
+                    j_tx["coinbase"]       = false;     // mempool tx are not coinbase, so always false
                     j_tx["is_rct"]         = oi_identification.is_rct;
                     j_tx["rct_type"]       = oi_identification.rct_type;
                     j_tx["mixin"]          = get_mixin_no(tx) - 1;
@@ -649,9 +626,7 @@ TxSearch::find_txs_in_mempool(
 }
 
 
-
-
-    pair<account_public_address, secret_key>
+pair<account_public_address, secret_key>
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);

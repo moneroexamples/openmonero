@@ -48,10 +48,8 @@ public:
     bool
     select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins);
 
-
     bool
     select_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
-
 
     uint64_t
     insert(const XmrInput& in_data);

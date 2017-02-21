@@ -17,7 +17,6 @@ XmrAccount::to_json() const
     json j {{"id"                  , id},
             {"address"             , address},
             {"viewkey"             , viewkey},
-            {"total_received"      , total_received},
             {"scanned_block_height", scanned_block_height},
             {"start_height"        , start_height}
     };
