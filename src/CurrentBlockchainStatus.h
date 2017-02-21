@@ -42,6 +42,8 @@ struct CurrentBlockchainStatus
 
     static bool testnet;
 
+    static bool do_not_relay;
+
     static std::thread m_thread;
 
     static bool is_running;
@@ -138,7 +140,7 @@ struct CurrentBlockchainStatus
     get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);
 
     static bool
-    commit_tx(const string& tx_blob, string& error_msg);
+    commit_tx(const string& tx_blob, string& error_msg,  bool do_not_relay = false);
 
     static bool
     read_mempool();

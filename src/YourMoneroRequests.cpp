@@ -643,7 +643,9 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
 
     string error_msg;
 
-    if (!CurrentBlockchainStatus::commit_tx(raw_tx_blob, error_msg))
+    if (!CurrentBlockchainStatus::commit_tx(
+            raw_tx_blob, error_msg,
+            CurrentBlockchainStatus::do_not_relay))
     {
         j_response["status"] = "error";
         j_response["error"] = error_msg;

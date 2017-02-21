@@ -21,6 +21,7 @@ atomic<uint64_t>        CurrentBlockchainStatus::current_height{0};
 string                  CurrentBlockchainStatus::blockchain_path{"/home/mwo/.blockchain/lmdb"};
 string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
 bool                    CurrentBlockchainStatus::testnet{false};
+bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
@@ -383,11 +384,11 @@ CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated
 
 
 bool
-CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg)
+CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg, bool do_not_relay)
 {
     rpccalls rpc {deamon_url};
 
-    if (!rpc.commit_tx(tx_blob, error_msg))
+    if (!rpc.commit_tx(tx_blob, error_msg, do_not_relay))
     {
         cerr << "commit_tx failed" << endl;
         return false;

@@ -21,6 +21,7 @@ xmreg::CmdLineOptions opts {ac, av};
 auto address_opt      = opts.get_option<string>("address");
 auto viewkey_opt      = opts.get_option<string>("viewkey");
 auto help_opt         = opts.get_option<bool>("help");
+auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
 auto use_ssl_opt      = opts.get_option<bool>("use-ssl");
 auto deamon_url_opt   = opts.get_option<string>("deamon-url");
@@ -34,9 +35,10 @@ if (*help_opt)
 
 bool testnet        = *testnet_opt;
 bool use_ssl        = *use_ssl_opt;
+bool do_not_relay   = *do_not_relay_opt;
+
 string address_str  = address_opt ? *address_opt : "";
 string viewkey_str  = viewkey_opt ? *viewkey_opt : "";
-
 
 auto port_opt       = opts.get_option<string>("port");
 auto bc_path_opt    = opts.get_option<string>("bc-path");
@@ -56,7 +58,9 @@ if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
 string deamon_url {*deamon_url_opt};
 
 if (testnet && deamon_url == "http:://127.0.0.1:18081")
+{
     deamon_url = "http:://127.0.0.1:28081";
+}
 
 cout << "Blockchain path: " << blockchain_path.string() << endl;
 
@@ -68,6 +72,7 @@ xmreg::MySqlConnector::dbname    = "openmonero";
 // setup blockchain status monitoring thread
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
+xmreg::CurrentBlockchainStatus::do_not_relay                       = do_not_relay;
 xmreg::CurrentBlockchainStatus::deamon_url                         = deamon_url;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds = 10;
 xmreg::CurrentBlockchainStatus::import_payment_address             = address_str;
@@ -131,11 +136,11 @@ auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request,
         "/import_wallet_request");
 
-auto settings = make_shared< Settings >( );
+auto settings = make_shared<Settings>( );
 
 if (use_ssl)
 {
-    auto ssl_settings = make_shared< SSLSettings >( );
+    auto ssl_settings = make_shared<SSLSettings>( );
 
     ssl_settings->set_http_disabled( true );
     ssl_settings->set_port(1984);
@@ -144,13 +149,16 @@ if (use_ssl)
     ssl_settings->set_temporary_diffie_hellman( Uri( "file:///tmp/dh2048.pem" ) );
 
     settings->set_ssl_settings(ssl_settings);
+
+    cout << "Start the service at https://localhost:1984" << endl;
 }
 else
 {
     settings->set_port(1984);
+
+    cout << "Start the service at http://localhost:1984" << endl;
 }
 
-cout << "Start the service at http://localhost:1984" << endl;
 
 Service service;
 

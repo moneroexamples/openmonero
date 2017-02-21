@@ -26,20 +26,19 @@ namespace xmreg
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
                 ("address,a", value<string>(),
-                 "monero address string for fee of importing transactions")
+                "monero address for transactions import payments")
                 ("viewkey,v", value<string>(),
                  "private view key string corresponding to the monero address provided")
+                ("do-not-relay", value<bool>()->default_value(false)->implicit_value(true),
+                 "does not relay txs to other nodes. useful when testing construction and submiting txs")
                 ("use-ssl", value<bool>()->default_value(false)->implicit_value(true),
                  "whether to use ssl (i.e., https) or not.")
                 ("port,p", value<string>()->default_value("8081"),
                  "default port")
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
-                ("custom-db-path,c", value<string>(),
-                 "path to the custom lmdb database used for searching things")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "monero address string");
-
 
         store(command_line_parser(acc, avv)
                           .options(desc)
