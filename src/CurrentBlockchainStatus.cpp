@@ -70,7 +70,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                {
                    while (true)
                    {
-                       current_height = get_current_blockchain_height();
+                       update_current_blockchain_height();
                        read_mempool();
                        cout << "Check block height: " << current_height;
                        cout << " no of mempool txs: " << mempool_txs.size();
@@ -103,6 +103,13 @@ CurrentBlockchainStatus::get_current_blockchain_height()
         return previous_height;
     }
 
+}
+
+
+void
+CurrentBlockchainStatus::update_current_blockchain_height()
+{
+    current_height = get_current_blockchain_height();
 }
 
 void

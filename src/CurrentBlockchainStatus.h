@@ -82,6 +82,9 @@ struct CurrentBlockchainStatus
     get_current_blockchain_height();
 
     static void
+    update_current_blockchain_height();
+
+    static void
     set_blockchain_path(const string &path);
 
     static void

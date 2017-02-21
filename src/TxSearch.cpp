@@ -116,8 +116,10 @@ TxSearch::search()
         {
             cerr << "Cant get block of height: " + to_string(searched_blk_no) << endl;
 
-            --searched_blk_no; // just go back one block, and retry
-                               // maybe this was laternative block and got orphaned.
+            // update of current_height, as maybe top block(s)
+            // were dropped due to reorganization.
+            CurrentBlockchainStatus::update_current_blockchain_height();
+
             continue;
         }
 
