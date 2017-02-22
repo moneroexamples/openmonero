@@ -282,7 +282,7 @@ get_human_readable_timestamp(uint64_t ts);
 
 
 string
-get_current_time(const char* format);
+get_current_time(const char* format = "%a, %d %b %Y %H:%M:%S %Z");
 
 }
 

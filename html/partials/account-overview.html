@@ -87,12 +87,11 @@
         </div>
       </div>
       <div class="w-row" style="margin-bottom: 15px;" ng-show="showing_tx_detail(tx)">
-        <div class="w-col w-col-5">
+        <div class="w-col w-col-11">
+
           <div class="transaction-detail" style="font-size: 10px;" ng-show="!tx_is_unlocked(tx)">
             {{tx_locked_reason(tx)}}
           </div>
-        </div>
-        <div class="w-col w-col-7">
           <div class="transaction-detail transaction-page move-text-div">
             <div class="transaction-address">
               <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}

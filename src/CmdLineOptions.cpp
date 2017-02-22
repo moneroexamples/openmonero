@@ -18,7 +18,7 @@ namespace xmreg
         p.add("txhash", -1);
 
         options_description desc(
-                "yourmonero, start YourMonare backend service");
+                "openmonero, start Open Monero backend service");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
@@ -38,7 +38,10 @@ namespace xmreg
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "monero address string");
+                 "monero address string")
+                ("frontend-url,u", value<string>()->default_value("http://127.0.0.1:81"),
+                "URl of the Open Monero frotnend.");
+
 
         store(command_line_parser(acc, avv)
                           .options(desc)

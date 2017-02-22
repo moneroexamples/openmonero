@@ -40,8 +40,11 @@ bool do_not_relay   = *do_not_relay_opt;
 string address_str  = address_opt ? *address_opt : "";
 string viewkey_str  = viewkey_opt ? *viewkey_opt : "";
 
-auto port_opt       = opts.get_option<string>("port");
-auto bc_path_opt    = opts.get_option<string>("bc-path");
+
+
+auto port_opt         = opts.get_option<string>("port");
+auto bc_path_opt      = opts.get_option<string>("bc-path");
+auto frontend_url_opt = opts.get_option<string>("frontend-url");
 
 //cast port number in string to uint16
 uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
@@ -105,9 +108,12 @@ xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 // create REST JSON API services
 xmreg::YourMoneroRequests::show_logs = true;
 
+// Open Monero frontend url.  Frontend url must match this value in
+// server. Otherwise CORS problems between frontend and backend can occure
+xmreg::YourMoneroRequests::frontend_url = *frontend_url_opt;
+
 xmreg::YourMoneroRequests your_xmr(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
-
 
 auto login                 = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::login,

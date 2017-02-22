@@ -13,25 +13,6 @@ namespace xmreg
 {
 
 
-multimap<string, string>
-make_headers(const multimap<string, string>& extra_headers)
-{
-    multimap<string, string> headers {
-            {"Date", get_current_time()},
-            {"Access-Control-Allow-Origin",      "http://127.0.0.1:81"},
-            {"access-control-allow-headers",     "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Set-Cookie"},
-            {"access-control-max-age",           "86400, 1728000"},
-            {"access-control-allow-methods",     "GET, POST, OPTIONS"},
-            {"access-control-allow-credentials", "true"},
-            {"Content-Type",                     "application/json"}
-    };
-
-    headers.insert(extra_headers.begin(), extra_headers.end());
-
-    return headers;
-};
-
-
 handel_::handel_(const fetch_func_t& callback):
         request_callback {callback}
 {}
@@ -659,7 +640,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
     string xmr_address = j_request["address"];
 
-    // a placeholder for exciting or new account data
+    // a placeholder for existing or new payment data
     xmreg::XmrPayment xmr_payment;
 
     json j_response;
@@ -808,6 +789,28 @@ YourMoneroRequests::generic_options_handler( const shared_ptr< Session > session
     });
 }
 
+
+
+
+multimap<string, string>
+YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
+{
+    multimap<string, string> headers {
+            {"Date", get_current_time()},
+            {"Access-Control-Allow-Origin",      frontend_url},
+            {"access-control-allow-headers",     "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Set-Cookie"},
+            {"access-control-max-age",           "86400, 1728000"},
+            {"access-control-allow-methods",     "GET, POST, OPTIONS"},
+            {"access-control-allow-credentials", "true"},
+            {"Content-Type",                     "application/json"}
+    };
+
+    headers.insert(extra_headers.begin(), extra_headers.end());
+
+    return headers;
+};
+
+
 void
 YourMoneroRequests::print_json_log(const string& text, const json& j)
 {
@@ -836,8 +839,11 @@ YourMoneroRequests::get_current_blockchain_height()
 }
 
 
-// define static variables
-bool YourMoneroRequests::show_logs = false;
+// define defai;t static variables
+bool   YourMoneroRequests::show_logs    {false};
+string YourMoneroRequests::frontend_url {"http://127.0.0.1:81"};
+string YourMoneroRequests::service_url  {"http://localhost:1984"};
+
 }
 
 

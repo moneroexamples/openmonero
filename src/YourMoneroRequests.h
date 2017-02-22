@@ -22,11 +22,6 @@ using namespace restbed;
 using namespace nlohmann;
 
 
-string
-get_current_time(const char* format = "%a, %d %b %Y %H:%M:%S %Z");
-
-multimap<string, string>
-make_headers(const multimap<string, string>& extra_headers = multimap<string, string>());
 
 struct handel_
 {
@@ -50,6 +45,9 @@ class YourMoneroRequests
 public:
 
     static bool show_logs;
+
+    static string frontend_url;
+    static string service_url;
 
     YourMoneroRequests(shared_ptr<MySqlAccounts> _acc);
 
@@ -94,9 +92,11 @@ public:
     static void
     generic_options_handler( const shared_ptr< Session > session );
 
+    static multimap<string, string>
+    make_headers(const multimap<string, string>& extra_headers = multimap<string, string>());
+
     static void
     print_json_log(const string& text, const json& j);
-
 
     static inline string
     body_to_string(const Bytes & body);
