@@ -66,17 +66,17 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
             $scope.error = e;
             return;
         }
-        // AccountService.login(keys.public_addr, keys.view.sec, keys.spend.sec, seed, false)
-        //     .then(function() {
-        //         ModalService.hide('login');
-        //         $location.path("/overview");
-        //         if (AccountService.wasAccountImported()) {
-        //             ModalService.show('imported-account');
-        //         }
-        //     }, function(reason) {
-        //         $scope.error = reason;
-        //         console.error(reason);
-        //     });
+        AccountService.login(keys.public_addr, keys.view.sec, keys.spend.sec, seed, false)
+            .then(function() {
+                ModalService.hide('login');
+                $location.path("/overview");
+                if (AccountService.wasAccountImported()) {
+                    ModalService.show('imported-account');
+                }
+            }, function(reason) {
+                $scope.error = reason;
+                console.error(reason);
+            });
     };
 
     $scope.login_keys = function(address, view_key, spend_key) {
