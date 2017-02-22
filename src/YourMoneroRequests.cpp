@@ -267,8 +267,8 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
             for (json& j_tx: j_mempool_tx)
             {
-                //cout    << "mempool j_tx[\"total_received\"]: "
-                //        << j_tx["total_received"] << endl;
+                cout    << "mempool j_tx[\"total_received\"]: "
+                        << j_tx["total_received"] << endl;
 
                 j_tx["id"] = ++last_tx_id_db;
 

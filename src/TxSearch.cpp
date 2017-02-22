@@ -43,6 +43,8 @@ TxSearch::TxSearch(XmrAccount& _acc)
     // this accont
     searched_blk_no = acc->scanned_block_height;
 
+    last_ping_timestamp = 0;
+
     ping();
 }
 

@@ -64,6 +64,7 @@ if (testnet && deamon_url == "http:://127.0.0.1:18081")
 
 cout << "Blockchain path: " << blockchain_path.string() << endl;
 
+// setup mysql/mariadb connectio details
 xmreg::MySqlConnector::url       = "127.0.0.1";
 xmreg::MySqlConnector::username  = "root";
 xmreg::MySqlConnector::password  = "root";
@@ -94,14 +95,14 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 
 // launch the status monitoring thread so that it keeps track of blockchain
 // info, e.g., current height. Information from this thread is used
-// by tx searching threads that are launch for each user independent,
-// when they login back or create new account.
+// by tx searching threads that are launched for each user independently,
+// when they log back or create new account.
 xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 
 
 
-
+// create REST JSON API services
 xmreg::YourMoneroRequests::show_logs = true;
 
 xmreg::YourMoneroRequests your_xmr(
@@ -135,6 +136,10 @@ auto submit_raw_tx         = your_xmr.make_resource(
 auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request,
         "/import_wallet_request");
+
+
+
+
 
 auto settings = make_shared<Settings>( );
 

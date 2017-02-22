@@ -195,6 +195,9 @@ OutputInputIdentification::identify_inputs(
         // mixin counter
         size_t count = 0;
 
+        // indicates whether we found any matching mixin in the current input
+        bool found_a_match {false};
+
         // for each found output public key check if its ours or not
         for (const uint64_t& abs_offset: absolute_offsets)
         {
@@ -233,9 +236,22 @@ OutputInputIdentification::identify_inputs(
                     (*it).second, // amount
                     output_public_key_str});
 
-            count++;
+            found_a_match = true;
+
+            ++count;
 
         } // for (const cryptonote::output_data_t& output_data: outputs)
+
+        if (found_a_match == false)
+        {
+            // if we didnt find any match, break of the look.
+            // there is no reason to check remaining key images
+            // as when we spent something, our outputs should be
+            // in all inputs in a given txs. Thus, if a single input
+            // is without our output, we can assume this tx does
+            // not contain any of our spendings.
+            break;
+        }
 
     } // for (const txin_to_key& in_key: input_key_imgs)
 

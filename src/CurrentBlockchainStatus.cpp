@@ -428,11 +428,6 @@ CurrentBlockchainStatus::read_mempool()
         // get transaction info of the tx in the mempool
         tx_info _tx_info = mempool_tx_info.at(i);
 
-        if (_tx_info.do_not_relay == true)
-        {
-            continue;
-        }
-
         crypto::hash mem_tx_hash = null_hash;
 
         if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
