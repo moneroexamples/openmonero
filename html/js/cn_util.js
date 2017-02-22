@@ -437,21 +437,6 @@ var cnUtil = (function(initConfig) {
         return bintohex(output);
     };*/
 
-    this.create_address_old = function(seed) {
-        var keys = {};
-        var first;
-
-        if (seed.length !== 64) {
-            first = this.cn_fast_hash(seed);
-        } else {
-            first = seed; //only input reduced seeds or this will not give you the result you want
-        }
-        keys.spend = this.generate_keys(first);
-        var second = this.cn_fast_hash(first);
-        keys.view = this.generate_keys(second);
-        keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
-        return keys;
-    };
 
     this.create_address = function(seed) {
         var keys = {};
@@ -461,12 +446,19 @@ var cnUtil = (function(initConfig) {
         } else {
             first = seed; //only input reduced seeds or this will not give you the result you want
         }
+
         keys.spend = this.generate_keys(first);
-        var second = this.cn_fast_hash(first);
+        if (seed.length !== 64) {
+            var second = this.cn_fast_hash(first);
+        } else {
+            var second = this.cn_fast_hash(keys.spend.sec);
+        }
+
         keys.view = this.generate_keys(second);
         keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
         return keys;
     };
+
 
     this.create_addr_prefix = function(seed) {
         var first;
