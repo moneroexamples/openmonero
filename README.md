@@ -35,10 +35,8 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
  search threads start when user logs in (viewkey and address are submitted to the search thread), 
  and finish shorty after logout. Once the search thread stops, 
  they can't be restarted without user logging in back, as Open Monero does not store viewkeys.
-      
-##  Status
 
-Still under development.
+
 
 ## Host it yourself
 
@@ -59,6 +57,27 @@ The Open Monero consists of four components that need to be setup for it to work
 ## Screenshot
 
 ![Open Monero](https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/screenshot/screen1.png)
+
+## Compilation on Ubuntu 
+
+Before proceeding, please make sure that Monero's libraries and header files are setup correctly, 
+as shown here:
+
+- [compile-monero-on-ubuntu-16-04](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
+
+```bash
+sudo apt install libmysql++-dev
+
+git clone https://github.com/moneroexamples/restbed-xmr.git
+
+cd restbed-xmr
+
+mkdir build && cd build
+
+cmake ..
+
+make
+```
 
 ## Scrap notes
 
