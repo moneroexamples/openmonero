@@ -422,9 +422,10 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
                 if (using_outs_amount.compare(totalAmount) < 0)
                 {
-                    deferred.reject("Not enough spendable outputs / balance too low (have: "
-                        + cnUtil.formatMoneyFull(using_outs_amount) + " need: "
-                        + cnUtil.formatMoneyFull(totalAmount) + ")");
+                    deferred.reject("Not enough spendable outputs / balance too low (have "
+                        + cnUtil.formatMoneyFull(using_outs_amount) + " but need "
+                        + cnUtil.formatMoneyFull(totalAmount)
+                        + " (estimated fee " + cnUtil.formatMoneyFull(neededFee) + " included)");
                     return;
                 }
                 else if (using_outs_amount.compare(totalAmount) > 0)
