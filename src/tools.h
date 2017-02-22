@@ -280,6 +280,10 @@ generated_payment_id()
 string
 get_human_readable_timestamp(uint64_t ts);
 
+
+string
+get_current_time(const char* format);
+
 }
 
 #endif //XMREG01_TOOLS_H

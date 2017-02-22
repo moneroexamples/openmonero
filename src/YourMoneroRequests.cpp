@@ -13,19 +13,6 @@ namespace xmreg
 {
 
 
-string
-get_current_time(const char* format)
-{
-
-    auto current_time = date::make_zoned(
-            date::current_zone(),
-            date::floor<chrono::seconds>(std::chrono::system_clock::now())
-    );
-
-    return date::format(format, current_time);
-}
-
-
 multimap<string, string>
 make_headers(const multimap<string, string>& extra_headers)
 {

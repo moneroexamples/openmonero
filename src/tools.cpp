@@ -1289,6 +1289,17 @@ get_human_readable_timestamp(uint64_t ts)
     return std::string(buffer);
 }
 
+string
+get_current_time(const char* format)
+{
+
+    auto current_time = date::make_zoned(
+            date::current_zone(),
+            date::floor<chrono::seconds>(std::chrono::system_clock::now())
+    );
+
+    return date::format(format, current_time);
+}
 
 }
 
