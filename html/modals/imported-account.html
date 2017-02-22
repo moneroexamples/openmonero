@@ -35,14 +35,23 @@ html {
       <a class="w-inline-block close-modal" hide-modal="">
         <div class="close-overlay pointer">+</div>
       </a>
-      <h1 class="head-modal">Importing account</h1>
+      <h1 class="head-modal">Importing account a</h1>
       <div class="subhead-text modal review">Pay an import fee to import previous transactions, or use your account for future transactions only</div>
       <div class="w-form form-wrapper">
-        <label class="field-label">Import transactions</label>
+        <label class="field-label">Import all transactions</label>
         <div class="review-text">Pay a small fee to import all the previous transactions for this account (you can always find this later in Account &gt; Import Wallet)</div>
         <div class="submit-div small-top-margin">
           <a class="login-btn modals pointer" show-modal="import-wallet">Import transactions</a>
         </div>
+
+        <!--
+        <label class="field-label">Import transactions from last 10000 blocks</label>
+        <div class="review-text">Imports transactions from last 10000 blocks (last 5-6 days). </div>
+        <div class="submit-div small-top-margin">
+          <a class="login-btn modals pointer" hide-modal="" ng-click="importLast('ckuc')">Import transactions</a>
+        </div>
+        -->
+
         <label class="field-label">Don't import transactions</label>
         <div class="review-text">You can send and receive coins from your account, but you won't be able to see or spend any transactions you have received before now</div>
         <div class="submit-div small-top-margin">

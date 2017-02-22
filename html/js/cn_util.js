@@ -440,6 +440,7 @@ var cnUtil = (function(initConfig) {
     this.create_address_old = function(seed) {
         var keys = {};
         var first;
+
         if (seed.length !== 64) {
             first = this.cn_fast_hash(seed);
         } else {
@@ -461,7 +462,7 @@ var cnUtil = (function(initConfig) {
             first = seed; //only input reduced seeds or this will not give you the result you want
         }
         keys.spend = this.generate_keys(first);
-        var second = this.cn_fast_hash(keys.spend.sec);
+        var second = this.cn_fast_hash(first);
         keys.view = this.generate_keys(second);
         keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
         return keys;
