@@ -1,0 +1,16 @@
+{
+  "database" :
+  {
+    "dbname"   : "openmonero",
+    "password" : "some_1_sercret_55",
+    "url"      : "127.0.0.1",
+    "user"     : "openmonero"
+  },
+  "wallet_import" :
+  {
+    "fee"     : 10000000000,
+    "address" : "9tzmPMTViHYM3z6NAgQni1Qm1Emzxy5hQFibPgWD3LVTAz91yok5Eni1pH6zKhBHzpTU15GZooPHSGHXFvFuXEdmEG2sWAZ",
+    "viewkey" : "ae6184287ca791609844f140b8502ccfa2223c04c8699cf31fcd0af1f1d0be08"
+  },
+  "refresh_block_status_every_seconds" : 10
+}

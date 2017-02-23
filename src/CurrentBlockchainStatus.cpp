@@ -11,6 +11,10 @@
 #include "MySqlAccounts.h"
 #include "TxSearch.h"
 
+
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "openmonero"
+
 namespace xmreg
 {
 
@@ -128,10 +132,9 @@ CurrentBlockchainStatus::set_testnet(bool is_testnet)
 bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
-
     // set  monero log output level
     uint32_t log_level = 0;
-    mlog_configure("", true);
+    mlog_configure(mlog_get_default_log_path("open-monero.log"), true);
 
     // initialize mcore and core_storage
     if (!xmreg::init_blockchain(blockchain_path,

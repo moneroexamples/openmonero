@@ -25,22 +25,20 @@ namespace xmreg
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
-                ("address,a", value<string>(),
-                "monero address for transactions import payments")
-                ("viewkey,v", value<string>(),
-                 "private view key string corresponding to the monero address provided")
                 ("do-not-relay", value<bool>()->default_value(false)->implicit_value(true),
                  "does not relay txs to other nodes. useful when testing construction and submiting txs")
                 ("use-ssl", value<bool>()->default_value(false)->implicit_value(true),
                  "whether to use ssl (i.e., https) or not.")
-                ("port,p", value<string>()->default_value("8081"),
-                 "default port")
+                ("port,p", value<string>()->default_value("1984"),
+                 "default port for restbed service of Open Monero")
                 ("bc-path,b", value<string>(),
                  "path to lmdb blockchain")
                 ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
                  "monero address string")
                 ("frontend-url,u", value<string>()->default_value("http://127.0.0.1:81"),
-                "URl of the Open Monero frotnend.");
+                "URl of the Open Monero frotnend.")
+                ("config-file,c", value<string>()->default_value("./config/config.json"),
+                 "Config file path.");
 
 
         store(command_line_parser(acc, avv)
