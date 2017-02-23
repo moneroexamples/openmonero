@@ -4,6 +4,7 @@
 
 #define MYSQLPP_SSQLS_NO_STATICS 1
 
+
 #include "YourMoneroRequests.h"
 
 #include "ssqlses.h"

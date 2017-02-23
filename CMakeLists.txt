@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.2)
-project(restbed_xmr)
+
+set(PROJECT_NAME
+        openmonero)
+
+project(${PROJECT_NAME})
+
 
 set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++14")
+        "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # find boost
 find_package(Boost COMPONENTS
@@ -30,6 +35,7 @@ set(MONERO_HEADERS_DIR
 include_directories(
         ${MONERO_HEADERS_DIR}/src
         ${MONERO_HEADERS_DIR}/external
+        ${MONERO_HEADERS_DIR}/build
         ${MONERO_HEADERS_DIR}/external/easylogging++
         ${MONERO_HEADERS_DIR}/contrib/epee/include
         ${MONERO_HEADERS_DIR}/external/db_drivers/liblmdb)
@@ -97,13 +103,39 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(
         "ext/restbed/source")
 
-# add src/ subfolder
-add_subdirectory(src/)
-
-# add ext/ subfolder
-add_subdirectory(ext/)
 
 
+# Get the current working branch
+execute_process(
+        COMMAND git rev-parse --abbrev-ref HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_BRANCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# http://xit0.org/2013/04/cmake-use-git-branch-and-commit-details-in-project/
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+        COMMAND git log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the date and time of last commit
+execute_process(
+        COMMAND git log -1 --format=%cd --date=short
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_DATETIME
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/src/version.h.in
+        ${CMAKE_BINARY_DIR}/gen/version.h
+)
+
+include_directories(${CMAKE_BINARY_DIR}/gen)
 
 macro(configure_files srcDir destDir)
     message(STATUS "Configuring directory ${destDir}")
@@ -125,14 +157,20 @@ endmacro(configure_files)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_BINARY_DIR}/config)
 
 
+# add src/ subfolder
+add_subdirectory(src/)
+
+# add ext/ subfolder
+add_subdirectory(ext/)
+
+
 set(SOURCE_FILES
         main.cpp)
 
-add_executable(restbed_xmr
+add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
-
-target_link_libraries(restbed_xmr
+target_link_libraries(${PROJECT_NAME}
         myxrm
         myext
         restbed

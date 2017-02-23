@@ -9,6 +9,8 @@
 #include <functional>
 
 
+#include "version.h"
+
 #include "CurrentBlockchainStatus.h"
 #include "MySqlAccounts.h"
 

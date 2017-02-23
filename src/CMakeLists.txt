@@ -12,7 +12,8 @@ set(SOURCE_FILES
 		ssqlses.cpp
 		YourMoneroRequests.cpp
 		TxSearch.cpp
-		OutputInputIdentification.cpp)
+		OutputInputIdentification.cpp
+		version.h.in)
 
 # make static library called libmyxrm
 # that we are going to link to

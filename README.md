@@ -23,6 +23,10 @@ to use, host and modify. Additionally, the following features were added/changed
  - added dynamic fees for testnet.
  - minimum mixin set to 4.
    
+## Screenshot
+
+![Open Monero](https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/screenshot/screen1.png)
+
    
 ## Limitations
 
@@ -35,7 +39,6 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
  search threads start when user logs in (viewkey and address are submitted to the search thread), 
  and finish shorty after logout. Once the search thread stops, 
  they can't be restarted without user logging in back, as Open Monero does not store viewkeys.
-
 
 
 ## Host it yourself
@@ -54,19 +57,25 @@ The Open Monero consists of four components that need to be setup for it to work
  with Monero deamon.
  
 
-## Screenshot
+## Example setup on Ubuntu 16.04 
 
-![Open Monero](https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/screenshot/screen1.png)
+Below are example instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
 
-## Compilation on Ubuntu 
+#### Mysql/Mariadb
 
-Before proceeding, please make sure that Monero's libraries and header files are setup correctly, 
-as shown here:
+#### Lighttpd
+
+#### Monero libraries
+
+Monero's libraries and header files are setup is described here:
 
 - [compile-monero-on-ubuntu-16-04](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
 
+#### Compilation of the Open Monero
+
 ```bash
-sudo apt install libmysql++-dev
+# need mysql++ libraries 
+sudo apt install libmysql++-dev 
 
 git clone https://github.com/moneroexamples/restbed-xmr.git
 
@@ -78,6 +87,8 @@ cmake ..
 
 make
 ```
+
+#### Run Open Monero
 
 ## Scrap notes
 
