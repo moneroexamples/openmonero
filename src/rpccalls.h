@@ -246,12 +246,21 @@ public:
             }
 
             cerr << "Error sending tx: " << res.reason << endl;
+
+            return false;
+        }
+        else if (res.status == "BUSY")
+        {
+            error_msg = "Deamon is BUSY. Cant sent now " + res.reason;
+
+            cerr << "Error sending tx: " << error_msg << endl;
+
             return false;
         }
 
         if (do_not_relay)
         {
-            cout << "Tx accepted by deamon but not relayed (useful for testing of custring txs)" << endl;
+            cout << "Tx accepted by deamon but not relayed (useful for testing of constructing txs)" << endl;
         }
 
         return true;
