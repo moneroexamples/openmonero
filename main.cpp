@@ -85,13 +85,13 @@ if (testnet && deamon_url == "http:://127.0.0.1:18081")
     deamon_url = "http:://127.0.0.1:28081";
 }
 
-// setup mysql/mariadb connectio details
+// set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
 xmreg::MySqlConnector::username = config_json["database"]["user"];
 xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
-// setup blockchain status monitoring thread
+// set blockchain status monitoring thread parameters
 xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
 xmreg::CurrentBlockchainStatus::set_testnet(testnet);
 xmreg::CurrentBlockchainStatus::do_not_relay
@@ -102,19 +102,31 @@ xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
         = config_json["refresh_block_status_every_seconds"];
 xmreg::CurrentBlockchainStatus::import_fee
         = config_json["wallet_import"]["fee"];
-xmreg::CurrentBlockchainStatus::import_payment_address
-        = config_json["wallet_import"]["address"];
-xmreg::CurrentBlockchainStatus::import_payment_viewkey
-        = config_json["wallet_import"]["viewkey"];
+
+if (testnet)
+{
+    xmreg::CurrentBlockchainStatus::import_payment_address
+            = config_json["wallet_import"]["testnet"]["address"];
+    xmreg::CurrentBlockchainStatus::import_payment_viewkey
+            = config_json["wallet_import"]["testnet"]["viewkey"];
+}
+else
+{
+    xmreg::CurrentBlockchainStatus::import_payment_address
+            = config_json["wallet_import"]["mainnet"]["address"];
+    xmreg::CurrentBlockchainStatus::import_payment_viewkey
+            = config_json["wallet_import"]["mainnet"]["viewkey"];
+}
 
 
 // since CurrentBlockchainStatus class monitors current status
-// of the blockchain (e.g, current height), its seems logical to
+// of the blockchain (e.g., current height), its seems logical to
 // make static objects for accessing the blockchain in this class.
 // this way monero accessing blockchain variables (i.e. mcore and core_storage)
 // are not passed around like crazy everywhere.
 // There are here, and this is the only class that
-// has direct access to blockchain.
+// has direct access to blockchain and talks (using rpc calls)
+// with the deamon.
 if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 {
     cerr << "Error accessing blockchain." << endl;
