@@ -133,8 +133,9 @@ bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
     // set  monero log output level
-    uint32_t log_level = 0;
-    mlog_configure(mlog_get_default_log_path("open-monero.log"), true);
+   //uint32_t log_level = 0;
+    mlog_configure(mlog_get_default_log_path(""), true);
+    //mlog_set_log(std::string(std::to_string(log_level) + ",open-monero:INFO").c_str());
 
     // initialize mcore and core_storage
     if (!xmreg::init_blockchain(blockchain_path,

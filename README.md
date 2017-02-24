@@ -92,7 +92,6 @@ make
 #### Mysql/Mariadb
 
 ```bash
-sudo apt update 
 sudo apt install mysql-server
 sudo mysql_secure_installation
 ```
@@ -113,14 +112,58 @@ mysql -p -u root < ../sql/openmonero.sql
 ```bash
 sudo apt-get install lighttpd
 ```
-Assuming we are still in `build` folder, copy frontend source files into lighttpd www folder.
+Assuming you are still in `build` folder, copy frontend source files into lighttpd www folder.
 
 ```bash
-sudo cp -rvf ../html/ /var/www/html
+sudo mkdir /var/www/html/openmonero
+sudo cp -rvf ../html/* /var/www/html/openmonero/
 ```
+
+Setup document root in `lighttpd.conf` into openmonero folder
+
+```bash
+sudo vim /etc/lighttpd/lighttpd.conf
+```
+
+and change `server.document-root` into:
+
+```bash
+server.document-root    = "/var/www/html/openmonero"
+```
+
+Restart lighttpd to see the change:
+
+```bash
+sudo systemctl restart lighttpd
+```
+
+Go to localhost (http://127.0.0.1) and check if frontend is working.
+
 
 #### Run Open Monero
 
+Command line options
+
+```bash
+./openmonero -h
+
+  -h [ --help ] [=arg(=1)] (=0)         produce help message
+  -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
+  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
+                                        useful when testing construction and 
+                                        submiting txs
+  --use-ssl [=arg(=1)] (=0)             whether to use ssl (i.e., https) or 
+                                        not.
+  -p [ --port ] arg (=1984)             default port for restbed service of 
+                                        Open Monero
+  -b [ --bc-path ] arg                  path to lmdb blockchain
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
+                                        monero address string
+  -u [ --frontend-url ] arg (=http://127.0.0.1:81)
+                                        URl of the Open Monero frotnend.
+  -c [ --config-file ] arg (=./config/config.json)
+                                        Config file path.
+```
 
 
 ## Scrap notes
