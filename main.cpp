@@ -29,26 +29,12 @@ if (*help_opt)
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
 auto port_opt         = opts.get_option<string>("port");
-auto bc_path_opt      = opts.get_option<string>("bc-path");
 auto config_file_opt  = opts.get_option<string>("config-file");
 
 
 bool testnet          = *testnet_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
-//cast port number in string to uint16
-uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
-
-// get blockchain path
-path blockchain_path;
-
-if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, testnet))
-{
-    cerr << "Error getting blockchain path." << endl;
-    return EXIT_FAILURE;
-}
-
-cout << "Blockchain path: " << blockchain_path.string() << endl;
 
 // check if config-file provided exist
 if (!boost::filesystem::exists(*config_file_opt))
@@ -73,6 +59,28 @@ catch (const std::exception& e)
          << e.what() << endl;
     return EXIT_FAILURE;
 }
+
+
+//cast port number in string to uint16
+uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
+
+// get blockchain path
+// if confing.json paths are emtpy, defeault monero
+// paths are going to be used
+path blockchain_path = testnet
+                       ? path(config_json["blockchain-path"]["testnet"].get<string>())
+                       : path(config_json["blockchain-path"]["mainnet"].get<string>());
+
+
+if (!xmreg::get_blockchain_path(blockchain_path, testnet))
+{
+    cerr << "Error getting blockchain path." << endl;
+    return EXIT_FAILURE;
+}
+
+cout << "Blockchain path: " << blockchain_path.string() << endl;
+
+
 
 string deamon_url = testnet
                     ? config_json["daemon-url"]["testnet"]

@@ -106,8 +106,7 @@ generate_key_image(const crypto::key_derivation& derivation,
                    crypto::key_image& key_img);
 
 bool
-get_blockchain_path(const boost::optional<string>& bc_path,
-                    bf::path& blockchain_path,
+get_blockchain_path(bf::path& blockchain_path,
                     bool testnet = false);
 
 uint64_t

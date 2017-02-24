@@ -189,8 +189,6 @@ OutputInputIdentification::identify_inputs(
             continue;
         }
 
-        //cout << "in_key.k_image): " << pod_to_hex(in_key.k_image) << endl;
-
 
         // mixin counter
         size_t count = 0;

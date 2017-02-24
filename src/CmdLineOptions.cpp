@@ -15,8 +15,6 @@ namespace xmreg
 
         positional_options_description p;
 
-        p.add("txhash", -1);
-
         options_description desc(
                 "openmonero, Open Monero backend service");
 
@@ -29,12 +27,6 @@ namespace xmreg
                  "does not relay txs to other nodes. useful when testing construction and submiting txs")
                 ("port,p", value<string>()->default_value("1984"),
                  "default port for restbed service of Open Monero")
-                ("bc-path,b", value<string>(),
-                 "path to lmdb blockchain")
-                ("deamon-url,d", value<string>()->default_value("http:://127.0.0.1:18081"),
-                 "monero address string")
-                ("frontend-url,u", value<string>()->default_value("http://127.0.0.1"),
-                "URl of the Open Monero frotnend.")
                 ("config-file,c", value<string>()->default_value("./config/config.json"),
                  "Config file path.");
 

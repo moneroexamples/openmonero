@@ -5,6 +5,12 @@
     "mainnet" : "http:://127.0.0.1:18081",
     "testnet" : "http:://127.0.0.1:28081"
   },
+  "blockchain-path" :
+  {
+    "_comment": "if paths are empty, default moenro paths will be used",
+    "mainnet" : "",
+    "testnet" : ""
+  },
   "database" :
   {
     "dbname"   : "openmonero",
@@ -31,6 +37,7 @@
   "ssl" :
   {
     "enable" : false,
+    "_comment": "below paths to crt and key files need to be given",
     "ssl-crt": "",
     "ssl-key": ""
   }
