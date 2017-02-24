@@ -180,7 +180,7 @@ auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request,
         "/import_wallet_request");
 
-auto get_version = your_xmr.make_resource(
+auto get_version           = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::get_version,
         "/get_version");
 

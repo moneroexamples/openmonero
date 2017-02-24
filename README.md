@@ -59,11 +59,33 @@ The Open Monero consists of four components that need to be setup for it to work
 
 ## Example setup on Ubuntu 16.04 
 
-Below are example instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
+Below are example and basic instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
 
 #### Mysql/Mariadb
 
+```bash
+sudo apt update 
+sudo apt install mysql-server
+sudo mysql_secure_installation
+```
+
+Download `openmonero.sql` provided and setup the `openmonero` database. `openmonero.sql` script will
+drop current `openmonero` if exist. So don't run it, if you have already some important information
+in the `openmonero` database.
+
+```bash
+# download the sql file
+wget https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/sql/openmonero.sql
+
+# apply it to mysql
+mysql -p -u root < ./openmonero.sql
+```
+
 #### Lighttpd
+
+```bash
+sudo apt-get install lighttpd
+```
 
 #### Monero libraries
 
