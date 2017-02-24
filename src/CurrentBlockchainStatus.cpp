@@ -29,6 +29,7 @@ bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
+uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
 xmreg::MicroCore        CurrentBlockchainStatus::mcore;
 cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
@@ -44,6 +45,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
     bool testnet = CurrentBlockchainStatus::testnet;
 
+    TxSearch::set_search_thread_life(search_thread_life_in_seconds);
 
     if (!import_payment_address.empty() && !import_payment_viewkey.empty())
     {

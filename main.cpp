@@ -95,6 +95,8 @@ xmreg::CurrentBlockchainStatus::deamon_url
         = deamon_url;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
         = config_json["refresh_block_status_every_seconds"];
+xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds
+        = config_json["search_thread_life_in_seconds"];
 xmreg::CurrentBlockchainStatus::import_fee
         = config_json["wallet_import"]["fee"];
 

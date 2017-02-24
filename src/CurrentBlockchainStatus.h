@@ -50,6 +50,7 @@ struct CurrentBlockchainStatus
 
     static uint64_t refresh_block_status_every_seconds;
 
+    static uint64_t search_thread_life_in_seconds;
 
     static string   import_payment_address;
     static string   import_payment_viewkey;

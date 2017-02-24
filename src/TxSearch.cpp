@@ -15,8 +15,6 @@
 namespace xmreg
 {
 
-
-
 TxSearch::TxSearch(XmrAccount& _acc)
 {
     acc = make_shared<XmrAccount>(_acc);
@@ -78,10 +76,11 @@ TxSearch::search()
             loop_timestamp = chrono::duration_cast<chrono::seconds>(
                     chrono::system_clock::now().time_since_epoch()).count();
 
-            if (loop_timestamp - last_ping_timestamp > THREAD_LIFE_DURATION)
+            if (loop_timestamp - last_ping_timestamp > thread_search_life)
             {
+
                 // also check if we caught up with current blockchain height
-                if (searched_blk_no == CurrentBlockchainStatus::current_height)
+                if (searched_blk_no >= CurrentBlockchainStatus::current_height)
                 {
                     stop();
                     continue;
@@ -634,5 +633,15 @@ TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);
 }
+
+
+void
+TxSearch::set_search_thread_life(uint64_t life_seconds)
+{
+    thread_search_life = life_seconds;
+}
+
+// default value of static veriables
+uint64_t TxSearch::thread_search_life {10};
 
 }

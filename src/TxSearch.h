@@ -36,8 +36,7 @@ class TxSearch
     // how long should the search thread be live after no request
     // are coming from the frontend. For example, when a user finishes
     // using the service.
-    static constexpr uint64_t THREAD_LIFE_DURATION           = 10 * 60; // in seconds
-
+    static uint64_t thread_search_life; // in seconds
 
     bool continue_search {true};
 
@@ -122,6 +121,9 @@ public:
 
     pair<account_public_address, secret_key>
     get_xmr_address_viewkey() const;
+
+    static void
+    set_search_thread_life(uint64_t life_seconds);
 
 };
 
