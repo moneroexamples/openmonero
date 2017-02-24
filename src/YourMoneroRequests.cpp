@@ -38,9 +38,6 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 {
     json j_request = body_to_json(body);
 
-//    if (show_logs)
-//        print_json_log("login request: ", j_request);
-
     string xmr_address  = j_request["address"];
 
     // a placeholder for exciting or new account data
@@ -66,9 +63,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // make it 1 block lower than current, just in case.
         // this variable will be our using to initialize
         // `canned_block_height` in mysql Accounts table.
-        uint64_t current_blkchain_height = get_current_blockchain_height() - 1;
-
-        if ((acc_id = xmr_accounts->insert(xmr_address, current_blkchain_height)) != 0)
+        if ((acc_id = xmr_accounts->insert(xmr_address, get_current_blockchain_height())) != 0)
         {
             // select newly created account
             if (xmr_accounts->select(acc_id, acc))
@@ -110,21 +105,18 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 {
     json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_address_txs request: ", j_request);
-
     string xmr_address  = j_request["address"];
 
     // initialize json response
     json j_response {
-            { "total_received", "0"},           // calculated in this function
-            { "total_received_unlocked", "0"},  // calculated in this function
-            { "scanned_height", 0},       // not used. it is here to match mymonero
-            { "scanned_block_height", 0}, // taken from Accounts table
-            { "start_height", 0},         // blockchain hieght when acc was created
-            { "transaction_height", 0},   // not used. it is here to match mymonero
-            { "blockchain_height", 0},    // current blockchain height
-            { "transactions", json::array()}
+            { "total_received"         , 0},    // calculated in this function
+            { "total_received_unlocked", 0},    // calculated in this function
+            { "scanned_height"         , 0},    // not used. it is here to match mymonero
+            { "scanned_block_height"   , 0},    // taken from Accounts table
+            { "start_height"           , 0},    // blockchain hieght when acc was created
+            { "transaction_height"     , 0},    // not used. it is here to match mymonero
+            { "blockchain_height"      , 0},    // current blockchain height
+            { "transactions"           , json::array()}
     };
 
 
@@ -137,10 +129,10 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         uint64_t total_received {0};
         uint64_t total_received_unlocked {0};
 
-        j_response["total_received"] = total_received;
-        j_response["start_height"] = acc.start_height;
+        j_response["total_received"]       = total_received;
+        j_response["start_height"]         = acc.start_height;
         j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"] = CurrentBlockchainStatus::get_current_blockchain_height();
+        j_response["blockchain_height"]    = get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
@@ -265,25 +257,22 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 {
     json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_address_info request: ", j_request);
-
     string xmr_address  = j_request["address"];
 
     json j_response  {
-            {"locked_funds", "0"},       // xmr in mempool transactions
-            {"total_received", "0"},     // taken from Accounts table
-            {"total_sent", "0"},         // sum of xmr in possible spent outputs
-            {"scanned_height", 0},       // not used. it is here to match mymonero
-            {"scanned_block_height", 0}, // taken from Accounts table
-            {"start_height", 0},         // not used, but available in Accounts table.
-            // it is here to match mymonero
-            {"transaction_height", 0},   // not used. it is here to match mymonero
-            {"blockchain_height", 0},    // current blockchain height
-            {"spent_outputs", nullptr}   // list of spent outputs that we think
-            // user has spent. client side will
-            // filter out false positives since
-            // only client has spent key
+            {"locked_funds"        , 0},    // xmr in mempool transactions
+            {"total_received"      , 0},    // calculated in this function
+            {"total_sent"          , 0},    // calculated in this function
+            {"scanned_height"      , 0},    // not used. it is here to match mymonero
+            {"scanned_block_height", 0},    // taken from Accounts table
+            {"start_height"        , 0},    // not used, but available in Accounts table.
+                                            // it is here to match mymonero
+            {"transaction_height"  , 0},    // not used. it is here to match mymonero
+            {"blockchain_height"   , 0},    // current blockchain height
+            {"spent_outputs"       , nullptr} // list of spent outputs that we think
+                                              // user has spent. client side will
+                                              // filter out false positives since
+                                              // only client has spent key
     };
 
 
@@ -365,9 +354,6 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 {
     json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_unspent_outs request: ", j_request);
-
     string xmr_address      = j_request["address"];
     uint64_t mixin          = j_request["mixin"];
     bool use_dust           = j_request["use_dust"];
@@ -378,8 +364,8 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
     json j_response  {
             {"amount" , 0},            // total value of the outputs
             {"outputs", json::array()} // list of outputs
-            // exclude those without require
-            // no of confirmation
+                                       // exclude those without require
+                                       // no of confirmation
     };
 
     // a placeholder for exciting or new account data
@@ -453,27 +439,21 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                             string rtc_mask   =  pod_to_hex(rct::identity());
                             string rtc_amount(64, '0');
 
-//                                cout << "od.commitment: " << pod_to_hex(od.commitment) << endl;
-//                                cout << "rct::commit(out.amount, od.commitment): " << pod_to_hex(rct::commit(out.amount, od.commitment)) << endl;
-//                                cout << "rct::commit(out.amount, rct::identity()): " << pod_to_hex(rct::commit(out.amount, rct::identity())) << endl;
-//                                cout << "pod_to_hex(rct::zeroCommit(out.amount)): " << pod_to_hex(rct::zeroCommit(out.amount)) << endl;
-//                                cout << endl;
-
                             rct = rtc_outpk + rtc_mask + rtc_amount;
                         }
 
                         json j_out{
-                                {"amount",           out.amount},
-                                {"public_key",       out.out_pub_key},
-                                {"index",            out.out_index},
-                                {"global_index",     out.global_index},
-                                {"rct"         ,     rct},
-                                {"tx_id",            out.tx_id},
-                                {"tx_hash",          tx.hash},
-                                {"tx_prefix_hash",   tx.prefix_hash},
-                                {"tx_pub_key"    ,   out.tx_pub_key},
-                                {"timestamp",        out.timestamp},
-                                {"height",           tx.height},
+                                {"amount"          , out.amount},
+                                {"public_key"      , out.out_pub_key},
+                                {"index"           , out.out_index},
+                                {"global_index"    , out.global_index},
+                                {"rct"             , rct},
+                                {"tx_id"           , out.tx_id},
+                                {"tx_hash"         , tx.hash},
+                                {"tx_prefix_hash"  , tx.prefix_hash},
+                                {"tx_pub_key"      , out.tx_pub_key},
+                                {"timestamp"       , out.timestamp},
+                                {"height"          , tx.height},
                                 {"spend_key_images", json::array()}
                         };
 
@@ -531,16 +511,12 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 {
     json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_unspent_outs request: ", j_request);
-
     uint64_t count     = j_request["count"];
     vector<uint64_t> amounts;
 
     for (json amount: j_request["amounts"])
     {
         amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
-        //amounts.push_back(0);
     }
 
     json j_response  {
@@ -603,10 +579,7 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
 {
     json j_request = body_to_json(body);
 
-//        if (show_logs)
-//            print_json_log("get_unspent_outs request: ", j_request);
-
-    string raw_tx_blob     = j_request["tx"];
+    string raw_tx_blob = j_request["tx"];
 
     json j_response;
 
@@ -635,9 +608,6 @@ void
 YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, const Bytes & body)
 {
     json j_request = body_to_json(body);
-
-    if (show_logs)
-        print_json_log("import_wallet_request request: ", j_request);
 
     string xmr_address = j_request["address"];
 
@@ -719,8 +689,8 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
         if (request_fulfilled)
         {
-            j_response["request_fulfilled"]  = request_fulfilled;
-            j_response["status"]             = "Payment received. Thank you.";
+            j_response["request_fulfilled"] = request_fulfilled;
+            j_response["status"]            = "Payment received. Thank you.";
         }
     }
     else
@@ -742,12 +712,12 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         {
             // payment entry created
 
-            j_response["payment_id"]  = xmr_payment.payment_id;
-            j_response["import_fee"]  = xmr_payment.import_fee;
-            j_response["new_request"] = true;
+            j_response["payment_id"]        = xmr_payment.payment_id;
+            j_response["import_fee"]        = xmr_payment.import_fee;
+            j_response["new_request"]       = true;
             j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
-            j_response["payment_address"] = xmr_payment.payment_address;
-            j_response["status"] = "Payment not yet received";
+            j_response["payment_address"]   = xmr_payment.payment_address;
+            j_response["status"]            = "Payment not yet received";
         }
     }
 
@@ -816,13 +786,15 @@ multimap<string, string>
 YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
 {
     multimap<string, string> headers {
-            {"Date", get_current_time()},
-            {"Access-Control-Allow-Origin",      frontend_url},
-            {"access-control-allow-headers",     "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Set-Cookie"},
-            {"access-control-max-age",           "86400, 1728000"},
-            {"access-control-allow-methods",     "GET, POST, OPTIONS"},
+            {"Date"                            , get_current_time()},
+            {"Access-Control-Allow-Origin"     , frontend_url},
+            {"access-control-allow-headers"    , "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,"
+                                                 "X-Requested-With,If-Modified-Since,Cache-Control,"
+                                                 "Content-Type,Set-Cookie"},
+            {"access-control-max-age"          , "86400, 1728000"},
+            {"access-control-allow-methods"    , "GET, POST, OPTIONS"},
             {"access-control-allow-credentials", "true"},
-            {"Content-Type",                     "application/json"}
+            {"Content-Type"                    , "application/json"}
     };
 
     headers.insert(extra_headers.begin(), extra_headers.end());
@@ -859,10 +831,8 @@ YourMoneroRequests::get_current_blockchain_height()
 }
 
 
-// define defai;t static variables
-bool   YourMoneroRequests::show_logs    {false};
+// define default static variables
 string YourMoneroRequests::frontend_url {"http://127.0.0.1:81"};
-string YourMoneroRequests::service_url  {"http://localhost:1984"};
 
 }
 

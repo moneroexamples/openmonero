@@ -157,10 +157,6 @@ Command line options
   -p [ --port ] arg (=1984)             default port for restbed service of 
                                         Open Monero
   -b [ --bc-path ] arg                  path to lmdb blockchain
-  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
-                                        monero address string
-  -u [ --frontend-url ] arg (=http://127.0.0.1:81)
-                                        URl of the Open Monero frotnend.
   -c [ --config-file ] arg (=./config/config.json)
                                         Config file path.
 ```

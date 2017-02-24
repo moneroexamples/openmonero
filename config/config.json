@@ -1,4 +1,10 @@
 {
+  "frontend-url": "http://127.0.0.1",
+  "daemon-url" :
+  {
+    "mainnet" : "http:://127.0.0.1:18081",
+    "testnet" : "http:://127.0.0.1:28081"
+  },
   "database" :
   {
     "dbname"   : "openmonero",
@@ -20,5 +26,11 @@
       "viewkey" : ""
     }
   },
-  "refresh_block_status_every_seconds" : 10
+  "refresh_block_status_every_seconds" : 10,
+  "ssl" :
+  {
+    "enable" : false,
+    "ssl-crt": "",
+    "ssl-key": ""
+  }
 }

@@ -46,10 +46,7 @@ class YourMoneroRequests
 
 public:
 
-    static bool show_logs;
-
     static string frontend_url;
-    static string service_url;
 
     YourMoneroRequests(shared_ptr<MySqlAccounts> _acc);
 

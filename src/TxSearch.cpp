@@ -73,7 +73,7 @@ TxSearch::search()
 
         if (loop_idx % 5 == 0)
         {
-            // get loop time every second iteration. no need to call it
+            // get loop time every fith iteration. no need to call it
             // all the time.
             loop_timestamp = chrono::duration_cast<chrono::seconds>(
                     chrono::system_clock::now().time_since_epoch()).count();
@@ -90,7 +90,8 @@ TxSearch::search()
         }
 
 
-        if (searched_blk_no > CurrentBlockchainStatus::current_height) {
+        if (searched_blk_no > CurrentBlockchainStatus::current_height)
+        {
             fmt::print("searched_blk_no {:d} and current_height {:d}\n",
                        searched_blk_no, CurrentBlockchainStatus::current_height);
 

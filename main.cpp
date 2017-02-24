@@ -28,16 +28,12 @@ if (*help_opt)
 
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
-auto use_ssl_opt      = opts.get_option<bool>("use-ssl");
-auto deamon_url_opt   = opts.get_option<string>("deamon-url");
 auto port_opt         = opts.get_option<string>("port");
 auto bc_path_opt      = opts.get_option<string>("bc-path");
-auto frontend_url_opt = opts.get_option<string>("frontend-url");
 auto config_file_opt  = opts.get_option<string>("config-file");
 
 
 bool testnet          = *testnet_opt;
-bool use_ssl          = *use_ssl_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
 //cast port number in string to uint16
@@ -78,12 +74,9 @@ catch (const std::exception& e)
     return EXIT_FAILURE;
 }
 
-string deamon_url {*deamon_url_opt};
-
-if (testnet && deamon_url == "http:://127.0.0.1:18081")
-{
-    deamon_url = "http:://127.0.0.1:28081";
-}
+string deamon_url = testnet
+                    ? config_json["daemon-url"]["testnet"]
+                    : config_json["daemon-url"]["mainnet"];
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
@@ -92,8 +85,10 @@ xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 // set blockchain status monitoring thread parameters
-xmreg::CurrentBlockchainStatus::set_blockchain_path(blockchain_path.string());
-xmreg::CurrentBlockchainStatus::set_testnet(testnet);
+xmreg::CurrentBlockchainStatus::blockchain_path
+        =  blockchain_path.string();
+xmreg::CurrentBlockchainStatus::testnet
+        = testnet;
 xmreg::CurrentBlockchainStatus::do_not_relay
         = do_not_relay;
 xmreg::CurrentBlockchainStatus::deamon_url
@@ -143,11 +138,11 @@ xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 
 // create REST JSON API services
-xmreg::YourMoneroRequests::show_logs = true;
 
 // Open Monero frontend url.  Frontend url must match this value in
 // server. Otherwise CORS problems between frontend and backend can occure
-xmreg::YourMoneroRequests::frontend_url = *frontend_url_opt;
+xmreg::YourMoneroRequests::frontend_url
+        = config_json["frontend-url"];
 
 xmreg::YourMoneroRequests your_xmr(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
@@ -199,7 +194,7 @@ service.publish(get_version);
 
 auto settings = make_shared<Settings>( );
 
-if (use_ssl)
+if (config_json["ssl"]["enable"])
 {
     auto ssl_settings = make_shared<SSLSettings>( );
 

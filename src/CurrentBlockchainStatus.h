@@ -86,12 +86,6 @@ struct CurrentBlockchainStatus
     static void
     update_current_blockchain_height();
 
-    static void
-    set_blockchain_path(const string &path);
-
-    static void
-    set_testnet(bool is_testnet);
-
     static bool
     init_monero_blockchain();
 

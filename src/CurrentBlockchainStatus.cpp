@@ -117,23 +117,11 @@ CurrentBlockchainStatus::update_current_blockchain_height()
     current_height = get_current_blockchain_height();
 }
 
-void
-CurrentBlockchainStatus::set_blockchain_path(const string &path)
-{
-    blockchain_path = path;
-}
-
-void
-CurrentBlockchainStatus::set_testnet(bool is_testnet)
-{
-    testnet = is_testnet;
-}
-
 bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
     // set  monero log output level
-   //uint32_t log_level = 0;
+    uint32_t log_level = 0;
     mlog_configure(mlog_get_default_log_path(""), true);
     //mlog_set_log(std::string(std::to_string(log_level) + ",open-monero:INFO").c_str());
 
