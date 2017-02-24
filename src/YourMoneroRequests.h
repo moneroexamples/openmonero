@@ -87,6 +87,9 @@ public:
     void
     import_wallet_request(const shared_ptr< Session > session, const Bytes & body);
 
+    void
+    get_version(const shared_ptr< Session > session, const Bytes & body);
+
     shared_ptr<Resource>
     make_resource(function< void (YourMoneroRequests&, const shared_ptr< Session >, const Bytes& ) > handle_func,
                   const string& path);

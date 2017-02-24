@@ -168,6 +168,9 @@ auto import_wallet_request = your_xmr.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request,
         "/import_wallet_request");
 
+auto get_version = your_xmr.make_resource(
+        &xmreg::YourMoneroRequests::get_version,
+        "/get_version");
 
 // restbed service
 Service service;
@@ -180,6 +183,7 @@ service.publish(get_unspent_outs);
 service.publish(get_random_outs);
 service.publish(submit_raw_tx);
 service.publish(import_wallet_request);
+service.publish(get_version);
 
 auto settings = make_shared<Settings>( );
 

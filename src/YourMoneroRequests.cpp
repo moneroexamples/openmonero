@@ -758,6 +758,25 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
     session->close( OK, response_body, response_headers);
 }
 
+
+void
+YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes & body)
+{
+
+    json j_response {
+        {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
+        {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
+        {"monero_version_full" , string {MONERO_VERSION_FULL}},
+    };
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
 shared_ptr<Resource>
 YourMoneroRequests::make_resource(
         function< void (YourMoneroRequests&, const shared_ptr< Session >, const Bytes& ) > handle_func,
