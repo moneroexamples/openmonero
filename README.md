@@ -61,31 +61,6 @@ The Open Monero consists of four components that need to be setup for it to work
 
 Below are example and basic instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
 
-#### Mysql/Mariadb
-
-```bash
-sudo apt update 
-sudo apt install mysql-server
-sudo mysql_secure_installation
-```
-
-Download `openmonero.sql` provided and setup the `openmonero` database. `openmonero.sql` script will
-drop current `openmonero` if exist. So don't run it, if you have already some important information
-in the `openmonero` database.
-
-```bash
-# download the sql file
-wget https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/sql/openmonero.sql
-
-# apply it to mysql
-mysql -p -u root < ./openmonero.sql
-```
-
-#### Lighttpd
-
-```bash
-sudo apt-get install lighttpd
-```
 
 #### Monero libraries
 
@@ -93,7 +68,11 @@ Monero's libraries and header files are setup is described here:
 
 - [compile-monero-on-ubuntu-16-04](https://github.com/moneroexamples/compile-monero-09-on-ubuntu-16-04)
 
-#### Compilation of the Open Monero
+#### Compilation of the Open Monero (don't run it yet)
+
+Download Open Monero and compile it. In fact we could postpone compilation to later, but 
+we can just do it now, to see if it compiles. But don't run it yet. It will not
+work without database, setup frontend, and synced and running monero blockchain.
 
 ```bash
 # need mysql++ libraries 
@@ -110,7 +89,39 @@ cmake ..
 make
 ```
 
+#### Mysql/Mariadb
+
+```bash
+sudo apt update 
+sudo apt install mysql-server
+sudo mysql_secure_installation
+```
+
+Download `openmonero.sql` provided and setup the `openmonero` database. `openmonero.sql` script will
+drop current `openmonero` if exist. So don't run it, if you have already some important information
+in the `openmonero` database.
+
+Assuming we are still in `build` folder:
+
+```bash
+# apply it to mysql
+mysql -p -u root < ../sql/openmonero.sql
+```
+
+#### Lighttpd and frontend
+
+```bash
+sudo apt-get install lighttpd
+```
+Assuming we are still in `build` folder, copy frontend source files into lighttpd www folder.
+
+```bash
+sudo cp -rvf ../html/ /var/www/html
+```
+
 #### Run Open Monero
+
+
 
 ## Scrap notes
 
