@@ -440,7 +440,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                             amount, global_amount_index);
 
                             string rtc_outpk  = pod_to_hex(od.commitment);
-                            string rtc_mask   =  pod_to_hex(rct::identity());
+                            string rtc_mask   = pod_to_hex(rct::identity());
                             string rtc_amount(64, '0');
 
                             rct = rtc_outpk + rtc_mask + rtc_amount;
@@ -515,9 +515,12 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 {
     json j_request = body_to_json(body);
 
-    uint64_t count     = j_request["count"];
+    uint64_t count = j_request["count"];
+
     vector<uint64_t> amounts;
 
+    // populate amounts vector so that we can pass it directly to
+    // daeamon to get random outputs for these amounts
     for (json amount: j_request["amounts"])
     {
         amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
@@ -528,7 +531,6 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
     };
 
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
-
 
     if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
     {
@@ -594,7 +596,7 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
             CurrentBlockchainStatus::do_not_relay))
     {
         j_response["status"] = "error";
-        j_response["error"] = error_msg;
+        j_response["error"]  = error_msg;
     }
     else
     {

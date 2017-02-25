@@ -12,6 +12,7 @@ set(SOURCE_FILES
 		ssqlses.cpp
 		YourMoneroRequests.cpp
 		TxSearch.cpp
+		rpccalls.cpp
 		OutputInputIdentification.cpp
 		version.h.in)
 

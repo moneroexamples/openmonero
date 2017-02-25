@@ -48,7 +48,7 @@ nlohmann::json config_json;
 
 try
 {
-    // try reading and parsing confing file provided
+    // try reading and parsing json config file provided
     std::ifstream i(*config_file_opt);
     i >> config_json;
 }
