@@ -179,12 +179,16 @@ openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 openssl dhparam -out dh2048.pem 2048
 ```
  
-### Test connection using curl
+### API calls
 
-Example of curl https request to the service
+Check if Open Monero REST service is working 
 
 ```bash
-curl -k -X POST -d '{"withCredentials":true,"address":"41pJD13rU5r3KZsxzS65tL9zLMpZZCer8aWSi7wj8Xm99BAgXthcj2wgazxdTX9auFAmp3czfJUGH2S3UJfLwDWXUxc3ooC","view_key":"06d1f0f0fd766c75b52b9c597592d06f4bca5cd6dcd3e9bf1859bc78d0d5f80e","create_account":true}' https://localhost:1984/login
+curl  -X POST http://139.162.32.245:1984/get_version
+```
+Example output:
+```
+{"last_git_commit_date":"2017-02-25","last_git_commit_hash":"f2008aa","monero_version_full":"0.10.2.1-release"}
 ```
 
 ## Other examples
