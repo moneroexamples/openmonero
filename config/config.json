@@ -9,7 +9,7 @@
   {
     "_comment": "if paths are empty, default Monero paths will be used",
     "mainnet" : "",
-    "testnet" : "/home/mwo/testnet/node_01/lmdb"
+    "testnet" : ""
   },
   "database" :
   {
