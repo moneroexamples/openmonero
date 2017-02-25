@@ -431,7 +431,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                         string rct = out.get_rct();
 
                         // coinbaser rct txs require speciall treatment
-                        if (tx.coinbase)
+                        if (tx.coinbase && tx.is_rct)
                         {
                             uint64_t amount  = (tx.is_rct ? 0 : out.amount);
 
