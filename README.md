@@ -1,4 +1,4 @@
-# Open Monero - a fully open source implementation of MyMonero
+# Open Monero - a fully open sourced implementation of MyMonero
 
 In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
  provide Monero related JSON REST service. For this purpose, 
@@ -6,11 +6,12 @@ In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
 
 
 Open Monero is an open source implementation of backend of
-https://mymonero.com/. The frontend, which includes HTML, CSS, JavaScript were adapted
+https://mymonero.com/. The frontend, which includes HTML, CSS, JavaScript, was adapted
 from (and originally developed by) https://mymonero.com/. 
 
 Unlike MyMonero, Open Monero's backend is open sourced, free
-to use, host and modify. Additionally, the following features were added/changed:
+to use, host and modify. Additionally, some features were added/changed. 
+They include:
 
  - google analytics, cloudflare, images and flash were removed.
  - transaction fees were set to zero (MyMonero also has now them zero due to problem with its RingCT).
@@ -20,24 +21,12 @@ to use, host and modify. Additionally, the following features were added/changed
  - added support of testnet network and mainnet network without relying transactions
  - improved handling of mempool, coinbase, locked and unlocked transactions.
  - added dynamic fees for testnet.
- - minimum mixin set to 4.
+ - minimum mixin set to 4 for the next hard fork.
+
    
 ## Screenshot
 
 ![Open Monero](https://raw.githubusercontent.com/moneroexamples/openmonero/master/screenshot/screen1.png)
-
-   
-## Limitations
-
-#### Performance
-
-Open Monero is not as fast as MyMonero. This is because it is basic, easy to understand
- and straight forward implementation of the backend. Thus, it does not use any catching
- of transactions, blocks, complex database structures and SQL queries. Also, no ongoing 
- monitoring of user's transactions is happening, since viewkey is not stored. Transaction
- search threads start when user logs in (viewkey and address are submitted to the search thread), 
- and finish shorty after logout. Once the search thread stops, 
- they can't be restarted without user logging in back, as Open Monero does not store viewkeys.
 
 
 ## Host it yourself
@@ -54,7 +43,21 @@ The Open Monero consists of four components that need to be setup for it to work
  - Backend - fully written in C++. It uses [restbed](https://github.com/Corvusoft/restbed/) to serve JSON REST to the frontend 
  and [mysql++](http://www.tangentsoft.net/mysql++/) to interface the database. It also accesses Monero blockchain and "talks"
  with Monero deamon.
- 
+    
+   
+## Limitations
+
+#### Performance
+
+Open Monero is not as fast as MyMonero. This is because it is basic, easy to understand
+ and straight forward implementation of the backend. Thus, it does not use any catching
+ of transactions, blocks, complex database structures and SQL queries. Also, no ongoing 
+ monitoring of user's transactions is happening, since viewkey is not stored. Transaction
+ search threads start when user logs in (viewkey and address are submitted to the search thread), 
+ and finish shorty after logout. Once the search threads stop, 
+ they can't be restarted without user logging in back, because viewkey is unknown.
+
+
 
 ## Example setup on Ubuntu 16.04 
 
@@ -151,11 +154,8 @@ Command line options
   --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
                                         useful when testing construction and 
                                         submiting txs
-  --use-ssl [=arg(=1)] (=0)             whether to use ssl (i.e., https) or 
-                                        not.
   -p [ --port ] arg (=1984)             default port for restbed service of 
                                         Open Monero
-  -b [ --bc-path ] arg                  path to lmdb blockchain
   -c [ --config-file ] arg (=./config/config.json)
                                         Config file path.
 ```
@@ -178,17 +178,6 @@ openssl req -new -key server.key -out server.csr
 openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 openssl dhparam -out dh2048.pem 2048
 ```
-
-### Enable it in Firefox or Chrome
-
-Firefox and chrome will not work with that certificate as they cant verify it. 
-To overcome this for development purposes on localhost, just open new tab in the browser used
-and go to any link from the service, e.g., `https://localhost:1984/login`. Once you do this,
-you should get warring about unsecured or un verified certificate. Then you just add it manually
-as exception.
-
-Also Open Monero generates uses 25 word seeds, which are fully comptabilite with `monero-wallet-cli`
-and `monero-core`.
  
 ### Test connection using curl
 
