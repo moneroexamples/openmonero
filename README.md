@@ -1,10 +1,9 @@
-# JSON REST service for Monero
+# Open Monero - a fully open source implementation of MyMonero
 
-Example of using [restbed](https://github.com/Corvusoft/restbed/) to
+In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
  provide Monero related JSON REST service. For this purpose, 
  a service called Open Monero was developed.
 
-##  Open Monero 
 
 Open Monero is an open source implementation of backend of
 https://mymonero.com/. The frontend, which includes HTML, CSS, JavaScript were adapted
@@ -25,7 +24,7 @@ to use, host and modify. Additionally, the following features were added/changed
    
 ## Screenshot
 
-![Open Monero](https://raw.githubusercontent.com/moneroexamples/restbed-xmr/master/screenshot/screen1.png)
+![Open Monero](https://raw.githubusercontent.com/moneroexamples/openmonero/master/screenshot/screen1.png)
 
    
 ## Limitations
@@ -78,9 +77,9 @@ work without database, setup frontend, and synced and running monero blockchain.
 # need mysql++ libraries 
 sudo apt install libmysql++-dev 
 
-git clone https://github.com/moneroexamples/restbed-xmr.git
+git clone https://github.com/moneroexamples/openmonero.git
 
-cd restbed-xmr
+cd openmonero
 
 mkdir build && cd build
 
