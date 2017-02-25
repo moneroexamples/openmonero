@@ -126,10 +126,10 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                 $q.all(promises).then(function() {
                     $scope.locked_balance = new JSBigInt(data.locked_funds || 0);
                     $scope.total_sent = new JSBigInt(data.total_sent || 0);
-                    $scope.account_scanned_tx_height = data.scanned_height || 0;
+                    //$scope.account_scanned_tx_height = data.scanned_height || 0;
                     $scope.account_scanned_block_height = data.scanned_block_height || 0;
                     $scope.account_scan_start_height = data.start_height || 0;
-                    $scope.transaction_height = data.transaction_height || 0;
+                    //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
                 });
             });
@@ -143,7 +143,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     $scope.account_scanned_height = data.scanned_height || 0;
                     $scope.account_scanned_block_height = data.scanned_block_height || 0;
                     $scope.account_scan_start_height = data.start_height || 0;
-                    $scope.transaction_height = data.transaction_height || 0;
+                    //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
                     var transactions = data.transactions || [];
                     for (var i = 0; i < transactions.length; ++i) {

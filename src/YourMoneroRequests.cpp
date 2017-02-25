@@ -114,7 +114,6 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             { "scanned_height"         , 0},    // not used. it is here to match mymonero
             { "scanned_block_height"   , 0},    // taken from Accounts table
             { "start_height"           , 0},    // blockchain hieght when acc was created
-            { "transaction_height"     , 0},    // not used. it is here to match mymonero
             { "blockchain_height"      , 0},    // current blockchain height
             { "transactions"           , json::array()}
     };
@@ -143,12 +142,19 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
             for (XmrTransaction tx: txs)
             {
-                json j_tx = tx.to_json();
-
-                // mark that this is from blockchain.
-                // tx stored in mysql/mariadb are only from blockchain
-                // and never from mempool.
-                j_tx["mempool"] = false;
+                json j_tx {
+                    {"id"             , tx.id}, // strangely, frontend sorts txs by id in database.
+                    {"coinbase"       , bool {tx.coinbase}},
+                    {"hash"           , tx.hash},
+                    {"height"         , tx.height},
+                    {"mixin"          , tx.mixin},
+                    {"payment_id"     , tx.payment_id},
+                    {"unlock_time"    , tx.unlock_time},
+                    {"total_sent"     , 0},    // to be field when checking for spent_outputs below
+                    {"total_received" , tx.total_received},
+                    {"timestamp"      , tx.timestamp},
+                    {"mempool"        , false} // tx in database are never from mempool
+                };
 
                 vector<XmrInput> inputs;
 
@@ -172,7 +178,6 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                                     {"tx_pub_key" , out.tx_pub_key},
                                     {"out_index"  , out.out_index},
                                     {"mixin"      , out.mixin}});
-
                         }
                     }
 
@@ -260,14 +265,13 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     string xmr_address  = j_request["address"];
 
     json j_response  {
-            {"locked_funds"        , 0},    // xmr in mempool transactions
+            {"locked_funds"        , 0},    // locked xmr (e.g., younger than 10 blocks)
             {"total_received"      , 0},    // calculated in this function
             {"total_sent"          , 0},    // calculated in this function
             {"scanned_height"      , 0},    // not used. it is here to match mymonero
             {"scanned_block_height", 0},    // taken from Accounts table
             {"start_height"        , 0},    // not used, but available in Accounts table.
                                             // it is here to match mymonero
-            {"transaction_height"  , 0},    // not used. it is here to match mymonero
             {"blockchain_height"   , 0},    // current blockchain height
             {"spent_outputs"       , nullptr} // list of spent outputs that we think
                                               // user has spent. client side will
