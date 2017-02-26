@@ -190,7 +190,7 @@ openssl dhparam -out dh2048.pem 2048
 Check if Open Monero REST service is working 
 
 ```bash
-curl  -X POST http://139.162.32.245:1984/get_version
+curl  -w "\n" -X POST http://139.162.32.245:1984/get_version
 ```
 Example output:
 ```
