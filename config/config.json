@@ -13,10 +13,10 @@
   },
   "database" :
   {
-    "dbname"   : "openmonero",
-    "password" : "some_1_sercret_55",
     "url"      : "127.0.0.1",
-    "user"     : "openmonero"
+    "dbname"   : "openmonero",
+    "user"     : "root",
+    "password" : "root"
   },
   "wallet_import" :
   {

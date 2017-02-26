@@ -23,6 +23,12 @@ They include:
  - added dynamic fees for testnet.
  - minimum mixin set to 4 for the next hard fork.
 
+## Testnet version
+
+- [http://139.162.32.245:81](http://139.162.32.245:81)
+
+This is Open Monero running on testnet network. You can use it to play around with it. 
+Since this is testnet version, frequent changes and database resets are expected.
    
 ## Screenshot
 

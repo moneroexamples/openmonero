@@ -373,7 +373,9 @@ TxSearch::search()
                     for (XmrInput& in_data: inputs_found)
                     {
                         in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
+
                         uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
+
                     }
 
                 } //  if (!inputs_found.empty())
