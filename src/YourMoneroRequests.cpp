@@ -743,6 +743,8 @@ YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes
         {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
         {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
         {"monero_version_full" , string {MONERO_VERSION_FULL}},
+        {"monero_version_full" , string {MONERO_VERSION_FULL}},
+        {"blockchain_height"   , get_current_blockchain_height()}
     };
 
     string response_body = j_response.dump();

@@ -13,6 +13,7 @@ thinwalletCtrls.controller('TempCtrl', function ($scope, $http) {
             $scope.version = "Open Monero version: "
                 + data.last_git_commit_date + "-" + data.last_git_commit_hash
                 + "  | Monero version: " + data.monero_version_full
+                + "  | Blockchain height: " + data.blockchain_height
 
         })
         .error(function(data) {
