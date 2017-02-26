@@ -166,6 +166,28 @@ Command line options
                                         Config file path.
 ```
 
+Before running `openmonero`: 
+
+ - make sure you have `Downloads` folder in your home directory. 
+ Time library used in Open Monero stores there time zone offsets database that it uses.
+ - edit `config/confing.js` file with your settings. Especially set `frontend-url` and `database`
+ connection details.
+ - set `apiUrl` in `html\js\config.js`. Last slash `/` in `apiUrl` is important.
+ - make sure monero deamon is running and fully sync. If using testnet network, use deamon
+ with testnet flag!
+   
+
+To start for mainnet: 
+```bash
+./openmonero
+```
+
+To start for testnet: 
+```bash
+./openmonero -t
+```
+   
+
 
 ## Scrap notes
 
