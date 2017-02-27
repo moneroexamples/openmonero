@@ -10,7 +10,9 @@
 
                 <div class="subhead-text modal">
                     Don’t yet have an account?&nbsp;
-                    <a class="login-link" data-ix="close-overlay" hide-modal href="#/create-your-account">Create a Monero account</a>
+                    <a class="login-link" data-ix="close-overlay" hide-modal href="#/create-your-account">
+                        Create a Monero account
+                    </a>
                 </div>
             </div>
             <div class="form-div">
@@ -20,7 +22,7 @@
                             <div>Login with Private Login Key</div>
                         </a>
                         <a class="w-tab-link w-inline-block tab-link-2" ng-class="{'w--current': tab_number == 2}" data-w-tab="Tab 2" ng-click="set_tab(2)">
-                            <div>Login with Public Key</div>
+                            <div>Login with Address and viewkey</div>
                         </a>
                     </div>
                     <div class="w-tab-content">
@@ -60,9 +62,13 @@
                                     <input class="w-input form-layout" id="view-key" type="text" placeholder="Enter your view key here"
                                            name="View-Key" data-name="View Key" autocomplete="off" required="required" ng-model="view_key">
                                     <label class="field-label" for="spend-key">Spend Key</label>
-                                    <input class="w-input form-layout" id="spend-key" type="text" placeholder="Enter your spend key here"
-                                           name="Spend-Key" data-name="Spend Key" autocomplete="off" required="required" ng-model="spend_key">
-
+                                    <input class="w-input form-layout" id="spend-key" type="text" placeholder="Optionally, enter your spend key here."
+                                           name="Spend-Key" data-name="Spend Key" autocomplete="off" ng-model="spend_key">
+                                    <div class="subhead-text modal">
+                                       Without spendkey, you will login in a view only mode.
+                                        Only incoming transactions will be shown, and
+                                        sending transactions will not be possible.
+                                    </div>
                                     <div class="submit-div">
                                         <input class="w-button login-btn pointer" id="form-submit2" type="submit" value="Enter my account"
                                                data-wait="Please wait...">
@@ -71,6 +77,7 @@
                                         <p>{{error}}</p>
                                     </div>
                                 </form>
+
                             </div>
                         </div>
                     </div>

@@ -22,6 +22,7 @@ They include:
  - improved handling of mempool, coinbase, locked and unlocked transactions.
  - added dynamic fees for testnet.
  - minimum mixin set to 4 for the next hard fork.
+ - view only mode - no spendkey required for frontend.
 
 ## Testnet version
 

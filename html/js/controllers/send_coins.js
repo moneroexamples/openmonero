@@ -34,6 +34,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
     $scope.targets = [{}];
     $scope.totalAmount = JSBigInt.ZERO;
     $scope.mixins = config.defaultMixin;
+    $scope.view_only = AccountService.isViewOnly();
 
     $scope.success_page = false;
     $scope.sent_tx = {};

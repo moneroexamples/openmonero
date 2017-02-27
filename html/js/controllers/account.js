@@ -106,22 +106,31 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                 address: AccountService.getAddress(),
                 view_key: AccountService.getViewKey()
             }).success(function(data) {
+
                 var promises = [];
-                for (var i = 0; i < (data.spent_outputs || []).length; ++i) {
+
+                var view_only = AccountService.isViewOnly();
+
+                for (var i = 0; i < (data.spent_outputs || []).length; ++i)
+                {
                     var deferred = $q.defer();
                     promises.push(deferred.promise);
-                    (function(deferred, spent_output) {
-                        setTimeout(function() {
-                            var key_image = AccountService.cachedKeyImage(
-                                spent_output.tx_pub_key,
-                                spent_output.out_index
-                            );
-                            if (spent_output.key_image !== key_image) {
-                                data.total_sent = new JSBigInt(data.total_sent).subtract(spent_output.amount);
-                            }
-                            deferred.resolve();
-                        }, 0);
-                    })(deferred, data.spent_outputs[i]);
+
+                    if (view_only === false)
+                    {
+                        (function(deferred, spent_output) {
+                            setTimeout(function() {
+                                var key_image = AccountService.cachedKeyImage(
+                                    spent_output.tx_pub_key,
+                                    spent_output.out_index
+                                );
+                                if (spent_output.key_image !== key_image) {
+                                    data.total_sent = new JSBigInt(data.total_sent).subtract(spent_output.amount);
+                                }
+                                deferred.resolve();
+                            }, 0);
+                        })(deferred, data.spent_outputs[i]);
+                    }
                 }
                 $q.all(promises).then(function() {
                     $scope.locked_balance = new JSBigInt(data.locked_funds || 0);
@@ -137,7 +146,11 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     };
 
     $scope.fetchTransactions = function() {
-        if (AccountService.loggedIn()) {
+        if (AccountService.loggedIn())
+        {
+
+            var view_only = AccountService.isViewOnly();
+
             $http.post(config.apiUrl + 'get_address_txs', AccountService.getAddressAndViewKey())
                 .success(function(data) {
                     $scope.account_scanned_height = data.scanned_height || 0;
@@ -149,30 +162,54 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     for (var i = 0; i < transactions.length; ++i) {
                         if ((transactions[i].spent_outputs || []).length > 0)
                         {
-                            for (var j = 0; j < transactions[i].spent_outputs.length; ++j)
+                            if (view_only === false)
                             {
-                                var key_image = AccountService.cachedKeyImage(
-                                    transactions[i].spent_outputs[j].tx_pub_key,
-                                    transactions[i].spent_outputs[j].out_index
-                                );
-                                if (transactions[i].spent_outputs[j].key_image !== key_image)
+                                for (var j = 0; j < transactions[i].spent_outputs.length; ++j)
                                 {
-                                    transactions[i].total_sent = new JSBigInt(transactions[i].total_sent).subtract(transactions[i].spent_outputs[j].amount).toString();
-                                    transactions[i].spent_outputs.splice(j, 1);
-                                    j--;
+                                    var key_image = AccountService.cachedKeyImage(
+                                        transactions[i].spent_outputs[j].tx_pub_key,
+                                        transactions[i].spent_outputs[j].out_index
+                                    );
+                                    if (transactions[i].spent_outputs[j].key_image !== key_image)
+                                    {
+                                        transactions[i].total_sent = new JSBigInt(transactions[i].total_sent).subtract(transactions[i].spent_outputs[j].amount).toString();
+                                        transactions[i].spent_outputs.splice(j, 1);
+                                        j--;
+                                    }
                                 }
+
                             }
                         }
-                        if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0)
-                        {
-                            transactions.splice(i, 1);
-                            i--;
-                            continue;
-                        }
-
                         //console.log(transactions[i].total_received, transactions[i].total_sent);
 
-                        transactions[i].amount = new JSBigInt(transactions[i].total_received || 0).subtract(transactions[i].total_sent || 0).toString();
+                        if (view_only === false)
+                        {
+
+                            if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0)
+                            {
+                                transactions.splice(i, 1);
+                                i--;
+                                continue;
+                            }
+
+
+                            transactions[i].amount = new JSBigInt(transactions[i].total_received || 0)
+                                .subtract(transactions[i].total_sent || 0).toString();
+                        }
+                        else
+                        {
+                            //remove tx if zero xmr recievied. probably spent only tx,
+                            //but we dont have spendkey to verify this.
+                            if (new JSBigInt(transactions[i].total_received).compare(0) === true)
+                            {
+                                transactions.splice(i, 1);
+                                i--;
+                                continue;
+                            }
+                            transactions[i].amount = new JSBigInt(transactions[i].total_received).toString();
+
+                        }
+
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
                         transactions[i].timestamp = new Date(transactions[i].timestamp);
                     }

@@ -10,7 +10,7 @@
 // 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
-//    materials provided with the distribution.
+//    materials provided wit      $interval.cancel(fetchInterval);h the distribution.
 // 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
@@ -26,7 +26,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller('TransactionsCtrl', function ($scope, $rootScope, $http, $interval) {
+thinwalletCtrls.controller('TransactionsCtrl', function ($scope, $rootScope, $http, $interval, AccountService) {
     "use strict";
 
     $scope.pageNum = 0;
@@ -34,6 +34,8 @@ thinwalletCtrls.controller('TransactionsCtrl', function ($scope, $rootScope, $ht
 
     $scope.predicate = 'id';
     $scope.reverse = true;
+
+    $scope.view_only = AccountService.isViewOnly();
 
     $scope.predicateIcon = function(expected) {
         if ($scope.predicate === expected) {
