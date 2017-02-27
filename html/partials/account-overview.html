@@ -6,7 +6,14 @@
       <div class="w-row">
         <div class="w-col w-col-6">
           <h1>Account Overview</h1>
-          <div class="subhead-text inner overview-page">Your account overview and recent transactions.</div>
+          <div class="subhead-text inner overview-page">
+            Your account overview and recent transactions.
+            <span ng-show="view_only"><rb/>This is <b>view only</b> wallet.
+              <br/>Balance and transactions do not account for any spendings.
+              Thus if there were any spendings made, the balance here
+              will be incorrect.
+            </span>
+          </div>
         </div>
         <div class="w-col w-col-6">
           <div class="balance-div">

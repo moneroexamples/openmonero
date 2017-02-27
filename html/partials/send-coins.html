@@ -1,6 +1,8 @@
 <div ng-include src="'partials/account-nav.html'"></div>
 
+<!--
 <div ng-include src="'modals/openalias-confirm.html'" ng-show="openaliasDialog"></div>
+-->
 
 <div class="body-section">
     <div class="w-container">
@@ -36,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="w-container middle-container send">
+    <div class="w-container middle-container send" ng-show="!view_only">
         <div class="middle-div send" ng-show="!success_page">
             <div class="w-form send-form">
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
@@ -100,6 +102,11 @@
                     <input class="w-button send-btn" type="submit" value="Send Another Payment" data-wait="Please wait...">
                 </form>
             </div>
+        </div>
+    </div>
+    <div class="w-container middle-container send" ng-show="view_only">
+        <div class="w-col w-col-11">
+            <div class="middle-text ">View only wallets can't sent any transactions, as spendkey is unknown</div>
         </div>
     </div>
 </div>

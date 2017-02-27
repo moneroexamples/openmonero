@@ -33,6 +33,8 @@ thinwalletCtrls.controller('AccountOverviewCtrl', function ($scope, $rootScope, 
     var fetchInterval = $interval($scope.fetchTransactions, 10 * 1000);
     $scope.fetchTransactions();
 
+    $scope.view_only = AccountService.isViewOnly();
+
     $scope.$on('$destroy', function () {
         $interval.cancel(fetchInterval);
     });

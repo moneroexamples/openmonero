@@ -154,6 +154,9 @@ thinwalletServices
         accountService.getSpendKey = function() {
             return private_keys.spend;
         };
+        accountService.isViewOnly = function() {
+            return view_only;
+        };
         accountService.getSeed = function() {
             return account_seed;
         };
