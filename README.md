@@ -28,7 +28,10 @@ They include:
 - [http://139.162.32.245:81](http://139.162.32.245:81)
 
 This is Open Monero running on testnet network. You can use it to play around with it. 
-Since this is testnet version, frequent changes and database resets are expected.
+Since this is testnet version, frequent changes and database resets are expected. 
+
+If you want some testnet monero, please make issue with your testnet address that you can
+obtained from Open Monero.
    
 ## Screenshot
 
@@ -173,7 +176,7 @@ Before running `openmonero`:
  - edit `config/confing.js` file with your settings. Especially set `frontend-url` and `database`
  connection details.
  - set `apiUrl` in `html\js\config.js`. Last slash `/` in `apiUrl` is important.
- - make sure monero deamon is running and fully sync. If using testnet network, use deamon
+ - make sure monero daemon is running and fully sync. If using testnet network, use daemon
  with testnet flag!
    
 
@@ -187,7 +190,11 @@ To start for testnet:
 ./openmonero -t
 ```
    
+To start for testnet with non-default location of `config.json` file:
 
+```bash
+./openmonero -t -c /path/to/config.js
+```
 
 ## Scrap notes
 

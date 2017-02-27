@@ -663,8 +663,16 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
         return false;
     }
 
-    // make a tx_search object for the given xmr account
-    searching_threads[acc.address] = make_shared<TxSearch>(acc);
+    try
+    {
+        // make a tx_search object for the given xmr account
+        searching_threads[acc.address] = make_shared<TxSearch>(acc);
+    }
+    catch (const std::exception& e)
+    {
+        cerr << "Faild created a search thread " << endl;
+        return false;
+    }
 
     // start the thread for the created object
     std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};

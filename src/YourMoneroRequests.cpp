@@ -91,6 +91,12 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     if (CurrentBlockchainStatus::start_tx_search_thread(acc))
     {
         cout << "Search thread started" << endl;
+        j_response["status"] = "OK";
+    }
+    else
+    {
+        j_response["status"] = "error";
+        j_response["reason"] = "Failed created search thread for this account";
     }
 
     string response_body = j_response.dump();

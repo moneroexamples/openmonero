@@ -749,6 +749,8 @@ MySqlAccounts::insert(const string& address, const uint64_t& current_blkchain_he
         // set to current blockchain height
         // when account is created.
 
+        //cout << "insert address: " << address << endl;
+
         SimpleResult sr = query.execute(address,
                                         current_blkchain_height,
                                         current_blkchain_height);

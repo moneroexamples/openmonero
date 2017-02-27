@@ -107,6 +107,12 @@ thinwalletServices
                     })
                     .success(function(data) {
                         // set account_imported to true if we are not logging in with a newly generated account, and a new account was created on the server
+                        if (data.status === "error")
+                        {
+                            accountService.logout();
+                            deferred.reject(data.reason);
+                            return;
+                        }
                         account_imported = !generated_account && data.new_address;
                         logging_in = false;
                         $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
