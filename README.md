@@ -24,6 +24,16 @@ They include:
  - minimum mixin set to 4 for the next hard fork.
  - view only mode - no spendkey required for frontend.
    
+## Testnet version
+
+- [http://139.162.32.245:81](http://139.162.32.245:81)
+
+This is Open Monero running on testnet network. You can use it to play around with it. 
+Since this is testnet version, frequent changes and database resets are expected. 
+
+If you want some testnet monero, please make issue with your testnet address that you can
+obtained from Open Monero.   
+   
 ## Screenshot
 
 ![Open Monero](https://raw.githubusercontent.com/moneroexamples/openmonero/master/screenshot/screen1.png)

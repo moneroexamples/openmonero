@@ -31,10 +31,10 @@
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
                                       ng-submit="login_mnemonic(mnemonic, mnemonic_language)" form-autofill-fix>
                                     <label class="field-label" for="Login-Key">Your Private Login Key</label>
-                                    <input class="w-input form-layout" id="Login-Key" type="text" placeholder="Enter your Private Login Key here"
+                                    <input class="w-input" id="Login-Key" type="text" placeholder="Enter your Private Login Key here"
                                            name="Login-Key" data-name="Login Key" autocomplete="off" required="required" ng-model="mnemonic">
                                     <label class="field-label" for="Login-Key-Language">Language</label>
-                                    <select class="w-input form-layout" id="Login-Key-Language" ng-model="mnemonic_language" selected="english" required="required">
+                                    <select class="w-input" id="Login-Key-Language" ng-model="mnemonic_language" selected="english" required="required">
                                         <option value="english">English</option>
                                         <option value="portuguese">Portuguese</option>
                                         <option value="spanish">Spanish</option>
@@ -56,13 +56,13 @@
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
                                       ng-submit="login_keys(address, view_key, spend_key)" form-autofill-fix>
                                     <label class="field-label" for="your-address">Your Address</label>
-                                    <input class="w-input form-layout" id="your-address" type="text" placeholder="Enter your address here"
+                                    <input class="w-input" id="your-address" type="text" placeholder="Enter your address here"
                                            name="Your-address" data-name="Your address" autocomplete="off" required="required" ng-model="address">
                                     <label class="field-label" for="view-key">View Key</label>
-                                    <input class="w-input form-layout" id="view-key" type="text" placeholder="Enter your view key here"
+                                    <input class="w-input" id="view-key" type="text" placeholder="Enter your view key here"
                                            name="View-Key" data-name="View Key" autocomplete="off" required="required" ng-model="view_key">
                                     <label class="field-label" for="spend-key">Spend Key</label>
-                                    <input class="w-input form-layout" id="spend-key" type="text" placeholder="Optionally, enter your spend key here."
+                                    <input class="w-input" id="spend-key" type="text" placeholder="Optionally, enter your spend key here."
                                            name="Spend-Key" data-name="Spend Key" autocomplete="off" ng-model="spend_key">
                                     <div class="subhead-text modal">
                                        Without spendkey, you will login in a view only mode.
