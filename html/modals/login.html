@@ -44,7 +44,30 @@
                                     <div class="submit-div">
                                         <input class="w-button login-btn pointer" id="form-submit" type="submit" value="Enter my account"
                                                data-wait="Please wait...">
+                                        <input class="w-button login-btn pointer" id="form-submit-decode" type="button"
+                                               value="Decode the login key (works offline)" ng-click="decodeSeed(mnemonic, mnemonic_language)">
                                     </div>
+
+                                    <div class="w-form form-wrapper" ng-show="address">
+                                        <form id="email-form" name="email-form" data-name="Email Form">
+                                            <label class="field-label review" for="Mnemonic-2">Account Address (Public)</label>
+                                            <div class="move-text-div">
+                                                <div class="review-text address">{{address}} </div>
+                                            </div>
+                                            <label class="field-label review" for="Mnemonic-2">View Key (Private)</label>
+                                            <div class="move-text-div">
+                                                <div class="review-text">{{view_key}} </div>
+                                            </div>
+                                            <label class="field-label review" for="Mnemonic-2">Spend Key (Private)</label>
+                                            <div class="move-text-div">
+                                                <div class="review-text">{{spend_key}} </div>
+                                            </div>
+                                            <div class="submit-div">
+                                                <a class="login-btn modals pointer" data-ix="close-review-details" hide-modal>Ok, thanks!</a>
+                                            </div>
+                                        </form>
+                                    </div>
+
                                     <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
                                         <p>{{error}}</p>
                                     </div>
