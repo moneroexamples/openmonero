@@ -34,6 +34,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.balance = JSBigInt.ZERO;
     $scope.locked_balance = JSBigInt.ZERO;
     $scope.total_received = JSBigInt.ZERO;
+    $scope.received_unlocked = JSBigInt.ZERO;
+    $scope.total_received_unlocked = JSBigInt.ZERO;
     $scope.total_sent = JSBigInt.ZERO;
     $scope.address = AccountService.getAddress();
     $scope.view_key = $scope.viewkey = AccountService.getViewKey();
@@ -96,6 +98,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
             $scope.balance = JSBigInt.ZERO;
             $scope.locked_balance = JSBigInt.ZERO;
             $scope.total_received = JSBigInt.ZERO;
+            $scope.total_received_unlocked = JSBigInt.ZERO;
+            $scope.received_unlocked = JSBigInt.ZERO;
             $scope.total_sent = JSBigInt.ZERO;
         }
     });
