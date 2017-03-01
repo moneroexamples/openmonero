@@ -188,6 +188,14 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             })(deferred, target);
         }
 
+        var strpad = function(padString, length)
+        {   // from http://stackoverflow.com/a/10073737/248823
+            var str = this;
+            while (str.length < length)
+                str = padString + str;
+            return str;
+        };
+
         // Transaction will need at least 1KB fee (13KB for RingCT)
 
         var feePerKB = new JSBigInt(config.feePerKB);
@@ -209,10 +217,23 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $scope.error = "You need to enter a valid destination";
                 return;
             }
-            if (payment_id && (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id)))) {
-                $scope.submitting = false;
-                $scope.error = "The payment ID you've entered is not valid";
-                return;
+            if (payment_id)
+            {
+                if (payment_id.length <= 64 && /^[0-9a-fA-F]+$/.test(payment_id))
+                {
+                    // if payment id is shorter, but has correct number, just
+                    // pad it to required length with zeros
+                    payment_id = strpad("0", 64);
+                }
+
+                // now double check if ok, when we padded it
+                if (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id)))
+                {
+                    $scope.submitting = false;
+                    $scope.error = "The payment ID you've entered is not valid";
+                    return;
+                }
+
             }
             if (realDsts.length === 1) {//multiple destinations aren't supported by MyMonero, but don't include integrated ID anyway (possibly should error in the future)
                 var decode_result = cnUtil.decode_address(realDsts[0].address);
