@@ -37,35 +37,51 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
 
     $scope.mnemonic_language = 'english';
 
+
+    var decode_seed = function(mnemonic, language)
+    {
+        var seed;
+        var keys;
+
+        switch (language) {
+            case 'english':
+                try {
+                    seed = mn_decode(mnemonic);
+                } catch (e) {
+                    // Try decoding as an electrum seed, on failure throw the original exception
+                    try {
+                        seed = mn_decode(mnemonic, "electrum");
+                    } catch (ee) {
+                        throw e;
+                    }
+                }
+                break;
+            default:
+                seed = mn_decode(mnemonic, language);
+                break;
+        }
+        keys = cnUtil.create_address(seed);
+
+        return [seed, keys];
+    };
+
+
     $scope.login_mnemonic = function(mnemonic, language) {
         $scope.error = '';
         var seed;
         var keys;
         mnemonic = mnemonic.toLowerCase() || "";
+
         try {
-            switch (language) {
-                case 'english':
-                    try {
-                        seed = mn_decode(mnemonic);
-                    } catch (e) {
-                        // Try decoding as an electrum seed, on failure throw the original exception
-                        try {
-                            seed = mn_decode(mnemonic, "electrum");
-                        } catch (ee) {
-                            throw e;
-                        }
-                    }
-                    break;
-                default:
-                    seed = mn_decode(mnemonic, language);
-                    break;
-            }
-            keys = cnUtil.create_address(seed);
+            var seed_key = decode_seed(mnemonic, language);
+            seed = seed_key[0];
+            keys  = seed_key[1];
         } catch (e) {
             console.log("Invalid mnemonic!");
             $scope.error = e;
             return;
         }
+
         AccountService.login(keys.public_addr, keys.view.sec, keys.spend.sec, seed, false)
             .then(function() {
                 ModalService.hide('login');
@@ -77,6 +93,34 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
                 $scope.error = reason;
                 console.error(reason);
             });
+    };
+
+
+
+    $scope.decodeSeed = function(mnemonic, language)
+    {
+        $scope.error = '';
+        var seed;
+        var keys;
+
+        mnemonic = mnemonic.toLowerCase() || "";
+
+        try
+        {
+            var seed_key = decode_seed(mnemonic, language);
+
+            seed = seed_key[0];
+            keys  = seed_key[1];
+
+            $scope.address = keys.public_addr;
+            $scope.view_key = keys.view.sec;
+            $scope.spend_key = keys.spend.sec;
+
+        } catch (e) {
+            console.log("Invalid mnemonic!");
+            $scope.error = e;
+            return;
+        }
     };
 
     $scope.login_keys = function(address, view_key, spend_key) {

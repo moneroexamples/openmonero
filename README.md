@@ -23,6 +23,8 @@ They include:
  - added dynamic fees for testnet.
  - minimum mixin set to 4 for the next hard fork.
  - view only mode added.
+ - ability to offline show your address and private view and spend keys, based on the mnemonic seed,
+  in case backend is dead.
    
 ## Testnet version
 
@@ -176,7 +178,9 @@ Before running `openmonero`:
  Time library used in Open Monero stores there time zone offsets database that it uses.
  - edit `config/confing.js` file with your settings. Especially set `frontend-url` and `database`
  connection details.
- - set `apiUrl` in `html\js\config.js`. Last slash `/` in `apiUrl` is important.
+ - set `apiUrl` in `html\js\config.js` and `testnet` flag. Last slash `/` in `apiUrl` is important. 
+ If running backend for testnet network, frontend `testnet` flag must be set to `true`.
+ For mainnet, it is set to `false`.
  - make sure monero daemon is running and fully sync. If using testnet network, use daemon
  with testnet flag!
    

@@ -1452,7 +1452,8 @@ var cnUtil = (function(initConfig) {
         var hash = this.cn_fast_hash(hashes);
         return {
             raw: buf,
-            hash: hash
+            hash: hash,
+            prvkey: tx.prvkey
         };
     };
 
@@ -1615,6 +1616,7 @@ var cnUtil = (function(initConfig) {
             unlock_time: unlock_time,
             version: rct ? CURRENT_TX_VERSION : OLD_TX_VERSION,
             extra: extra,
+            prvkey: '',
             vin: [],
             vout: []
         };
@@ -1624,6 +1626,7 @@ var cnUtil = (function(initConfig) {
             tx.signatures = [];
         }
         tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
+        tx.prvkey = txkey.sec;
 
         var in_contexts  = [];
 
