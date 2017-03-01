@@ -91,13 +91,17 @@
                             <div class="middle-text receive">{{sent_tx.amount | money}} (+{{sent_tx.tx_fee | money}} fee)</div>
                         </div>
                         <div class="w-col w-col-6 responsive-column">
-                            <label class="send-label" for="Receiver-address-2">Payment ID</label>
+                            <label class="send-label" >Payment ID</label>
                             <div class="middle-text receive">{{sent_tx.payment_id || "N/A"}}</div>
                         </div>
                     </div>
-                    <label class="send-label" for="Select-a-number">Transaction ID</label>
+                    <label class="send-label" >Transaction ID/Hash</label>
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_id}}</div>
+                    </div>
+                    <label class="send-label" >Transaction Private Key (write it down if you want to prove recipient that you sent it)</label>
+                    <div class="move-text-div">
+                        <div class="middle-text receive">{{sent_tx.tx_prvkey}}</div>
                     </div>
                     <input class="w-button send-btn" type="submit" value="Send Another Payment" data-wait="Please wait...">
                 </form>

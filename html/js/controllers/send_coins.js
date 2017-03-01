@@ -299,6 +299,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             var prevFee = neededFee;
             var raw_tx = tx_h.raw;
             var tx_hash = tx_h.hash;
+            var tx_prvkey = tx_h.prvkey;
             // work out per-kb fee for transaction
             var txBlobBytes = raw_tx.length / 2;
             var numKB = Math.floor((txBlobBytes) / 1024);
@@ -340,6 +341,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         amount: realDsts[0].amount,
                         payment_id: payment_id,
                         tx_id: tx_hash,
+                        tx_prvkey: tx_prvkey,
                         tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
                     };
                     $scope.success_page = true;
@@ -540,6 +542,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     if (signed.version === 1) {
                         raw_tx_and_hash.raw = cnUtil.serialize_tx(signed);
                         raw_tx_and_hash.hash = cnUtil.cn_fast_hash(raw_tx);
+                        raw_tx_and_hash.prvkey = signed.prvkey;
                     } else {
                         raw_tx_and_hash = cnUtil.serialize_rct_tx_with_hash(signed);
                     }
