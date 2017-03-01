@@ -31,7 +31,8 @@ They include:
 - [http://139.162.32.245:81](http://139.162.32.245:81)
 
 This is Open Monero running on testnet network. You can use it to play around with it. 
-Since this is testnet version, frequent changes and database resets are expected. 
+Since this is testnet version, frequent changes and database resets are expected. Also,
+ it is running on cheapest vps, which may result in some lag.
 
 If you want some testnet monero, please make issue with your testnet address that you can
 obtained from Open Monero.   
