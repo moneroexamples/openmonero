@@ -1,7 +1,7 @@
 # Open Monero - a fully open sourced implementation of MyMonero
 
 In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
- provide Monero related JSON REST service. For this purpose, 
+ provide Monero related JSON REST service. To demonstrate this, 
  a service called Open Monero was developed.
 
 
@@ -201,7 +201,7 @@ To start for testnet with non-default location of `config.json` file:
 ./openmonero -t -c /path/to/config.js
 ```
 
-## Scrap notes
+## Scrap notes (just for myself)
 
 ### Generate your own ssl certificate 
  
