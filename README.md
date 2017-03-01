@@ -24,7 +24,7 @@ They include:
  - minimum mixin set to 4 for the next hard fork.
  - view only mode added.
  - ability to offline show your address and private view and spend keys, based on the mnemonic seed,
-  in case backend is dead.
+  in case of server or connections problem.
    
 ## Testnet version
 
