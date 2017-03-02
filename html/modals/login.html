@@ -44,8 +44,9 @@
                                     <div class="submit-div">
                                         <input class="w-button login-btn pointer" id="form-submit" type="submit" value="Enter my account"
                                                data-wait="Please wait...">
-                                        <input class="w-button login-btn pointer" id="form-submit-decode" type="button"
-                                               value="Decode the login key (works offline)" ng-click="decodeSeed(mnemonic, mnemonic_language)">
+                                    </div>
+                                    <div class="subhead-text modal">
+                                        <a class="login-link" data-ix="close-overlay" href="" ng-click="decodeSeed(mnemonic, mnemonic_language)">Decode the login key (works offline)</a>
                                     </div>
 
                                     <div class="w-form form-wrapper" ng-show="address">
