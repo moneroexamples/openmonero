@@ -322,6 +322,99 @@ Output (only part shown):
 }
 ```
 
+#### get_unspent_outs
+
+```bash
+ curl  -w "\n" -X POST http://139.162.32.245:1984/get_unspent_outs -d '{"address":"9viPdjLNXDaRFNtTTDg5wXg9Yg55uDC9XRLv882aPAFye1Ta6fSh25M41JoXBQj8d964JyFXuLVddEdg71cPJ8DY7WrSH3z","view_key":"ab227fb819e2b2100bb00840df1f00ed89867752d7d9d7918f6db6a0fa7f6b0c","amount":"0","mixin":4,"use_dust":false,"dust_threshold":"1000000000"}'
+```
+
+Output (only part shown):
+
+```json
+{
+  "amount": 2746682935584926,
+  "outputs": [
+    {
+      "amount": 2450000000000,
+      "global_index": 86136,
+      "height": 839599,
+      "index": 0,
+      "public_key": "6f6a4023bfa407ca1ce37f7382d5ea7540a330575bd570094b5add5e8ded2dd9",
+      "rct": "4aca9e9b9a5d63fcf409ac28191696cabb78c0ba14791152509ebe6db7f9311033a1dc75d69a1dad7523f65856d07487aad2bee2098f5566b6d92ec5a5c68f00653d241a9d7f16ff13df87825609e8b2353ec20e50d11f8133d234184d9f8b03",
+      "spend_key_images": [
+        "2818dae0940fb945185c562fcb0a496f3c3b551f33b7ddd7ec1b5ecd856166e6"
+      ],
+      "timestamp": "2017-02-01 05:53:28",
+      "tx_hash": "9d17084091beedc55c8a0cd342e441b7c0d89eeca25ac151b4b91fe1e12051e7",
+      "tx_id": 2117,
+      "tx_prefix_hash": "849f11f6b012c1557f87692ca7a67bcb24a5a553078c4faed870b8982821feee",
+      "tx_pub_key": "4219b1004fa64bde0213bf3c59b9e160af8603be03d79e13148c15fd598e3a0e"
+    },
+    {
+      "amount": 10000000000,
+      "global_index": 86550,
+      "height": 840011,
+      "index": 0,
+      "public_key": "5506e8786b7634a77487f0938a00d3de6ab005e2f76ffee05fee68d5165382f1",
+      "rct": "6f78720d6bb0287d78c50bfa41332232fbc4bc9b7f04e35681ff926cc156b1fbfb3b84a2dcdc8cb98b33be70b302e380944abc3e7a7cbf3e27614936eccca40203447622e149ba1e09a7062eb8910acf029f561ecdaa5a34e076baff5d63770e",
+      "spend_key_images": [
+        "9c82226bdf165fd2424d9a0ead661682bfab2fe644cd0bcef575ae16595c550c"
+      ],
+      "timestamp": "2017-02-02 03:18:18",
+      "tx_hash": "8257367ca6def69dc3d280e8909c3cd01b230fc9922c9a89217db06f3fb41102",
+      "tx_id": 2118,
+      "tx_prefix_hash": "781a0ce699865987ec78ad331e8e89c0d14461f9881dd11a7a4541114b567568",
+      "tx_pub_key": "29ceefd594b856c7c06d2423be17cd674b97d1d8f72907ace8d27f5b6aa9875c"
+    }
+  ],
+  "per_kb_fee": 2480631964
+}
+```
+
+#### get_random_outs
+
+```bash
+curl  -w "\n" -X POST http://139.162.32.245:1984/get_random_outs -d '{"amounts":["0","0"],"count":5}'
+```
+
+Output (only part shown):
+
+```json
+  "amount_outs": [
+    {
+      "amount": 0,
+      "outputs": [
+        {
+          "global_index": 48449,
+          "public_key": "637dbadf193fa9fd5c50c96af18f458a9b7d4844fdf7ffdfa3f62d51d6aff835",
+          "rct": "0c908e1969edfe7824560104e44334b46ced17c9462eacb5aaa70e62ea34a394837c07d14bffc5a65e2dd14da395dd135bcc2e5ac70648782d76e4a9920cd007b9ffe319b796c555fb7713a270f21181a5ee5c8b01259becba0dd332b93a6c02"
+        },
+        {
+          "global_index": 67558,
+          "public_key": "6ca3a73512dadd669430f73809c949f3edf71728bea5201441c648c2d128c453",
+          "rct": "999312ca1914895cf8a517c91a54a069d8fdc7205d7768173618e77fad2fde5c725604d666b101c9ae19c72e07cf5f821603a7b63efb5dfd8a7c0e36ed0c250fa92929cda49ddd0d34e664e15634ee59e958815764ec979b5ff0a72b3af6af0a"
+        },
+        {
+          "global_index": 102186,
+          "public_key": "c29d43f5d7c71a6f1b4f3286da3c296a083cf68728d85c268ee0c964a6c8c00e",
+          "rct": "23aa82efdbd0c6878060496a13f7a707a6f45649b51de12d54d0cad14c5be5bd00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "global_index": 96992,
+          "public_key": "fb83d74a42abe65d5b8a6a906791202376b91e3459a31737ac62a401b7b9356c",
+          "rct": "975b42f50cabb801091c90a4227bf7ba024ddacfeda7e5e0383f034b0bc8ba2500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "global_index": 36848,
+          "public_key": "2a8785e42a9446785cf189a40fca8f56a592dab9db1f38f8e8a3d2eb84b680ff",
+          "rct": "a09e27b83917792bc8f6c51b40077aea329bf08b569e63657e2ac3529db5d0aa14f9f9fc45930577b43829119847ac857d69c00d12859a903cfcbf470819dc00b1bfa43aa979e46a0d0476cb36717e8d8374afe9af1fb3715091147cc9587e0e"
+        }
+      ]
+    }
+  ]
+}
+```
+
 Need to add other.
 
 
