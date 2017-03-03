@@ -1,7 +1,7 @@
-# Open Monero - a fully open sourced implementation of MyMonero
+# Open Monero - a fully open sourced implementation of MyMonero backend
 
 In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
- provide Monero related JSON REST service. To demonstrate this, 
+demonstrate how to provide Monero related JSON REST service. For this purpose, 
  a service called Open Monero was developed.
 
 
@@ -9,9 +9,9 @@ Open Monero is an open source implementation of backend of
 https://mymonero.com/. The frontend, which includes HTML, CSS, JavaScript, was adapted
 from (and originally developed by) https://mymonero.com/. 
 
-Unlike MyMonero, Open Monero's backend is open sourced, free
-to use, host and modify. Additionally, some features were added/changed. 
-They include:
+Open Monero's backend is open sourced, free
+to use, host and modify. Additionally, some features were added/changed as compared
+to MyMonero. They include:
 
  - google analytics, cloudflare, images and flash were removed.
  - transaction fees were set to zero (MyMonero also has now them zero due to problem with its RingCT).
