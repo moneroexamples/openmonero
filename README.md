@@ -202,6 +202,129 @@ To start for testnet with non-default location of `config.json` file:
 ./openmonero -t -c /path/to/config.js
 ```
 
+ 
+## API calls
+
+
+#### get_version
+
+
+```bash
+curl  -w "\n" -X POST http://139.162.32.245:1984/get_version
+```
+Example output:
+
+```json
+{
+  "blockchain_height": 858972,
+  "last_git_commit_date": "2017-03-03",
+  "last_git_commit_hash": "544bacc",
+  "monero_version_full": "0.10.2.1-release"
+}
+```
+
+#### get_address_info
+
+```bash
+curl  -w "\n" -X POST http://139.162.32.245:1984/get_address_info -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV"}'
+```
+
+Output (only part shown):
+
+```json
+{
+  "blockchain_height": 858970,
+  "locked_funds": 0,
+  "scanned_block_height": 858970,
+  "scanned_height": 0,
+  "spent_outputs": [
+    {
+      "amount": 13683584012406,
+      "key_image": "437518836c315bf989c5cc28b935280345ed672d727122f6d6c5c5ff32e98224",
+      "mixin": 0,
+      "out_index": 0,
+      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+    },
+    {
+      "amount": 13683584012406,
+      "key_image": "ac3088ce17cc608bcf86db65e9061fe4b9b02573b997944e4ebf7d8e64e4a3b4",
+      "mixin": 0,
+      "out_index": 0,
+      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+    }
+  ],
+  "start_height": 855633,
+  "total_received": 13481878608141995,
+  "total_sent": 4699871131811773
+}
+```
+
+#### get_address_txs
+
+```bash
+curl  -w "\n" -X POST http://139.162.32.245:1984/get_address_txs -d '{"address": "9viPdjLNXDaRFNtTTDg5wXg9Yg55uDC9XRLv882aPAFye1Ta6fSh25M41JoXBQj8d964JyFXuLVddEdg71cPJ8DY7WrSH3z"}'
+```
+
+Output (only part shown):
+
+```json
+{
+  "blockchain_height": 858973,
+  "scanned_block_height": 857881,
+  "scanned_height": 0,
+  "start_height": 855639,
+  "total_received": 2709882623948850,
+  "total_received_unlocked": 2709882623948850,
+  "transactions": [
+    {
+      "coinbase": false,
+      "hash": "19f4ca4d601db3cc518f7abf6778cc325150386ecdf116a6b124605974f05fcc",
+      "height": 848286,
+      "id": 2140,
+      "mempool": false,
+      "mixin": 4,
+      "payment_id": "",
+      "spent_outputs": [
+        {
+          "amount": 10000000000000,
+          "key_image": "29c1218b5b63c3c92fd9702a3a292def8d3c94b4ea2a3a3a8b0c2dce45bbe905",
+          "mixin": 4,
+          "out_index": 0,
+          "tx_pub_key": "8850a06305369f11a9e408739dddea7a05bdfbcd2140b0e00097a231fe37f7ac"
+        },
+        {
+          "amount": 10000000000,
+          "key_image": "9c82226bdf165fd2424d9a0ead661682bfab2fe644cd0bcef575ae16595c550c",
+          "mixin": 4,
+          "out_index": 0,
+          "tx_pub_key": "29ceefd594b856c7c06d2423be17cd674b97d1d8f72907ace8d27f5b6aa9875c"
+        }
+      ],
+      "timestamp": "2017-02-15 01:44:06",
+      "total_received": 6974553705816,
+      "total_sent": 10010000000000,
+      "unlock_time": 0
+    },
+    {
+      "coinbase": false,
+      "hash": "899d41642e8439cb390737d1e38c8c06fe92f4cceb5ca9f49575ed84942453a1",
+      "height": 848294,
+      "id": 2142,
+      "mempool": false,
+      "mixin": 4,
+      "payment_id": "",
+      "timestamp": "2017-02-15 01:55:34",
+      "total_received": 1000000000000,
+      "total_sent": 0,
+      "unlock_time": 0
+    }
+  ]
+}
+```
+
+Need to add other.
+
+
 ## Scrap notes (just for myself)
 
 ### Generate your own ssl certificate 
@@ -219,18 +342,7 @@ openssl req -new -key server.key -out server.csr
 openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 openssl dhparam -out dh2048.pem 2048
 ```
- 
-### API calls
 
-Check if Open Monero REST service is working 
-
-```bash
-curl  -w "\n" -X POST http://139.162.32.245:1984/get_version
-```
-Example output:
-```
-{"last_git_commit_date":"2017-02-25","last_git_commit_hash":"f2008aa","monero_version_full":"0.10.2.1-release"}
-```
 
 ## Other examples
 
