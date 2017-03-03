@@ -188,9 +188,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             })(deferred, target);
         }
 
-        var strpad = function(padString, length)
+        var strpad = function(org_str, padString, length)
         {   // from http://stackoverflow.com/a/10073737/248823
-            var str = this;
+            var str = org_str;
             while (str.length < length)
                 str = padString + str;
             return str;
@@ -223,7 +223,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 {
                     // if payment id is shorter, but has correct number, just
                     // pad it to required length with zeros
-                    payment_id = strpad("0", 64);
+                    payment_id = strpad(payment_id, "0", 64);
                 }
 
                 // now double check if ok, when we padded it

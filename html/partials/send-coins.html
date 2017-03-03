@@ -86,11 +86,11 @@
                         <div class="middle-text receive">{{sent_tx.address}} <span ng-show="sent_tx.domain">({{sent_tx.domain}})</span></div>
                     </div>
                     <div class="w-row">
-                        <div class="w-col w-col-6 responsive-column">
+                        <div class="w-col w-col-4 responsive-column">
                             <label class="send-label" for="Amount">Amount</label>
                             <div class="middle-text receive">{{sent_tx.amount | money}} (+{{sent_tx.tx_fee | money}} fee)</div>
                         </div>
-                        <div class="w-col w-col-6 responsive-column">
+                        <div class="w-col w-col-8 responsive-column">
                             <label class="send-label" >Payment ID</label>
                             <div class="middle-text receive">{{sent_tx.payment_id || "N/A"}}</div>
                         </div>
@@ -99,7 +99,7 @@
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_id}}</div>
                     </div>
-                    label class="send-label" >Transaction Private Key (save it, as it is needed to prove the recipient that you sent him xmr)</label>
+                    <label class="send-label" >Transaction Private Key (save it, as it is needed to prove the recipient that you sent him xmr)</label>
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_prvkey}}</div>
                     </div>
