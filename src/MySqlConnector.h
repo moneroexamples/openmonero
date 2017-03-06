@@ -54,6 +54,9 @@ public:
     Query
     query(const std::string& qstr);
 
+    bool
+    connect();
+
     virtual ~MySqlConnector();
 };
 

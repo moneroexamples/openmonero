@@ -652,14 +652,11 @@ bool
 MySqlAccounts::select(const string& address, XmrAccount& account)
 {
 
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
+    if (!conn->connect())
+    {
+        cerr << "Failed reconnecting to mysql" << endl;
+        return false;
+    }
 
     Query query = conn->query(XmrAccount::SELECT_STMT);
     query.parse();
