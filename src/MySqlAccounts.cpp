@@ -654,7 +654,9 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
 
     if (!conn->connect())
     {
-        cerr << "Failed reconnecting to mysql" << endl;
+        cerr << __FUNCTION__ << ":" << __LINE__
+             <<  " failed connecting to mysql"
+             << endl;
         return false;
     }
 
@@ -689,14 +691,13 @@ bool
 MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
 {
 
-    //static shared_ptr<Query> query;
-
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrAccount::SELECT_STMT2);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
+    if (!conn->connect())
+    {
+        cerr << __FUNCTION__ << ":" << __LINE__
+             <<  " failed connecting to mysql"
+             << endl;
+        return false;
+    }
 
     Query query = conn->query(XmrAccount::SELECT_STMT2);
     query.parse();
@@ -724,16 +725,6 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
 uint64_t
 MySqlAccounts::insert(const string& address, const uint64_t& current_blkchain_height)
 {
-
-    //    static shared_ptr<Query> query;
-
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrAccount::INSERT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
 
     Query query = conn->query(XmrAccount::INSERT_STMT);
     query.parse();
