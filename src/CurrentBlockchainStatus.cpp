@@ -656,7 +656,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    if (searching_threads.count(acc.address) > 0)
+    if (search_thread_exist(acc.address))
     {
         // thread for this address exist, dont make new one
         cout << "Thread exisist, dont make new one" << endl;
@@ -688,7 +688,7 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    if (searching_threads.count(address) == 0)
+    if (!search_thread_exist(address))
     {
         // thread does not exist
         cout << "thread for " << address << " does not exist" << endl;
@@ -700,6 +700,17 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
     return true;
 }
 
+
+
+bool
+CurrentBlockchainStatus::search_thread_exist(const string& address)
+{
+    // no mutex here, as this will be executed
+    // from other methods, which do use mutex.
+    // so if you put mutex here, you will get into deadlock.
+    return searching_threads.count(address) > 0;
+}
+
 bool
 CurrentBlockchainStatus::get_xmr_address_viewkey(
         const string& address_str,
@@ -708,7 +719,7 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    if (searching_threads.count(address_str) == 0)
+    if (!search_thread_exist(address_str))
     {
         // thread does not exist
         cout << "thread for " << address_str << " does not exist" << endl;
@@ -767,7 +778,7 @@ CurrentBlockchainStatus::clean_search_thread_map()
 
     for (auto st: searching_threads)
     {
-        if (st.second->still_searching() == false)
+        if (search_thread_exist(st.first) && st.second->still_searching() == false)
         {
             cout << st.first << " still searching: " << st.second->still_searching() << endl;
             searching_threads.erase(st.first);

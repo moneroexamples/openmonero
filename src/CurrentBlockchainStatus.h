@@ -166,6 +166,9 @@ struct CurrentBlockchainStatus
     ping_search_thread(const string& address);
 
     static bool
+    search_thread_exist(const string& address);
+
+    static bool
     get_xmr_address_viewkey(const string& address_str,
                             account_public_address& address,
                             secret_key& viewkey);
