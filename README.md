@@ -32,7 +32,7 @@ to MyMonero. They include:
 
 or alternatively, owning to [Gingeropolous](https://github.com/Gingeropolous):
 
-- [http://testwallet.moneroworld.com](testwallet.moneroworld.com)
+- [http://testwallet.moneroworld.com](http://testwallet.moneroworld.com)
 
 This is Open Monero running on testnet network. You can use it to play around with it. 
 Since this is testnet version, frequent changes and database resets are expected. Also,
