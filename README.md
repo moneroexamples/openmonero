@@ -30,6 +30,10 @@ to MyMonero. They include:
 
 - [http://139.162.32.245:81](http://139.162.32.245:81)
 
+or alternatively, owning to [Gingeropolous](https://github.com/Gingeropolous):
+
+- [http://testwallet.moneroworld.com](testwallet.moneroworld.com)
+
 This is Open Monero running on testnet network. You can use it to play around with it. 
 Since this is testnet version, frequent changes and database resets are expected. Also,
  it is running on cheap vps, which may result in some lag.
