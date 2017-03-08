@@ -666,7 +666,9 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     try
     {
         // make a tx_search object for the given xmr account
-        searching_threads.emplace(acc.address, new TxSearch(acc));
+        //searching_threads.emplace(acc.address, new TxSearch(acc)); // does not work on older gcc
+                                                                     // such as the one in ubuntu 16.04
+        searching_threads[acc.address] = unique_ptr<TxSearch>(new TxSearch(acc));
     }
     catch (const std::exception& e)
     {
