@@ -45,6 +45,12 @@ MySqlConnector::connect()
 }
 
 
+bool
+MySqlConnector::ping()
+{
+    return conn.ping();
+}
+
 Query
 MySqlConnector::query(const char *qstr)
 {

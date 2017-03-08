@@ -645,6 +645,10 @@ MySqlAccounts::MySqlAccounts()
     mysql_in        = make_shared<MysqlInputs>(conn);
     mysql_payment   = make_shared<MysqlPayments>(conn);
 
+    // mysql connection will timeout after few hours
+    // of iddle time. so we have this tiny helper
+    // thread to ping mysql, thus keeping it alive
+    launch_mysql_pinging_thread();
 }
 
 
@@ -1033,6 +1037,47 @@ MySqlAccounts::update(XmrAccount& acc_orginal, XmrAccount& acc_new)
 }
 
 
+
+/**
+ * A completely different way to tackle this,
+ * if your program doesn’t block forever waiting on I/O while idle,
+ * is to periodically call Connection::ping(). [12]
+ * This sends the smallest possible amount of data to the database server,
+ * which will reset its idle timer and cause it to respond, so ping() returns true.
+ * If it returns false instead, you know you need to reconnect to the server.
+ * Periodic pinging is easiest to do if your program uses asynchronous I/O,
+ * threads, or some kind of event loop to ensure that you can call
+ * something periodically even while the rest of the program has nothing to do.
+ *
+ * from: https://tangentsoft.net/mysql++/doc/html/userman/tutorial.html#connopts
+ */
+void
+MySqlAccounts::launch_mysql_pinging_thread()
+{
+    // lambda can only capture local variables, so we make
+    // copy of the connection's shared pointer
+    shared_ptr<MySqlConnector> conn_ptr = conn;
+
+    std::thread ping_thread ([conn_ptr]()
+     {
+         while (true)
+         {
+             std::this_thread::sleep_for(chrono::seconds(14400)); // 4 hours
+
+             if (!conn_ptr->ping())
+             {
+                 cerr << "Pinging mysql failed. stoping mysql pinging thread." << endl;
+                 break;
+             }
+
+             cout << "Mysql ping successful. " << endl;
+         }
+     });
+
+    // run this in the background forever
+    // we dont need to wait for it to finish
+    ping_thread.detach();
+}
 
 
 

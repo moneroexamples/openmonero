@@ -57,6 +57,9 @@ public:
     bool
     connect();
 
+    bool
+    ping();
+
     virtual ~MySqlConnector();
 };
 

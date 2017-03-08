@@ -247,7 +247,8 @@ public:
     bool
     update(XmrAccount& acc_orginal, XmrAccount& acc_new);
 
-
+    void
+    launch_mysql_pinging_thread();
 };
 
 

@@ -25,7 +25,6 @@ class TxSearch;
 class XmrAccount;
 class MySqlAccounts;
 
-
 static mutex searching_threads_map_mtx;
 static mutex getting_mempool_txs;
 
@@ -80,8 +79,7 @@ struct CurrentBlockchainStatus
     static
     void start_monitor_blockchain_thread();
 
-    static
-    uint64_t
+    static uint64_t
     get_current_blockchain_height();
 
     static void
