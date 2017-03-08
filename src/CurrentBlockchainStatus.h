@@ -69,7 +69,7 @@ struct CurrentBlockchainStatus
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
     // make it static to guarantee only one such map exist.
-    static map<string, shared_ptr<TxSearch>> searching_threads;
+    static map<string, unique_ptr<TxSearch>> searching_threads;
 
     // since this class monitors current status
     // of the blockchain, its seems logical to
