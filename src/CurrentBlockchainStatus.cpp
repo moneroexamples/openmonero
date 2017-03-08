@@ -38,7 +38,7 @@ string                  CurrentBlockchainStatus::import_payment_viewkey;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
-map<string, shared_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
+map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
@@ -666,7 +666,9 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     try
     {
         // make a tx_search object for the given xmr account
-        searching_threads[acc.address] = make_shared<TxSearch>(acc);
+        //searching_threads.emplace(acc.address, new TxSearch(acc)); // does not work on older gcc
+                                                                     // such as the one in ubuntu 16.04
+        searching_threads[acc.address] = unique_ptr<TxSearch>(new TxSearch(acc));
     }
     catch (const std::exception& e)
     {
@@ -776,7 +778,7 @@ CurrentBlockchainStatus::clean_search_thread_map()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    for (auto st: searching_threads)
+    for (const auto& st: searching_threads)
     {
         if (search_thread_exist(st.first) && st.second->still_searching() == false)
         {
