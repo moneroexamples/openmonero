@@ -279,17 +279,6 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
 uint64_t
 MysqlOutpus::insert(const XmrOutput& out_data)
 {
-
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrOutput::INSERT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
-
     Query query = conn->query(XmrOutput::INSERT_STMT);
     query.parse();
 

@@ -154,38 +154,38 @@ xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 xmreg::YourMoneroRequests::frontend_url
         = config_json["frontend-url"];
 
-xmreg::YourMoneroRequests your_xmr(
+xmreg::YourMoneroRequests open_monero(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
 
-auto login                 = your_xmr.make_resource(
+auto login                 = open_monero.make_resource(
         &xmreg::YourMoneroRequests::login,
         "/login");
 
-auto get_address_txs       = your_xmr.make_resource(
+auto get_address_txs       = open_monero.make_resource(
         &xmreg::YourMoneroRequests::get_address_txs,
         "/get_address_txs");
 
-auto get_address_info      = your_xmr.make_resource(
+auto get_address_info      = open_monero.make_resource(
         &xmreg::YourMoneroRequests::get_address_info,
         "/get_address_info");
 
-auto get_unspent_outs      = your_xmr.make_resource(
+auto get_unspent_outs      = open_monero.make_resource(
         &xmreg::YourMoneroRequests::get_unspent_outs,
         "/get_unspent_outs");
 
-auto get_random_outs       = your_xmr.make_resource(
+auto get_random_outs       = open_monero.make_resource(
         &xmreg::YourMoneroRequests::get_random_outs,
         "/get_random_outs");
 
-auto submit_raw_tx         = your_xmr.make_resource(
+auto submit_raw_tx         = open_monero.make_resource(
         &xmreg::YourMoneroRequests::submit_raw_tx,
         "/submit_raw_tx");
 
-auto import_wallet_request = your_xmr.make_resource(
+auto import_wallet_request = open_monero.make_resource(
         &xmreg::YourMoneroRequests::import_wallet_request,
         "/import_wallet_request");
 
-auto get_version           = your_xmr.make_resource(
+auto get_version           = open_monero.make_resource(
         &xmreg::YourMoneroRequests::get_version,
         "/get_version");
 
