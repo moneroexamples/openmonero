@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Feb 21, 2017 at 02:37 AM
+-- Generation Time: Mar 12, 2017 at 08:38 AM
 -- Server version: 10.1.21-MariaDB
 -- PHP Version: 7.1.2
 
@@ -32,6 +32,7 @@ DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
+  `viewkey_hash` char(64) NOT NULL,
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `start_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -174,27 +175,27 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 --
 -- AUTO_INCREMENT for table `Inputs`
 --
 ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=449;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1738;
 --
 -- AUTO_INCREMENT for table `Outputs`
 --
 ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11206;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4373;
 --
 -- AUTO_INCREMENT for table `Payments`
 --
 ALTER TABLE `Payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 --
 -- AUTO_INCREMENT for table `Transactions`
 --
 ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3145;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3702;
 --
 -- Constraints for dumped tables
 --

@@ -126,7 +126,16 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
     $scope.login_keys = function(address, view_key, spend_key) {
         $scope.error = '';
         AccountService.login(address, view_key, spend_key, undefined, false)
-            .then(function() {
+            .then(function(data)
+            {
+                if (data.status === "error")
+                {
+                    $scope.status = "";
+                    $scope.submitting = false;
+                    $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
+                    return;
+                }
+
                 ModalService.hide('login');
                 $location.path("/overview");
                 if (AccountService.wasAccountImported()) {

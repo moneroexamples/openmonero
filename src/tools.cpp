@@ -1301,5 +1301,14 @@ get_current_time(const char* format)
     return date::format(format, current_time);
 }
 
+string
+make_hash(const string& in_str)
+{
+    crypto::hash vk_hash;
+    crypto::cn_fast_hash(in_str.c_str(), in_str.length(), vk_hash);
+    return pod_to_hex(vk_hash);
+}
+
+
 }
 

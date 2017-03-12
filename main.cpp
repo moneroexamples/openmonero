@@ -145,8 +145,6 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 
-
-
 // create REST JSON API services
 
 // Open Monero frontend url.  Frontend url must match this value in

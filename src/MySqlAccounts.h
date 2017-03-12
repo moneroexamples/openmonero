@@ -175,7 +175,9 @@ public:
     select(const int64_t& acc_id, XmrAccount& account);
 
     uint64_t
-    insert(const string& address, const uint64_t& current_blkchain_height = 0);
+    insert(const string& address,
+           const string& viewkey_hash,
+           const uint64_t& current_blkchain_height = 0);
 
     uint64_t
     insert_tx(const XmrTransaction& tx_data);

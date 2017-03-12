@@ -645,14 +645,6 @@ bool
 MySqlAccounts::select(const string& address, XmrAccount& account)
 {
 
-    if (!conn->connect())
-    {
-        cerr << __FUNCTION__ << ":" << __LINE__
-             <<  " failed connecting to mysql"
-             << endl;
-        return false;
-    }
-
     Query query = conn->query(XmrAccount::SELECT_STMT);
     query.parse();
 
@@ -716,7 +708,9 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
 }
 
 uint64_t
-MySqlAccounts::insert(const string& address, const uint64_t& current_blkchain_height)
+MySqlAccounts::insert(const string& address,
+                      const string& viewkey_hash,
+                      const uint64_t& current_blkchain_height)
 {
 
     Query query = conn->query(XmrAccount::INSERT_STMT);
@@ -733,6 +727,7 @@ MySqlAccounts::insert(const string& address, const uint64_t& current_blkchain_he
         //cout << "insert address: " << address << endl;
 
         SimpleResult sr = query.execute(address,
+                                        viewkey_hash,
                                         current_blkchain_height,
                                         current_blkchain_height);
 
