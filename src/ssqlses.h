@@ -13,10 +13,22 @@
 namespace xmreg
 {
 
-
 using namespace std;
 using namespace nlohmann;
 using namespace mysqlpp;
+
+/**
+ * Base class for all mysql table based classes that we use.
+ */
+class Table
+{
+public:
+
+    virtual string table_name() const = 0;
+    virtual json to_json()      const = 0;
+
+    friend std::ostream& operator<< (std::ostream& stream, const Table& data);
+};
 
 sql_create_7(Accounts, 1, 2,
              sql_bigint_unsigned, id,
@@ -28,7 +40,7 @@ sql_create_7(Accounts, 1, 2,
              sql_timestamp      , modified);
 
 
-struct XmrAccount : public Accounts
+struct XmrAccount : public Accounts, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -45,18 +57,15 @@ struct XmrAccount : public Accounts
                                 (%0q, %1q, %2q, %3q);
     )";
 
-
     using Accounts::Accounts;
 
     // viewkey is not stored in mysql db or anywhere
     // so need to be populated when user logs in.
     string viewkey;
 
-    json
-    to_json() const;
+    string table_name() const override { return this->table();};
 
-
-    friend std::ostream& operator<< (std::ostream& stream, const XmrAccount& acc);
+    json to_json() const override;
 
 };
 
@@ -78,7 +87,7 @@ sql_create_15(Transactions, 1, 2,
               sql_timestamp      , timestamp);
 
 
-struct XmrTransaction : public Transactions
+struct XmrTransaction : public Transactions, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -127,13 +136,13 @@ struct XmrTransaction : public Transactions
 
     using Transactions::Transactions;
 
-    json
-    to_json() const;
 
     static DateTime
     timestamp_to_DateTime(time_t timestamp);
 
-    friend std::ostream& operator<< (std::ostream& stream, const XmrTransaction& acc);
+    string table_name() const override { return this->table();};
+
+    json to_json() const override;
 
 };
 
@@ -152,7 +161,7 @@ sql_create_13(Outputs, 1, 3,
               sql_bigint_unsigned, mixin,
               sql_timestamp      , timestamp);
 
-struct XmrOutput : public Outputs
+struct XmrOutput : public Outputs, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -188,9 +197,6 @@ struct XmrOutput : public Outputs
 
     using Outputs::Outputs;
 
-    json
-    to_json() const;
-
     string
     get_rct() const
     {
@@ -198,7 +204,9 @@ struct XmrOutput : public Outputs
     }
 
 
-    friend std::ostream& operator<< (std::ostream& stream, const XmrOutput& out);
+    string table_name() const override { return this->table();};
+
+    json to_json() const override;
 
 };
 
@@ -213,7 +221,7 @@ sql_create_7(Inputs, 1, 4,
              sql_timestamp      , timestamp);
 
 
-struct XmrInput : public Inputs
+struct XmrInput : public Inputs, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -237,10 +245,9 @@ struct XmrInput : public Inputs
 
     using Inputs::Inputs;
 
-    json
-    to_json() const;
+    string table_name() const override { return this->table();};
 
-    friend std::ostream& operator<< (std::ostream& stream, const XmrInput& out);
+    json to_json() const override;
 
 };
 
@@ -256,7 +263,7 @@ sql_create_9(Payments, 1, 2,
              sql_timestamp      , modified);
 
 
-struct XmrPayment : public Payments
+struct XmrPayment : public Payments, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
@@ -279,10 +286,9 @@ struct XmrPayment : public Payments
 
     using Payments::Payments;
 
-    json
-    to_json() const;
+    string table_name() const override { return this->table();};
 
-    friend std::ostream& operator<< (std::ostream& stream, const XmrPayment& out);
+    json to_json() const override;
 
 };
 

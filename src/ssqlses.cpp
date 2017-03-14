@@ -9,7 +9,11 @@ namespace xmreg
 {
 
 
-
+ostream& operator<< (std::ostream& os, const Table& data)
+{
+    os << data.table_name() << ": " << data.to_json().dump() << '\n';
+    return os;
+};
 
 json
 XmrAccount::to_json() const
@@ -23,13 +27,6 @@ XmrAccount::to_json() const
 
     return j;
 }
-
-ostream& operator<< (std::ostream& os, const XmrAccount& acc)
-{
-    os << "XmrAccount: " << acc.to_json().dump() << '\n';
-    return os;
-};
-
 
 json
 XmrTransaction::to_json() const
