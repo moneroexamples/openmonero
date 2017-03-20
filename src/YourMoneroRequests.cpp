@@ -61,7 +61,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
         auto response_headers = make_headers({{"Content-Length", to_string(response_body.size())}});
 
-        session->close( OK, response_body, response_headers);
+        session->close(OK, response_body, response_headers);
 
         return;
     }
@@ -103,6 +103,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             if (CurrentBlockchainStatus::start_tx_search_thread(acc))
             {
                 cout << "Search thread started" << endl;
+
                 j_response["status"]      = "success";
                 j_response["new_address"] = false;
             }
@@ -111,7 +112,6 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
                 j_response["status"] = "error";
                 j_response["reason"] = "Failed created search thread for this account";
             }
-
         }
         else
         {
