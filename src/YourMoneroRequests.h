@@ -95,7 +95,9 @@ public:
     generic_options_handler( const shared_ptr< Session > session );
 
     static multimap<string, string>
-    make_headers(const multimap<string, string>& extra_headers = multimap<string, string>());
+    make_headers(
+            const multimap<string, string>& extra_headers
+            = multimap<string, string>());
 
     static void
     print_json_log(const string& text, const json& j);
@@ -108,6 +110,15 @@ public:
 
     inline uint64_t
     get_current_blockchain_height();
+
+private:
+
+    inline void
+    session_close(const shared_ptr< Session > session, string response_body);
+
+    bool parse_request(const Bytes& body,
+                       map<string, string>& values_map,
+                       json& j_response);
 
 };
 

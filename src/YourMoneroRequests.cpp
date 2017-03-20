@@ -36,35 +36,18 @@ YourMoneroRequests::YourMoneroRequests(shared_ptr<MySqlAccounts> _acc):
 void
 YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 {
-    json j_request;
-
     json j_response;
 
-    string xmr_address;
-    string view_key;
+    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
 
-    try
+    if (!parse_request(body, values_map, j_response))
     {
-        j_request = body_to_json(body);
-
-        xmr_address  = j_request["address"];
-        view_key     = j_request["view_key"];
-    }
-    catch (std::exception& e)
-    {
-        cerr << "login: cant parse json: " << e.what() << endl;
-
-        j_response["status"] = "error";
-        j_response["reason"] = "address and/or viewkey not provided";
-
-        string response_body = j_response.dump();
-
-        auto response_headers = make_headers({{"Content-Length", to_string(response_body.size())}});
-
-        session->close(OK, response_body, response_headers);
-
+        session_close(session, j_response.dump());
         return;
     }
+
+    const string& xmr_address = values_map["address"];
+    const string& view_key    = values_map["view_key"];
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -85,7 +68,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
         if (viewkey_hash == acc.viewkey_hash)
         {
-            acc.viewkey = j_request["view_key"];
+            acc.viewkey = values_map["view_key"];
 
             // so we have an account now. Either existing or
             // newly created. Thus, we can start a tread
@@ -143,12 +126,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         }
     }
 
-
-    string response_body = j_response.dump();
-
-    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
-
-    session->close( OK, response_body, response_headers);
+    session_close(session, j_response.dump());
 }
 
 void
@@ -888,6 +866,47 @@ YourMoneroRequests::get_current_blockchain_height()
 {
     return CurrentBlockchainStatus::get_current_blockchain_height();
 }
+
+void
+YourMoneroRequests::session_close(const shared_ptr< Session > session, string response_body)
+{
+    auto response_headers = make_headers({{"Content-Length", to_string(response_body.size())}});
+    session->close(OK, response_body, response_headers);
+}
+
+
+bool
+YourMoneroRequests::parse_request(
+        const Bytes& body,
+        map<string, string>& values_map,
+        json& j_response)
+{
+
+    json j_request;
+
+    try
+    {
+        j_request = body_to_json(body);
+
+        for (const auto& kv: values_map)
+        {
+            values_map[kv.first] = j_request[kv.first];
+        }
+
+        return true;
+    }
+    catch (std::exception& e)
+    {
+        cerr << "YourMoneroRequests::parse_request: " << e.what() << endl;
+
+        j_response["status"] = "error";
+        j_response["reason"] = "reqest json parsing failed";
+
+        return false;
+    }
+}
+
+
 
 
 // define default static variables
