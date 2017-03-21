@@ -120,8 +120,21 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             // select newly created account
             if (xmr_accounts->select(acc_id, acc))
             {
-                j_response["status"]      = "success";
-                j_response["new_address"] = false;
+
+                // if account was created start the new search thread.
+                if (CurrentBlockchainStatus::start_tx_search_thread(acc))
+                {
+                    cout << "Search thread started" << endl;
+
+                    j_response["status"]      = "success";
+                    j_response["new_address"] = false;
+                }
+                else
+                {
+                    j_response["status"] = "error";
+                    j_response["reason"] = "Failed created search thread for this account";
+                }
+
             }
         }
     }
