@@ -633,11 +633,6 @@ MySqlAccounts::MySqlAccounts()
     mysql_out       = make_shared<MysqlOutpus>(conn);
     mysql_in        = make_shared<MysqlInputs>(conn);
     mysql_payment   = make_shared<MysqlPayments>(conn);
-
-    // mysql connection will timeout after few hours
-    // of iddle time. so we have this tiny helper
-    // thread to ping mysql, thus keeping it alive
-    launch_mysql_pinging_thread();
 }
 
 

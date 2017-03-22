@@ -30,7 +30,13 @@ handel_::operator()(const shared_ptr< Session > session)
 
 YourMoneroRequests::YourMoneroRequests(shared_ptr<MySqlAccounts> _acc):
     xmr_accounts {_acc}
-{}
+{
+
+    // mysql connection will timeout after few hours
+    // of iddle time. so we have this tiny helper
+    // thread to ping mysql, thus keeping it alive
+    xmr_accounts->launch_mysql_pinging_thread();
+}
 
 
 void

@@ -19,6 +19,7 @@ TxSearch::TxSearch(XmrAccount& _acc)
 {
     acc = make_shared<XmrAccount>(_acc);
 
+    // creates an mysql connection for this thread
     xmr_accounts = make_shared<MySqlAccounts>();
 
     bool testnet = CurrentBlockchainStatus::testnet;
