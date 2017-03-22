@@ -36,10 +36,12 @@ MysqlInputs::select(const uint64_t& address_id, vector<XmrInput>& ins)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -67,10 +69,12 @@ MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -96,10 +100,12 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -141,6 +147,7 @@ MysqlInputs::insert(const XmrInput& in_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 
@@ -170,10 +177,12 @@ MysqlOutpus::select(const uint64_t& address_id, vector<XmrOutput>& outs)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -201,10 +210,12 @@ MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -230,10 +241,12 @@ MysqlOutpus::select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -265,10 +278,12 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return true;
@@ -306,6 +321,7 @@ MysqlOutpus::insert(const XmrOutput& out_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 
@@ -346,10 +362,12 @@ MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& tx
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -399,6 +417,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 
@@ -420,6 +439,7 @@ MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 }
@@ -440,6 +460,7 @@ MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 }
@@ -470,10 +491,12 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return true;
@@ -502,6 +525,7 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 }
@@ -528,10 +552,12 @@ MysqlPayments::select(const string& address, vector<XmrPayment>& payments)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -556,10 +582,12 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -591,6 +619,7 @@ MysqlPayments::insert(const XmrPayment& payment_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 
@@ -616,6 +645,7 @@ MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return false;
     }
 
@@ -658,10 +688,12 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -697,6 +729,7 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
     }
 
     return false;
@@ -733,6 +766,7 @@ MySqlAccounts::insert(const string& address,
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return 0;
     }
 
@@ -1009,6 +1043,7 @@ MySqlAccounts::update(XmrAccount& acc_orginal, XmrAccount& acc_new)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
+        throw  e;
         return false;
     }
 

@@ -479,6 +479,15 @@ TxSearch::find_txs_in_mempool(
         known_outputs_keys_copy = known_outputs_keys;
     }
 
+    // since find_txs_in_mempool can be called outside of this thread,
+    // we need to use local connection. we cant use connection that the
+    // main search method is using, as we can end up wtih mysql errors
+    // mysql will blow up when two queries are done at the same
+    // time in a single connection.
+    // so we create local connection here, only to be used in this method.
+
+    shared_ptr<MySqlAccounts> local_xmr_accounts = make_shared<MySqlAccounts>();
+
     for (const pair<uint64_t, transaction>& mtx: mempool_txs)
     {
 
@@ -549,7 +558,7 @@ TxSearch::find_txs_in_mempool(
                 // tx public key and its index in that tx
                 XmrOutput out;
 
-                if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                if (local_xmr_accounts->output_exists(in_info.out_pub_key, out))
                 {
                     uint64_t output_amount = out.amount;
                     string tx_pub_key = out.tx_pub_key;
