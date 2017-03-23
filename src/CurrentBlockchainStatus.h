@@ -73,7 +73,7 @@ struct CurrentBlockchainStatus
     // since this class monitors current status
     // of the blockchain, its seems logical to
     // make object for accessing the blockchain here
-    static xmreg::MicroCore mcore;
+    static unique_ptr<xmreg::MicroCore> mcore;
     static cryptonote::Blockchain *core_storage;
 
     static

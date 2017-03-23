@@ -30,8 +30,6 @@ bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
 uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
-xmreg::MicroCore        CurrentBlockchainStatus::mcore;
-cryptonote::Blockchain *CurrentBlockchainStatus::core_storage;
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;
 string                  CurrentBlockchainStatus::import_payment_viewkey;
@@ -39,6 +37,8 @@ uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.
 account_public_address  CurrentBlockchainStatus::address;
 secret_key              CurrentBlockchainStatus::viewkey;
 map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
+cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
+unique_ptr<xmreg::MicroCore>        CurrentBlockchainStatus::mcore;
 
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
@@ -125,15 +125,19 @@ CurrentBlockchainStatus::init_monero_blockchain()
     // set  monero log output level
     uint32_t log_level = 0;
     mlog_configure(mlog_get_default_log_path(""), true);
-    //mlog_set_log(std::string(std::to_string(log_level) + ",open-monero:INFO").c_str());
 
-    // initialize mcore and core_storage
-    if (!xmreg::init_blockchain(blockchain_path,
-                                mcore, core_storage))
+    mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
+
+    // initialize the core using the blockchain path
+    if (!mcore->init(blockchain_path))
     {
         cerr << "Error accessing blockchain." << endl;
         return false;
     }
+
+    // get the high level Blockchain object to interact
+    // with the blockchain lmdb database
+    core_storage = &(mcore->get_core());
 
     return true;
 }
@@ -192,7 +196,7 @@ CurrentBlockchainStatus::is_tx_spendtime_unlocked(
 bool
 CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
 {
-    return mcore.get_block_from_height(height, blk);
+    return mcore->get_block_from_height(height, blk);
 }
 
 bool
@@ -263,7 +267,7 @@ CurrentBlockchainStatus::get_tx_with_output(
 
     output_idx_in_tx = tx_out_idx.second;
 
-    if (!mcore.get_tx(tx_out_idx.first, tx))
+    if (!mcore->get_tx(tx_out_idx.first, tx))
     {
         cerr << "Cant get tx: " << tx_out_idx.first << endl;
 
