@@ -865,13 +865,17 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                 // so we still are going to use this txs, but we need to double
                 // check if its still valid, i.e., it's block did not get orphaned.
                 // we do this by checking if txs still exists in the blockchain
-                // and if its in the same block as noted in the database.
+                // and if its blockchain_tx_id is same as what we have in our mysql.
 
-                if (!CurrentBlockchainStatus::tx_exist(tx.hash))
+                uint64_t blockchain_tx_id {0};
+
+                CurrentBlockchainStatus::tx_exist(tx.hash, blockchain_tx_id);
+
+                if (blockchain_tx_id != tx.blockchain_tx_id)
                 {
-                    // tx does not exist in blockchain, but it was there before.
-                    // probably was in orphaned block. So remove it from the
-                    // mysql database.
+                    // tx does not exist in blockchain, or its blockchain_id changed
+                    // for example, it was orhpaned, and then readded.
+
                     uint64_t no_row_updated = delete_tx(tx.id);
 
                     if (no_row_updated != 1)
@@ -881,8 +885,14 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                                                     "xmr_accounts->delete_tx(tx.id)");
                     }
 
+                    // because txs does not exist in blockchain anymore,
+                    // we assume its back to mempool, and it will be rescanned
+                    // by tx search thread once added again to some block.
+
                     continue;
+
                 }
+
 
                 // set unlock_time field so that frontend displies it
                 // as a locked tx, if unlock_time is zero.

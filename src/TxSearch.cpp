@@ -205,6 +205,12 @@ TxSearch::search()
                     cout << "\nTransaction " << oi_identification.tx_hash_str
                          << " already present in mysql"
                          << endl;
+
+                    // if tx is already present for that user,
+                    // just move to next txs. This can happen we we
+                    // rescan user's transactions.
+
+                    continue;
                 }
 
                 tx_data.hash             = oi_identification.tx_hash_str;
@@ -390,7 +396,6 @@ TxSearch::search()
                         in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
 
                         uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
-
                     }
 
                 } //  if (!inputs_found.empty())

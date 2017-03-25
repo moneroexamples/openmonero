@@ -184,7 +184,6 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
         if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
         {
-
             json j_txs = json::array();
 
             for (XmrTransaction tx: txs)
