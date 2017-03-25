@@ -398,6 +398,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
         SimpleResult sr = query.execute(tx_data.hash,
                                         tx_data.prefix_hash,
                                         tx_data.account_id,
+                                        tx_data.blockchain_tx_id,
                                         tx_data.total_received,
                                         tx_data.total_sent,
                                         tx_data.unlock_time,

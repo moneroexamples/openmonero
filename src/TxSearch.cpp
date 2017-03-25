@@ -169,12 +169,24 @@ TxSearch::search()
             bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(
                     tx.unlock_time, searched_blk_no);
 
+
+            // this is id of txs in lmdb blockchain table.
+            // it will be used mostly to sort txs in the frontend.
+            uint64_t blockchain_tx_id {0};
+
+            if (!CurrentBlockchainStatus::tx_exist(oi_identification.tx_hash, blockchain_tx_id))
+            {
+                cerr << "Tx " << oi_identification.tx_hash_str << "not found in blockchain !" << endl;
+                continue;
+            }
+
             // FIRSt step.
             oi_identification.identify_outputs();
 
             vector<uint64_t> amount_specific_indices;
 
             uint64_t tx_mysql_id {0};
+
 
             // if we identified some outputs as ours,
             // save them into mysql.
@@ -195,27 +207,28 @@ TxSearch::search()
                          << endl;
                 }
 
-                tx_data.hash           = oi_identification.tx_hash_str;
-                tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
-                tx_data.account_id     = acc->id;
-                tx_data.total_received = oi_identification.total_received;
-                tx_data.total_sent     = 0; // at this stage we don't have any
-                                            // info about spendings
+                tx_data.hash             = oi_identification.tx_hash_str;
+                tx_data.prefix_hash      = oi_identification.tx_prefix_hash_str;
+                tx_data.account_id       = acc->id;
+                tx_data.blockchain_tx_id = blockchain_tx_id;
+                tx_data.total_received   = oi_identification.total_received;
+                tx_data.total_sent       = 0; // at this stage we don't have any
+                                             // info about spendings
 
-                                         // this is current block + unlock time
-                                         // for regular tx, the unlock time is
-                                         // default of 10 blocks.
-                                         // for coinbase tx it is 60 blocks
-                tx_data.unlock_time    = tx.unlock_time;
+                                             // this is current block + unlock time
+                                             // for regular tx, the unlock time is
+                                             // default of 10 blocks.
+                                             // for coinbase tx it is 60 blocks
+                tx_data.unlock_time      = tx.unlock_time;
 
-                tx_data.height         = searched_blk_no;
-                tx_data.coinbase       = oi_identification.tx_is_coinbase;
-                tx_data.is_rct         = oi_identification.is_rct;
-                tx_data.rct_type       = oi_identification.rct_type;
-                tx_data.spendable      = is_spendable;
-                tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                tx_data.mixin          = oi_identification.mixin_no;
-                tx_data.timestamp      = blk_timestamp_mysql_format;
+                tx_data.height           = searched_blk_no;
+                tx_data.coinbase         = oi_identification.tx_is_coinbase;
+                tx_data.is_rct           = oi_identification.is_rct;
+                tx_data.rct_type         = oi_identification.rct_type;
+                tx_data.spendable        = is_spendable;
+                tx_data.payment_id       = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                tx_data.mixin            = oi_identification.mixin_no;
+                tx_data.timestamp        = blk_timestamp_mysql_format;
 
 
                 // insert tx_data into mysql's Transactions table
@@ -343,20 +356,21 @@ TxSearch::search()
 
                         XmrTransaction tx_data;
 
-                        tx_data.hash           = oi_identification.tx_hash_str;
-                        tx_data.prefix_hash    = oi_identification.tx_prefix_hash_str;
-                        tx_data.account_id     = acc->id;
-                        tx_data.total_received = 0; // because this is spending, total_recieved is 0
-                        tx_data.total_sent     = total_sent;
-                        tx_data.unlock_time    = tx.unlock_time;
-                        tx_data.height         = searched_blk_no;
-                        tx_data.coinbase       = oi_identification.tx_is_coinbase;
-                        tx_data.is_rct         = oi_identification.is_rct;
-                        tx_data.rct_type       = oi_identification.rct_type;
-                        tx_data.spendable      = is_spendable;
-                        tx_data.payment_id     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
-                        tx_data.mixin          = get_mixin_no(tx) - 1;
-                        tx_data.timestamp      = blk_timestamp_mysql_format;
+                        tx_data.hash             = oi_identification.tx_hash_str;
+                        tx_data.prefix_hash      = oi_identification.tx_prefix_hash_str;
+                        tx_data.account_id       = acc->id;
+                        tx_data.blockchain_tx_id = blockchain_tx_id;
+                        tx_data.total_received   = 0; // because this is spending, total_recieved is 0
+                        tx_data.total_sent       = total_sent;
+                        tx_data.unlock_time      = tx.unlock_time;
+                        tx_data.height           = searched_blk_no;
+                        tx_data.coinbase         = oi_identification.tx_is_coinbase;
+                        tx_data.is_rct           = oi_identification.is_rct;
+                        tx_data.rct_type         = oi_identification.rct_type;
+                        tx_data.spendable        = is_spendable;
+                        tx_data.payment_id       = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                        tx_data.mixin            = get_mixin_no(tx) - 1;
+                        tx_data.timestamp        = blk_timestamp_mysql_format;
 
                         // insert tx_data into mysql's Transactions table
                         tx_mysql_id = xmr_accounts->insert_tx(tx_data);

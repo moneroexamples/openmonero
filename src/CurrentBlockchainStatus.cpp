@@ -225,6 +225,18 @@ CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash)
 }
 
 bool
+CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash, uint64_t& tx_index)
+{
+    if (!core_storage->get_db().tx_exists(tx_hash, tx_index))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool
 CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
 {
     crypto::hash tx_hash;

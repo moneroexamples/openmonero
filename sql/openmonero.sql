@@ -110,6 +110,7 @@ CREATE TABLE `Transactions` (
   `hash` varchar(64) NOT NULL,
   `prefix_hash` varchar(64) NOT NULL DEFAULT '',
   `account_id` bigint(20) UNSIGNED NOT NULL,
+  `blockchain_tx_id` bigint(20) UNSIGNED NOT NULL,
   `total_received` bigint(20) UNSIGNED NOT NULL,
   `total_sent` bigint(20) UNSIGNED NOT NULL,
   `unlock_time` bigint(20) UNSIGNED NOT NULL DEFAULT '0',

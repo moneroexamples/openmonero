@@ -20,7 +20,7 @@ OutputInputIdentification::OutputInputIdentification(
 
     tx_hash        = get_transaction_hash(*tx);
     tx_prefix_hash = get_transaction_prefix_hash(*tx);
-    tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(*tx);
+    tx_pub_key     = xmreg::get_tx_pub_key_from_received_outs(*tx);
 
     tx_hash_str        = pod_to_hex(tx_hash);
     tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);

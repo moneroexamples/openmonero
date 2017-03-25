@@ -69,11 +69,12 @@ struct XmrAccount : public Accounts, Table
 
 };
 
-sql_create_15(Transactions, 1, 2,
+sql_create_16(Transactions, 1, 2,
               sql_bigint_unsigned, id,
               sql_varchar        , hash,
               sql_varchar        , prefix_hash,
               sql_bigint_unsigned, account_id,
+              sql_bigint_unsigned, blockchain_tx_id,
               sql_bigint_unsigned, total_received,
               sql_bigint_unsigned, total_sent,
               sql_bigint_unsigned, unlock_time,
@@ -107,16 +108,16 @@ struct XmrTransaction : public Transactions, Table
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `account_id`,
+        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `account_id`, `blockchain_tx_id`,
                                            `total_received`, `total_sent`, `unlock_time`,
                                            `height`, `coinbase`, `is_rct`, `rct_type`,
                                            `spendable`,
                                            `payment_id`, `mixin`, `timestamp`)
-                                VALUES (%0q, %1q, %2q,
-                                        %3q, %4q, %5q,
-                                        %6q, %7q, %8q, %9q,
-                                        %10q,
-                                        %11q, %12q, %13q);
+                                VALUES (%0q, %1q, %2q, %3q,
+                                        %4q, %5q, %6q,
+                                        %7q, %8q, %9q, %10q,
+                                        %11q,
+                                        %12q, %13q, %14q);
     )";
 
     static constexpr const char* MARK_AS_SPENDABLE_STMT = R"(

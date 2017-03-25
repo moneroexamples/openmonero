@@ -190,7 +190,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             for (XmrTransaction tx: txs)
             {
                 json j_tx {
-                    {"id"             , tx.id}, // strangely, frontend sorts txs by id in database.
+                    {"id"             , tx.blockchain_tx_id},
                     {"coinbase"       , bool {tx.coinbase}},
                     {"hash"           , tx.hash},
                     {"height"         , tx.height},
