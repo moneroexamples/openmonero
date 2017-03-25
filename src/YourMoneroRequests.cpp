@@ -84,8 +84,8 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         }
         else
         {
-            j_response["status"] = "error";
-            j_response["reason"] = "Viewkey provided is incorrect";
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
         }
     }
     else
@@ -138,8 +138,8 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         }
         else
         {
-            j_response["status"] = "error";
-            j_response["reason"] = "Failed created search thread for this account";
+            j_response = json {{"status", "error"},
+                               {"reason", "Failed created search thread for this account"}};
         }
 
     } // if (start_search_thread)
@@ -150,12 +150,25 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 void
 YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const Bytes & body)
 {
-    json j_request = body_to_json(body);
+    json j_response;
 
-    string xmr_address  = j_request["address"];
+    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
+
+    if (!parse_request(body, values_map, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    const string& xmr_address = values_map["address"];
+    const string& view_key    = values_map["view_key"];
+
+    // make hash of the submited viewkey. we only store
+    // hash of viewkey in database, not acctual viewkey.
+    string viewkey_hash = make_hash(view_key);
 
     // initialize json response
-    json j_response {
+    j_response = json {
             { "total_received"         , 0},    // calculated in this function
             { "total_received_unlocked", 0},    // calculated in this function
             { "scanned_height"         , 0},    // not used. it is here to match mymonero
@@ -165,12 +178,26 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             { "transactions"           , json::array()}
     };
 
-
     // a placeholder for exciting or new account data
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc)) {
+    if (xmr_accounts->select(xmr_address, acc))
+    {
+        // before fetching txs, check if provided view key
+        // is correct. this is simply to ensure that
+        // we cant fetch an account's txs using only address.
+        // knowlage of the viewkey is also needed.
+
+        if (viewkey_hash != acc.viewkey_hash)
+        {
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
+
+            session_close(session, j_response.dump());
+            return;
+        }
+
 
         uint64_t total_received {0};
         uint64_t total_received_unlocked {0};
@@ -306,11 +333,24 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 void
 YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const Bytes & body)
 {
-    json j_request = body_to_json(body);
+    json j_response;
 
-    string xmr_address  = j_request["address"];
+    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
 
-    json j_response  {
+    if (!parse_request(body, values_map, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    const string& xmr_address = values_map["address"];
+    const string& view_key    = values_map["view_key"];
+
+    // make hash of the submited viewkey. we only store
+    // hash of viewkey in database, not acctual viewkey.
+    string viewkey_hash = make_hash(view_key);
+
+    j_response = json {
             {"locked_funds"        , 0},    // locked xmr (e.g., younger than 10 blocks)
             {"total_received"      , 0},    // calculated in this function
             {"total_sent"          , 0},    // calculated in this function
@@ -325,13 +365,21 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
                                               // only client has spent key
     };
 
-
     // a placeholder for exciting or new account data
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc))
     {
+        if (viewkey_hash != acc.viewkey_hash)
+        {
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
+
+            session_close(session, j_response.dump());
+            return;
+        }
+
         uint64_t total_received {0};
 
         // ping the search thread that we still need it.
@@ -379,15 +427,20 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
                         }
 
                         total_received += out.amount;
-                    }
-                }
-            }
+
+                    } //  for (XmrOutput &out: outs)
+
+                } //  if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
+
+            } // for (XmrTransaction tx: txs)
+
 
             j_response["total_received"] = total_received;
             j_response["total_sent"]     = total_sent;
 
             j_response["spent_outputs"]  = j_spent_outputs;
-        }
+
+        } // if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
 
     } // if (xmr_accounts->select(xmr_address, acc))
 
@@ -907,7 +960,21 @@ YourMoneroRequests::parse_request(
 
         for (const auto& kv: values_map)
         {
+
+            if (j_request.count(kv.first) == 0)
+            {
+                cerr << kv.first + " value not provided" << endl;
+
+                j_response["status"] = "error";
+                j_response["reason"] = kv.first + " value not provided";
+
+                return false;
+            }
+
             values_map[kv.first] = j_request[kv.first];
+
+            // assume some needed value in json is not given
+            j_response["reason"] = kv.first + " value not provided";
         }
 
         return true;

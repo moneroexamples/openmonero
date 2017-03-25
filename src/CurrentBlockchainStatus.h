@@ -107,6 +107,9 @@ struct CurrentBlockchainStatus
     tx_exist(const crypto::hash& tx_hash, uint64_t& tx_index);
 
     static bool
+    tx_exist(const string& tx_hash_str, uint64_t& tx_index);
+
+    static bool
     tx_exist(const string& tx_hash_str);
 
     static bool

@@ -214,7 +214,7 @@ To start for testnet with non-default location of `config.json` file:
 
 
 ```bash
-curl  -w "\n" -X POST http://139.162.32.245:1984/get_version
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_version
 ```
 Example output:
 
@@ -237,46 +237,11 @@ curl  -w "\n" -X POST http://127.0.0.1:1984/login -d '{"address": "A2VTvE8bC9APs
 {"new_address":false,"status":"success"}
 ```
 
-#### get_address_info
-
-```bash
-curl  -w "\n" -X POST http://139.162.32.245:1984/get_address_info -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV"}'
-```
-
-Output (only part shown):
-
-```json
-{
-  "blockchain_height": 858970,
-  "locked_funds": 0,
-  "scanned_block_height": 858970,
-  "scanned_height": 0,
-  "spent_outputs": [
-    {
-      "amount": 13683584012406,
-      "key_image": "437518836c315bf989c5cc28b935280345ed672d727122f6d6c5c5ff32e98224",
-      "mixin": 0,
-      "out_index": 0,
-      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
-    },
-    {
-      "amount": 13683584012406,
-      "key_image": "ac3088ce17cc608bcf86db65e9061fe4b9b02573b997944e4ebf7d8e64e4a3b4",
-      "mixin": 0,
-      "out_index": 0,
-      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
-    }
-  ],
-  "start_height": 855633,
-  "total_received": 13481878608141995,
-  "total_sent": 4699871131811773
-}
-```
 
 #### get_address_txs
 
 ```bash
-curl  -w "\n" -X POST http://139.162.32.245:1984/get_address_txs -d '{"address": "9viPdjLNXDaRFNtTTDg5wXg9Yg55uDC9XRLv882aPAFye1Ta6fSh25M41JoXBQj8d964JyFXuLVddEdg71cPJ8DY7WrSH3z"}'
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_address_txs -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
 ```
 
 Output (only part shown):
@@ -335,6 +300,43 @@ Output (only part shown):
   ]
 }
 ```
+
+#### get_address_info
+
+```bash
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_address_info -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
+```
+
+Output (only part shown):
+
+```json
+{
+  "blockchain_height": 858970,
+  "locked_funds": 0,
+  "scanned_block_height": 858970,
+  "scanned_height": 0,
+  "spent_outputs": [
+    {
+      "amount": 13683584012406,
+      "key_image": "437518836c315bf989c5cc28b935280345ed672d727122f6d6c5c5ff32e98224",
+      "mixin": 0,
+      "out_index": 0,
+      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+    },
+    {
+      "amount": 13683584012406,
+      "key_image": "ac3088ce17cc608bcf86db65e9061fe4b9b02573b997944e4ebf7d8e64e4a3b4",
+      "mixin": 0,
+      "out_index": 0,
+      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+    }
+  ],
+  "start_height": 855633,
+  "total_received": 13481878608141995,
+  "total_sent": 4699871131811773
+}
+```
+
 
 #### get_unspent_outs
 

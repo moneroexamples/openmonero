@@ -237,6 +237,19 @@ CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash, uint64_t& tx_inde
 
 
 bool
+CurrentBlockchainStatus::tx_exist(const string& tx_hash_str, uint64_t& tx_index)
+{
+    crypto::hash tx_hash;
+
+    if (hex_to_pod(tx_hash_str, tx_hash))
+    {
+        return tx_exist(tx_hash, tx_index);
+    }
+
+    throw runtime_error("hex_to_pod(tx_hash_str, tx_hash) failed!");
+}
+
+bool
 CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
 {
     crypto::hash tx_hash;
