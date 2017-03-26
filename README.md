@@ -209,6 +209,8 @@ To start for testnet with non-default location of `config.json` file:
  
 ## API calls
 
+In the below examples, you can change `127.0.0.1:1984` into `139.162.32.245:1984` to
+query the testnet open monero instance (assuming its up and working well).
 
 #### get_version
 
@@ -341,7 +343,7 @@ Output (only part shown):
 #### get_unspent_outs
 
 ```bash
- curl  -w "\n" -X POST http://139.162.32.245:1984/get_unspent_outs -d '{"address":"9viPdjLNXDaRFNtTTDg5wXg9Yg55uDC9XRLv882aPAFye1Ta6fSh25M41JoXBQj8d964JyFXuLVddEdg71cPJ8DY7WrSH3z","view_key":"ab227fb819e2b2100bb00840df1f00ed89867752d7d9d7918f6db6a0fa7f6b0c","amount":"0","mixin":4,"use_dust":false,"dust_threshold":"1000000000"}'
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_unspent_outs -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400","amount":"0","mixin":4,"use_dust":false,"dust_threshold":"1000000000"}'
 ```
 
 Output (only part shown):
@@ -390,7 +392,7 @@ Output (only part shown):
 #### get_random_outs
 
 ```bash
-curl  -w "\n" -X POST http://139.162.32.245:1984/get_random_outs -d '{"amounts":["0","0"],"count":5}'
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_random_outs -d '{"amounts":["0","0"],"count":5}'
 ```
 
 Output (only part shown):
