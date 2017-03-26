@@ -117,7 +117,8 @@ private:
     session_close(const shared_ptr< Session > session, string response_body);
 
     bool parse_request(const Bytes& body,
-                       map<string, string>& values_map,
+                       vector<string>& values_map,
+                       json& j_request,
                        json& j_response);
 
 };

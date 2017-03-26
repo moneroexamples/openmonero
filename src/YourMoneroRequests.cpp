@@ -43,17 +43,18 @@ void
 YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 {
     json j_response;
+    json j_request;
 
-    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
+    vector<string> required_values {"address", "view_key"};
 
-    if (!parse_request(body, values_map, j_response))
+    if (!parse_request(body, required_values, j_request, j_response))
     {
         session_close(session, j_response.dump());
         return;
     }
 
-    const string& xmr_address = values_map["address"];
-    const string& view_key    = values_map["view_key"];
+    string xmr_address = j_request["address"];
+    string view_key    = j_request["view_key"];
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -78,7 +79,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
         if (viewkey_hash == acc.viewkey_hash)
         {
-            acc.viewkey = values_map["view_key"];
+            acc.viewkey = view_key;
 
             start_search_thread = true;
         }
@@ -106,7 +107,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             // select newly created account
             if (xmr_accounts->select(acc_id, acc))
             {
-                acc.viewkey = values_map["view_key"];
+                acc.viewkey = view_key;
 
                 start_search_thread = true;
             }
@@ -151,17 +152,18 @@ void
 YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
+    json j_request;
 
-    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
+    vector<string> requested_values{"address", "view_key"};
 
-    if (!parse_request(body, values_map, j_response))
+    if (!parse_request(body, requested_values, j_request, j_response))
     {
         session_close(session, j_response.dump());
         return;
     }
 
-    const string& xmr_address = values_map["address"];
-    const string& view_key    = values_map["view_key"];
+    string xmr_address = j_request["address"];
+    string view_key    = j_request["view_key"];
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -334,17 +336,18 @@ void
 YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
+    json j_request;
 
-    map<string, string> values_map{{"address" , {}}, {"view_key", {}}};
+    vector<string> requested_values {"address" , "view_key"};
 
-    if (!parse_request(body, values_map, j_response))
+    if (!parse_request(body, requested_values, j_request, j_response))
     {
         session_close(session, j_response.dump());
         return;
     }
 
-    const string& xmr_address = values_map["address"];
-    const string& view_key    = values_map["view_key"];
+    const string& xmr_address = j_request["address"];
+    const string& view_key    = j_request["view_key"];
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -455,16 +458,33 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 void
 YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const Bytes & body)
 {
-    json j_request = body_to_json(body);
+    json j_response;
+    json j_request;
 
-    string xmr_address      = j_request["address"];
-    uint64_t mixin          = j_request["mixin"];
-    bool use_dust           = j_request["use_dust"];
+    vector<string> requested_values {"address" , "view_key", "mixin",
+                                     "use_dust", "dust_threshold", "amount"};
+
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    string xmr_address = j_request["address"];
+    string view_key    = j_request["view_key"];
+
+    uint64_t mixin     = j_request["mixin"];
+    bool use_dust      = j_request["use_dust"];
 
     uint64_t dust_threshold = boost::lexical_cast<uint64_t>(j_request["dust_threshold"].get<string>());
     uint64_t amount         = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
 
-    json j_response  {
+
+    // make hash of the submited viewkey. we only store
+    // hash of viewkey in database, not acctual viewkey.
+    string viewkey_hash = make_hash(view_key);
+
+    j_response = json  {
             {"amount" , 0},            // total value of the outputs
             {"outputs", json::array()} // list of outputs
                                        // exclude those without require
@@ -477,6 +497,15 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
     // select this account if its existing one
     if (xmr_accounts->select(xmr_address, acc))
     {
+        if (viewkey_hash != acc.viewkey_hash)
+        {
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
+
+            session_close(session, j_response.dump());
+            return;
+        }
+
         uint64_t total_outputs_amount {0};
 
         uint64_t current_blockchain_height
@@ -948,33 +977,31 @@ YourMoneroRequests::session_close(const shared_ptr< Session > session, string re
 bool
 YourMoneroRequests::parse_request(
         const Bytes& body,
-        map<string, string>& values_map,
+        vector<string>& values_map,
+        json& j_request,
         json& j_response)
 {
-
-    json j_request;
 
     try
     {
         j_request = body_to_json(body);
 
-        for (const auto& kv: values_map)
+        // parsing was successful
+        // now check if all required values are there.
+
+        for (const auto& v: values_map)
         {
 
-            if (j_request.count(kv.first) == 0)
+            if (j_request.count(v) == 0)
             {
-                cerr << kv.first + " value not provided" << endl;
+                cerr << v + " value not provided" << endl;
 
                 j_response["status"] = "error";
-                j_response["reason"] = kv.first + " value not provided";
+                j_response["reason"] = v + " value not provided";
 
                 return false;
             }
 
-            values_map[kv.first] = j_request[kv.first];
-
-            // assume some needed value in json is not given
-            j_response["reason"] = kv.first + " value not provided";
         }
 
         return true;
