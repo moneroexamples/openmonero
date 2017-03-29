@@ -6,6 +6,7 @@
 #include <memory>
 #include <cstdlib>
 
+
 using namespace std;
 using namespace restbed;
 
@@ -155,42 +156,21 @@ xmreg::YourMoneroRequests::frontend_url
 xmreg::YourMoneroRequests open_monero(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
 
-auto login                 = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::login,
-        "/login");
+// create Open Monero APIs
+MAKE_RESOURCE(login);
+MAKE_RESOURCE(get_address_txs);
+MAKE_RESOURCE(get_address_info);
+MAKE_RESOURCE(get_unspent_outs);
+MAKE_RESOURCE(get_random_outs);
+MAKE_RESOURCE(submit_raw_tx);
+MAKE_RESOURCE(import_wallet_request);
+MAKE_RESOURCE(get_version);
 
-auto get_address_txs       = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::get_address_txs,
-        "/get_address_txs");
-
-auto get_address_info      = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::get_address_info,
-        "/get_address_info");
-
-auto get_unspent_outs      = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::get_unspent_outs,
-        "/get_unspent_outs");
-
-auto get_random_outs       = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::get_random_outs,
-        "/get_random_outs");
-
-auto submit_raw_tx         = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::submit_raw_tx,
-        "/submit_raw_tx");
-
-auto import_wallet_request = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::import_wallet_request,
-        "/import_wallet_request");
-
-auto get_version           = open_monero.make_resource(
-        &xmreg::YourMoneroRequests::get_version,
-        "/get_version");
 
 // restbed service
 Service service;
 
-// Open Monero API we publish to the frontend
+// Publish the Open Monero API created so that front end can use it
 service.publish(login);
 service.publish(get_address_txs);
 service.publish(get_address_info);

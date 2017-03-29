@@ -16,6 +16,11 @@
 
 #include "../ext/restbed/source/restbed"
 
+#ifndef MAKE_RESOURCE
+#define MAKE_RESOURCE(name) auto name = open_monero.make_resource( \
+                           &xmreg::YourMoneroRequests::name, "/" + string(#name));
+#endif
+
 namespace xmreg
 {
 
