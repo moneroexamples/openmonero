@@ -183,7 +183,6 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                                         j--;
                                     }
                                 }
-
                             }
                         }
                         //console.log(transactions[i].total_received, transactions[i].total_sent);
@@ -206,7 +205,9 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         {
                             //remove tx if zero xmr recievied. probably spent only tx,
                             //but we dont have spendkey to verify this.
-                            if (new JSBigInt(transactions[i].total_received).compare(0) === true)
+                            //console.log(new JSBigInt(transactions[i].total_received));
+                            //console.log(new JSBigInt(transactions[i].total_received).compare(0));
+                            if (new JSBigInt(transactions[i].total_received).compare(0) <= 0)
                             {
                                 transactions.splice(i, 1);
                                 i--;
