@@ -101,7 +101,9 @@
             <div class="w-icon-nav-menu"></div>
         </div>
         <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#/overview' : '#/'}}">
-            <span style="font-size: 32px; font-weight: bold;">OPEN MONERO</span> <span style="color:white" ng-hide="testnet == false"><br/>testnet monero network</span>
+            <span style="font-size: 32px; font-weight: bold;">OPEN MONERO</span>
+            <span style="color:white" ng-hide="testnet == false"><br/>testnet monero network</span>
+            <span style="color:white" ng-hide="testnet == true"><br/>mainnet monero network</span>
         </a>
     </div>
 </div>

@@ -129,7 +129,7 @@ else
 // of the blockchain (e.g., current height), its seems logical to
 // make static objects for accessing the blockchain in this class.
 // this way monero accessing blockchain variables (i.e. mcore and core_storage)
-// are not passed around like crazy everywhere.
+// are not passed around like crazy everywhere. Uri( "file:///tmp/dh2048.pem"
 // There are here, and this is the only class that
 // has direct access to blockchain and talks (using rpc calls)
 // with the deamon.
