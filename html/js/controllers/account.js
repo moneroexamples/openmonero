@@ -39,6 +39,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.total_sent = JSBigInt.ZERO;
     $scope.address = AccountService.getAddress();
     $scope.view_key = $scope.viewkey = AccountService.getViewKey();
+    $scope.view_only  = AccountService.isViewOnly();
     $scope.spend_key = AccountService.getSpendKey();
     $scope.mnemonic = AccountService.getMnemonic();
 
@@ -92,6 +93,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
         $scope.view_key = $scope.viewkey = AccountService.getViewKey();
         $scope.spend_key = AccountService.getSpendKey();
         $scope.mnemonic = AccountService.getMnemonic();
+        $scope.view_only = AccountService.isViewOnly();
         if (!AccountService.loggedIn()) {
             $scope.transactions = [];
             $scope.blockchain_height = 0;

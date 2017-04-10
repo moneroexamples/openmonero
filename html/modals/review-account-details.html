@@ -8,21 +8,23 @@
             <div class="subhead-text modal review">These are your account details. Feel free to view them at any time.</div>
             <div class="w-form form-wrapper">
                 <form id="email-form" name="email-form" data-name="Email Form">
-                    <label class="field-label review" for="Mnemonic-2">Mnemonic seed (Private)</label>
+                    <label class="field-label review">Mnemonic seed (Private)</label>
                     <div class="move-text-div">
-                        <div class="review-text address">{{mnemonic}} </div>
+                        <div class="review-text address" ng-show="!view_only">{{mnemonic}}</div>
+                        <div class="review-text" ng-show="view_only">N/A for view only account</div>
                     </div>
-                    <label class="field-label review" for="Mnemonic-2">Account Address (Public)</label>
+                    <label class="field-label review" >Account Address (Public)</label>
                     <div class="move-text-div">
                         <div class="review-text address">{{address}} </div>
                     </div>
-                    <label class="field-label review" for="Mnemonic-2">View Key (Private)</label>
+                    <label class="field-label review">View Key (Private)</label>
                     <div class="move-text-div">
                         <div class="review-text">{{view_key}} </div>
                     </div>
-                    <label class="field-label review" for="Mnemonic-2">Spend Key (Private)</label>
+                    <label class="field-label review">Spend Key (Private)</label>
                     <div class="move-text-div">
-                        <div class="review-text">{{spend_key}} </div>
+                        <div class="review-text" ng-show="!view_only">{{spend_key}} </div>
+                        <div class="review-text" ng-show="view_only">N/A for view only account</div>
                     </div>
                     <div class="submit-div">
                         <a class="login-btn modals pointer" data-ix="close-review-details" hide-modal>Ok, thanks!</a>
