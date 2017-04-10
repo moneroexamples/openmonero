@@ -10,8 +10,8 @@
                 <form id="email-form" name="email-form" data-name="Email Form">
                     <label class="field-label review">Mnemonic seed (Private)</label>
                     <div class="move-text-div">
-                        <div class="review-text address" ng-show="!view_only">{{mnemonic}}</div>
-                        <div class="review-text" ng-show="view_only">N/A for view only account</div>
+                        <div class="review-text address" ng-show="mnemonic">{{mnemonic}}</div>
+                        <div class="review-text" ng-show="!mnemonic"></div>
                     </div>
                     <label class="field-label review" >Account Address (Public)</label>
                     <div class="move-text-div">
