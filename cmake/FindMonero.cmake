@@ -75,6 +75,8 @@ if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
 			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
 endif()
 
+message(STATUS ${MONERO_SOURCE_DIR}/build)
+
 # include monero headers
 include_directories(
 		${MONERO_SOURCE_DIR}/src

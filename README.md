@@ -83,7 +83,7 @@ Below are example and basic instructions on how to setup up and run Open Monero 
 
 #### Monero download and compilation
 
-Download and compile Monero into your home folder:
+Download and compile Monero recent monero realease into your home folder:
 
 ```bash
 # first install monero dependecines
@@ -98,12 +98,15 @@ git clone https://github.com/monero-project/monero
 
 cd monero/
 
+# checkout last monero version
+git checkout -b v0.10.3.1
+
 make
 ```
 
 #### Compilation of the Open Monero (don't run it yet)
 
-Once Monero was downloaed and compiled, we can download Open Monero and compile it. 
+Once Monero was downloaded and compiled, we can download Open Monero and compile it. 
 In fact we could postpone compilation to later, but 
 we can just do it now, to see if it compiles. But don't run it yet. It will not
 work without database, setup frontend, and synced and running monero blockchain.
