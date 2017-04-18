@@ -76,14 +76,14 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
 
 
 
-## Example setup on Ubuntu 16.04 
+## Example compilation on Ubuntu 16.04 
 
 Below are example and basic instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
 
 
 #### Monero download and compilation
 
-Download and compile Monero recent monero realease into your home folder:
+Download and compile recent Monero realease into your home folder:
 
 ```bash
 # first install monero dependecines
