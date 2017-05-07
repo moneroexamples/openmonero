@@ -916,20 +916,12 @@ YourMoneroRequests::generic_options_handler( const shared_ptr< Session > session
 }
 
 
-
-
 multimap<string, string>
 YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
 {
     multimap<string, string> headers {
-            {"Date"                            , get_current_time()},
-            {"Access-Control-Allow-Origin"     , frontend_url},
-            {"access-control-allow-headers"    , "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,"
-                                                 "X-Requested-With,If-Modified-Since,Cache-Control,"
-                                                 "Content-Type,Set-Cookie"},
-            {"access-control-max-age"          , "86400, 1728000"},
-            {"access-control-allow-methods"    , "GET, POST, OPTIONS"},
-            {"access-control-allow-credentials", "true"},
+            {"Access-Control-Allow-Origin"     , "*"},
+            {"Access-Control-Allow-Headers"    , "Content-Type"},
             {"Content-Type"                    , "application/json"}
     };
 
@@ -937,7 +929,6 @@ YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
 
     return headers;
 };
-
 
 void
 YourMoneroRequests::print_json_log(const string& text, const json& j)
@@ -1016,12 +1007,6 @@ YourMoneroRequests::parse_request(
         return false;
     }
 }
-
-
-
-
-// define default static variables
-string YourMoneroRequests::frontend_url {"http://127.0.0.1:81"};
 
 }
 

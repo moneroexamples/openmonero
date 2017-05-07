@@ -1,5 +1,4 @@
 {
-  "frontend-url": "http://127.0.0.1",
   "daemon-url" :
   {
     "mainnet" : "http:://127.0.0.1:18081",
