@@ -82,6 +82,9 @@ public:
     void
     set_searched_blk_no(uint64_t new_value);
 
+    uint64_t
+    get_searched_blk_no() const;
+
     void
     ping();
 

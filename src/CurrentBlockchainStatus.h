@@ -184,6 +184,10 @@ struct CurrentBlockchainStatus
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
 
+    static bool
+    get_searched_blk_no(const string& address,
+                        uint64_t& searched_blk_no);
+
     static void
     clean_search_thread_map();
 
