@@ -32,7 +32,7 @@
     }
   },
   "refresh_block_status_every_seconds" : 10,
-  "search_thread_life_in_seconds"      : 600,
+  "search_thread_life_in_seconds"      : 300,
   "ssl" :
   {
     "enable" : false,
