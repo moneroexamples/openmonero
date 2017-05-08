@@ -116,13 +116,22 @@ public:
 
 private:
 
+    bool
+    login_and_start_search_thread(
+            const string& xmr_address,
+            const string& viewkey,
+            XmrAccount& acc,
+            json& j_response);
+
+
     inline void
     session_close(const shared_ptr< Session > session, string response_body);
 
-    bool parse_request(const Bytes& body,
-                       vector<string>& values_map,
-                       json& j_request,
-                       json& j_response);
+    bool
+    parse_request(const Bytes& body,
+                  vector<string>& values_map,
+                  json& j_request,
+                  json& j_response);
 
 };
 

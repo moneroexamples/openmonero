@@ -56,40 +56,15 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     string xmr_address = j_request["address"];
     string view_key    = j_request["view_key"];
 
-    // make hash of the submited viewkey. we only store
-    // hash of viewkey in database, not acctual viewkey.
-    string viewkey_hash = make_hash(view_key);
 
     // a placeholder for exciting or new account data
     XmrAccount acc;
 
     uint64_t acc_id {0};
 
-    // indicate that login of exisitng user was successful
-    // or creating a new user, so that search thread
-    // for that user can be started
-    bool start_search_thread {false};
-
+    // first check if new account
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
-    {
-        // we got accunt from the database. we double check
-        // if hsah of provided viewkey by the frontend, matches
-        // what we have in database.
-
-        if (viewkey_hash == acc.viewkey_hash)
-        {
-            acc.viewkey = view_key;
-
-            start_search_thread = true;
-        }
-        else
-        {
-            j_response = json {{"status", "error"},
-                               {"reason", "Viewkey provided is incorrect"}};
-        }
-    }
-    else
+    if (!xmr_accounts->select(xmr_address, acc))
     {
         // account does not exist, so create new one
         // for this address
@@ -99,51 +74,38 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // to start searching txs of this new acount
         // make it 1 block lower than current, just in case.
         // this variable will be our using to initialize
-        // `canned_block_height` in mysql Accounts table.
+        // `scanned_block_height` in mysql Accounts table.
         if ((acc_id = xmr_accounts->insert(xmr_address,
-                                           viewkey_hash,
-                                           get_current_blockchain_height())) != 0)
+                                           make_hash(view_key),
+                                           get_current_blockchain_height())) == 0)
         {
-            // select newly created account
-            if (xmr_accounts->select(acc_id, acc))
-            {
-                acc.viewkey = view_key;
-
-                start_search_thread = true;
-            }
-        }
-
-    } // else  if (xmr_accounts->select(xmr_address, acc))
-
-    if (start_search_thread)
-    {
-        // so we have an account now. Either existing or
-        // newly created. Thus, we can start a tread
-        // which will scan for transactions belonging to
-        // that account, using its address and view key.
-        // the thread will scan the blockchain for txs belonging
-        // to that account and updated mysql database whenever it
-        // will find something.
-        //
-        // The other client (i.e., a webbrowser) will query other functions to retrieve
-        // any belonging transactions in a loop. Thus the thread does not need
-        // to do anything except looking for tx and updating mysql
-        // with relative tx information
-
-        if (CurrentBlockchainStatus::start_tx_search_thread(acc))
-        {
-            cout << "Search thread started" << endl;
-
-            j_response["status"]      = "success";
-            j_response["new_address"] = false;
-        }
-        else
-        {
+            // if creating account failed
             j_response = json {{"status", "error"},
-                               {"reason", "Failed created search thread for this account"}};
-        }
+                               {"reason", "Account creation failed"}};
 
-    } // if (start_search_thread)
+            session_close(session, j_response.dump());
+            return;
+        }
+    } // if (!xmr_accounts->select(xmr_address, acc))
+
+
+    // so by now new account has been created or it already exists
+    // so we just login into it.
+
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    {
+       // if successfuly logged in and created search thread
+        j_response["status"]      = "success";
+        j_response["new_address"] = false;
+    }
+    else
+    {
+        // some error with loggin in or search thread start
+        session_close(session, j_response.dump());
+        return;
+
+    } // else  if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+
 
     session_close(session, j_response.dump());
 }
@@ -199,6 +161,9 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             session_close(session, j_response.dump());
             return;
         }
+
+        // check if search thread exisits, and start one if not
+
 
 
         uint64_t total_received {0};
@@ -956,6 +921,77 @@ YourMoneroRequests::get_current_blockchain_height()
 {
     return CurrentBlockchainStatus::get_current_blockchain_height();
 }
+
+bool
+YourMoneroRequests::login_and_start_search_thread(
+                        const string& xmr_address,
+                        const string& view_key,
+                        XmrAccount& acc,
+                        json& j_response)
+{
+
+    // select this account if its existing one
+    if (xmr_accounts->select(xmr_address, acc))
+    {
+        // we got accunt from the database. we double check
+        // if hash of provided viewkey by the frontend, matches
+        // what we have in database.
+
+        // make hash of the submited viewkey. we only store
+        // hash of viewkey in database, not acctual viewkey.
+        string viewkey_hash = make_hash(view_key);
+
+        if (viewkey_hash == acc.viewkey_hash)
+        {
+            // if match, than save the viewkey in account object
+            // and proceed to checking if a search thread exisits
+            // for this account. if not, then create new thread
+
+            acc.viewkey = view_key;
+
+            // so we have an account now. Either existing or
+            // newly created. Thus, we can start a tread
+            // which will scan for transactions belonging to
+            // that account, using its address and view key.
+            // the thread will scan the blockchain for txs belonging
+            // to that account and updated mysql database whenever it
+            // will find something.
+            //
+            // The other client (i.e., a webbrowser) will query other functions to retrieve
+            // any belonging transactions in a loop. Thus the thread does not need
+            // to do anything except looking for tx and updating mysql
+            // with relative tx information
+
+            if (CurrentBlockchainStatus::start_tx_search_thread(acc))
+            {
+                cout << "Search thread started" << endl;
+
+                j_response["status"]      = "success";
+                j_response["new_address"] = false;
+
+                // thread has been started or already exists.
+                // everything seems fine.
+
+                return true;
+            }
+            else
+            {
+                j_response = json {{"status", "error"},
+                                   {"reason", "Failed created search thread for this account"}};
+            }
+
+        }
+        else
+        {
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
+        }
+    }
+
+    return false;
+}
+
+
 
 void
 YourMoneroRequests::session_close(const shared_ptr< Session > session, string response_body)
