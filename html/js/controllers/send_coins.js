@@ -200,6 +200,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
+        var fee_multiplayer = 4; // default value for priority 2
+
         var neededFee = rct ? feePerKB.multiply(13) : feePerKB;
         var totalAmountWithoutFee;
         var unspentOuts;
@@ -276,6 +278,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     if (data.per_kb_fee)
                     {
                         feePerKB = new JSBigInt(data.per_kb_fee);
+                        neededFee = feePerKB.multiply(13).multiply(fee_multiplayer);
                     }
                     transfer().then(transferSuccess, transferFailure);
                 })
@@ -328,7 +331,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 numKB++;
             }
             console.log(txBlobBytes + " bytes <= " + numKB + " KB (current fee: " + cnUtil.formatMoneyFull(prevFee) + ")");
-            neededFee = feePerKB.multiply(numKB);
+            neededFee = feePerKB.multiply(numKB).multiply(fee_multiplayer);
             // if we need a higher fee
             if (neededFee.compare(prevFee) > 0) {
                 console.log("Previous fee: " + cnUtil.formatMoneyFull(prevFee) + " New fee: " + cnUtil.formatMoneyFull(neededFee));
@@ -428,7 +431,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 //compute fee as closely as possible before hand
                 if (using_outs.length > 1 && rct)
                 {
-                    var newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(feePerKB);
+                    var newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(feePerKB).multiply(fee_multiplayer);
                     totalAmount = totalAmountWithoutFee.add(newNeededFee);
                     //add outputs 1 at a time till we either have them all or can meet the fee
                     while (using_outs_amount.compare(totalAmount) < 0 && unused_outs.length > 0)
@@ -437,7 +440,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         using_outs.push(out);
                         using_outs_amount = using_outs_amount.add(out.amount);
                         console.log("Using output: " + cnUtil.formatMoney(out.amount) + " - " + JSON.stringify(out));
-                        newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(feePerKB);
+                        newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixin, 2) / 1024)).multiply(feePerKB).multiply(fee_multiplayer);
                         totalAmount = totalAmountWithoutFee.add(newNeededFee);
                     }
                     console.log("New fee: " + cnUtil.formatMoneySymbol(newNeededFee) + " for " + using_outs.length + " inputs");
