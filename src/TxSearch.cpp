@@ -51,11 +51,6 @@ void
 TxSearch::search()
 {
 
-    if (searched_blk_no > CurrentBlockchainStatus::current_height)
-    {
-        throw TxSearchException("searched_blk_no > CurrentBlockchainStatus::current_height");
-    }
-
     uint64_t current_timestamp = chrono::duration_cast<chrono::seconds>(
             chrono::system_clock::now().time_since_epoch()).count();
 
