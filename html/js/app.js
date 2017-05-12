@@ -53,7 +53,7 @@ var thinwalletApp = angular.module('thinWallet', [
 ]);
 
 thinwalletApp.config(['$httpProvider', function($httpProvider) {
-     $httpProvider.defaults.withCredentials = true;
+     $httpProvider.defaults.withCredentials = false;
      delete $httpProvider.defaults.headers.common['X-Requested-With'];
 }]);
 

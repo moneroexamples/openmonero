@@ -148,11 +148,6 @@ xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 // create REST JSON API services
 
-// Open Monero frontend url.  Frontend url must match this value in
-// server. Otherwise CORS problems between frontend and backend can occure
-xmreg::YourMoneroRequests::frontend_url
-        = config_json["frontend-url"];
-
 xmreg::YourMoneroRequests open_monero(
         shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
 

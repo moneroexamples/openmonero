@@ -56,40 +56,15 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     string xmr_address = j_request["address"];
     string view_key    = j_request["view_key"];
 
-    // make hash of the submited viewkey. we only store
-    // hash of viewkey in database, not acctual viewkey.
-    string viewkey_hash = make_hash(view_key);
 
     // a placeholder for exciting or new account data
     XmrAccount acc;
 
     uint64_t acc_id {0};
 
-    // indicate that login of exisitng user was successful
-    // or creating a new user, so that search thread
-    // for that user can be started
-    bool start_search_thread {false};
-
+    // first check if new account
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
-    {
-        // we got accunt from the database. we double check
-        // if hsah of provided viewkey by the frontend, matches
-        // what we have in database.
-
-        if (viewkey_hash == acc.viewkey_hash)
-        {
-            acc.viewkey = view_key;
-
-            start_search_thread = true;
-        }
-        else
-        {
-            j_response = json {{"status", "error"},
-                               {"reason", "Viewkey provided is incorrect"}};
-        }
-    }
-    else
+    if (!xmr_accounts->select(xmr_address, acc))
     {
         // account does not exist, so create new one
         // for this address
@@ -99,51 +74,38 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // to start searching txs of this new acount
         // make it 1 block lower than current, just in case.
         // this variable will be our using to initialize
-        // `canned_block_height` in mysql Accounts table.
+        // `scanned_block_height` in mysql Accounts table.
         if ((acc_id = xmr_accounts->insert(xmr_address,
-                                           viewkey_hash,
-                                           get_current_blockchain_height())) != 0)
+                                           make_hash(view_key),
+                                           get_current_blockchain_height())) == 0)
         {
-            // select newly created account
-            if (xmr_accounts->select(acc_id, acc))
-            {
-                acc.viewkey = view_key;
-
-                start_search_thread = true;
-            }
-        }
-
-    } // else  if (xmr_accounts->select(xmr_address, acc))
-
-    if (start_search_thread)
-    {
-        // so we have an account now. Either existing or
-        // newly created. Thus, we can start a tread
-        // which will scan for transactions belonging to
-        // that account, using its address and view key.
-        // the thread will scan the blockchain for txs belonging
-        // to that account and updated mysql database whenever it
-        // will find something.
-        //
-        // The other client (i.e., a webbrowser) will query other functions to retrieve
-        // any belonging transactions in a loop. Thus the thread does not need
-        // to do anything except looking for tx and updating mysql
-        // with relative tx information
-
-        if (CurrentBlockchainStatus::start_tx_search_thread(acc))
-        {
-            cout << "Search thread started" << endl;
-
-            j_response["status"]      = "success";
-            j_response["new_address"] = false;
-        }
-        else
-        {
+            // if creating account failed
             j_response = json {{"status", "error"},
-                               {"reason", "Failed created search thread for this account"}};
-        }
+                               {"reason", "Account creation failed"}};
 
-    } // if (start_search_thread)
+            session_close(session, j_response.dump());
+            return;
+        }
+    } // if (!xmr_accounts->select(xmr_address, acc))
+
+
+    // so by now new account has been created or it already exists
+    // so we just login into it.
+
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    {
+       // if successfuly logged in and created search thread
+        j_response["status"]      = "success";
+        j_response["new_address"] = false;
+    }
+    else
+    {
+        // some error with loggin in or search thread start
+        session_close(session, j_response.dump());
+        return;
+
+    } // else  if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+
 
     session_close(session, j_response.dump());
 }
@@ -183,22 +145,14 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     // a placeholder for exciting or new account data
     xmreg::XmrAccount acc;
 
-    // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
+    // if not logged, i.e., no search thread exist, then start one.
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
     {
         // before fetching txs, check if provided view key
         // is correct. this is simply to ensure that
         // we cant fetch an account's txs using only address.
         // knowlage of the viewkey is also needed.
 
-        if (viewkey_hash != acc.viewkey_hash)
-        {
-            j_response = json {{"status", "error"},
-                               {"reason", "Viewkey provided is incorrect"}};
-
-            session_close(session, j_response.dump());
-            return;
-        }
 
 
         uint64_t total_received {0};
@@ -218,17 +172,17 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
             for (XmrTransaction tx: txs)
             {
                 json j_tx {
-                    {"id"             , tx.blockchain_tx_id},
-                    {"coinbase"       , bool {tx.coinbase}},
-                    {"hash"           , tx.hash},
-                    {"height"         , tx.height},
-                    {"mixin"          , tx.mixin},
-                    {"payment_id"     , tx.payment_id},
-                    {"unlock_time"    , tx.unlock_time},
-                    {"total_sent"     , 0},    // to be field when checking for spent_outputs below
-                    {"total_received" , tx.total_received},
-                    {"timestamp"      , tx.timestamp},
-                    {"mempool"        , false} // tx in database are never from mempool
+                        {"id"             , tx.blockchain_tx_id},
+                        {"coinbase"       , bool {tx.coinbase}},
+                        {"hash"           , tx.hash},
+                        {"height"         , tx.height},
+                        {"mixin"          , tx.mixin},
+                        {"payment_id"     , tx.payment_id},
+                        {"unlock_time"    , tx.unlock_time},
+                        {"total_sent"     , 0},    // to be field when checking for spent_outputs below
+                        {"total_received" , tx.total_received},
+                        {"timestamp"      , tx.timestamp},
+                        {"mempool"        , false} // tx in database are never from mempool
                 };
 
                 vector<XmrInput> inputs;
@@ -248,11 +202,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                             total_spent += input.amount;
 
                             j_spent_outputs.push_back({
-                                    {"amount"     , input.amount},
-                                    {"key_image"  , input.key_image},
-                                    {"tx_pub_key" , out.tx_pub_key},
-                                    {"out_index"  , out.out_index},
-                                    {"mixin"      , out.mixin}});
+                                                              {"amount"     , input.amount},
+                                                              {"key_image"  , input.key_image},
+                                                              {"tx_pub_key" , out.tx_pub_key},
+                                                              {"out_index"  , out.out_index},
+                                                              {"mixin"      , out.mixin}});
                         }
                     }
 
@@ -280,8 +234,13 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
         } // if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
 
-    } //  if (xmr_accounts->select(xmr_address, acc))
-
+    } // if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    else
+    {
+        // some error with loggin in or search thread start
+        session_close(session, j_response.dump());
+        return;
+    }
 
     // append txs found in mempool to the json returned
 
@@ -372,22 +331,29 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
     {
-        if (viewkey_hash != acc.viewkey_hash)
-        {
-            j_response = json {{"status", "error"},
-                               {"reason", "Viewkey provided is incorrect"}};
-
-            session_close(session, j_response.dump());
-            return;
-        }
 
         uint64_t total_received {0};
 
         // ping the search thread that we still need it.
         // otherwise it will finish after some time.
         CurrentBlockchainStatus::ping_search_thread(xmr_address);
+
+        uint64_t current_searched_blk_no {0};
+
+        if (CurrentBlockchainStatus::get_searched_blk_no(xmr_address, current_searched_blk_no))
+        {
+            // if current_searched_blk_no is higher than what is in mysql, update it
+            // in the search thread. This may occure when manually editing scanned_block_height
+            // in Accounts table to import txs or rescan txs.
+            // we use the minumum difference of 10 blocks, for this update to happen
+
+            if (current_searched_blk_no > acc.scanned_block_height + 10)
+            {
+                CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, acc.scanned_block_height);
+            }
+        }
 
         j_response["total_received"]       = total_received;
         j_response["start_height"]         = acc.start_height;
@@ -445,7 +411,13 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
         } // if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
 
-    } // if (xmr_accounts->select(xmr_address, acc))
+    } //  if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    else
+    {
+        // some error with loggin in or search thread start
+        session_close(session, j_response.dump());
+        return;
+    }
 
     string response_body = j_response.dump();
 
@@ -495,17 +467,8 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
-    if (xmr_accounts->select(xmr_address, acc))
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
     {
-        if (viewkey_hash != acc.viewkey_hash)
-        {
-            j_response = json {{"status", "error"},
-                               {"reason", "Viewkey provided is incorrect"}};
-
-            session_close(session, j_response.dump());
-            return;
-        }
-
         uint64_t total_outputs_amount {0};
 
         uint64_t current_blockchain_height
@@ -629,7 +592,14 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
             }
         }
 
-    } //  if (xmr_accounts->select(xmr_address, acc))
+    } // if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    else
+    {
+        // some error with loggin in or search thread start
+        session_close(session, j_response.dump());
+        return;
+
+    }
 
     string response_body = j_response.dump();
 
@@ -916,20 +886,12 @@ YourMoneroRequests::generic_options_handler( const shared_ptr< Session > session
 }
 
 
-
-
 multimap<string, string>
 YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
 {
     multimap<string, string> headers {
-            {"Date"                            , get_current_time()},
-            {"Access-Control-Allow-Origin"     , frontend_url},
-            {"access-control-allow-headers"    , "*, DNT,X-CustomHeader,Keep-Alive,User-Agent,"
-                                                 "X-Requested-With,If-Modified-Since,Cache-Control,"
-                                                 "Content-Type,Set-Cookie"},
-            {"access-control-max-age"          , "86400, 1728000"},
-            {"access-control-allow-methods"    , "GET, POST, OPTIONS"},
-            {"access-control-allow-credentials", "true"},
+            {"Access-Control-Allow-Origin"     , "*"},
+            {"Access-Control-Allow-Headers"    , "Content-Type"},
             {"Content-Type"                    , "application/json"}
     };
 
@@ -937,7 +899,6 @@ YourMoneroRequests::make_headers(const multimap<string, string>& extra_headers)
 
     return headers;
 };
-
 
 void
 YourMoneroRequests::print_json_log(const string& text, const json& j)
@@ -965,6 +926,77 @@ YourMoneroRequests::get_current_blockchain_height()
 {
     return CurrentBlockchainStatus::get_current_blockchain_height();
 }
+
+bool
+YourMoneroRequests::login_and_start_search_thread(
+                        const string& xmr_address,
+                        const string& view_key,
+                        XmrAccount& acc,
+                        json& j_response)
+{
+
+    // select this account if its existing one
+    if (xmr_accounts->select(xmr_address, acc))
+    {
+        // we got accunt from the database. we double check
+        // if hash of provided viewkey by the frontend, matches
+        // what we have in database.
+
+        // make hash of the submited viewkey. we only store
+        // hash of viewkey in database, not acctual viewkey.
+        string viewkey_hash = make_hash(view_key);
+
+        if (viewkey_hash == acc.viewkey_hash)
+        {
+            // if match, than save the viewkey in account object
+            // and proceed to checking if a search thread exisits
+            // for this account. if not, then create new thread
+
+            acc.viewkey = view_key;
+
+            // so we have an account now. Either existing or
+            // newly created. Thus, we can start a tread
+            // which will scan for transactions belonging to
+            // that account, using its address and view key.
+            // the thread will scan the blockchain for txs belonging
+            // to that account and updated mysql database whenever it
+            // will find something.
+            //
+            // The other client (i.e., a webbrowser) will query other functions to retrieve
+            // any belonging transactions in a loop. Thus the thread does not need
+            // to do anything except looking for tx and updating mysql
+            // with relative tx information
+
+            if (CurrentBlockchainStatus::start_tx_search_thread(acc))
+            {
+                cout << "Search thread started" << endl;
+
+                j_response["status"]      = "success";
+                j_response["new_address"] = false;
+
+                // thread has been started or already exists.
+                // everything seems fine.
+
+                return true;
+            }
+            else
+            {
+                j_response = json {{"status", "error"},
+                                   {"reason", "Failed created search thread for this account"}};
+            }
+
+        }
+        else
+        {
+            j_response = json {{"status", "error"},
+                               {"reason", "Viewkey provided is incorrect"}};
+        }
+    }
+
+    return false;
+}
+
+
 
 void
 YourMoneroRequests::session_close(const shared_ptr< Session > session, string response_body)
@@ -1016,12 +1048,6 @@ YourMoneroRequests::parse_request(
         return false;
     }
 }
-
-
-
-
-// define default static variables
-string YourMoneroRequests::frontend_url {"http://127.0.0.1:81"};
 
 }
 

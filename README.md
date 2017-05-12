@@ -25,6 +25,8 @@ to MyMonero. They include:
  - view only mode added.
  - ability to offline show your address and private view and spend keys, based on the mnemonic seed,
   in case of server or connections problem.
+ - private tx key given to user which can be used to prove sending xmr to the recipient. 
+ - Cross-Origin Resource Sharing (CORS) was disabled. 
    
 ## Testnet version
 

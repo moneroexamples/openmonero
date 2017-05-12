@@ -731,7 +731,23 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
     return true;
 }
 
+bool
+CurrentBlockchainStatus::get_searched_blk_no(const string& address,
+                                             uint64_t& searched_blk_no)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
+    if (!search_thread_exist(address))
+    {
+        // thread does not exist
+        cout << "thread for " << address << " does not exist" << endl;
+        return false;
+    }
+
+    searched_blk_no = searching_threads[address].get()->get_searched_blk_no();
+
+    return true;
+}
 
 bool
 CurrentBlockchainStatus::search_thread_exist(const string& address)

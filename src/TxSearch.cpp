@@ -51,11 +51,6 @@ void
 TxSearch::search()
 {
 
-    if (searched_blk_no > CurrentBlockchainStatus::current_height)
-    {
-        throw TxSearchException("searched_blk_no > CurrentBlockchainStatus::current_height");
-    }
-
     uint64_t current_timestamp = chrono::duration_cast<chrono::seconds>(
             chrono::system_clock::now().time_since_epoch()).count();
 
@@ -448,8 +443,13 @@ TxSearch::set_searched_blk_no(uint64_t new_value)
     searched_blk_no = new_value;
 }
 
+uint64_t
+TxSearch::get_searched_blk_no() const
+{
+    return searched_blk_no;
+}
 
-void
+    void
 TxSearch::ping()
 {
     cout << "new last_ping_timestamp: " << last_ping_timestamp << endl;
