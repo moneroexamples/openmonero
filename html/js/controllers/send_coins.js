@@ -229,7 +229,13 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
-        var fee_multiplayer = 4; // default value for priority 2
+
+        // few multiplayers based on uint64_t wallet2::get_fee_multiplier
+        var fee_multiplayers = [1, 4, 20, 166];
+
+        var priority = 2;
+
+        var fee_multiplayer = fee_multiplayers[priority - 1]; // default is 4
 
         var neededFee = rct ? feePerKB.multiply(13) : feePerKB;
         var totalAmountWithoutFee;
