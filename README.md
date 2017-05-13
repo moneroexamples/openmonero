@@ -20,13 +20,14 @@ to MyMonero. They include:
  - import wallet fee was reduced.
  - added support of testnet network and mainnet network without relying transactions
  - improved handling of mempool, coinbase, locked and unlocked transactions.
- - added dynamic fees for testnet.
+ - added dynamic miner fees.
  - minimum mixin set to 4 for the next hard fork.
  - view only mode added.
  - ability to offline show your address and private view and spend keys, based on the mnemonic seed,
   in case of server or connections problem.
  - private tx key given to user which can be used to prove sending xmr to the recipient. 
- - Cross-Origin Resource Sharing (CORS) was disabled. 
+ - Cross-Origin Resource Sharing (CORS) was disabled.
+ - Transaction confirmation window added to double check tx details before its commited. 
    
 ## Testnet version
 
