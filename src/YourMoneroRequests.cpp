@@ -579,18 +579,17 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         j_response["amount"] = total_outputs_amount;
 
 
-        // need proper per_kb_fee estimate for testnet as
+        // need proper per_kb_fee estimate as
         // it is already using dynanamic fees. frontend
         // uses old fixed fees.
-        if (CurrentBlockchainStatus::testnet)
-        {
-            uint64_t fee_estimated {DYNAMIC_FEE_PER_KB_BASE_FEE};
 
-            if (CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(fee_estimated))
-            {
-                j_response["per_kb_fee"] = fee_estimated;
-            }
+        uint64_t fee_estimated {DYNAMIC_FEE_PER_KB_BASE_FEE};
+
+        if (CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(fee_estimated))
+        {
+            j_response["per_kb_fee"] = fee_estimated;
         }
+
 
     } // if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
     else

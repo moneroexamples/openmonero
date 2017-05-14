@@ -26,7 +26,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountService) {
+thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountService, ModalService) {
     "use strict";
     $scope.status = "";
     $scope.error = "";
@@ -40,6 +40,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
     $scope.sent_tx = {};
 
     $scope.openaliasDialog = undefined;
+
 
     function confirmOpenAliasAddress(domain, address, name, description, dnssec_used) {
         var deferred = $q.defer();
@@ -62,6 +63,34 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $scope.openaliasDialog = undefined;
                 console.log("User rejected OpenAlias resolution for " + domain + " to " + address);
                 deferred.reject("OpenAlias resolution rejected by user");
+            }
+        };
+        return deferred.promise;
+    }
+
+    $scope.transferConfirmDialog = undefined;
+
+    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key, payment_id, mixin) {
+        var deferred = $q.defer();
+        if ($scope.transferConfirmDialog !== undefined) {
+            deferred.reject("transferConfirmDialog is already being shown!");
+            return;
+        }
+        $scope.transferConfirmDialog = {
+            address: address,
+            fee: fee,
+            tx_hash: tx_hash,
+            amount: amount,
+            tx_prv_key: tx_prv_key,
+            payment_id: payment_id,
+            mixin: mixin,
+            confirm: function() {
+                $scope.transferConfirmDialog = undefined;
+                deferred.resolve();
+            },
+            cancel: function() {
+                $scope.transferConfirmDialog = undefined;
+                deferred.reject("Transfer canceled by user");
             }
         };
         return deferred.promise;
@@ -200,7 +229,13 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
-        var fee_multiplayer = 4; // default value for priority 2
+
+        // few multiplayers based on uint64_t wallet2::get_fee_multiplier
+        var fee_multiplayers = [1, 4, 20, 166];
+
+        var priority = 2;
+
+        var fee_multiplayer = fee_multiplayers[priority - 1]; // default is 4
 
         var neededFee = rct ? feePerKB.multiply(13) : feePerKB;
         var totalAmountWithoutFee;
@@ -348,35 +383,49 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 view_key: AccountService.getViewKey(),
                 tx: raw_tx
             };
-            $http.post(config.apiUrl + 'submit_raw_tx', request)
-                .success(function(data) {
-                    if (data.status === "error")
-                    {
+
+
+            confirmTransfer(realDsts[0].address, realDsts[0].amount,
+                            tx_hash, neededFee, tx_prvkey, payment_id, mixin).then(function() {
+
+                //alert('Confirmed ');
+
+                $http.post(config.apiUrl + 'submit_raw_tx', request)
+                    .success(function(data) {
+                        if (data.status === "error")
+                        {
+                            $scope.status = "";
+                            $scope.submitting = false;
+                            $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
+                            return;
+                        }
+                        console.log("Successfully submitted tx");
+                        $scope.targets = [{}];
+                        $scope.sent_tx = {
+                            address: realDsts[0].address,
+                            domain: realDsts[0].domain,
+                            amount: realDsts[0].amount,
+                            payment_id: payment_id,
+                            tx_id: tx_hash,
+                            tx_prvkey: tx_prvkey,
+                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
+                        };
+                        $scope.success_page = true;
                         $scope.status = "";
                         $scope.submitting = false;
-                        $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
-                        return;
-                    }
-                    console.log("Successfully submitted tx");
-                    $scope.targets = [{}];
-                    $scope.sent_tx = {
-                        address: realDsts[0].address,
-                        domain: realDsts[0].domain,
-                        amount: realDsts[0].amount,
-                        payment_id: payment_id,
-                        tx_id: tx_hash,
-                        tx_prvkey: tx_prvkey,
-                        tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
-                    };
-                    $scope.success_page = true;
-                    $scope.status = "";
-                    $scope.submitting = false;
-                })
-                .error(function(error) {
-                    $scope.status = "";
-                    $scope.submitting = false;
-                    $scope.error = "Something unexpected occurred when submitting your transaction: " + (error.Error || error);
-                });
+                    })
+                    .error(function(error) {
+                        $scope.status = "";
+                        $scope.submitting = false;
+                        $scope.error = "Something unexpected occurred when submitting your transaction: " + (error.Error || error);
+                    });
+
+            }, function(reason) {
+                //alert('Failed: ' + reason);
+                transferFailure("Transfer canceled");
+            });
+
+
         }
 
         function transferFailure(reason) {
