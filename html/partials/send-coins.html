@@ -68,6 +68,14 @@
                         <option value="10">High (mix with 10 others)</option>
                         <option value="20">Paranoid (mix with 20 others)</option>
                     </select>
+                    <label class="send-label" for="field4">Priority Level (adjusts miner fee)</label>
+                    <select class="w-select" id="field4" name="Select-a-number" data-name="Select a number"
+                            required="required" ng-model="priority">
+                        <option value="1">Low (the cheapest, but might not confirm quickly)</option>
+                        <option value="2">Medium (default, usually enough for all transactions)</option>
+                        <option value="3">High (if you are in hurry and if there is some backlog of txs)</option>
+                        <option value="4">Paranoid (absolute priority, but the most expensive obviously)</option>
+                    </select>
                     <input class="w-button send-btn" id="form-submit" type="submit" value="Send Payment"
                            data-wait="Please wait..." ng-disabled="submitting">
                 </form>
