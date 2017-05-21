@@ -547,7 +547,7 @@ TxSearch::find_txs_in_mempool(
             j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
             j_tx["is_rct"]         = oi_identification.is_rct;
             j_tx["rct_type"]       = oi_identification.rct_type;
-            j_tx["mixin"]          = get_mixin_no(tx) - 1;
+            j_tx["mixin"]          = get_mixin_no(tx);
             j_tx["mempool"]        = true;
 
             j_transactions.push_back(j_tx);
@@ -640,7 +640,7 @@ TxSearch::find_txs_in_mempool(
                     j_tx["coinbase"]       = false;     // mempool tx are not coinbase, so always false
                     j_tx["is_rct"]         = oi_identification.is_rct;
                     j_tx["rct_type"]       = oi_identification.rct_type;
-                    j_tx["mixin"]          = get_mixin_no(tx) - 1;
+                    j_tx["mixin"]          = get_mixin_no(tx);
                     j_tx["mempool"]        = true;
                     j_tx["spent_outputs"]  = spend_keys;
 

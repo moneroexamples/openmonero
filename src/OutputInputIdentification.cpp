@@ -47,7 +47,7 @@ OutputInputIdentification::OutputInputIdentification(
 
     if (!tx_is_coinbase)
     {
-        mixin_no = get_mixin_no(*tx) - 1;
+        mixin_no = get_mixin_no(*tx);
     }
 
 }

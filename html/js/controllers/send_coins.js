@@ -83,7 +83,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             amount: amount,
             tx_prv_key: tx_prv_key,
             payment_id: payment_id,
-            mixin: mixin,
+            mixin: mixin + 1,
             confirm: function() {
                 $scope.transferConfirmDialog = undefined;
                 deferred.resolve();
