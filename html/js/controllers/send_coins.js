@@ -39,7 +39,22 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
     $scope.success_page = false;
     $scope.sent_tx = {};
 
+
+
+    // few multiplayers based on uint64_t wallet2::get_fee_multiplier
+    var fee_multiplayers = [1, 4, 20, 166];
+
+    var default_priority = 2;
+
+    $scope.priority = default_priority;
+
     $scope.openaliasDialog = undefined;
+
+    function isInt(value) {
+        return !isNaN(value) &&
+            parseInt(Number(value)) == value &&
+            !isNaN(parseInt(value, 10));
+    }
 
 
     function confirmOpenAliasAddress(domain, address, name, description, dnssec_used) {
@@ -70,12 +85,15 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
     $scope.transferConfirmDialog = undefined;
 
-    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key, payment_id, mixin) {
+    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key, payment_id, mixin, priority) {
         var deferred = $q.defer();
         if ($scope.transferConfirmDialog !== undefined) {
             deferred.reject("transferConfirmDialog is already being shown!");
             return;
         }
+
+        var priority_names = ["Low", "Medium", "High", "Paranoid"];
+
         $scope.transferConfirmDialog = {
             address: address,
             fee: fee,
@@ -84,6 +102,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             tx_prv_key: tx_prv_key,
             payment_id: payment_id,
             mixin: mixin + 1,
+            priority: priority_names[priority - 1],
             confirm: function() {
                 $scope.transferConfirmDialog = undefined;
                 deferred.resolve();
@@ -229,11 +248,21 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
+        var priority = $scope.priority || 2;
 
-        // few multiplayers based on uint64_t wallet2::get_fee_multiplier
-        var fee_multiplayers = [1, 4, 20, 166];
+        if (!isInt(priority))
+        {
+            $scope.submitting = false;
+            $scope.error = "Priority is not an integer number";
+            return;
+        }
 
-        var priority = 2;
+        if (!(priority >= 1 && priority <= 4))
+        {
+            $scope.submitting = false;
+            $scope.error = "Priority is not between 1 and 4";
+            return;
+        }
 
         var fee_multiplayer = fee_multiplayers[priority - 1]; // default is 4
 
@@ -386,7 +415,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
 
             confirmTransfer(realDsts[0].address, realDsts[0].amount,
-                            tx_hash, neededFee, tx_prvkey, payment_id, mixin).then(function() {
+                            tx_hash, neededFee, tx_prvkey, payment_id,
+                            mixin, priority).then(function() {
 
                 //alert('Confirmed ');
 
