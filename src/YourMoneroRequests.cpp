@@ -181,7 +181,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                         {"unlock_time"    , tx.unlock_time},
                         {"total_sent"     , 0},    // to be field when checking for spent_outputs below
                         {"total_received" , tx.total_received},
-                        {"timestamp"      , tx.timestamp},
+                        {"timestamp"      , static_cast<uint64_t>(tx.timestamp)},
                         {"mempool"        , false} // tx in database are never from mempool
                 };
 
@@ -547,7 +547,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                 {"tx_hash"         , tx.hash},
                                 {"tx_prefix_hash"  , tx.prefix_hash},
                                 {"tx_pub_key"      , out.tx_pub_key},
-                                {"timestamp"       , out.timestamp},
+                                {"timestamp"       , static_cast<uint64_t>(out.timestamp)},
                                 {"height"          , tx.height},
                                 {"spend_key_images", json::array()}
                         };

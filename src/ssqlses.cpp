@@ -45,7 +45,7 @@ XmrTransaction::to_json() const
             {"rct_type"            , rct_type},
             {"spendable"           , bool {spendable}},
             {"mixin"               , mixin},
-            {"timestamp"           , timestamp}
+            {"timestamp"           , static_cast<uint64_t>(timestamp)}
     };
 
     return j;
@@ -76,7 +76,7 @@ XmrOutput::to_json() const
             {"global_index"        , global_index},
             {"out_index"           , out_index},
             {"mixin"               , mixin},
-            {"timestamp"           , timestamp}
+            {"timestamp"           , static_cast<uint64_t>(timestamp)}
     };
 
     return j;
@@ -98,7 +98,7 @@ XmrInput::to_json() const
             {"output_id"           , output_id},
             {"key_image"           , key_image},
             {"amount"              , amount},
-            {"timestamp"           , timestamp}
+            {"timestamp"           , static_cast<uint64_t>(timestamp)}
     };
 
     return j;

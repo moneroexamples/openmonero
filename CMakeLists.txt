@@ -91,7 +91,6 @@ target_link_libraries(${PROJECT_NAME}
         common
         mnemonics
         epee
-        easylogging
         mysqlpp
         mysqlclient
         ${Boost_LIBRARIES}
