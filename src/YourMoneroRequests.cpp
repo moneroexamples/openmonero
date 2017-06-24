@@ -798,7 +798,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
     }
     else
     {
-        // payment request is now, so create its entry in
+        // payment request is new, so create its entry in
         // Payments table
 
         uint64_t payment_table_id {0};

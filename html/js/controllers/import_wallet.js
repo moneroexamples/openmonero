@@ -62,4 +62,9 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
     $scope.$on('$destroy', function() {
         $interval.cancel(getRequestInterval);
     });
+
+    $scope.importLast = function(no_blocks) {
+        alert(no_blocks);
+    }
+
 });
