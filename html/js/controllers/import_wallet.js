@@ -83,6 +83,10 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
                 $scope.success = "Request successful. Import will start shortly. This window will close in few seconds.";
                 $timeout(function(){ModalService.hide('imported-account')}, 5000);
             }
+            else
+            {
+                $scope.error = data.Error || "An unexpected server error occurred";
+            }
         }).error(function(err) {
             $scope.error = err.Error || err || "An unexpected server error occurred";
         });

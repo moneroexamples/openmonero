@@ -848,10 +848,16 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
     json j_response;
     json j_request;
 
+    bool request_fulfilled {false};
+
+    j_response["request_fulfilled"] = false;
+
     vector<string> requested_values {"address" , "view_key", "no_blocks_to_import"};
 
     if (!parse_request(body, requested_values, j_request, j_response))
     {
+
+        j_response["Error"] = "Cant parse json body";
         session_close(session, j_response.dump());
         return;
     }
@@ -867,15 +873,19 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
     }
     catch (boost::bad_lexical_cast& e)
     {
-        cerr << "Cant cast " << j_request["no_blocks_to_import"] << " into number."
-             << " Using default value of " << no_blocks_to_import << '\n';
+        string msg = "Cant parse " + j_request["no_blocks_to_import"].get<string>() + " into number";
+
+        cerr << msg << '\n';
+
+        j_response["Error"] = msg;
+        session_close(session, j_response.dump());
+        return;
     }
 
     // make sure that we dont import more that the maximum alowed no of blocks
     no_blocks_to_import = std::min(no_blocks_to_import,
                                    CurrentBlockchainStatus::max_number_of_blocks_to_import);
 
-    bool request_fulfilled {false};
 
     XmrAccount acc;
 
@@ -900,11 +910,11 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
                                                                       updated_acc.scanned_block_height))
                 {
                     cerr << "Updating searched_blk_no failed!" << endl;
-                    j_response["status"] = "Updating searched_blk_no failed!";
+                    j_response["Error"]  = "Updating searched_blk_no failed!";
                 }
                 else
                 {
-                    // if success, set acc to updated_acc;
+                    // if success, makre that request was successful;
                     request_fulfilled = true;
                 }
             }
