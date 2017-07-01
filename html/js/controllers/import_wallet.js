@@ -33,6 +33,7 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
     $scope.import_fee = JSBigInt.ZERO;
     $scope.status = '';
     $scope.command = '';
+    $scope.no_blocks_to_import = "1000";
 
     function get_import_request() {
         if ($scope.account_scan_start_height === 0) {
@@ -64,7 +65,7 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
     });
 
     $scope.importLast = function(no_blocks) {
-        alert(no_blocks);
+        alert($scope.no_blocks_to_import);
     }
 
 });

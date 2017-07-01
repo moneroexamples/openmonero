@@ -4,20 +4,30 @@
       <a class="w-inline-block close-modal" hide-modal="">
         <div class="close-overlay pointer">+</div>
       </a>
-      <h1 class="head-modal">Importing account a</h1>
-      <div class="subhead-text modal review">Pay an import fee to import previous transactions, or use your account for future transactions only</div>
+      <h1 class="head-modal">Importing transactions</h1>
       <div class="w-form form-wrapper">
         <label class="field-label">Import all transactions</label>
-        <div class="review-text">Pay a small fee to import all the previous transactions for this account (you can always find this later in Account &gt; Import Wallet)</div>
+        <div class="review-text">This will scan all blocks in the blockchain. This is very resource intensive task.
+          Thus a small fee is required.</div>
         <div class="submit-div small-top-margin">
-          <a class="login-btn modals pointer" show-modal="import-wallet">Import transactions</a>
+          <a class="login-btn modals pointer" show-modal="import-wallet">Import all transactions</a>
         </div>
 
-        <label class="field-label">Import transactions from last 10000 blocks</label>
-        <div class="review-text">Imports transactions from last 10000 blocks (last 5-6 days). </div>
-        <div class="submit-div small-top-margin">
-          <a class="login-btn modals pointer" hide-modal="" ng-click="importLast('10000')">Import transactions</a>
+        <div class="w-form form-wrapper">
+          <label class="field-label" for="field4">Import transactions from last n blocks (free)</label>
+          <select class="w-select" id="field4" name="Select-a-number" data-name="Select a number"
+                  required="required" ng-model="no_blocks_to_import" selected="1000">
+            <option value="1000">n = 1000 (since roughly 5 days ago)</option>
+            <option value="2000">n = 2000 (since roughly 10 days ago)</option>
+            <option value="4000">n = 3000 (since roughly 20 days ago)</option>
+            <option value="8000">n = 8000 (since roughly 40 days ago)</option>
+          </select>
         </div>
+
+        <div class="submit-div small-top-margin">
+          <a class="login-btn modals pointer" hide-modal="" ng-click="importLast('10000')">Import recent transactions</a>
+        </div>
+
 
         <label class="field-label">Don't import transactions</label>
         <div class="review-text">You can send and receive coins from your account, but you won't be able to see or spend any transactions you have received before now</div>
