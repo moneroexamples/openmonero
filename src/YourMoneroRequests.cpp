@@ -614,18 +614,27 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
     uint64_t count = j_request["count"];
 
-    vector<uint64_t> amounts;
-
-    // populate amounts vector so that we can pass it directly to
-    // daeamon to get random outputs for these amounts
-    for (json amount: j_request["amounts"])
-    {
-        amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
-    }
-
     json j_response  {
             {"amount_outs", json::array()}
     };
+
+    vector<uint64_t> amounts;
+
+    try
+    {
+        // populate amounts vector so that we can pass it directly to
+        // daeamon to get random outputs for these amounts
+        for (json amount: j_request["amounts"])
+        {
+            amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
+        }
+    }
+    catch (boost::bad_lexical_cast& e)
+    {
+        cerr << "Bed lexical cast" << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
 
@@ -832,6 +841,96 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 }
 
 
+
+void
+YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    vector<string> requested_values {"address" , "view_key", "no_blocks_to_import"};
+
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    string xmr_address           = j_request["address"];
+    string view_key              = j_request["view_key"];
+
+    uint64_t no_blocks_to_import {1000};
+
+    try
+    {
+        no_blocks_to_import = boost::lexical_cast<uint64_t>(j_request["no_blocks_to_import"].get<string>());
+    }
+    catch (boost::bad_lexical_cast& e)
+    {
+        cerr << "Cant cast " << j_request["no_blocks_to_import"] << " into number."
+             << " Using default value of " << no_blocks_to_import << '\n';
+    }
+
+    // make sure that we dont import more that the maximum alowed no of blocks
+    no_blocks_to_import = std::min(no_blocks_to_import,
+                                   CurrentBlockchainStatus::max_number_of_blocks_to_import);
+
+    bool request_fulfilled {false};
+
+    XmrAccount acc;
+
+    if (xmr_accounts->select(xmr_address, acc))
+    {
+        XmrAccount updated_acc = acc;
+
+        // make sure scanned_block_height is larger than  no_blocks_to_import so we dont
+        // end up with overflowing uint64_t.
+
+        if (updated_acc.scanned_block_height > no_blocks_to_import)
+        {
+            // repetead calls to import_recent_wallet_request will be moving the scanning backward.
+            // not sure yet if any protection is needed to make sure that a user does not
+            // go back too much back by importing his/hers wallet multiple times in a row.
+            updated_acc.scanned_block_height = updated_acc.scanned_block_height - no_blocks_to_import;
+
+            if (xmr_accounts->update(acc, updated_acc))
+            {
+                // change search blk number in the search thread
+                if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address,
+                                                                      updated_acc.scanned_block_height))
+                {
+                    cerr << "Updating searched_blk_no failed!" << endl;
+                    j_response["status"] = "Updating searched_blk_no failed!";
+                }
+                else
+                {
+                    // if success, set acc to updated_acc;
+                    request_fulfilled = true;
+                }
+            }
+
+        }  // if (updated_acc.scanned_block_height > no_blocks_to_import)
+    }
+    else
+    {
+        cerr << "Updating account with new scanned_block_height failed! " << endl;
+        j_response["status"] = "Updating account with new scanned_block_height failed!";
+    }
+
+    if (request_fulfilled)
+    {
+        j_response["request_fulfilled"] = request_fulfilled;
+        j_response["status"]            = "Updating account with for importing recent txs successeful.";
+    }
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
 void
 YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes & body)
 {
@@ -875,8 +974,6 @@ YourMoneroRequests::generic_options_handler( const shared_ptr< Session > session
     const auto request = session->get_request( );
 
     size_t content_length = request->get_header( "Content-Length", 0);
-
-    //cout << "generic_options_handler" << endl;
 
     session->fetch(content_length, [](const shared_ptr< Session > session, const Bytes & body)
     {

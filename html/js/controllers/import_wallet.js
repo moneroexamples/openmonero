@@ -26,13 +26,14 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http, AccountService, ModalService, $interval) {
+thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http, AccountService, ModalService, $interval, $timeout) {
     "use strict";
     $scope.payment_address = '';
     $scope.payment_id = '';
     $scope.import_fee = JSBigInt.ZERO;
     $scope.status = '';
     $scope.command = '';
+    $scope.success = '';
     $scope.no_blocks_to_import = "1000";
 
     function get_import_request() {
@@ -57,15 +58,34 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
         });
     }
 
-    var getRequestInterval = $interval(get_import_request, 10 * 1000);
-    get_import_request();
+    // var getRequestInterval = $interval(get_import_request, 10 * 1000);
+    // get_import_request();
+    //
+    // $scope.$on('$destroy', function() {
+    //     $interval.cancel(getRequestInterval);
+    // });
 
-    $scope.$on('$destroy', function() {
-        $interval.cancel(getRequestInterval);
-    });
+    $scope.importLast = function()
+    {
+        if ($scope.no_blocks_to_import > 8000) {
+            ModalService.hide('imported-account');
+            return;
+        }
 
-    $scope.importLast = function(no_blocks) {
-        alert($scope.no_blocks_to_import);
+        $http.post(config.apiUrl + "import_recent_wallet_request", {
+            address: AccountService.getAddress(),
+            view_key: AccountService.getViewKey(),
+            no_blocks_to_import: $scope.no_blocks_to_import
+        }).success(function(data) {
+            $scope.status = data.status;
+
+            if (data.request_fulfilled) {
+                $scope.success = "Request successful. Import will start shortly. This window will close in few seconds.";
+                $timeout(function(){ModalService.hide('imported-account')}, 5000);
+            }
+        }).error(function(err) {
+            $scope.error = err.Error || err || "An unexpected server error occurred";
+        });
     }
 
 });

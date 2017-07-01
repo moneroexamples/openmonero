@@ -49,6 +49,8 @@ struct CurrentBlockchainStatus
 
     static uint64_t refresh_block_status_every_seconds;
 
+    static uint64_t max_number_of_blocks_to_import;
+
     static uint64_t search_thread_life_in_seconds;
 
     static string   import_payment_address;

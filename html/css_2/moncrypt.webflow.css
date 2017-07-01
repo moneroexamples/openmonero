@@ -1268,6 +1268,15 @@ p {
   font-weight: 500;
   text-align: center;
 }
+.success-backing {
+  padding-top: 15px;
+  border-radius: 3px;
+  background-color: #008331;
+  font-family: Proximanova, sans-serif;
+  color: white;
+  font-weight: 500;
+  text-align: center;
+}
 .support-block {
   display: inline-block;
   margin-left: 12px;

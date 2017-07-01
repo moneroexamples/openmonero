@@ -29,6 +29,7 @@ bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
 uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
+uint64_t                CurrentBlockchainStatus::max_number_of_blocks_to_import{8000};
 uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address;

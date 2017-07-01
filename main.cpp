@@ -104,6 +104,8 @@ xmreg::CurrentBlockchainStatus::deamon_url
         = deamon_url;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
         = config_json["refresh_block_status_every_seconds"];
+xmreg::CurrentBlockchainStatus::max_number_of_blocks_to_import
+        = config_json["max_number_of_blocks_to_import"];
 xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds
         = config_json["search_thread_life_in_seconds"];
 xmreg::CurrentBlockchainStatus::import_fee
@@ -159,8 +161,8 @@ MAKE_RESOURCE(get_unspent_outs);
 MAKE_RESOURCE(get_random_outs);
 MAKE_RESOURCE(submit_raw_tx);
 MAKE_RESOURCE(import_wallet_request);
+MAKE_RESOURCE(import_recent_wallet_request);
 MAKE_RESOURCE(get_version);
-
 
 // restbed service
 Service service;
@@ -173,6 +175,7 @@ service.publish(get_unspent_outs);
 service.publish(get_random_outs);
 service.publish(submit_raw_tx);
 service.publish(import_wallet_request);
+service.publish(import_recent_wallet_request);
 service.publish(get_version);
 
 auto settings = make_shared<Settings>( );

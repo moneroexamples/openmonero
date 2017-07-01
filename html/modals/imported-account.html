@@ -25,7 +25,7 @@
         </div>
 
         <div class="submit-div small-top-margin">
-          <a class="login-btn modals pointer" hide-modal="" ng-click="importLast('10000')">Import recent transactions</a>
+          <a class="login-btn modals pointer" ng-click="importLast()">Import recent transactions</a>
         </div>
 
 
@@ -33,6 +33,12 @@
         <div class="review-text">You can send and receive coins from your account, but you won't be able to see or spend any transactions you have received before now</div>
         <div class="submit-div small-top-margin">
           <a class="login-btn modals pointer" hide-modal="">Don't import transactions</a>
+        </div>
+        <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+            <p>{{error}}</p>
+        </div>
+        <div class="w-form-done success-backing" style="display: block;" ng-show="!!success">
+          <p>{{success}}</p>
         </div>
       </div>
     </div>
