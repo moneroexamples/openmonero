@@ -1,4 +1,4 @@
-<div class="modal-background" modal-name="imported-account" ng-controller="ImportWalletCtrl">
+<div class="modal-background" modal-name="imported-account" ng-controller="ImportAccountCtrl">
   <div class="w-container">
     <div class="w-clearfix">
       <a class="w-inline-block close-modal" hide-modal="">
@@ -10,7 +10,7 @@
         <div class="review-text">This will scan all blocks in the blockchain. This is very resource intensive task.
           Thus a small fee is required.</div>
         <div class="submit-div small-top-margin">
-          <a class="login-btn modals pointer" show-modal="import-wallet">Import all transactions</a>
+          <a class="login-btn modals pointer" ng-click="importAll()">Import all transactions</a>
         </div>
 
         <div class="w-form form-wrapper">

@@ -728,6 +728,8 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
     json j_response;
 
+    j_response["request_fulfilled"] = false;
+
     // select this payment if its existing one
     if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
     {
@@ -856,7 +858,6 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
 
     if (!parse_request(body, requested_values, j_request, j_response))
     {
-
         j_response["Error"] = "Cant parse json body";
         session_close(session, j_response.dump());
         return;
@@ -885,7 +886,6 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
     // make sure that we dont import more that the maximum alowed no of blocks
     no_blocks_to_import = std::min(no_blocks_to_import,
                                    CurrentBlockchainStatus::max_number_of_blocks_to_import);
-
 
     XmrAccount acc;
 

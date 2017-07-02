@@ -26,43 +26,49 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http, AccountService, ModalService, $interval, $timeout) {
+thinwalletCtrls.controller("ImportAccountCtrl", function($scope, $location, $http, AccountService, ModalService, $timeout) {
     "use strict";
-    $scope.payment_address = '';
-    $scope.payment_id = '';
-    $scope.import_fee = JSBigInt.ZERO;
-    $scope.status = '';
-    $scope.command = '';
-    $scope.success = '';
 
-    function get_import_request() {
-        if ($scope.account_scan_start_height === 0) {
-            ModalService.hide('import-wallet');
+    $scope.success = '';
+    $scope.no_blocks_to_import = "1000";
+
+
+    // if we are import all tx from blockchain,
+    // go to different modal and its controller
+    $scope.importAll = function()
+    {
+        ModalService.show('import-wallet');
+        return;
+    }
+
+
+    // if we import recent blocks, we can make this request here
+    // as its much less complicated that importAll.
+    $scope.importLast = function()
+    {
+        if ($scope.no_blocks_to_import > 8000) {
+            ModalService.hide('imported-account');
             return;
         }
-        $http.post(config.apiUrl + "import_wallet_request", {
+
+        $http.post(config.apiUrl + "import_recent_wallet_request", {
             address: AccountService.getAddress(),
-            view_key: AccountService.getViewKey()
+            view_key: AccountService.getViewKey(),
+            no_blocks_to_import: $scope.no_blocks_to_import
         }).success(function(data) {
-            $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee) + ' ' + data.payment_id;
-            $scope.payment_id = data.payment_id;
-            $scope.payment_address = data.payment_address;
-            $scope.import_fee = new JSBigInt(data.import_fee);
             $scope.status = data.status;
+
             if (data.request_fulfilled) {
-                $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
-                $timeout(function(){ModalService.hide('import-wallet')}, 5000);
+                $scope.success = "Request successful. Import will start shortly. This window will close in few seconds.";
+                $timeout(function(){ModalService.hide('imported-account')}, 5000);
+            }
+            else
+            {
+                $scope.error = data.Error || "An unexpected server error occurred";
             }
         }).error(function(err) {
             $scope.error = err.Error || err || "An unexpected server error occurred";
         });
     }
-
-    var getRequestInterval = $interval(get_import_request, 10 * 1000);
-    get_import_request();
-
-    $scope.$on('$destroy', function() {
-        $interval.cancel(getRequestInterval);
-    });
 
 });
