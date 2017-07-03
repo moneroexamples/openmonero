@@ -218,7 +218,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         }
 
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
-                        transactions[i].timestamp = new Date(transactions[i].timestamp);
+                        transactions[i].timestamp = new Date(transactions[i].timestamp * 1000);
                     }
                     transactions.sort(function(a, b)
                     {
