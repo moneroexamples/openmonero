@@ -15,8 +15,6 @@
 
 #include "monero_headers.h"
 
-#include "../ext/infix_iterator.h"
-#include "../ext/date/tz.h"
 #include "../ext/format.h"
 #include "../ext/json.hpp"
 
@@ -85,11 +83,9 @@ remove_trailing_path_separator(const string& in_path);
 bf::path
 remove_trailing_path_separator(const bf::path& in_path);
 
-string
-timestamp_to_str(time_t timestamp, const char* format = "%F %T");
 
 string
-timestamp_to_str_local(time_t timestamp, const char* format = "%F %T");
+timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
 operator<< (ostream& os, const account_public_address& addr);
@@ -172,20 +168,6 @@ read(string filename);
 
 
 
-/**
- * prints an iterable such as vector
- */
-template<typename T>
-void print_iterable(const T & elems) {
-
-    infix_ostream_iterator<typename T::value_type>
-            oiter(std::cout, ",");
-
-    std::cout << "[";
-    std::copy(elems.begin(), elems.end(),oiter);
-    std::cout << "]" << std::endl;
-}
-
 pair<string, double>
 timestamps_time_scale(const vector<uint64_t>& timestamps,
                   uint64_t timeN, uint64_t resolution = 80,
@@ -219,9 +201,6 @@ decrypt(const std::string &ciphertext,
 // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
 public_key
 get_tx_pub_key_from_received_outs(const transaction &tx);
-
-date::sys_seconds
-parse(const std::string& str, string format="%Y-%m-%d %H:%M:%S");
 
 
 string
@@ -279,9 +258,6 @@ generated_payment_id()
 string
 get_human_readable_timestamp(uint64_t ts);
 
-
-string
-get_current_time(const char* format = "%a, %d %b %Y %H:%M:%S %Z");
 
 string
 make_hash(const string& in_str);

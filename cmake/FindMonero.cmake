@@ -30,7 +30,7 @@
 
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;
 		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;
-		blockchain_db;ringct;wallet)
+                blockchain_db;ringct;wallet;cncrypto)
 
 set(Xmr_INCLUDE_DIRS "${CPP_MONERO_DIR}")
 
@@ -63,11 +63,6 @@ if (EXISTS ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 	set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
-if (EXISTS ${MONERO_BUILD_DIR}/src/crypto/libcrypto.a)
-	add_library(cryptoxmr STATIC IMPORTED)
-	set_property(TARGET cryptoxmr
-			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/src/crypto/libcrypto.a)
-endif()
 
 if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
 	add_library(easylogging STATIC IMPORTED)

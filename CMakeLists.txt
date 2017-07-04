@@ -84,7 +84,7 @@ target_link_libraries(${PROJECT_NAME}
         cryptonote_protocol
         cryptonote_basic
         daemonizer
-        cryptoxmr
+        cncrypto
         blocks
         lmdb
         ringct
@@ -93,6 +93,7 @@ target_link_libraries(${PROJECT_NAME}
         epee
         mysqlpp
         mysqlclient
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound
