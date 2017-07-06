@@ -23,11 +23,11 @@ to MyMonero. They include:
  - added dynamic miner fees.
  - minimum mixin set to 4 for the next hard fork.
  - view only mode added.
- - ability to offline show your address and private view and spend keys, based on the mnemonic seed,
-  in case of server or connections problem.
- - private tx key given to user which can be used to prove sending xmr to the recipient. 
+ - ability to offline show your address and private view and spend keys, based on the mnemonic seed, in case of server or connections problem resulting in not being able to login to your account.
+ - private tx key given to a user which can be used to prove sending xmr to a recipient. 
  - Cross-Origin Resource Sharing (CORS) was disabled.
  - Transaction confirmation window added to double check tx details before its commited. 
+ - Ability to select transaction priority. 
    
 ## Testnet version
 
@@ -230,7 +230,7 @@ To start for testnet:
 To start for testnet with non-default location of `config.json` file:
 
 ```bash
-./openmonero -t -c /path/to/config.js
+./openmonero -t -c /path/to/config.json
 ```
 
  
