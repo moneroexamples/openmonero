@@ -259,6 +259,11 @@ var cnUtil = (function(initConfig) {
         return mn_random(128);
     };
 
+    // Generate a 64-bit crypto random
+    this.rand_8 = function() {
+        return mn_random(64);
+    };    
+
     this.encode_varint = function(i) {
         i = new JSBigInt(i);
         var out = '';
@@ -383,6 +388,17 @@ var cnUtil = (function(initConfig) {
         var checksum = this.cn_fast_hash(data);
         return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
     };
+
+    this.get_account_integrated_address = function(address, payment_id8) {
+        var decoded_address = decode_address(address);
+
+        var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);        
+        var data = prefix + decoded_address.spend  + decoded_address.view + payment_id8;    
+
+        var checksum = this.cn_fast_hash(data);
+
+        return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
+    };    
 
     // Generate keypair from seed
     this.generate_keys_old = function(seed) {

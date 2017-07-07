@@ -29,11 +29,17 @@
 thinwalletCtrls.controller('ReceiveCoinsCtrl', function($scope, $rootScope, AccountService, EVENT_CODES) {
     "use strict";
     $scope.accountService = AccountService;
+    
     $scope.params = {
         address: $scope.address
     };
     // Generate random payment id
     $scope.payment_id = cnUtil.rand_32();
+
+    //
+    //var payment_id8 = rand_8();        
+    //var integarted_address = get_account_integrated_address(keys.public_addr, payment_id8);
+
 
     $scope.$watch(
         function(scope) {
