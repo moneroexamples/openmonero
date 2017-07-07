@@ -26,6 +26,29 @@
             </div>
         </div>
     </div>
+
+    <div class="w-container middle-container receive">
+        <div class="middle-div receive">
+            <div class="w-form send-form receive">
+                <form id="email-form" name="email-form" data-name="Email Form" form-autofill-fix>
+                    <label class="send-label" for="Receiver-address">   Integrated Address
+                    </label>
+                    <div class="move-text-div">
+                        <div class="middle-text receive">     {{integrated_address}} 
+                        </div>
+                    </div>
+
+                    <label class="send-label" for="Receiver-address-3">Payment ID (Randomly generated)</label>
+                    <div class="move-text-div">
+                        <div class="middle-text receive">{{payment_id8}} </div>
+                    </div>
+                    <input scroll-to-marker="qrcode" class="w-button send-btn" id="form-submit" type="submit"
+                           value="Receive" data-wait="Generate new payment id">
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="w-container middle-container receive">
         <div class="middle-div receive">
             <div class="w-form send-form receive">
