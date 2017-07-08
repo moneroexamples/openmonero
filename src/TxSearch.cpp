@@ -210,6 +210,7 @@ TxSearch::search()
 
                 tx_data.hash             = oi_identification.tx_hash_str;
                 tx_data.prefix_hash      = oi_identification.tx_prefix_hash_str;
+                tx_data.tx_pub_key      = oi_identification.tx_pub_key_str;
                 tx_data.account_id       = acc->id;
                 tx_data.blockchain_tx_id = blockchain_tx_id;
                 tx_data.total_received   = oi_identification.total_received;
@@ -258,7 +259,6 @@ TxSearch::search()
                     out_data.account_id   = acc->id;
                     out_data.tx_id        = tx_mysql_id;
                     out_data.out_pub_key  = out_info.pub_key;
-                    out_data.tx_pub_key   = oi_identification.tx_pub_key_str;
                     out_data.amount       = out_info.amount;
                     out_data.out_index    = out_info.idx_in_tx;
                     out_data.rct_outpk    = out_info.rtc_outpk;
@@ -359,6 +359,7 @@ TxSearch::search()
 
                         tx_data.hash             = oi_identification.tx_hash_str;
                         tx_data.prefix_hash      = oi_identification.tx_prefix_hash_str;
+                        tx_data.tx_pub_key       = oi_identification.tx_pub_key_str;
                         tx_data.account_id       = acc->id;
                         tx_data.blockchain_tx_id = blockchain_tx_id;
                         tx_data.total_received   = 0; // because this is spending, total_recieved is 0
@@ -534,6 +535,7 @@ TxSearch::find_txs_in_mempool(
                                         // this id is used for sorting txs in the frontend.
 
             j_tx["hash"]           = oi_identification.tx_hash_str;
+            j_tx["tx_pub_key"]     = oi_identification.tx_pub_key_str;
             j_tx["timestamp"]      = timestamp_to_str_gm(recieve_time); // when it got into mempool
             j_tx["total_received"] = oi_identification.total_received;
             j_tx["total_sent"]     = 0; // to be set later when looking for key images
@@ -580,7 +582,7 @@ TxSearch::find_txs_in_mempool(
                 if (local_xmr_accounts->output_exists(in_info.out_pub_key, out))
                 {
                     uint64_t output_amount = out.amount;
-                    string tx_pub_key = out.tx_pub_key;
+                    string tx_pub_key = oi_identification.tx_pub_key_str;
                     uint64_t out_index  = out.out_index;
                     uint64_t mixin = out.mixin; // mixin not used but get it anyway
                                                 // as in mymonero
@@ -627,6 +629,7 @@ TxSearch::find_txs_in_mempool(
                                                          // this id is used for sorting txs in the frontend.
 
                     j_tx["hash"]           = oi_identification.tx_hash_str;
+                    j_tx["tx_pub_key"]     = oi_identification.tx_pub_key_str;
                     j_tx["timestamp"]      = timestamp_to_str_gm(recieve_time); // when it got into mempool
                     j_tx["total_received"] = 0;          // we did not recive any outputs/xmr
                     j_tx["total_sent"]     = total_sent; // to be set later when looking for key images

@@ -400,6 +400,19 @@ var cnUtil = (function(initConfig) {
         return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
     };    
 
+
+    this.decrypt_payment_id = function(payment_id8, tx_public_key, acc_prv_view_key) {
+        if (payment_id8.length !== 16) throw "Invalid input length!";  
+
+        var key_derivation = this.generate_key_derivation(tx_public_key, acc_prv_view_key);    
+
+        var pid_key = this.cn_fast_hash(key_derivation + ENCRYPTED_PAYMENT_ID_TAIL.toString(16)).slice(0, INTEGRATED_ID_SIZE * 2);
+
+        var decrypted_payment_id = this.hex_xor(payment_id8, pid_key);
+
+        return decrypted_payment_id;
+    }
+
     // Generate keypair from seed
     this.generate_keys_old = function(seed) {
         if (seed.length !== 64) throw "Invalid input length!";

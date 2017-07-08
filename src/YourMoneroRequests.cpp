@@ -174,11 +174,12 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                 json j_tx {
                         {"id"             , tx.blockchain_tx_id},
                         {"coinbase"       , bool {tx.coinbase}},
+                        {"tx_pub_key"     , tx.tx_pub_key},
                         {"hash"           , tx.hash},
                         {"height"         , tx.height},
                         {"mixin"          , tx.mixin},
                         {"payment_id"     , tx.payment_id},
-                        {"unlock_time"    , tx.unlock_time},
+                        {"unlock_time"    , tx.unlock_time},                  
                         {"total_sent"     , 0},    // to be field when checking for spent_outputs below
                         {"total_received" , tx.total_received},
                         {"timestamp"      , static_cast<uint64_t>(tx.timestamp)},
@@ -202,11 +203,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                             total_spent += input.amount;
 
                             j_spent_outputs.push_back({
-                                                              {"amount"     , input.amount},
-                                                              {"key_image"  , input.key_image},
-                                                              {"tx_pub_key" , out.tx_pub_key},
-                                                              {"out_index"  , out.out_index},
-                                                              {"mixin"      , out.mixin}});
+                              {"amount"     , input.amount},
+                              {"key_image"  , input.key_image},
+                              {"tx_pub_key" , tx.tx_pub_key},
+                              {"out_index"  , out.out_index},
+                              {"mixin"      , out.mixin}});
                         }
                     }
 
@@ -386,7 +387,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
                                 j_spent_outputs.push_back({
                                     {"amount"     , in.amount},
                                     {"key_image"  , in.key_image},
-                                    {"tx_pub_key" , out.tx_pub_key},
+                                    {"tx_pub_key" , tx.tx_pub_key},
                                     {"out_index"  , out.out_index},
                                     {"mixin"      , out.mixin},
                                 });
@@ -546,7 +547,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                 {"tx_id"           , out.tx_id},
                                 {"tx_hash"         , tx.hash},
                                 {"tx_prefix_hash"  , tx.prefix_hash},
-                                {"tx_pub_key"      , out.tx_pub_key},
+                                {"tx_pub_key"      , tx.tx_pub_key},
                                 {"timestamp"       , static_cast<uint64_t>(out.timestamp)},
                                 {"height"          , tx.height},
                                 {"spend_key_images", json::array()}

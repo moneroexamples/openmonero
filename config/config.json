@@ -33,7 +33,7 @@
   },
   "refresh_block_status_every_seconds" : 10,
   "search_thread_life_in_seconds"      : 300,
-  "max_number_of_blocks_to_import"     : 8000,
+  "max_number_of_blocks_to_import"     : 22000,
   "ssl" :
   {
     "enable" : false,

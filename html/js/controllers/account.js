@@ -48,6 +48,13 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.transactions = [];
     $scope.blockchain_height = 0;
 
+
+    // var private_view_key = AccountService.getViewKey();
+    
+
+    // decrypt_payment_id();
+
+
     $scope.tx_is_confirmed = function(tx) {
        // return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
         if (!tx.coinbase)
@@ -165,6 +172,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
                     var transactions = data.transactions || [];
+
                     for (var i = 0; i < transactions.length; ++i) {
                         if ((transactions[i].spent_outputs || []).length > 0)
                         {
@@ -186,6 +194,21 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                             }
                         }
                         //console.log(transactions[i].total_received, transactions[i].total_sent);
+
+
+                        // decrypt payment_id8 which results in using
+                        // integrated address
+                        if (transactions[i].payment_id.length == 16) {
+                            if (transactions[i].tx_pub_key) {
+                                var decrypted_payment_id8
+                                    = decrypt_payment_id(transactions[i].payment_id,
+                                                        transactions[i].tx_pub_key,
+                                                        AccountService.getViewKey());
+                                //console.log("decrypted_payment_id8: " + decrypted_payment_id8);
+                                transactions[i].payment_id = decrypted_payment_id8;
+                            }
+                        }
+
 
                         if (view_only === false)
                         {
@@ -220,6 +243,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
                         transactions[i].timestamp = new Date(transactions[i].timestamp * 1000);
                     }
+
                     transactions.sort(function(a, b)
                     {
                         return b.id - a.id; // sort by id in database
