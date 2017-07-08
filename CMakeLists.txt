@@ -94,6 +94,7 @@ target_link_libraries(${PROJECT_NAME}
         mysqlpp
         mysqlclient
         easylogging
+        readline
         ${Boost_LIBRARIES}
         pthread
         unbound

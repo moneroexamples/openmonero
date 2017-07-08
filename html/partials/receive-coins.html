@@ -30,25 +30,52 @@
     <div class="w-container middle-container receive">
         <div class="middle-div receive">
             <div class="w-form send-form receive">
-                <form id="email-form" name="email-form" data-name="Email Form" form-autofill-fix>
                     <label class="send-label" for="Receiver-address">   Integrated Address
                     </label>
                     <div class="move-text-div">
-                        <div class="middle-text receive">     {{integrated_address}} 
+                        <div class="middle-text receive">
+                            {{integarted_address}} 
                         </div>
                     </div>
 
-                    <label class="send-label" for="Receiver-address-3">Payment ID (Randomly generated)</label>
-                    <div class="move-text-div">
-                        <div class="middle-text receive">{{payment_id8}} </div>
+
+                    <div class="w-col w-col-6 responsive-column">         
+                        <label class="send-label" for="payment_id8">
+                            Payment ID (max 16 [0-9a-fA-F] characters)
+                        </label>               
+                        <input class="w-input send-text-box" id="payment_id8" type="text" ng-model="payment_id8"
+                               placeholder="e.g. 671a4f30238c5152"
+                               name="payment_id8" data-name="payment_id8">
                     </div>
-                    <input scroll-to-marker="qrcode" class="w-button send-btn" id="form-submit" type="submit"
-                           value="Receive" data-wait="Generate new payment id">
-                </form>
+
+
+                    <div class="w-col w-col-6 responsive-column">
+                        <label class="send-label" for="payment_id8_rendered">
+                            Final payment ID
+                        </label>
+                        <div class="move-text-div">
+                            <div class="middle-text receive">
+                                {{payment_id8_rendered}}
+                            </div>
+                        </div>
+                    </div>    
+
+
+
+                    <div class="submit-div small-top-margin">
+                      <a class="login-btn modals pointer" ng-click="new_payment_id8()">Generate new integrated address</a>
+                    </div>            
+
+
+                    <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+                        <p>{{error}}</p>
+                    </div>                           
+
             </div>
         </div>
     </div>
 
+<!--
     <div class="w-container middle-container receive">
         <div class="middle-div receive">
             <div class="w-form send-form receive">
@@ -85,6 +112,7 @@
                 </div>
             </div>
         </div>
+        -->
 
         <!--
         <div class="qr-div" scroll-marker="qrcode">
@@ -106,6 +134,7 @@
                 </div>
             </div>
         </div>
-        -->
+    
     </div>
+        -->
 </div>
