@@ -536,7 +536,7 @@ TxSearch::find_txs_in_mempool(
 
             j_tx["hash"]           = oi_identification.tx_hash_str;
             j_tx["tx_pub_key"]     = oi_identification.tx_pub_key_str;
-            j_tx["timestamp"]      = timestamp_to_str_gm(recieve_time); // when it got into mempool
+            j_tx["timestamp"]      = recieve_time; // when it got into mempool
             j_tx["total_received"] = oi_identification.total_received;
             j_tx["total_sent"]     = 0; // to be set later when looking for key images
             j_tx["unlock_time"]    = 0; // for mempool we set it to zero
@@ -630,7 +630,7 @@ TxSearch::find_txs_in_mempool(
 
                     j_tx["hash"]           = oi_identification.tx_hash_str;
                     j_tx["tx_pub_key"]     = oi_identification.tx_pub_key_str;
-                    j_tx["timestamp"]      = timestamp_to_str_gm(recieve_time); // when it got into mempool
+                    j_tx["timestamp"]      = recieve_time; // when it got into mempool
                     j_tx["total_received"] = 0;          // we did not recive any outputs/xmr
                     j_tx["total_sent"]     = total_sent; // to be set later when looking for key images
                     j_tx["unlock_time"]    = 0;          // for mempool we set it to zero
