@@ -182,23 +182,31 @@ auto settings = make_shared<Settings>( );
 
 if (config_json["ssl"]["enable"])
 {
+    // based on the example provided at
+    // https://github.com/Corvusoft/restbed/blob/34187502642144ab9f749ab40f5cdbd8cb17a54a/example/https_service/source/example.cpp
     auto ssl_settings = make_shared<SSLSettings>( );
 
-    ssl_settings->set_http_disabled( true );
+    Uri ssl_key = Uri(config_json["ssl"]["ssl-key"].get<string>());
+    Uri ssl_crt = Uri(config_json["ssl"]["ssl-crt"].get<string>());
+    Uri dh_pem  = Uri(config_json["ssl"]["dh-pem"].get<string>());
+
+    ssl_settings->set_http_disabled(true);
     ssl_settings->set_port(app_port);
-    ssl_settings->set_private_key( Uri( "file:///tmp/mwo.key" ) );
-    ssl_settings->set_certificate( Uri( "file:///tmp/mwo.crt" ) );
-    ssl_settings->set_temporary_diffie_hellman( Uri( "file:///tmp/dh2048.pem" ) );
+    ssl_settings->set_private_key(ssl_key);
+    ssl_settings->set_certificate(ssl_crt);
+    ssl_settings->set_temporary_diffie_hellman(dh_pem);
 
     settings->set_ssl_settings(ssl_settings);
 
-    cout << "Start the service at https://localhost:" << app_port << endl;
+    // can check using: curl -k -v -w'\n' -X POST 'https://127.0.0.1:1984/get_version'
+
+    cout << "Start the service at https://127.0.0.1:" << app_port << endl;
 }
 else
 {
     settings->set_port(app_port);
 
-    cout << "Start the service at http://localhost:" << app_port  << endl;
+    cout << "Start the service at http://127.0.0.1:" << app_port  << endl;
 }
 
 

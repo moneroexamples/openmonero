@@ -1,8 +1,8 @@
 {
   "daemon-url" :
   {
-    "mainnet" : "http:://127.0.0.1:18081",
-    "testnet" : "http:://127.0.0.1:28081"
+    "mainnet" : "http://127.0.0.1:18081",
+    "testnet" : "http://127.0.0.1:28081"
   },
   "blockchain-path" :
   {
@@ -37,8 +37,9 @@
   "ssl" :
   {
     "enable" : false,
-    "_comment": "below paths to crt and key files need to be given",
-    "ssl-crt": "",
-    "ssl-key": ""
+    "_comment": "below are example paths to crt and key files need to be given",
+    "ssl-key": "file:///tmp/server.key",
+    "ssl-crt": "file:///tmp/server.crt",
+    "dh-pem" : "file:///tmp/dh2048.pem"
   }
 }
