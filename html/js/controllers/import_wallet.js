@@ -44,7 +44,7 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
             address: AccountService.getAddress(),
             view_key: AccountService.getViewKey()
         }).success(function(data) {
-            $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee) + ' ' + data.payment_id;
+            $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
             $scope.payment_id = data.payment_id;
             $scope.payment_address = data.payment_address;
             $scope.import_fee = new JSBigInt(data.import_fee);

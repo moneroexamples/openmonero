@@ -113,16 +113,16 @@ xmreg::CurrentBlockchainStatus::import_fee
 
 if (testnet)
 {
-    xmreg::CurrentBlockchainStatus::import_payment_address
+    xmreg::CurrentBlockchainStatus::import_payment_address_str
             = config_json["wallet_import"]["testnet"]["address"];
-    xmreg::CurrentBlockchainStatus::import_payment_viewkey
+    xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
             = config_json["wallet_import"]["testnet"]["viewkey"];
 }
 else
 {
-    xmreg::CurrentBlockchainStatus::import_payment_address
+    xmreg::CurrentBlockchainStatus::import_payment_address_str
             = config_json["wallet_import"]["mainnet"]["address"];
-    xmreg::CurrentBlockchainStatus::import_payment_viewkey
+    xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
             = config_json["wallet_import"]["mainnet"]["viewkey"];
 }
 

@@ -19,16 +19,20 @@
               It should not take more than few minutes before your transfer is detected in the mempool.
             </div>
           </div>
+          <!--
           <label class="field-label review" for="Mnemonic-2">Payment command</label>
             <div class="review-text address">{{command}} </div>
           </div>
-          <label class="field-label review" for="Mnemonic-2">Payment address</label>
+          -->
+          <label class="field-label review" for="Mnemonic-2">
+            Transfer {{import_fee | money:false:true}} into the following integrated address
+          </label>
 
           <div class="move-text-div">
-           <div class="review-text address">{{payment_address}}</div>
+           <div class="review-text address" style="font-size: 10px">{{payment_address}}</div>
           </div>
 
-          <label class="field-label review" for="Mnemonic-2">Payment ID (make sure to use this)</label>
+          <label class="field-label review" for="Mnemonic-2">Payment ID (for your reference, as it is embedded into the integrated address)</label>
           <div class="move-text-div">
             <div class="review-text">{{payment_id}}</div>
           </div>

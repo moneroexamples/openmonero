@@ -740,11 +740,14 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
         bool request_fulfilled = bool {xmr_payment.request_fulfilled};
 
+        string integrated_address =
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(xmr_payment.payment_id);
+
         j_response["payment_id"]        = xmr_payment.payment_id;
         j_response["import_fee"]        = xmr_payment.import_fee;
         j_response["new_request"]       = false;
         j_response["request_fulfilled"] = request_fulfilled;
-        j_response["payment_address"]   = xmr_payment.payment_address;
+        j_response["payment_address"]   = integrated_address;
         j_response["status"]            = "Payment not yet received";
 
         string tx_hash_with_payment;
@@ -815,12 +818,17 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
         uint64_t payment_table_id {0};
 
+        crypto::hash8 random_payment_id8 = crypto::rand<crypto::hash8>();
+
+        string integrated_address =
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(random_payment_id8);
+
         xmr_payment.address           = xmr_address;
-        xmr_payment.payment_id        = pod_to_hex(generated_payment_id());
+        xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
         xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
         xmr_payment.request_fulfilled = false;
         xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
-        xmr_payment.payment_address   = CurrentBlockchainStatus::import_payment_address;
+        xmr_payment.payment_address   = integrated_address;
 
 
         if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)

@@ -32,11 +32,11 @@ uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seco
 uint64_t                CurrentBlockchainStatus::max_number_of_blocks_to_import{8000};
 uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
-string                  CurrentBlockchainStatus::import_payment_address;
-string                  CurrentBlockchainStatus::import_payment_viewkey;
+string                  CurrentBlockchainStatus::import_payment_address_str;
+string                  CurrentBlockchainStatus::import_payment_viewkey_str;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
-account_public_address  CurrentBlockchainStatus::address;
-secret_key              CurrentBlockchainStatus::viewkey;
+account_public_address  CurrentBlockchainStatus::import_payment_address;
+secret_key              CurrentBlockchainStatus::import_payment_viewkey;
 map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
 unique_ptr<xmreg::MicroCore>        CurrentBlockchainStatus::mcore;
@@ -48,25 +48,25 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
     TxSearch::set_search_thread_life(search_thread_life_in_seconds);
 
-    if (!import_payment_address.empty() && !import_payment_viewkey.empty())
+    if (!import_payment_address_str.empty() && !import_payment_viewkey_str.empty())
     {
         if (!xmreg::parse_str_address(
+                import_payment_address_str,
                 import_payment_address,
-                address,
                 testnet))
         {
             cerr << "Cant parse address_str: "
-                 << import_payment_address
+                 << import_payment_address_str
                  << endl;
             return;
         }
 
         if (!xmreg::parse_str_secret_key(
-                import_payment_viewkey,
-                viewkey))
+                import_payment_viewkey_str,
+                import_payment_viewkey))
         {
             cerr << "Cant parse the viewkey_str: "
-                 << import_payment_viewkey
+                 << import_payment_viewkey_str
                  << endl;
             return;
         }
@@ -323,6 +323,27 @@ CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
     return true;
 }
 
+
+string
+CurrentBlockchainStatus::get_account_integrated_address_as_str(
+        crypto::hash8 const& payment_id8)
+{
+    return cryptonote::get_account_integrated_address_as_str(testnet,
+                    import_payment_address, payment_id8);
+}
+
+string
+CurrentBlockchainStatus::get_account_integrated_address_as_str(
+        string const& payment_id8_str)
+{
+    crypto::hash8 payment_id8;
+
+    if (!hex_to_pod(payment_id8_str, payment_id8))
+        return string {};
+
+    return get_account_integrated_address_as_str(payment_id8);
+}
+
 bool
 CurrentBlockchainStatus::get_amount_specific_indices(const crypto::hash& tx_hash,
                             vector<uint64_t>& out_indices)
@@ -543,37 +564,79 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         string tx_payment_id_str = get_payment_id_as_string(tx);
 
-        if (payment_id_str != tx_payment_id_str)
+        // we are interested only in txs with encrypted payments id8
+        // they have length of 16 characters.
+
+        if (tx_payment_id_str.length() != 16)
+        {
+            continue;
+        }
+
+        // we have some tx with encrypted payment_id8
+        // need to decode it using tx public key, and our
+        // private view key, before we can comapre it is
+        // what we are after.
+
+        crypto::hash8 encrypted_payment_id8;
+
+        if (!hex_to_pod(tx_payment_id_str, encrypted_payment_id8))
+        {
+            cerr << "failed parsing hex to pod for encrypted_payment_id8" << '\n';
+        }
+
+        // decrypt the encrypted_payment_id8
+
+        public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+
+
+        // public transaction key is combined with our viewkey
+        // to create, so called, derived key.
+        key_derivation derivation;
+
+        if (!generate_key_derivation(tx_pub_key, import_payment_viewkey, derivation))
+        {
+            cerr << "Cant get derived key for: "  << "\n"
+                 << "pub_tx_key: " << tx_pub_key << " and "
+                 << "prv_view_key" << import_payment_viewkey << endl;
+
+            return false;
+        }
+
+        // decrypt encrypted payment id, as used in integreated addresses
+        crypto::hash8 decrypted_payment_id8 = encrypted_payment_id8;
+
+        if (decrypted_payment_id8 != null_hash8)
+        {
+            if (!decrypt_payment_id(decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
+            {
+                cerr << "Cant decrypt  decrypted_payment_id8: "
+                     << pod_to_hex(decrypted_payment_id8) << "\n";
+            }
+        }
+
+        string decrypted_tx_payment_id_str = pod_to_hex(decrypted_payment_id8);
+
+        // check if decrypted payment id matches what we have stored
+        // in mysql.
+        if (payment_id_str != decrypted_tx_payment_id_str)
         {
             // check tx having specific payment id only
             continue;
         }
 
-        public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
+        // if everything ok with payment id, we proceed with
+        // checking if the amount transfered is correct.
+
+        // for each output, in a tx, check if it belongs
+        // to the given account of specific address and viewkey
+
 
         //          <public_key  , amount  , out idx>
         vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
 
         outputs = get_ouputs_tuple(tx);
 
-        // for each output, in a tx, check if it belongs
-        // to the given account of specific address and viewkey
-
-        // public transaction key is combined with our viewkey
-        // to create, so called, derived key.
-        key_derivation derivation;
-
-        if (!generate_key_derivation(tx_pub_key, viewkey, derivation))
-        {
-            cerr << "Cant get derived key for: "  << "\n"
-                 << "pub_tx_key: " << tx_pub_key << " and "
-                 << "prv_view_key" << viewkey << endl;
-
-            return false;
-        }
-
         string tx_hash_str = pod_to_hex(get_transaction_hash(tx));
-
 
 
         uint64_t total_received {0};
@@ -591,7 +654,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
             derive_public_key(derivation,
                               output_idx_in_tx,
-                              address.m_spend_public_key,
+                              import_payment_address.m_spend_public_key,
                               generated_tx_pubkey);
 
             // check if generated public key matches the current output's key
@@ -612,7 +675,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
                     r = decode_ringct(tx.rct_signatures,
                                       tx_pub_key,
-                                      viewkey,
+                                      import_payment_viewkey,
                                       output_idx_in_tx,
                                       tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
                                       rct_amount);
