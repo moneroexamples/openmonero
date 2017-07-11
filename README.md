@@ -28,6 +28,8 @@ to MyMonero. They include:
  - Cross-Origin Resource Sharing (CORS) was disabled.
  - Transaction confirmation window added to double check tx details before its commited. 
  - Ability to select transaction priority. 
+ - Legacy address + payment_id system replaced with integrated addresses for better privacy.
+ - Free, time based imports of recent transactions added. 
    
 ## Testnet version
 
@@ -82,6 +84,7 @@ Open Monero is not as fast as MyMonero. This is because it is basic, easy to und
 ## Example compilation on Ubuntu 16.04 
 
 Below are example and basic instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
+For other Linux operating systems, the instructions are analogical. 
 
 
 #### Monero download and compilation
@@ -97,12 +100,11 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder 
 cd ~
 
+# get latest development version of monero. Monero changes so fast
+# that if something breaks during compilation of open monero, please make an issue
 git clone https://github.com/monero-project/monero
 
 cd monero/
-
-# checkout last monero version
-git checkout -b last_release v0.10.3.1
 
 make
 ```
