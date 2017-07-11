@@ -44,13 +44,22 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
             address: AccountService.getAddress(),
             view_key: AccountService.getViewKey()
         }).success(function(data) {
+
             $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
             $scope.payment_id = data.payment_id;
             $scope.payment_address = data.payment_address;
             $scope.import_fee = new JSBigInt(data.import_fee);
             $scope.status = data.status;
-            if (data.request_fulfilled) {
-                $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+
+            if (data.request_fulfilled === true) {
+
+                if (data.new_request === true) {
+                    $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                }
+                else {
+                    $scope.success = "The wallet is being imported now or it has already been imported before.";
+                }
+
                 $timeout(function(){ModalService.hide('import-wallet')}, 5000);
             }
         }).error(function(err) {
