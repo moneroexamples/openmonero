@@ -97,7 +97,7 @@ thinwalletServices
                     account_seed = '';
                 }
                 logged_in = true;
-                console.log("logged_in = true;");
+                // console.log("logged_in = true;");
                 $http
                     .post(config.apiUrl + "login", {
                     	withCredentials: true,
@@ -105,8 +105,11 @@ thinwalletServices
                         view_key: view_key,
                         create_account: true
                     })
-                    .success(function(data) {
+                    .then(function(response) {
                         // set account_imported to true if we are not logging in with a newly generated account, and a new account was created on the server
+
+                        var data = response.data;
+
                         if (data.status === "error")
                         {
                             accountService.logout();
@@ -117,8 +120,8 @@ thinwalletServices
                         logging_in = false;
                         $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
                         deferred.resolve(data);
-                    })
-                    .error(function(reason) {
+                    }, function(reason) {
+                        console.log(reason);
                         accountService.logout();
                         deferred.reject((reason || {}).Error || reason || "server error");
                     });

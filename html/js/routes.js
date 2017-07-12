@@ -32,7 +32,7 @@ thinwalletApp.config(function ($routeProvider, $locationProvider) {
     $routeProvider
         .when('/', {
             templateUrl: 'partials/home.html?1',
-            controller: 'TempCtrl',
+            controller: 'VersionCtrl',
             title: 'Welcome',
             redirectToAccount: true
         })

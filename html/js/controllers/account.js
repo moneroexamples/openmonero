@@ -118,7 +118,9 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
             $http.post(config.apiUrl + "get_address_info", {
                 address: AccountService.getAddress(),
                 view_key: AccountService.getViewKey()
-            }).success(function(data) {
+            }).then(function(response) {
+
+                var data = response.data;
 
                 var promises = [];
 
@@ -154,7 +156,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
                 });
-            });
+            }, function(response) {console.log(response)});
         }
     };
 
@@ -165,7 +167,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
             var view_only = AccountService.isViewOnly();
 
             $http.post(config.apiUrl + 'get_address_txs', AccountService.getAddressAndViewKey())
-                .success(function(data) {
+                .then(function(response) {
+                    var data = response.data;
                     $scope.account_scanned_height = data.scanned_height || 0;
                     $scope.account_scanned_block_height = data.scanned_block_height || 0;
                     $scope.account_scan_start_height = data.start_height || 0;
@@ -256,6 +259,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);
                     $scope.total_received_unlocked = new JSBigInt(data.total_received_unlocked || 0);
+                }, function(response){
+                    console.log("error")
                 });
         }
     };
