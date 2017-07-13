@@ -28,7 +28,7 @@
 
 thinwalletApp.config(function ($routeProvider, $locationProvider) {
     "use strict";
-    $locationProvider.html5Mode(false);
+    //$locationProvider.html5Mode(false);
     $routeProvider
         .when('/', {
             templateUrl: 'partials/home.html?1',

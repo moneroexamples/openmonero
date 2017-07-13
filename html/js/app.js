@@ -29,7 +29,7 @@
 config.coinUnits = JSBigInt.pow(10, config.coinUnitPlaces);
 
 var thinwalletCtrls = angular.module('thinWallet.Controllers', [
-    'infinite-scroll'
+   // 'infinite-scroll'
 ]);
 
 var thinwalletFilters = angular.module('thinWallet.Filters', []);

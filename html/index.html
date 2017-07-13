@@ -27,13 +27,13 @@
     </style>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="bower_components/fastclick/lib/fastclick.js"></script>
+    <!--<script src="bower_components/fastclick/lib/fastclick.js"></script>-->
     <script src="bower_components/angular/angular.min.js"></script>
     <script src="bower_components/angular-route/angular-route.min.js"></script>
-    <script src="bower_components/ngInfiniteScroll/build/ng-infinite-scroll.min.js"></script>
+   <!-- <script src="bower_components/ngInfiniteScroll/build/ng-infinite-scroll.min.js"></script>-->
     <script src="bower_components/ng-idle/angular-idle.min.js"></script>
     <script src="bower_components/moment/min/moment-with-locales.min.js"></script>
-    <script src="js/webflow.js"></script>
+    <!--<script src="js/webflow.js"></script>-->
 
     <script src="js/crc32.js?1"></script>
     <script src="js/mnemonic.js?2"></script>
@@ -80,8 +80,8 @@
 <div class="w-nav nav" data-collapse="small" data-animation="default" data-duration="400" data-contain="1">
     <div class="w-container">
         <nav class="w-nav-menu nav-menu" role="navigation">
-            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('create-your-account')" href="#/create-your-account">CREATE A NEW ACCOUNT</a>
-            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('support')" href="#/support">SUPPORT</a>
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('create-your-account')" href="#!/create-your-account">CREATE A NEW ACCOUNT</a>
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('support')" href="#!/support">SUPPORT</a>
             <a class="w-nav-link nav-link pointer login" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">LOG IN</a>
 
             <div class="w-dropdown" ng-show="loggedIn()" data-delay="0">
@@ -96,13 +96,13 @@
                     <a class="w-dropdown-link dropdown-styling pointer bottom" data-ix="display-review-account" show-modal="review-account-details">Account Details</a>
                 </nav>
             </div>
-            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('support')" href="#/support">Support</a>
-            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('-')" ng-click="logout()" href="#/">Logout</a>
+            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('support')" href="#!/support">Support</a>
+            <a class="w-nav-link nav-link" ng-show="loggedIn()" ng-class="currentPage('-')" ng-click="logout()" href="#!/">Logout</a>
         </nav>
         <div class="w-nav-button menu-btn">
             <div class="w-icon-nav-menu"></div>
         </div>
-        <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#/overview' : '#/'}}">
+        <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#!/overview' : '#!/'}}">
             <span style="font-size: 32px; font-weight: bold;">OPEN MONERO</span>
             <span style="color:white" ng-hide="testnet == false"><br/>testnet monero network</span>
             <span style="color:white" ng-hide="testnet == true"><br/>mainnet monero network</span>
