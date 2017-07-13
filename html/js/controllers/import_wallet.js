@@ -26,7 +26,9 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http, AccountService, ModalService, $interval, $timeout) {
+thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http,
+                                                        AccountService, ModalService,
+                                                        $interval, $timeout, ApiCalls) {
     "use strict";
     $scope.payment_address = '';
     $scope.payment_id = '';
@@ -40,31 +42,31 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
             ModalService.hide('import-wallet');
             return;
         }
-        $http.post(config.apiUrl + "import_wallet_request", {
-            address: AccountService.getAddress(),
-            view_key: AccountService.getViewKey()
-        }).success(function(data) {
+        ApiCalls.import_wallet_request(AccountService.getAddress(), AccountService.getViewKey())
+            .then(function(response) {
 
-            $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
-            $scope.payment_id = data.payment_id;
-            $scope.payment_address = data.payment_address;
-            $scope.import_fee = new JSBigInt(data.import_fee);
-            $scope.status = data.status;
+                var data = response.data;
 
-            if (data.request_fulfilled === true) {
+                $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
+                $scope.payment_id = data.payment_id;
+                $scope.payment_address = data.payment_address;
+                $scope.import_fee = new JSBigInt(data.import_fee);
+                $scope.status = data.status;
 
-                if (data.new_request === true) {
-                    $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                if (data.request_fulfilled === true) {
+
+                    if (data.new_request === true) {
+                        $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                    }
+                    else {
+                        $scope.success = "The wallet is being imported now or it has already been imported before.";
+                    }
+
+                    $timeout(function(){ModalService.hide('import-wallet')}, 5000);
                 }
-                else {
-                    $scope.success = "The wallet is being imported now or it has already been imported before.";
-                }
-
-                $timeout(function(){ModalService.hide('import-wallet')}, 5000);
-            }
-        }).error(function(err) {
-            $scope.error = err.Error || err || "An unexpected server error occurred";
-        });
+            },function(response) {
+                $scope.error = "Error connecting to the backend. Can't get payment import data.";
+            });
     }
 
     var getRequestInterval = $interval(get_import_request, 10 * 1000);

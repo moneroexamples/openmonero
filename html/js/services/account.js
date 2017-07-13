@@ -27,7 +27,9 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 thinwalletServices
-    .factory('AccountService', function($rootScope, $http, $q, $location, $route, EVENT_CODES) {
+    .factory('AccountService', function($rootScope, $http, $q,
+                                        $location, $route,
+                                        EVENT_CODES, ApiCalls) {
         "use strict";
         var public_address = '';
         var account_seed = '';
@@ -98,13 +100,8 @@ thinwalletServices
                 }
                 logged_in = true;
                 // console.log("logged_in = true;");
-                $http
-                    .post(config.apiUrl + "login", {
-                    	withCredentials: true,
-                        address: public_address,
-                        view_key: view_key,
-                        create_account: true
-                    })
+
+                ApiCalls.login(public_address, view_key)
                     .then(function(response) {
                         // set account_imported to true if we are not logging in with a newly generated account, and a new account was created on the server
 

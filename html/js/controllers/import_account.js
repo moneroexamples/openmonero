@@ -26,7 +26,10 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller("ImportAccountCtrl", function($scope, $location, $http, AccountService, ModalService, $timeout) {
+thinwalletCtrls.controller("ImportAccountCtrl", function($scope, $location,
+                                                         $http, AccountService,
+                                                         ModalService, $timeout,
+                                                         ApiCalls) {
     "use strict";
 
     $scope.success = '';
@@ -51,24 +54,26 @@ thinwalletCtrls.controller("ImportAccountCtrl", function($scope, $location, $htt
             return;
         }
 
-        $http.post(config.apiUrl + "import_recent_wallet_request", {
-            address: AccountService.getAddress(),
-            view_key: AccountService.getViewKey(),
-            no_blocks_to_import: $scope.no_blocks_to_import
-        }).success(function(data) {
-            $scope.status = data.status;
+        ApiCalls.import_recent_wallet_request(AccountService.getAddress(),
+                                              AccountService.getViewKey(),
+                                              $scope.no_blocks_to_import)
+            .then(function(response) {
 
-            if (data.request_fulfilled) {
-                $scope.success = "Request successful. Import will start shortly. This window will close in few seconds.";
-                $timeout(function(){ModalService.hide('imported-account')}, 5000);
-            }
-            else
-            {
-                $scope.error = data.Error || "An unexpected server error occurred";
-            }
-        }).error(function(err) {
-            $scope.error = err.Error || err || "An unexpected server error occurred";
-        });
+                var data = response.data;
+
+                $scope.status = data.status;
+
+                if (data.request_fulfilled === true) {
+                    $scope.success = "Request successful. Import will start shortly. This window will close in few seconds.";
+                    $timeout(function(){ModalService.hide('imported-account')}, 5000);
+                }
+                else
+                {
+                    $scope.error = data.Error || "An unexpected server error occurred";
+                }
+            },function(err) {
+                $scope.error = "An unexpected server error occurred";
+            });
     }
 
 });

@@ -99,9 +99,9 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
                 if (AccountService.wasAccountImported()) {
                     ModalService.show('imported-account');
                 }
-            }, function(reason) {
-                $scope.error = reason;
-                console.error(reason);
+            }, function(response) {
+                $scope.error = "Error connecting to the backend. Can't login.";
+                //console.error(response);
             });
     };
 
