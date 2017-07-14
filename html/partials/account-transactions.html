@@ -14,17 +14,8 @@
         </div>
       </div>
       <div class="w-col w-col-6">
-        <div class="balance-div">
-          <div class="w-clearfix">
-            <div class="balance-header">Your Balance / Unlocked Balance</div>
-          </div>
-          <div class="balance-text">
-            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
-            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}<br/>
-            Timestamp: {{account_scanned_block_timestamp | time}}
-          </div>
-        </div>
-        </div>
+        <ng-include src="'partials/account-balance.html'"></ng-include>
+      </div>
       </div>
     </div>
   </div>
