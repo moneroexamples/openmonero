@@ -409,7 +409,8 @@ TxSearch::search()
 
             XmrAccount updated_acc = *acc;
 
-            updated_acc.scanned_block_height = searched_blk_no;
+            updated_acc.scanned_block_height    = searched_blk_no;
+            updated_acc.scanned_block_timestamp = blk_timestamp_mysql_format;
 
             if (xmr_accounts->update(*acc, updated_acc))
             {

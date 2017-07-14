@@ -34,6 +34,7 @@ CREATE TABLE `Accounts` (
   `address` varchar(95) NOT NULL,
   `viewkey_hash` char(64) NOT NULL,
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
+  `scanned_block_timestamp` timestamp NOT NULL DEFAULT 0,
   `start_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -69,6 +69,18 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // account does not exist, so create new one
         // for this address
 
+        uint64_t current_blockchain_height = get_current_blockchain_height();
+
+        uint64_t current_blockchain_timestamp {0};
+
+        block last_blk;
+
+        if (CurrentBlockchainStatus::get_block(current_blockchain_height, last_blk))
+        {
+            current_blockchain_timestamp
+                    = XmrTransaction::timestamp_to_DateTime(last_blk.timestamp);
+        }
+
         // we will save current blockchain height
         // in mysql, so that we know from what block
         // to start searching txs of this new acount
@@ -77,7 +89,8 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // `scanned_block_height` in mysql Accounts table.
         if ((acc_id = xmr_accounts->insert(xmr_address,
                                            make_hash(view_key),
-                                           get_current_blockchain_height())) == 0)
+                                           current_blockchain_height,
+                                           current_blockchain_timestamp)) == 0)
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -133,13 +146,14 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     // initialize json response
     j_response = json {
-            { "total_received"         , 0},    // calculated in this function
-            { "total_received_unlocked", 0},    // calculated in this function
-            { "scanned_height"         , 0},    // not used. it is here to match mymonero
-            { "scanned_block_height"   , 0},    // taken from Accounts table
-            { "start_height"           , 0},    // blockchain hieght when acc was created
-            { "blockchain_height"      , 0},    // current blockchain height
-            { "transactions"           , json::array()}
+            {"total_received"         , 0},    // calculated in this function
+            {"total_received_unlocked", 0},    // calculated in this function
+            {"scanned_height"         , 0},    // not used. it is here to match mymonero
+            {"scanned_block_height"   , 0},    // taken from Accounts table
+            {"scanned_block_timestamp", 0},    // taken from Accounts table
+            {"start_height"           , 0},    // blockchain hieght when acc was created
+            {"blockchain_height"      , 0},    // current blockchain height
+            {"transactions"           , json::array()}
     };
 
     // a placeholder for exciting or new account data
@@ -158,10 +172,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         uint64_t total_received {0};
         uint64_t total_received_unlocked {0};
 
-        j_response["total_received"]       = total_received;
-        j_response["start_height"]         = acc.start_height;
-        j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"]    = get_current_blockchain_height();
+        j_response["total_received"]          = total_received;
+        j_response["start_height"]            = acc.start_height;
+        j_response["scanned_block_height"]    = acc.scanned_block_height;
+        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(acc.scanned_block_timestamp);
+        j_response["blockchain_height"]       = get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
@@ -314,18 +329,19 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     string viewkey_hash = make_hash(view_key);
 
     j_response = json {
-            {"locked_funds"        , 0},    // locked xmr (e.g., younger than 10 blocks)
-            {"total_received"      , 0},    // calculated in this function
-            {"total_sent"          , 0},    // calculated in this function
-            {"scanned_height"      , 0},    // not used. it is here to match mymonero
-            {"scanned_block_height", 0},    // taken from Accounts table
-            {"start_height"        , 0},    // not used, but available in Accounts table.
-                                            // it is here to match mymonero
-            {"blockchain_height"   , 0},    // current blockchain height
-            {"spent_outputs"       , nullptr} // list of spent outputs that we think
-                                              // user has spent. client side will
-                                              // filter out false positives since
-                                              // only client has spent key
+            {"locked_funds"           , 0},    // locked xmr (e.g., younger than 10 blocks)
+            {"total_received"         , 0},    // calculated in this function
+            {"total_sent"             , 0},    // calculated in this function
+            {"scanned_height"         , 0},    // not used. it is here to match mymonero
+            {"scanned_block_height"   , 0},    // taken from Accounts table
+            {"scanned_block_timestamp", 0},    // taken from Accounts table
+            {"start_height"           , 0},    // not used, but available in Accounts table.
+                                               // it is here to match mymonero
+            {"blockchain_height"      , 0},    // current blockchain height
+            {"spent_outputs"          , nullptr} // list of spent outputs that we think
+                                               // user has spent. client side will
+                                               // filter out false positives since
+                                               // only client has spent key
     };
 
     // a placeholder for exciting or new account data
@@ -356,10 +372,11 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
             }
         }
 
-        j_response["total_received"]       = total_received;
-        j_response["start_height"]         = acc.start_height;
-        j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
+        j_response["total_received"]          = total_received;
+        j_response["start_height"]            = acc.start_height;
+        j_response["scanned_block_height"]    = acc.scanned_block_height;
+        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(acc.scanned_block_timestamp);
+        j_response["blockchain_height"]       = get_current_blockchain_height();
 
         uint64_t total_sent {0};
 
@@ -722,7 +739,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 {
     json j_request = body_to_json(body);
 
-    string xmr_address = j_request["address"];
+    string xmr_address   = j_request["address"];
 
     // a placeholder for existing or new payment data
     xmreg::XmrPayment xmr_payment;
@@ -730,6 +747,8 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
     json j_response;
 
     j_response["request_fulfilled"] = false;
+    j_response["status"] = "error";
+    j_response["error"]  = "Some error occured";
 
     // select this payment if its existing one
     if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
@@ -741,7 +760,8 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         bool request_fulfilled = bool {xmr_payment.request_fulfilled};
 
         string integrated_address =
-                CurrentBlockchainStatus::get_account_integrated_address_as_str(xmr_payment.payment_id);
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                        xmr_payment.payment_id);
 
         j_response["payment_id"]        = xmr_payment.payment_id;
         j_response["import_fee"]        = xmr_payment.import_fee;
@@ -788,20 +808,20 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                         if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
                         {
                             cerr << "Updating searched_blk_no failed!" << endl;
-                            j_response["status"] = "Updating searched_blk_no failed!";
+                            j_response["error"] = "Updating searched_blk_no failed!";
                         }
                     }
                 }
                 else
                 {
                     cerr << "Updating accounts due to made payment mysql failed! " << endl;
-                    j_response["status"] = "Updating accounts due to made payment mysql failed!";
+                    j_response["error"] = "Updating accounts due to made payment mysql failed!";
                 }
             }
             else
             {
                 cerr << "Updating payment mysql failed! " << endl;
-                j_response["status"] = "Updating payment mysql failed!";
+                j_response["error"] = "Updating payment mysql failed!";
             }
         }
 
@@ -809,6 +829,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         {
             j_response["request_fulfilled"] = request_fulfilled;
             j_response["status"]            = "Payment received. Thank you.";
+            j_response["error"]             = "";
         }
     }
     else
@@ -821,7 +842,8 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         crypto::hash8 random_payment_id8 = crypto::rand<crypto::hash8>();
 
         string integrated_address =
-                CurrentBlockchainStatus::get_account_integrated_address_as_str(random_payment_id8);
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                        random_payment_id8);
 
         xmr_payment.address           = xmr_address;
         xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
@@ -829,7 +851,6 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         xmr_payment.request_fulfilled = false;
         xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
         xmr_payment.payment_address   = integrated_address;
-
 
         if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)
         {
@@ -841,6 +862,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
             j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
             j_response["payment_address"]   = xmr_payment.payment_address;
             j_response["status"]            = "Payment not yet received";
+            j_response["error"]             = "";
         }
     }
 

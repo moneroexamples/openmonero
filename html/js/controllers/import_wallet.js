@@ -47,6 +47,12 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
 
                 var data = response.data;
 
+                if ('status' in data == true && data.status == "error") {
+                    $scope.status = data.error || "Some error occured";
+                    $scope.error = data.error || "Some error occured";
+                    return;
+                }
+
                 $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
                 $scope.payment_id = data.payment_id;
                 $scope.payment_address = data.payment_address;
@@ -55,7 +61,9 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
 
                 if (data.request_fulfilled === true) {
 
-                    if (data.new_request === true) {
+                    console.log(data);
+
+                    if (data.new_request === false) {
                         $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
                     }
                     else {

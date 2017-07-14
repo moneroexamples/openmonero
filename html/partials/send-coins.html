@@ -32,7 +32,8 @@
                         </div>
                         <div class="balance-text">
                             {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
-                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
+                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}<br/>
+                            Timestamp: {{account_scanned_block_timestamp | time}}
                         </div>
                     </div>
                 </div>

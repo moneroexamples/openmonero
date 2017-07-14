@@ -148,10 +148,18 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         }
                     }
                     $q.all(promises).then(function() {
+
+                        var scanned_block_timestamp = data.scanned_block_timestamp || 0;
+
+                        if (scanned_block_timestamp > 0)
+                            scanned_block_timestamp = new Date(scanned_block_timestamp * 1000)
+
+
                         $scope.locked_balance = new JSBigInt(data.locked_funds || 0);
                         $scope.total_sent = new JSBigInt(data.total_sent || 0);
                         //$scope.account_scanned_tx_height = data.scanned_height || 0;
                         $scope.account_scanned_block_height = data.scanned_block_height || 0;
+                        $scope.account_scanned_block_timestamp = scanned_block_timestamp;
                         $scope.account_scan_start_height = data.start_height || 0;
                         //$scope.transaction_height = data.transaction_height || 0;
                         $scope.blockchain_height = data.blockchain_height || 0;
@@ -170,12 +178,22 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
             ApiCalls.get_address_txs(AccountService.getAddress(), AccountService.getViewKey())
                 .then(function(response) {
+
                     var data = response.data;
+
+                    var scanned_block_timestamp = data.scanned_block_timestamp || 0;
+
+                    if (scanned_block_timestamp > 0)
+                        scanned_block_timestamp = new Date(scanned_block_timestamp * 1000)
+
                     $scope.account_scanned_height = data.scanned_height || 0;
                     $scope.account_scanned_block_height = data.scanned_block_height || 0;
+                    $scope.account_scanned_block_timestamp = scanned_block_timestamp;
                     $scope.account_scan_start_height = data.start_height || 0;
                     //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
+
+
                     var transactions = data.transactions || [];
 
                     for (var i = 0; i < transactions.length; ++i) {
