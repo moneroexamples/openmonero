@@ -759,7 +759,7 @@ MySqlAccounts::insert(const string& address,
         SimpleResult sr = query.execute(address,
                                         viewkey_hash,
                                         current_blkchain_height,
-                                        current_blkchain_timestamp,
+                                        XmrTransaction::timestamp_to_DateTime(current_blkchain_timestamp),
                                         current_blkchain_height);
 
         if (sr.rows() == 1)
