@@ -182,6 +182,8 @@ TxSearch::search()
 
             uint64_t tx_mysql_id {0};
 
+            // start mysql transaction
+            mysqlpp::Transaction trans(xmr_accounts->get_connection()->get_connection());
 
             // if we identified some outputs as ours,
             // save them into mysql.
@@ -191,26 +193,33 @@ TxSearch::search()
                 // check if it already exists. So that we dont
                 // do it twice.
 
-                XmrTransaction tx_data;
+                XmrTransaction tx_data_existing;
 
                 if (xmr_accounts->tx_exists(acc->id,
                                             oi_identification.tx_hash_str,
-                                            tx_data))
+                                            tx_data_existing))
                 {
                     cout << "\nTransaction " << oi_identification.tx_hash_str
                          << " already present in mysql"
                          << endl;
 
                     // if tx is already present for that user,
-                    // just move to next txs. This can happen we we
-                    // rescan user's transactions.
+                    // we remove it, as we get it data from scrach
 
-                    continue;
+                    if (xmr_accounts->delete_tx(tx_data_existing.id) == 0)
+                    {
+                        string msg = fmt::format("xmr_accounts->delete_tx(%d)",
+                                                 tx_data_existing.id);
+                        cerr << msg << endl;
+                        throw TxSearchException(msg);
+                    }
                 }
+
+                XmrTransaction tx_data;
 
                 tx_data.hash             = oi_identification.tx_hash_str;
                 tx_data.prefix_hash      = oi_identification.tx_prefix_hash_str;
-                tx_data.tx_pub_key      = oi_identification.tx_pub_key_str;
+                tx_data.tx_pub_key       = oi_identification.tx_pub_key_str;
                 tx_data.account_id       = acc->id;
                 tx_data.blockchain_tx_id = blockchain_tx_id;
                 tx_data.total_received   = oi_identification.total_received;
@@ -310,7 +319,7 @@ TxSearch::search()
                     if (xmr_accounts->output_exists(in_info.out_pub_key, out))
                     {
                         cout << "input uses some mixins which are our outputs"
-                             << out << endl;
+                             << out << '\n';
 
                         // seems that this key image is ours.
                         // so get it infromatoin from database into XmrInput
@@ -397,6 +406,12 @@ TxSearch::search()
                 } //  if (!inputs_found.empty())
 
             } //  if (!oi_identification.identified_inputs.empty())
+
+            // if we get to this point, we assume that all tx related tables are ready
+            // to be written, i.e., Transactions, Outputs and Inputs. If so, write
+            // all this into database.
+
+            trans.commit();
 
         } // for (const transaction& tx: blk_txs)
 

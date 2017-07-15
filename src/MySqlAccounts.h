@@ -252,6 +252,9 @@ public:
 
     void
     launch_mysql_pinging_thread();
+
+    shared_ptr<MySqlConnector>
+    get_connection();
 };
 
 

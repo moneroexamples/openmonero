@@ -1106,6 +1106,12 @@ MySqlAccounts::launch_mysql_pinging_thread()
     ping_thread.detach();
 }
 
+shared_ptr<MySqlConnector>
+MySqlAccounts::get_connection()
+{
+    return conn;
+}
+
 
 
 }

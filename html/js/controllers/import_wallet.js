@@ -63,7 +63,7 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
 
                     console.log(data);
 
-                    if (data.new_request === false) {
+                    if (data.new_request === true) {
                         $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
                     }
                     else {

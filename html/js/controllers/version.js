@@ -9,10 +9,11 @@ thinwalletCtrls.controller('VersionCtrl', function ($scope, $http, ApiCalls) {
 
             var last_git_commit_date = response.data.last_git_commit_date;
             var last_git_commit_hash = response.data.last_git_commit_hash;
+            var git_branch_name      = response.data.git_branch_name;
             var monero_version_full  = response.data.monero_version_full;
 
             $scope.version = "Open Monero version: "
-                + last_git_commit_date + "-" + last_git_commit_hash
+                + git_branch_name + "-" + last_git_commit_date + "-" + last_git_commit_hash
                 + "  | Monero version: " + monero_version_full
                 + "  | Blockchain height: " + response.data.blockchain_height
 
