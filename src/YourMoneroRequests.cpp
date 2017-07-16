@@ -776,66 +776,83 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
         string tx_hash_with_payment;
 
-        if (!request_fulfilled
-            && CurrentBlockchainStatus::search_if_payment_made(
-                xmr_payment.payment_id,
-                xmr_payment.import_fee,
-                tx_hash_with_payment))
+        // if payment has not yet been done
+        if (!request_fulfilled)
         {
-            XmrPayment updated_xmr_payment = xmr_payment;
-
-            // updated values
-            updated_xmr_payment.request_fulfilled = true;
-            updated_xmr_payment.tx_hash           = tx_hash_with_payment;
-
-            // save to mysql
-            if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
+            // check if it has just been done now
+            // if yes, mark it in mysql
+            if(CurrentBlockchainStatus::search_if_payment_made(
+                    xmr_payment.payment_id,
+                    xmr_payment.import_fee,
+                    tx_hash_with_payment))
             {
+                XmrPayment updated_xmr_payment = xmr_payment;
 
-                // set scanned_block_height	to 0 to begin
-                // scanning entire blockchain
+                // updated values
+                updated_xmr_payment.request_fulfilled = true;
+                updated_xmr_payment.tx_hash           = tx_hash_with_payment;
 
-                XmrAccount acc;
-
-                if (xmr_accounts->select(xmr_address, acc))
+                // save to mysql
+                if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
                 {
-                    XmrAccount updated_acc = acc;
 
-                    updated_acc.scanned_block_height = 0;
+                    // set scanned_block_height	to 0 to begin
+                    // scanning entire blockchain
 
-                    if (xmr_accounts->update(acc, updated_acc))
+                    XmrAccount acc;
+
+                    if (xmr_accounts->select(xmr_address, acc))
                     {
-                        // if success, set acc to updated_acc;
-                        request_fulfilled = true;
+                        XmrAccount updated_acc = acc;
 
-                        // change search blk number in the search thread
-                        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                        updated_acc.scanned_block_height = 0;
+
+                        if (xmr_accounts->update(acc, updated_acc))
                         {
-                            cerr << "Updating searched_blk_no failed!" << endl;
-                            j_response["error"] = "Updating searched_blk_no failed!";
+                            // if success, set acc to updated_acc;
+                            request_fulfilled = true;
+
+                            // change search blk number in the search thread
+                            if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                            {
+                                cerr << "Updating searched_blk_no failed!" << endl;
+                                j_response["error"] = "Updating searched_blk_no failed!";
+                            }
+
+                            j_response["request_fulfilled"] = request_fulfilled;
+                            j_response["status"]            = "Payment received. Thank you.";
+                            j_response["new_request"]       = true;
+                            j_response["error"]             = "";
                         }
+                    }
+                    else
+                    {
+                        cerr << "Updating accounts due to made payment mysql failed! " << endl;
+                        j_response["error"] = "Updating accounts due to made payment mysql failed!";
                     }
                 }
                 else
                 {
-                    cerr << "Updating accounts due to made payment mysql failed! " << endl;
-                    j_response["error"] = "Updating accounts due to made payment mysql failed!";
+                    cerr << "Updating payment mysql failed! " << endl;
+                    j_response["error"] = "Updating payment mysql failed!";
                 }
-            }
-            else
-            {
-                cerr << "Updating payment mysql failed! " << endl;
-                j_response["error"] = "Updating payment mysql failed!";
-            }
-        }
 
-        if (request_fulfilled)
+            } // if(CurrentBlockchainStatus::search_if_payment_made(
+
+        }  // if (!request_fulfilled)
+        else
         {
+            // if payment has been made, and we get new request to import txs
+            // indicate that this is new requeest, but request was fulfiled.
+            // front end should give proper message in this case
+
             j_response["request_fulfilled"] = request_fulfilled;
-            j_response["status"]            = "Payment received. Thank you.";
+            j_response["status"]            = "Wallet already imported or in the progress.";
+            j_response["new_request"]       = false;
             j_response["error"]             = "";
         }
-    }
+
+    } //  if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
     else
     {
         // payment request is new, so create its entry in

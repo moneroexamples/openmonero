@@ -47,9 +47,9 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
 
                 var data = response.data;
 
-                if ('status' in data == true && data.status == "error") {
-                    $scope.status = data.error || "Some error occured";
-                    $scope.error = data.error || "Some error occured";
+                if ('status' in data === true && data.status == "error") {
+                    $scope.status = data.error || "Some error occurred";
+                    $scope.error = data.error || "Some error occurred";
                     return;
                 }
 
@@ -61,7 +61,7 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
 
                 if (data.request_fulfilled === true) {
 
-                    console.log(data);
+                    //console.log(data);
 
                     if (data.new_request === true) {
                         $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
