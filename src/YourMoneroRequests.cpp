@@ -73,12 +73,17 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
         uint64_t current_blockchain_timestamp {0};
 
+        // get last block so we have its timestamp when
+        // createing the account
         block last_blk;
 
         if (CurrentBlockchainStatus::get_block(current_blockchain_height, last_blk))
         {
             current_blockchain_timestamp = last_blk.timestamp;
         }
+
+        DateTime blk_timestamp_mysql_format
+                = XmrTransaction::timestamp_to_DateTime(current_blockchain_timestamp);
 
         // we will save current blockchain height
         // in mysql, so that we know from what block
@@ -88,8 +93,8 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // `scanned_block_height` in mysql Accounts table.
         if (acc_id = xmr_accounts->insert(xmr_address,
                                            make_hash(view_key),
-                                           current_blockchain_height,
-                                                   current_blockchain_timestamp) == 0)
+                                           blk_timestamp_mysql_format,
+                                           current_blockchain_height) == 0)
         {
             // if creating account failed
             j_response = json {{"status", "error"},

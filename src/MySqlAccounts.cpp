@@ -739,8 +739,8 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
 uint64_t
 MySqlAccounts::insert(const string& address,
                       const string& viewkey_hash,
-                      const uint64_t& current_blkchain_height,
-                      uint64_t const& current_blkchain_timestamp)
+                      DateTime const& current_blkchain_timestamp,
+                      uint64_t const& current_blkchain_height)
 {
 
     Query query = conn->query(XmrAccount::INSERT_STMT);
@@ -759,7 +759,7 @@ MySqlAccounts::insert(const string& address,
         SimpleResult sr = query.execute(address,
                                         viewkey_hash,
                                         current_blkchain_height,
-                                        XmrTransaction::timestamp_to_DateTime(current_blkchain_timestamp),
+                                        current_blkchain_timestamp,
                                         current_blkchain_height);
 
         if (sr.rows() == 1)
