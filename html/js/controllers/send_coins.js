@@ -36,7 +36,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
     $scope.submitting = false;
     $scope.targets = [{}];
     $scope.totalAmount = JSBigInt.ZERO;
-    $scope.mixins = config.defaultMixin;
+    $scope.mixins = config.defaultMixin.toString();
     $scope.view_only = AccountService.isViewOnly();
 
     $scope.success_page = false;
@@ -49,7 +49,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
     var default_priority = 2;
 
-    $scope.priority = default_priority;
+    $scope.priority = default_priority.toString();
 
     $scope.openaliasDialog = undefined;
 
@@ -254,7 +254,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
-        var priority = $scope.priority || 2;
+        var priority = $scope.priority || default_priority;
 
         if (!isInt(priority))
         {
