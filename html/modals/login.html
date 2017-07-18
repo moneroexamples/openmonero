@@ -29,7 +29,7 @@
                         <div class="w-tab-pane" data-w-tab="Tab 1" ng-class="{'w--tab-active': tab_number == 1}">
                             <div class="form-wrapper">
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
-                                      ng-submit="login_mnemonic(mnemonic, mnemonic_language)" form-autofill-fix>
+                                      ng-submit="login_mnemonic(mnemonic, mnemonic_language)" >
                                     <label class="field-label" for="Login-Key">Your Private Login Key</label>
                                     <input class="w-input" id="Login-Key" type="text" placeholder="Enter your Private Login Key here"
                                            name="Login-Key" data-name="Login Key" autocomplete="off" required="required" ng-model="mnemonic">
@@ -79,7 +79,7 @@
                         <div class="w-tab-pane" data-w-tab="Tab 2" ng-class="{'w--tab-active': tab_number == 2}">
                             <div class="form-wrapper">
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
-                                      ng-submit="login_keys(address, view_key, spend_key)" form-autofill-fix>
+                                      ng-submit="login_keys(address, view_key, spend_key)" >
                                     <label class="field-label" for="your-address">Your Address</label>
                                     <input class="w-input" id="your-address" type="text" placeholder="Enter your address here"
                                            name="Your-address" data-name="Your address" autocomplete="off" required="required" ng-model="address">

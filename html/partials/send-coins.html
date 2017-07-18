@@ -35,7 +35,7 @@
         <div class="middle-div send" ng-show="!success_page">
             <div class="w-form send-form">
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
-                      ng-submit="sendCoins(targets, mixins, payment_id)" form-autofill-fix>
+                      ng-submit="sendCoins(targets, mixins, payment_id)">
                     <label class="send-label" for="receiver-address">Receiver Address</label>
                     <input class="w-input send-text-box" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
                            name="Receiver-address" data-name="Receiver address" required="required" ng-model="targets[0].address">
