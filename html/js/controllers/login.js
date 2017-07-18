@@ -38,7 +38,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
     $scope.mnemonic_language = 'english';
 
     // just some dummy account, as not to fill login form every time.
-    $scope.mnemonic = "daft mouth scenic irate origin island irritate eternal ablaze template hotel boxes suitcase oilfield jury dash folding gymnast titans toolbox hiker archer hexagon hijack irate";
+    $scope.mnemonic = "volcano gave orange magically present chlorine tyrant across vapidly puck ulcers issued trash tawny agreed ruby niece nifty glide fictional business rash uncle going glide";
 
 
     var decode_seed = function(mnemonic, language)
