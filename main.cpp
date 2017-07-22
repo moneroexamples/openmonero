@@ -205,6 +205,7 @@ if (config_json["ssl"]["enable"])
 else
 {
     settings->set_port(app_port);
+    settings->set_default_header( "Connection", "close" );
 
     cout << "Start the service at http://127.0.0.1:" << app_port  << endl;
 }
