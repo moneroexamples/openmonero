@@ -73,6 +73,7 @@ XmrOutput::to_json() const
             {"account_id"          , account_id},
             {"tx_id"               , tx_id},
             {"out_pub_key"         , out_pub_key},
+            {"tx_pub_key"          , tx_pub_key},
             {"amount"              , amount},
             {"global_index"        , global_index},
             {"out_index"           , out_index},

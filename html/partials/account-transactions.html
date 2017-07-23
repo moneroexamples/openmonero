@@ -61,10 +61,8 @@
     </div>
   </div>
   <div class="received-div transaction-body lighter" ng-repeat="tx in transactions | orderBy:predicate:reverse | startFrom:pageNum*pageSize | limitTo:pageSize">
-    <div class="w-row" ng-click="toggle_tx_detail(tx)">
       <transaction></transaction>
-    </div>
+  </div>
   <a class="table-btn left pointer" ng-click="navigatePage(1)">&lt;&lt; Previous 10</a>
   <a class="table-btn right pointer" ng-click="navigatePage(-1)">Next 10 &gt;&gt;</a>
-</div>
 </div>

@@ -304,6 +304,7 @@ MysqlOutpus::insert(const XmrOutput& out_data)
         SimpleResult sr = query.execute(out_data.account_id,
                                         out_data.tx_id,
                                         out_data.out_pub_key,
+                                        out_data.tx_pub_key,
                                         out_data.rct_outpk,
                                         out_data.rct_mask,
                                         out_data.rct_amount,

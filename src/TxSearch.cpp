@@ -280,6 +280,7 @@ TxSearch::search()
                         out_data.account_id   = acc->id;
                         out_data.tx_id        = tx_mysql_id;
                         out_data.out_pub_key  = out_info.pub_key;
+                        out_data.tx_pub_key   = oi_identification.tx_pub_key_str;
                         out_data.amount       = out_info.amount;
                         out_data.out_index    = out_info.idx_in_tx;
                         out_data.rct_outpk    = out_info.rtc_outpk;

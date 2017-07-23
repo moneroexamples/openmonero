@@ -224,7 +224,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                             j_spent_outputs.push_back({
                               {"amount"     , input.amount},
                               {"key_image"  , input.key_image},
-                              {"tx_pub_key" , tx.tx_pub_key},
+                              {"tx_pub_key" , out.tx_pub_key},
                               {"out_index"  , out.out_index},
                               {"mixin"      , out.mixin}});
                         }
@@ -408,7 +408,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
                                 j_spent_outputs.push_back({
                                     {"amount"     , in.amount},
                                     {"key_image"  , in.key_image},
-                                    {"tx_pub_key" , tx.tx_pub_key},
+                                    {"tx_pub_key" , out.tx_pub_key},
                                     {"out_index"  , out.out_index},
                                     {"mixin"      , out.mixin},
                                 });

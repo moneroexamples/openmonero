@@ -72,6 +72,7 @@ CREATE TABLE `Outputs` (
   `rct_outpk` varchar(64) NOT NULL DEFAULT '',
   `rct_mask` varchar(64) NOT NULL DEFAULT '',
   `rct_amount` varchar(64) NOT NULL DEFAULT '',
+  `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
   `amount` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `global_index` bigint(20) UNSIGNED NOT NULL,
   `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
