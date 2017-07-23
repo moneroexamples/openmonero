@@ -628,20 +628,14 @@ TxSearch::find_txs_in_mempool(
 
                 if (local_xmr_accounts->output_exists(in_info.out_pub_key, out))
                 {
-                    uint64_t output_amount = out.amount;
-                    string tx_pub_key = oi_identification.tx_pub_key_str;
-                    uint64_t out_index  = out.out_index;
-                    uint64_t mixin = out.mixin; // mixin not used but get it anyway
-                                                // as in mymonero
-
-                    total_sent += output_amount;
+                    total_sent += out.amount;
 
                     spend_keys.push_back({
                           {"key_image" , in_info.key_img},
-                          {"amount"    , output_amount},
-                          {"tx_pub_key", tx_pub_key},
-                          {"out_index" , out_index},
-                          {"mixin"     , mixin},
+                          {"amount"    , out.amount},
+                          {"tx_pub_key", out.tx_pub_key},
+                          {"out_index" , out.out_index},
+                          {"mixin"     , out.mixin},
                     });
                 }
             }
