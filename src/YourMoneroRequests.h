@@ -21,13 +21,28 @@
                            &xmreg::YourMoneroRequests::name, "/" + string(#name));
 #endif
 
+
+
+// When making *any* change here, bump minor
+// If the change is incompatible, then bump major and set minor to 0
+// This ensures that RPC_VERSION always increases, that every change
+// has its own version, and that clients can just test major to see
+// whether they can talk to a given backend without having to know in
+// advance which version they will stop working with
+// Don't go over 32767 for any of these
+#define OPENMONERO_RPC_VERSION_MAJOR 1
+#define OPENMONERO_RPC_VERSION_MINOR 0
+#define MAKE_OPENMONERO_RPC_VERSION(major,minor) (((major)<<16)|(minor))
+#define OPENMONERO_RPC_VERSION \
+    MAKE_OPENMONERO_RPC_VERSION(OPENMONERO_RPC_VERSION_MAJOR, OPENMONERO_RPC_VERSION_MINOR)
+
+
 namespace xmreg
 {
 
 using namespace std;
 using namespace restbed;
 using namespace nlohmann;
-
 
 
 struct handel_
