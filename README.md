@@ -45,7 +45,13 @@ Since this is testnet version, frequent changes and database resets are expected
  it is running on cheap vps, which may result in some lag.
 
 If you want some testnet monero, please make issue with your testnet address that you can
-obtained from Open Monero.   
+obtained from Open Monero.  
+
+## Current working branch
+
+All current development (new features, bug fixes, etc) are happening in this branch:
+
+ - https://github.com/moneroexamples/openmonero/tree/upgrade_angularjs
    
 ## Screenshot
 
