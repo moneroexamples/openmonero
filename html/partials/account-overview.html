@@ -2,13 +2,12 @@
 
 <div class="body-section">
   <div class="w-container">
-    <div>
       <div class="w-row">
         <div class="w-col w-col-6">
           <h1>Account Overview</h1>
           <div class="subhead-text inner overview-page">
             Your account overview and recent transactions.
-            <span ng-show="view_only"><rb/>This is <b>view only</b> wallet.
+            <span ng-show="view_only"><br/>This is <b>view only</b> wallet.
               <br/>Balance and transactions do not account for any spendings.
               Thus, if there were any outgoing transactions made,
               the balance here will be incorrect, and those transactions
@@ -20,38 +19,38 @@
           <ng-include src="'partials/account-balance.html'"></ng-include>
         </div>
       </div>
-    </div>
-  <div class="w-container middle-container overview-page">
-    <div class="middle-div">
-      <div class="overview-body-head">Address</div>
-      <div class="move-text-div">
-        <p class="middle-text">{{address}}</p>
+      <div class="w-container middle-container overview-page">
+        <div class="middle-div">
+          <div class="overview-body-head">Address</div>
+          <div class="move-text-div">
+            <p class="middle-text">{{address}}</p>
+          </div>
+        </div>
+        <div>
+          <div class="overview-body-head">
+            <div class="overview-body-head">Recent transactions</div>
+          </div>
+        </div>
+        <div class="table-headers overview">
+          <div class="w-row">
+            <div class="w-col w-col-2 responsive-column">
+              <div class="transaction-head">Value (XMR)</div>
+            </div>
+            <div class="w-col w-col-3 responsive-column">
+              <div class="transaction-head">Date Received</div>
+            </div>
+            <div class="w-col w-col-1 responsive-column">
+              <div class="transaction-head">Ring Size</div>
+            </div>
+            <div class="w-col w-col-6 responsive-column">
+              <div class="transaction-head">Transaction ID/Hash</div>
+            </div>
+          </div>
+        </div>
+        <div class="received-div" ng-repeat="tx in transactions | limitTo:10">
+          <transaction></transaction>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="overview-body-head">
-        <div class="overview-body-head">Transaction History</div>
-      </div>
-    </div>
-    <div class="table-headers overview">
-      <div class="w-row">
-        <div class="w-col w-col-2 responsive-column">
-          <div class="transaction-head">Value (XMR)</div>
-        </div>
-        <div class="w-col w-col-3 responsive-column">
-          <div class="transaction-head">Date Received</div>
-        </div>
-        <div class="w-col w-col-1 responsive-column">
-          <div class="transaction-head">Ring Size</div>
-        </div>
-        <div class="w-col w-col-6 responsive-column">
-          <div class="transaction-head">Transaction ID</div>
-        </div>
-      </div>
-    </div>
-    <div class="received-div" ng-repeat="tx in transactions | limitTo:10">
-      <transaction></transaction>
-    </div>
+  </div>
 </div>
-
 <!--<script src="js/directives/qr_scanner.js?4"></script>-->

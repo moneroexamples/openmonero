@@ -1,8 +1,7 @@
 <div ng-include src="'partials/account-nav.html'"></div>
 
 <div class="body-section">
-<div class="w-container">
-  <div>
+  <div class="w-container">
     <div class="w-row">
       <div class="w-col w-col-6 w-clearfix">
         <div class="header-div-block">
@@ -16,53 +15,32 @@
       <div class="w-col w-col-6">
         <ng-include src="'partials/account-balance.html'"></ng-include>
       </div>
+    </div>
+    <div class="w-container middle-container overview-page">
+      <div>
+        <div class="overview-body-head">Transaction History</div>
       </div>
+      <div class="table-headers overview">
+        <div class="w-row">
+          <div class="w-col w-col-2 responsive-column">
+            <div class="transaction-head">Value (XMR)</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <div class="transaction-head">Date Received</div>
+          </div>
+          <div class="w-col w-col-1 responsive-column">
+            <div class="transaction-head">Ring Size</div>
+          </div>
+          <div class="w-col w-col-6 responsive-column">
+            <div class="transaction-head">Transaction ID/Hash</div>
+          </div>
+        </div>
+      </div>
+      <div class="received-div" ng-repeat="tx in transactions | orderBy:predicate:reverse | startFrom:pageNum*pageSize | limitTo:pageSize">
+          <transaction></transaction>
+      </div>
+      <a class="table-btn left pointer" ng-click="navigatePage(1)">&lt;&lt; Previous 20</a>
+      <a class="table-btn right pointer" ng-click="navigatePage(-1)">Next 20 &gt;&gt;</a>
     </div>
   </div>
-  <div class="generated-results">
-    <div class="details-block top">
-      <div class="result-header">YOUR&nbsp;MNEMONIC <span class="info-text">(You’ll need this to login. Don't forget it!)</span>
-      </div>
-
-      <div class="result-text">{{mnemonic}}</div>
-    </div>
-    <div class="details-block">
-      <div class="result-header">PUBLIC&nbsp;ADDRESS</div>
-
-      <div class="result-text">{{address}}</div>
-    </div>
-    <div class="details-block">
-      <div class="result-header">VIEW&nbsp;KEY</div>
-
-      <div class="result-text">{{viewkey}}</div>
-    </div>
-    <div class="login-div"><a class="button generate-btn login" href="#">Log In</a>
-    </div>
-  </div>
-</div>
-<div class="w-container middle-container transaction-page">
-  <div>
-    <div class="overview-body-head"></div>
-  </div>
-  <div class="table-headers">
-    <div class="w-row">
-      <div class="w-col w-col-2 shift-column none" ng-click="clickedPredicate('approx_float_amount')">
-        <div class="transaction-head transactions">Value (XMR) <i class="fa {{predicateIcon('approx_float_amount')}}"></i></div>
-      </div>
-      <div class="w-col w-col-3 shift-column" ng-click="clickedPredicate('id')">
-        <div class="transaction-head transactions">Date Received <i class="fa {{predicateIcon('timestamp')}}"></i></div>
-      </div>
-      <div class="w-col w-col-1 shift-column" ng-click="clickedPredicate('mixin')">
-        <div class="transaction-head transactions">Ring Size <i class="fa {{predicateIcon('mixin')}}"></i></div>
-      </div>
-      <div class="w-col w-col-6 shift-column" ng-click="clickedPredicate('hash')">
-        <div class="transaction-head transactions">Transaction ID <i class="fa {{predicateIcon('hash')}}"></i></div>
-      </div>
-    </div>
-  </div>
-  <div class="received-div transaction-body lighter" ng-repeat="tx in transactions | orderBy:predicate:reverse | startFrom:pageNum*pageSize | limitTo:pageSize">
-      <transaction></transaction>
-  </div>
-  <a class="table-btn left pointer" ng-click="navigatePage(1)">&lt;&lt; Previous 10</a>
-  <a class="table-btn right pointer" ng-click="navigatePage(-1)">Next 10 &gt;&gt;</a>
 </div>
