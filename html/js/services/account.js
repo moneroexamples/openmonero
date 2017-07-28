@@ -53,11 +53,15 @@ thinwalletServices
             $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
         };
         accountService.login = function(address, view_key, spend_key, seed, generated_account) {
+
+            spend_key = spend_key || "";
+
             var deferred = $q.defer();
             logging_in = true;
             (function() {
                 accountService.logout();
-                view_only = (spend_key === '');
+
+                view_only = (spend_key === "");
                 if (!view_key || view_key.length !== 64 || (view_only ? false : spend_key.length !== 64)) {
                     return deferred.reject("invalid secret key length");
                 }
