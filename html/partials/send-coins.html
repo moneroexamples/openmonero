@@ -37,17 +37,17 @@
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
                       ng-submit="sendCoins(targets, mixins, payment_id)">
                     <label class="send-label" for="receiver-address">Receiver Address</label>
-                    <input class="w-input send-text-box" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
+                    <input class="w-input" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
                            name="Receiver-address" data-name="Receiver address" required="required" ng-model="targets[0].address">
                     <div class="w-row">
                         <div class="w-col w-col-6 responsive-column">
                             <label class="send-label" for="amount">Amount</label>
-                            <input class="w-input send-text-box" id="amount" type="text" placeholder="e.g. 0.5"
+                            <input class="w-input" id="amount" type="text" placeholder="e.g. 0.5"
                                    name="Amount" data-name="Amount" required="required" ng-model="targets[0].amount">
                         </div>
                         <div class="w-col w-col-6 responsive-column">
                             <label class="send-label" for="payment-id">Payment ID (Optional)</label>
-                            <input class="w-input send-text-box" id="payment-id" type="text"
+                            <input class="w-input" id="payment-id" type="text"
                                    placeholder="e.g. 59af9132941ec6e9f6ba3c4867e1cd92f2bd5fbce4325fc7b19bcdb55d640de5" name="Receiver-address-2"
                                    data-name="Receiver Address 2" ng-model="payment_id">
                         </div>
