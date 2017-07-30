@@ -67,7 +67,7 @@ html {
       <div class="w-form formwrap login-key-form">
         <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html" ng-submit="login(seed, mnemonic, mnemonic_confirmation)" >
           <label class="info-header form middle" for="Login-Key">Confirm your Private Login Key</label>
-          <input class="w-input form-layout mnemonic-page" id="Login-Key" type="text" ng-model="mnemonic_confirmation" placeholder="Type your Private Login Key out here to confirm it" name="Login-Key" data-name="Login Key" autocomplete="off" required="">
+          <input class="w-input mnemonic-page" id="Login-Key" type="text" ng-model="mnemonic_confirmation" placeholder="Type your Private Login Key out here to confirm it" name="Login-Key" data-name="Login Key" autocomplete="off" required="">
           <input class="w-button mnemonic-login" id="form-submit" type="submit" value="I&#39;ve written down my Private Login Key, log me in!" data-wait="Please wait...">
         </form>
         <div class="w-form-fail" style="display: block;" ng-show="!!error">
