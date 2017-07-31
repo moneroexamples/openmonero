@@ -260,12 +260,25 @@ Example output:
 
 ```json
 {
-  "blockchain_height": 858972,
-  "last_git_commit_date": "2017-03-03",
-  "last_git_commit_hash": "544bacc",
-  "monero_version_full": "0.10.2.1-release"
+  "api": 65536,
+  "blockchain_height": 965507,
+  "git_branch_name": "upgrade_angularjs",
+  "last_git_commit_date": "2017-07-25",
+  "last_git_commit_hash": "456f9d6",
+  "monero_version_full": "0.10.3.1-125f823"
 }
 ```
+
+
+`api` number is represented as `uint32_t`. In this case, `65536` represents 
+major version 1 and minor version 0.
+In JavaScript, to get these numbers, one can do as follows:
+
+```javascript
+var api_major = response.data.api >> 16;
+var api_minor = response.data.api & 0xffff;
+```
+
 
 ### login
 
@@ -288,53 +301,74 @@ Output (only part shown):
 
 ```json
 {
-  "blockchain_height": 858973,
-  "scanned_block_height": 857881,
+  "blockchain_height": 965512,
+  "new_address": false,
+  "scanned_block_height": 961405,
+  "scanned_block_timestamp": 1500969813,
   "scanned_height": 0,
-  "start_height": 855639,
-  "total_received": 2709882623948850,
-  "total_received_unlocked": 2709882623948850,
-  "transactions": [
+  "start_height": 957190,
+  "status": "success",
+  "total_received": 32594830001895764,
+  "total_received_unlocked": 32594830001895764,
+  "transactions": [ 
     {
       "coinbase": false,
-      "hash": "19f4ca4d601db3cc518f7abf6778cc325150386ecdf116a6b124605974f05fcc",
-      "height": 848286,
-      "id": 2140,
+      "hash": "2877c449a7a9f0a507c7a6e4ae17b43d96dc44369092e57adc4e6d9ddcde1a68",
+      "height": 812669,
+      "id": 831631,
       "mempool": false,
       "mixin": 4,
       "payment_id": "",
       "spent_outputs": [
         {
-          "amount": 10000000000000,
-          "key_image": "29c1218b5b63c3c92fd9702a3a292def8d3c94b4ea2a3a3a8b0c2dce45bbe905",
-          "mixin": 4,
+          "amount": 13659082425875,
+          "key_image": "0b6a04e1a1d7f149a8e8aeb91047b8ab4722de50554b88af4ed7646fd1929947",
+          "mixin": 0,
           "out_index": 0,
-          "tx_pub_key": "8850a06305369f11a9e408739dddea7a05bdfbcd2140b0e00097a231fe37f7ac"
-        },
-        {
-          "amount": 10000000000,
-          "key_image": "9c82226bdf165fd2424d9a0ead661682bfab2fe644cd0bcef575ae16595c550c",
-          "mixin": 4,
-          "out_index": 0,
-          "tx_pub_key": "29ceefd594b856c7c06d2423be17cd674b97d1d8f72907ace8d27f5b6aa9875c"
+          "tx_pub_key": ""
         }
       ],
-      "timestamp": "2017-02-15 01:44:06",
-      "total_received": 6974553705816,
-      "total_sent": 10010000000000,
+      "timestamp": 1482567670,
+      "total_received": 0,
+      "total_sent": 13659082425875,
+      "tx_pub_key": "41bd5cb51aa26fb58d41acd25711a7ecc2d19be0c24b296a9e362aebee61d4d0",
       "unlock_time": 0
     },
     {
-      "coinbase": false,
-      "hash": "899d41642e8439cb390737d1e38c8c06fe92f4cceb5ca9f49575ed84942453a1",
-      "height": 848294,
-      "id": 2142,
+      "coinbase": true,
+      "hash": "1f76938b4deceb9e0722f02f4477006d3e96e2331552f726c47f297977434b9c",
+      "height": 818908,
+      "id": 838719,
       "mempool": false,
-      "mixin": 4,
+      "mixin": 0,
       "payment_id": "",
-      "timestamp": "2017-02-15 01:55:34",
-      "total_received": 1000000000000,
+      "timestamp": 1483311688,
+      "total_received": 13388479628538,
       "total_sent": 0,
+      "tx_pub_key": "3c71217add3b7882e8370fe6b903bc48059a79580af5e095485afc88b3126d09",
+      "unlock_time": 818968
+    },
+    {
+      "coinbase": false,
+      "hash": "53cb70ded276fbfcc68c98a8d9577b42c543bf1094d6cbb151fa05c9edb457be",
+      "height": 818921,
+      "id": 838735,
+      "mempool": false,
+      "mixin": 5,
+      "payment_id": "",
+      "spent_outputs": [
+        {
+          "amount": 13683584012406,
+          "key_image": "437518836c315bf989c5cc28b935280345ed672d727122f6d6c5c5ff32e98224",
+          "mixin": 0,
+          "out_index": 0,
+          "tx_pub_key": ""
+        }
+      ],
+      "timestamp": 1483313063,
+      "total_received": 12648774828503,
+      "total_sent": 13683584012406,
+      "tx_pub_key": "3eac7a5ce7dc0cc78172522cef4591a43b0e9aab643ac3b57554fd0dbc8ba86a",
       "unlock_time": 0
     }
   ]
@@ -351,9 +385,11 @@ Output (only part shown):
 
 ```json
 {
-  "blockchain_height": 858970,
+  "blockchain_height": 965513,
   "locked_funds": 0,
-  "scanned_block_height": 858970,
+  "new_address": false,
+  "scanned_block_height": 965513,
+  "scanned_block_timestamp": 1501466493,
   "scanned_height": 0,
   "spent_outputs": [
     {
@@ -361,14 +397,14 @@ Output (only part shown):
       "key_image": "437518836c315bf989c5cc28b935280345ed672d727122f6d6c5c5ff32e98224",
       "mixin": 0,
       "out_index": 0,
-      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+      "tx_pub_key": ""
     },
     {
       "amount": 13683584012406,
       "key_image": "ac3088ce17cc608bcf86db65e9061fe4b9b02573b997944e4ebf7d8e64e4a3b4",
       "mixin": 0,
       "out_index": 0,
-      "tx_pub_key": "99c74015a50d91d29a16f3c1e43540a0b9da858c2a09faaec167db3cc6939dbf"
+      "tx_pub_key": ""
     }
   ],
   "start_height": 855633,
