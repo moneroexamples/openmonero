@@ -62,6 +62,9 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
     uint64_t acc_id {0};
 
+    // marks if this is new account creation or not
+    bool new_account_created {false};
+
     // first check if new account
     // select this account if its existing one
     if (!xmr_accounts->select(xmr_address, acc))
@@ -103,6 +106,13 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             session_close(session, j_response.dump());
             return;
         }
+
+        // set this flag to indicate that we have just created a
+        // new account in mysql. this information is sent to front-end
+        // as it can disply some greeting window to new users upon
+        // their first install
+        new_account_created = true;
+
     } // if (!xmr_accounts->select(xmr_address, acc))
 
 
@@ -113,7 +123,10 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     {
        // if successfuly logged in and created search thread
         j_response["status"]      = "success";
-        j_response["new_address"] = false;
+
+        // we overwrite what ever was sent in login_and_start_search_thread
+        // for the j_response["new_address"].
+        j_response["new_address"] = new_account_created;
     }
     else
     {

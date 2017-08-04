@@ -58,6 +58,7 @@ thinwalletCtrls.controller('GenerateWalletCtrl', function ($scope, $location, Ac
         }
         //var keys = cnUtil.create_address(seed);
         var keys = cnUtil.create_address(seed);
+
         AccountService.login(keys.public_addr, keys.view.sec, keys.spend.sec, seed, true)
             .then(function () {
                 $location.path("/overview");

@@ -52,9 +52,12 @@ thinwalletServices
             view_only = false;
             $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
         };
+
         accountService.login = function(address, view_key, spend_key, seed, generated_account) {
 
             spend_key = spend_key || "";
+
+            generated_account = generated_account || false;
 
             var deferred = $q.defer();
             logging_in = true;
@@ -117,6 +120,9 @@ thinwalletServices
                             deferred.reject(data.reason);
                             return;
                         }
+
+                        //console.log(data);
+
                         account_imported = !generated_account && data.new_address;
                         logging_in = false;
                         $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
