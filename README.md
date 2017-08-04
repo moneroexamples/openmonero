@@ -113,9 +113,6 @@ git clone https://github.com/monero-project/monero
 
 cd monero/
 
-# dont use readline. it causes problems at the moment.
-cmake . -DUSE_READLINE=OFF
-
 make
 ```
 
