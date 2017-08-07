@@ -414,6 +414,31 @@ Output (only part shown):
 ```
 
 
+#### get_tx
+
+```bash
+curl  -w "\n" -X POST http://127.0.0.1:1984/get_tx -d '{"tx_hash": "bfbfbb3bfa169731a092891795be1c3c923a018882ac0efc0ed3e79e2d2b2e54"}'
+```
+
+Output (only part shown):
+
+```json
+{
+  "coinbase": false,
+  "error": "",
+  "fee": 22893920000,
+  "mixin_no": 11,
+  "no_confirmations": 2898,
+  "pub_key": "b753c863c64565ae81630bfdbf497f06955b6ce041f656565809d04be6ef9343",
+  "size": 13461,
+  "status": "OK",
+  "tx_hash": "bfbfbb3bfa169731a092891795be1c3c923a018882ac0efc0ed3e79e2d2b2e54",
+  "tx_height": 960491,
+  "xmr_inputs": 0,
+  "xmr_outputs": 0
+}
+```
+
 #### get_unspent_outs
 
 ```bash

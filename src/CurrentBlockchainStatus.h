@@ -189,6 +189,15 @@ struct CurrentBlockchainStatus
                         json& transactions);
 
     static bool
+    get_tx(crypto::hash const& tx_hash, transaction& tx);
+
+    static bool
+    get_tx(string const& tx_hash_str, transaction& tx);
+
+    static bool
+    get_tx_block_height(crypto::hash const& tx_hash, int64_t& tx_height);
+
+    static bool
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
 

@@ -26,7 +26,9 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller('AccountOverviewCtrl', function ($scope, $rootScope, $http, $interval, AccountService, EVENT_CODES) {
+thinwalletCtrls.controller('AccountOverviewCtrl', function ($scope, $rootScope, $http,
+                                                            $interval, AccountService,
+                                                            EVENT_CODES) {
     "use strict";
 
     $rootScope.$watch('account', $scope.fetchTransactions);

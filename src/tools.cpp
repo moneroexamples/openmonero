@@ -290,7 +290,112 @@ get_blockchain_path(bf::path& blockchain_path,
 }
 
 
-uint64_t
+
+
+array<uint64_t, 4>
+summary_of_in_out_rct(
+        const transaction& tx,
+        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<txin_to_key>& input_key_imgs)
+{
+
+    uint64_t xmr_outputs       {0};
+    uint64_t xmr_inputs        {0};
+    uint64_t mixin_no          {0};
+    uint64_t num_nonrct_inputs {0};
+
+
+    for (const tx_out& txout: tx.vout)
+    {
+        if (txout.target.type() != typeid(txout_to_key))
+        {
+            // push empty pair.
+            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+            continue;
+        }
+
+        // get tx input key
+        const txout_to_key& txout_key
+                = boost::get<cryptonote::txout_to_key>(txout.target);
+
+        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
+
+        xmr_outputs += txout.amount;
+    }
+
+    size_t input_no = tx.vin.size();
+
+    for (size_t i = 0; i < input_no; ++i)
+    {
+
+        if(tx.vin[i].type() != typeid(cryptonote::txin_to_key))
+        {
+            continue;
+        }
+
+        // get tx input key
+        const cryptonote::txin_to_key& tx_in_to_key
+                = boost::get<cryptonote::txin_to_key>(tx.vin[i]);
+
+        xmr_inputs += tx_in_to_key.amount;
+
+        if (tx_in_to_key.amount != 0)
+        {
+            ++num_nonrct_inputs;
+        }
+
+        if (mixin_no == 0)
+        {
+            mixin_no = tx_in_to_key.key_offsets.size();
+        }
+
+        input_key_imgs.push_back(tx_in_to_key);
+
+    } //  for (size_t i = 0; i < input_no; ++i)
+
+
+    return {xmr_outputs, xmr_inputs, mixin_no, num_nonrct_inputs};
+};
+
+
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json)
+{
+    uint64_t xmr_outputs       {0};
+    uint64_t xmr_inputs        {0};
+    uint64_t no_outputs        {0};
+    uint64_t no_inputs         {0};
+    uint64_t mixin_no          {0};
+    uint64_t num_nonrct_inputs {0};
+
+    for (const json& vout: _json["vout"])
+    {
+        xmr_outputs += vout["amount"].get<uint64_t>();
+    }
+
+    no_outputs = _json["vout"].size();
+
+    for (const json& vin: _json["vin"])
+    {
+        uint64_t amount = vin["key"]["amount"].get<uint64_t>();
+
+        xmr_inputs += amount;
+
+        if (amount != 0)
+            ++num_nonrct_inputs;
+    }
+
+    no_inputs  = _json["vin"].size();
+
+    mixin_no = _json["vin"].at(0)["key"]["key_offsets"].size() - 1;
+
+    return {xmr_outputs, xmr_inputs, no_outputs, no_inputs, mixin_no, num_nonrct_inputs};
+};
+
+
+
+    uint64_t
 sum_money_in_outputs(const transaction& tx)
 {
     uint64_t sum_xmr {0};
