@@ -146,7 +146,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     json j_response;
     json j_request;
 
-    vector<string> requested_values{"address", "view_key"};
+    vector<string> requested_values {"address", "view_key"};
 
     if (!parse_request(body, requested_values, j_request, j_response))
     {
@@ -996,6 +996,156 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
     {
         j_response["request_fulfilled"] = request_fulfilled;
         j_response["status"]            = "Updating account with for importing recent txs successeful.";
+    }
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
+
+void
+YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & body)
+{
+
+    json j_request = body_to_json(body);
+
+    string tx_hash_str = j_request["tx_hash"];
+
+    json j_response;
+
+    j_response["status"] = "error";
+    j_response["error"]  = "Some error occured";
+
+
+    crypto::hash tx_hash;
+
+    if (!hex_to_pod(tx_hash_str, tx_hash))
+    {
+        cerr << "Cant parse tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant parse tx hash! : " + tx_hash_str;
+        session_close(session, j_response.dump());
+        return;
+    }
+
+
+    transaction tx;
+
+    bool tx_found {false};
+
+    if (!CurrentBlockchainStatus::get_tx(tx_hash, tx))
+    {
+        // if tx not found in the blockchain, check if its in mempool
+
+        vector<pair<uint64_t, transaction>> mempool_txs =
+                CurrentBlockchainStatus::get_mempool_txs();
+
+
+        for (auto const& mtx: mempool_txs)
+        {
+
+            cout << (get_transaction_hash(mtx.second)) << endl;
+            if (get_transaction_hash(mtx.second) == tx_hash)
+            {
+                tx = mtx.second;
+                tx_found = true;
+                break;
+            }
+        }
+
+        tx_found = false;
+    }
+    else
+    {
+        tx_found = true;
+    }
+
+    if (tx_found)
+    {
+        crypto::hash tx_hash = get_transaction_hash(tx);
+
+        // return tx hash. can be used to check if we acctually
+        // delivered the tx that was requested
+        j_response["tx_hash"]  = pod_to_hex(tx_hash);
+
+        j_response["pub_key"]  = pod_to_hex(xmreg::get_tx_pub_key_from_received_outs(tx));
+
+
+        bool coinbase = is_coinbase(tx);
+
+        j_response["coinbase"] = coinbase;
+
+        // key images of inputs
+        vector<txin_to_key> input_key_imgs;
+
+        // public keys and xmr amount of outputs
+        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+
+        uint64_t xmr_inputs;
+        uint64_t xmr_outputs;
+        uint64_t num_nonrct_inputs;
+        uint64_t fee;
+        uint64_t mixin_no;
+        uint64_t size;
+        uint64_t blk_height;
+
+        // sum xmr in inputs and ouputs in the given tx
+        array<uint64_t, 4> const& sum_data = xmreg::summary_of_in_out_rct(
+                tx, output_pub_keys, input_key_imgs);
+
+        xmr_outputs       = sum_data[0];
+        xmr_inputs        = sum_data[1];
+        mixin_no          = sum_data[2];
+        num_nonrct_inputs = sum_data[3];
+
+        j_response["xmr_outputs"] = xmr_outputs;
+        j_response["xmr_inputs"]  = xmr_inputs;
+        j_response["mixin_no"]    = mixin_no;
+
+        fee = 0;
+
+        if (!coinbase &&  tx.vin.size() > 0)
+        {
+            // check if not miner tx
+            // i.e., for blocks without any user transactions
+            if (tx.vin.at(0).type() != typeid(txin_gen))
+            {
+                // get tx fee
+                fee = get_tx_fee(tx);
+            }
+        }
+
+        j_response["fee"] = fee;
+
+        // get tx size in bytes
+        size = get_object_blobsize(tx);
+
+        j_response["size"] = size;
+
+        int64_t tx_height {-1};
+
+        int64_t no_confirmations {-1};
+
+        if (CurrentBlockchainStatus::get_tx_block_height(tx_hash, tx_height))
+        {
+            // get the current blockchain height. Just to check
+            uint64_t bc_height = get_current_blockchain_height();
+
+            no_confirmations = bc_height - tx_height;
+        }
+
+        j_response["tx_height"]         = tx_height;
+        j_response["no_confirmations"]  = no_confirmations;
+        j_response["status"]            = "OK";
+        j_response["error"]             = "";
+    }
+    else
+    {
+        cerr << "Cant get tx details for tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant get tx details for tx hash! : " + tx_hash_str;
     }
 
     string response_body = j_response.dump();

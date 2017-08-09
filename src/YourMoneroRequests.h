@@ -106,6 +106,9 @@ public:
     import_recent_wallet_request(const shared_ptr< Session > session, const Bytes & body);
 
     void
+    get_tx(const shared_ptr< Session > session, const Bytes & body);
+
+    void
     get_version(const shared_ptr< Session > session, const Bytes & body);
 
     shared_ptr<Resource>

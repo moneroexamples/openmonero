@@ -247,7 +247,7 @@ CurrentBlockchainStatus::tx_exist(const string& tx_hash_str, uint64_t& tx_index)
         return tx_exist(tx_hash, tx_index);
     }
 
-    throw runtime_error("hex_to_pod(tx_hash_str, tx_hash) failed!");
+    false;
 }
 
 bool
@@ -863,8 +863,38 @@ CurrentBlockchainStatus::find_txs_in_mempool(
     return true;
 };
 
+bool
+CurrentBlockchainStatus::get_tx(crypto::hash const& tx_hash, transaction& tx)
+{
+    return mcore->get_tx(tx_hash, tx);
+}
 
-    bool
+
+bool
+CurrentBlockchainStatus::get_tx(string const& tx_hash_str, transaction& tx)
+{
+    crypto::hash tx_hash;
+
+    if (!hex_to_pod(tx_hash_str, tx_hash))
+    {
+       return false;
+    }
+
+    return mcore->get_tx(tx_hash, tx);
+}
+
+bool
+CurrentBlockchainStatus::get_tx_block_height(crypto::hash const& tx_hash, int64_t& tx_height)
+{
+    if (!tx_exist(tx_hash))
+        return false;
+
+    tx_height = core_storage->get_db().get_tx_block_height(tx_hash);
+
+    return true;
+}
+
+bool
 CurrentBlockchainStatus::set_new_searched_blk_no(const string& address, uint64_t new_value)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);

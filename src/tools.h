@@ -105,6 +105,16 @@ bool
 get_blockchain_path(bf::path& blockchain_path,
                     bool testnet = false);
 
+array<uint64_t, 4>
+summary_of_in_out_rct(
+        const transaction& tx,
+        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<txin_to_key>& input_key_imgs);
+
+// this version for mempool txs from json
+array<uint64_t, 6>
+summary_of_in_out_rct(const json& _json);
+
 uint64_t
 sum_money_in_outputs(const transaction& tx);
 
