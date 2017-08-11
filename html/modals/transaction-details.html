@@ -1,15 +1,25 @@
-<div class="review-details-modal" modal-name="transfer-confirm" ng-controller="TransactionDetailsCtrl">
+<div class="review-details-modal" modal-name="transaction-details" ng-controller="TransactionDetailsCtrl">
   <div class="w-container review-details-container">
     <div class="w-clearfix review-details-div">
-      <a class="w-inline-block close-modal" data-ix="close-login-key" ng-click="transferConfirmDialog.cancel()">
+      <a class="w-inline-block close-modal" data-ix="close-review-details" hide-modal>
         <div class="close-overlay pointer" data-ix="close-overlay">+</div>
       </a>
       <h1 class="head-modal">Transaction details</h1>
-      <div class="subhead-text modal review">Transaction details</div>
+      <div class="subhead-text modal review" style="margin-bottom: 10px">{{ tx_hash }}</div>
       <div class="w-form form-wrapper">
-        <label class="field-label review" for="Mnemonic-2">Receiver Address</label>
-        <div class="move-text-div">
-          <div class="review-text address">{{transferConfirmDialog.address}} </span></div>
+        <div class="w-row">
+          <div class="w-col w-col-4 responsive-column">
+            <label class="field-label review" for="Amount">Amount</label>
+            <div class="review-text">{{transferConfirmDialog.amount | money}} (+{{transferConfirmDialog.fee | money}} fee)</div>
+          </div>
+          <div class="w-col w-col-4 responsive-column">
+            <label class="field-label review">Ring Size</label>
+            <div class="review-text">{{ ring_size }}</div>
+          </div>
+          <div class="w-col w-col-4 responsive-column">
+            <label class="field-label review">Fee</label>
+            <div class="review-text">{{ fee | money }}</div>
+          </div>
         </div>
         <div class="w-row">
           <div class="w-col w-col-4 responsive-column">
@@ -44,12 +54,8 @@
           <div class="review-text">{{transferConfirmDialog.tx_prv_key}}</div>
         </div>
         <br/>
-        <div class="move-text-div">
-          <div class="review-text ">After pressing "Confirm", an attempt will be made to
-            submit this tx to a Monero node. The node will perform additional checks of the tx
-            (e.g., if the miner fee is sufficient), and if the tests pass, the tx will be submitted to
-            Monero network awaiting miners confirmation.
-          </div>
+        <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+          <p>{{error}}</p>
         </div>
       </div>
     </div>

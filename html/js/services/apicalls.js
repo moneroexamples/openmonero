@@ -75,5 +75,11 @@ thinwalletServices
             })
         };
 
+        api.get_tx = function(tx_hash) {
+            return $http.post(config.apiUrl + 'get_tx', {
+                tx_hash: tx_hash
+            })
+        };
+
         return api;
     });
