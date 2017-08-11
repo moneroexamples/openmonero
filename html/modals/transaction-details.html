@@ -8,17 +8,21 @@
       <div class="subhead-text modal review" style="margin-bottom: 10px">{{ tx_hash }}</div>
       <div class="w-form form-wrapper">
         <div class="w-row">
-          <div class="w-col w-col-4 responsive-column">
+          <div class="w-col w-col-3 responsive-column">
             <label class="field-label review" for="Amount">Amount</label>
             <div class="review-text">{{transferConfirmDialog.amount | money}} (+{{transferConfirmDialog.fee | money}} fee)</div>
           </div>
-          <div class="w-col w-col-4 responsive-column">
+          <div class="w-col w-col-3 responsive-column">
             <label class="field-label review">Ring Size</label>
             <div class="review-text">{{ ring_size }}</div>
           </div>
-          <div class="w-col w-col-4 responsive-column">
+          <div class="w-col w-col-3 responsive-column">
             <label class="field-label review">Fee</label>
             <div class="review-text">{{ fee | money }}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review">Size [kB]</label>
+            <div class="review-text">{{ tx_size }}</div>
           </div>
         </div>
         <div class="w-row">
