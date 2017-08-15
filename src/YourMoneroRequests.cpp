@@ -1052,11 +1052,11 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         vector<pair<uint64_t, transaction>> mempool_txs =
                 CurrentBlockchainStatus::get_mempool_txs();
 
-        cout << "serach mempool" << endl;
+        //cout << "serach mempool" << endl;
 
         for (auto const& mtx: mempool_txs)
         {
-            cout << (get_transaction_hash(mtx.second)) << '\n';
+            //cout << (get_transaction_hash(mtx.second)) << '\n';
 
             if (get_transaction_hash(mtx.second) == tx_hash)
             {
