@@ -1153,6 +1153,9 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         // Class that is responsible for identification of our outputs
         // and inputs in a given tx.
 
+        j_response["payment_id"] = string {};
+        j_response["timestamp"]  = uint64_t {0};
+
         account_public_address address;
         secret_key viewkey;
 
@@ -1206,6 +1209,9 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                  if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
                  {
+                     j_response["payment_id"] = xmr_tx.payment_id;
+                     j_response["timestamp"]  = static_cast<uint64_t>(xmr_tx.timestamp);
+
                      vector<XmrInput> inputs;
 
                      if (xmr_accounts->select_inputs_for_tx(xmr_tx.id, inputs))
