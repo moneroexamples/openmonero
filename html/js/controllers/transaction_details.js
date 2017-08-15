@@ -55,11 +55,16 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
             // set data to be shown in the modal window
             $scope.ring_size        = data.mixin_no;
             $scope.fee              = data.fee;
-            $scope.tx_size          = Math.round(data.size * 1e3) / 1e3;
+            $scope.tx_size          = (data.size / 1024).toFixed(4);
             $scope.no_confirmations = data.no_confirmations === -1 ? "tx in mempool" : data.no_confirmations;
             $scope.tx_height        = data.tx_height;
             $scope.tx_pub_key       = data.pub_key;
+            $scope.coinbase         = data.coinbase;
             $scope.timestamp        = new Date(data.timestamp * 1000);
+
+            var age_duration = moment.duration(new Date() - new Date(data.timestamp * 1000));
+
+            $scope.tx_age = age_duration.humanize();
 
             var total_received      = data.total_received;
             var total_sent          = data.total_sent;
@@ -105,5 +110,6 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
         });
 
     $scope.explorerLink = explorerUrl + "tx/" + tx_hash;
+
 
 });
