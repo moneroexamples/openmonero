@@ -304,8 +304,7 @@ TxSearch::search()
                             known_outputs_keys.push_back(make_pair(out_info.pub_key, out_info.amount));
                         }
 
-
-                    } // for (auto &out_k_idx: found_mine_outputs)
+                    } //  for (auto& out_info: oi_identification.identified_outputs)
 
                 } // if (!found_mine_outputs.empty())
 

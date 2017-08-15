@@ -25,6 +25,8 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
         return;
     }
 
+    var view_only = AccountService.isViewOnly();
+
 
     $scope.tx_hash = tx_hash;
 
@@ -35,8 +37,11 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
         return;
     }
 
+    var address = AccountService.getAddress();
+    var view_key = AccountService.getViewKey();
+
     // tx_hash seems ok, so ask the backed for its details.
-    ApiCalls.get_tx(tx_hash)
+    ApiCalls.get_tx(address, view_key, tx_hash)
         .then(function(response) {
             var data = response.data;
 
@@ -49,9 +54,36 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
             $scope.ring_size        = data.mixin_no;
             $scope.fee              = data.fee;
             $scope.tx_size          = Math.round(data.size*1e3) / 1e3;
-            $scope.no_confirmations = no_confirmations;
-            $scope.tx_height        = tx_height;
-            $scope.tx_pub_key       = pub_key;
+            $scope.no_confirmations = data.no_confirmations;
+            $scope.tx_height        = data.tx_height;
+            $scope.tx_pub_key       = data.pub_key;
+
+            var total_received      = data.total_received;
+            var total_sent          = data.total_sent;
+
+            if ((data.spent_outputs || []).length > 0)
+            {
+                if (view_only === false)
+                {
+                    for (var j = 0; j < data.spent_outputs.length; ++j)
+                    {
+                        var key_image = AccountService.cachedKeyImage(
+                            data.spent_outputs[j].tx_pub_key,
+                            data.spent_outputs[j].out_index
+                        );
+                        if (data.spent_outputs[j].key_image !== key_image)
+                        {
+                            total_sent = new JSBigInt(total_sent).subtract(data.spent_outputs[j].amount);
+                            data.spent_outputs.splice(j, 1);
+                            j--;
+                        }
+                    }
+                }
+            }
+
+            $scope.tx_amount = new JSBigInt(total_received || 0).subtract(total_sent || 0).toString();
+
+            console.log($scope.tx_amount);
 
         }, function(data) {
             $scope.error = 'Failed to get tx detailed from the backend';

@@ -75,8 +75,10 @@ thinwalletServices
             })
         };
 
-        api.get_tx = function(tx_hash) {
+        api.get_tx = function(public_address, view_key, tx_hash) {
             return $http.post(config.apiUrl + 'get_tx', {
+                address: public_address,
+                view_key: view_key,
                 tx_hash: tx_hash
             })
         };
