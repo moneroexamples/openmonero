@@ -26,25 +26,25 @@
           </div>
         </div>
         <div class="w-row">
-          <div class="w-col w-col-3 responsive-column">
+          <div class="w-col w-col-4 responsive-column">
             <label class="field-label review" for="Amount">No of confirmations</label>
             <div class="review-text">{{no_confirmations}}</div>
           </div>
-          <div class="w-col w-col-3 responsive-column">
+          <div class="w-col w-col-4 responsive-column">
             <label class="field-label review">Fee</label>
             <div class="review-text">{{fee | money}}</div>
           </div>
-          <div class="w-col w-col-3 responsive-column">
+          <div class="w-col w-col-4 responsive-column">
             <label class="field-label review">Timestamp (age)</label>
             <div class="review-text">{{timestamp | time}} ({{ tx_age }})</div>
           </div>
-          <div class="w-col w-col-3 responsive-column">
+        </div>
+        <div class="w-row">
+          <div class="w-col w-col-2 responsive-column">
             <label class="field-label review">Is coinbase?</label>
             <div class="review-text">{{coinbase}}</div>
           </div>
-        </div>
-        <div class="w-row">
-          <div class="w-col w-col-6 responsive-column">
+          <div class="w-col w-col-10 responsive-column">
             <label class="field-label review" for="Mnemonic-2">Payment ID</label>
             <div class="review-text">{{payment_id || "N/A"}}</div>
           </div>
