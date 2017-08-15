@@ -189,6 +189,10 @@ struct CurrentBlockchainStatus
                         json& transactions);
 
     static bool
+    find_tx_in_mempool(crypto::hash const& tx_hash,
+                       transaction& tx);
+
+    static bool
     get_tx(crypto::hash const& tx_hash, transaction& tx);
 
     static bool

@@ -864,6 +864,14 @@ CurrentBlockchainStatus::find_txs_in_mempool(
 };
 
 bool
+CurrentBlockchainStatus::find_tx_in_mempool(
+        crypto::hash const& tx_hash,
+        transaction& tx)
+{
+
+}
+
+bool
 CurrentBlockchainStatus::get_tx(crypto::hash const& tx_hash, transaction& tx)
 {
     return mcore->get_tx(tx_hash, tx);

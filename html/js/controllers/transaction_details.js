@@ -56,7 +56,7 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
             $scope.ring_size        = data.mixin_no;
             $scope.fee              = data.fee;
             $scope.tx_size          = Math.round(data.size * 1e3) / 1e3;
-            $scope.no_confirmations = data.no_confirmations;
+            $scope.no_confirmations = data.no_confirmations === -1 ? "tx in mempool" : data.no_confirmations;
             $scope.tx_height        = data.tx_height;
             $scope.tx_pub_key       = data.pub_key;
             $scope.timestamp        = new Date(data.timestamp * 1000);
