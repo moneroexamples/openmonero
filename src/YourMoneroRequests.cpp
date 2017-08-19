@@ -1043,6 +1043,8 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
     transaction tx;
 
+    uint64_t default_timestamp {0};
+
     bool tx_found {false};
 
     if (!CurrentBlockchainStatus::get_tx(tx_hash, tx))
@@ -1062,6 +1064,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
             {
                 tx = mtx.second;
                 tx_found = true;
+                default_timestamp = mtx.first;
                 break;
             }
         }
@@ -1153,7 +1156,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         // and inputs in a given tx.
 
         j_response["payment_id"] = string {};
-        j_response["timestamp"]  = uint64_t {0};
+        j_response["timestamp"]  = default_timestamp;
 
         account_public_address address;
         secret_key viewkey;
