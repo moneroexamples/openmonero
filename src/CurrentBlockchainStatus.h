@@ -209,6 +209,10 @@ struct CurrentBlockchainStatus
     get_searched_blk_no(const string& address,
                         uint64_t& searched_blk_no);
 
+    static bool
+    get_known_outputs_keys(string const& address,
+                           vector<pair<string, uint64_t>>& known_outputs_keys);
+
     static void
     clean_search_thread_map();
 

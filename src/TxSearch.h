@@ -94,6 +94,9 @@ public:
     void
     populate_known_outputs();
 
+    vector<pair<string, uint64_t>>
+    get_known_outputs_keys();
+
 
     /**
      * Search for our txs in the mempool

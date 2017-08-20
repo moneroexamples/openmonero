@@ -814,6 +814,27 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
 }
 
 bool
+CurrentBlockchainStatus::get_known_outputs_keys(
+        string const& address,
+        vector<pair<string, uint64_t>>& known_outputs_keys)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (!search_thread_exist(address))
+    {
+        // thread does not exist
+        cout << "thread for " << address << " does not exist" << endl;
+        return false;
+    }
+
+
+    known_outputs_keys
+            = searching_threads[address].get()->get_known_outputs_keys();
+
+    return true;
+}
+
+bool
 CurrentBlockchainStatus::search_thread_exist(const string& address)
 {
     // no mutex here, as this will be executed

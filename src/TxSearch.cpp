@@ -525,6 +525,12 @@ TxSearch::populate_known_outputs()
     }
 }
 
+vector<pair<string, uint64_t>>
+TxSearch::get_known_outputs_keys()
+{
+    std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
+    return known_outputs_keys;
+};
 
 json
 TxSearch::find_txs_in_mempool(
@@ -534,16 +540,7 @@ TxSearch::find_txs_in_mempool(
 
     uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
 
-    vector<pair<string, uint64_t>> known_outputs_keys_copy;
-
-    {
-        // copy known ouputs. mutex is needed as known_outputs_keys can
-        // be updated at the same time as used in this here.
-        // we make its copy as to keep mutex for short time,
-        // and read only on copy safely.
-        std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
-        known_outputs_keys_copy = known_outputs_keys;
-    }
+    vector<pair<string, uint64_t>> known_outputs_keys_copy = get_known_outputs_keys();
 
     // since find_txs_in_mempool can be called outside of this thread,
     // we need to use local connection. we cant use connection that the
