@@ -146,7 +146,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     json j_response;
     json j_request;
 
-    vector<string> requested_values{"address", "view_key"};
+    vector<string> requested_values {"address", "view_key"};
 
     if (!parse_request(body, requested_values, j_request, j_response))
     {
@@ -996,6 +996,342 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
     {
         j_response["request_fulfilled"] = request_fulfilled;
         j_response["status"]            = "Updating account with for importing recent txs successeful.";
+    }
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
+
+void
+YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    vector<string> requested_values {"address" , "view_key", "tx_hash"};
+
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    string const& xmr_address = j_request["address"];
+    string const& view_key    = j_request["view_key"];
+    string const& tx_hash_str = j_request["tx_hash"];
+
+
+    j_response["status"] = "error";
+    j_response["error"]  = "Some error occured";
+
+
+    crypto::hash tx_hash;
+
+    if (!hex_to_pod(tx_hash_str, tx_hash))
+    {
+        cerr << "Cant parse tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant parse tx hash! : " + tx_hash_str;
+        session_close(session, j_response.dump());
+        return;
+    }
+
+
+    transaction tx;
+
+    uint64_t default_timestamp {0};
+
+    bool tx_found {false};
+
+    bool tx_in_mempool {false};
+
+    if (!CurrentBlockchainStatus::get_tx(tx_hash, tx))
+    {
+        // if tx not found in the blockchain, check if its in mempool
+
+        vector<pair<uint64_t, transaction>> mempool_txs =
+                CurrentBlockchainStatus::get_mempool_txs();
+
+        //cout << "serach mempool" << endl;
+
+        for (auto const& mtx: mempool_txs)
+        {
+            //cout << (get_transaction_hash(mtx.second)) << '\n';
+
+            if (get_transaction_hash(mtx.second) == tx_hash)
+            {
+                tx = mtx.second;
+                tx_found = true;
+                tx_in_mempool = true;
+                default_timestamp = mtx.first;
+                break;
+            }
+        }
+    }
+    else
+    {
+        tx_found = true;
+    }
+
+    if (tx_found)
+    {
+        crypto::hash tx_hash = get_transaction_hash(tx);
+
+        // return tx hash. can be used to check if we acctually
+        // delivered the tx that was requested
+        j_response["tx_hash"]  = pod_to_hex(tx_hash);
+
+        j_response["pub_key"]  = pod_to_hex(xmreg::get_tx_pub_key_from_received_outs(tx));
+
+
+        bool coinbase = is_coinbase(tx);
+
+        j_response["coinbase"] = coinbase;
+
+        // key images of inputs
+        vector<txin_to_key> input_key_imgs;
+
+        // public keys and xmr amount of outputs
+        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+
+        uint64_t xmr_inputs;
+        uint64_t xmr_outputs;
+        uint64_t num_nonrct_inputs;
+        uint64_t fee;
+        uint64_t mixin_no;
+        uint64_t size;
+        uint64_t blk_height;
+
+        // sum xmr in inputs and ouputs in the given tx
+        array<uint64_t, 4> const& sum_data = xmreg::summary_of_in_out_rct(
+                tx, output_pub_keys, input_key_imgs);
+
+        xmr_outputs       = sum_data[0];
+        xmr_inputs        = sum_data[1];
+        mixin_no          = sum_data[2];
+        num_nonrct_inputs = sum_data[3];
+
+        j_response["xmr_outputs"] = xmr_outputs;
+        j_response["xmr_inputs"]  = xmr_inputs;
+        j_response["mixin_no"]    = mixin_no;
+
+        fee = 0;
+
+        if (!coinbase &&  tx.vin.size() > 0)
+        {
+            // check if not miner tx
+            // i.e., for blocks without any user transactions
+            if (tx.vin.at(0).type() != typeid(txin_gen))
+            {
+                // get tx fee
+                fee = get_tx_fee(tx);
+            }
+        }
+
+        j_response["fee"] = fee;
+
+        // get tx size in bytes
+        size = get_object_blobsize(tx);
+
+        j_response["size"] = size;
+
+        // to be field later on using data from OutputInputIdentification
+        j_response["total_sent"] = 0;
+        j_response["total_received"] = 0;
+
+        int64_t tx_height {-1};
+
+        int64_t no_confirmations {-1};
+
+        if (CurrentBlockchainStatus::get_tx_block_height(tx_hash, tx_height))
+        {
+            // get the current blockchain height. Just to check
+            uint64_t bc_height = get_current_blockchain_height();
+
+            no_confirmations = bc_height - tx_height;
+        }
+
+        // Class that is responsible for identification of our outputs
+        // and inputs in a given tx.
+
+        j_response["payment_id"] = string {};
+        j_response["timestamp"]  = default_timestamp;
+
+        account_public_address address;
+        secret_key viewkey;
+
+        // to get info about recived xmr in this tx, we calculate it from
+        // scrach, i.e., search for outputs. We could get this info
+        // directly from the database, but doing it again here, is a good way
+        // to double check tx data in the frontend, and also maybe try doing
+        // it differently than before. Its not great, since we reinvent the wheel
+        // but its worth double checking the mysql data, and also allows for new
+        // implementation in the frontend.
+        if (CurrentBlockchainStatus::get_xmr_address_viewkey(xmr_address, address, viewkey))
+        {
+            OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+            oi_identification.identify_outputs();
+
+            uint64_t total_received {0};
+
+            // we just get total amount recieved. we have viewkey,
+            // so this must be correct and front end does not
+            // need to do anything to check this.
+            for (auto& out_info: oi_identification.identified_outputs)
+            {
+                total_received += out_info.amount;
+            }
+
+            j_response["total_received"] = total_received;
+
+            json j_spent_outputs = json::array();
+
+            // to get spendings, we need to have our key_images. but
+            // the backend does not have spendkey, so it cant determine
+            // which key images are really ours or not. this is the task
+            // for the frontend. however, backend can only provide guesses and
+            // nessessery data to the frontend to filter out incorrect
+            // guesses.
+            //
+            // for input identification, we will use our mysql. its just much
+            // faster to use it here, than before. but first we need to
+            // get account id of the user asking for tx details.
+
+            // a placeholder for exciting or new account data
+            XmrAccount acc;
+
+            // select this account if its existing one
+            if (xmr_accounts->select(xmr_address, acc))
+            {
+                // if user exist, get tx data from database
+                // this will work only for tx in the blockchain,
+                // not those in the mempool.
+
+                if (!tx_in_mempool)
+                {
+                    // if not in mempool, but in blockchain, just
+                    // get data aout key images from the mysql
+
+                    XmrTransaction xmr_tx;
+
+                    if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
+                    {
+                        j_response["payment_id"] = xmr_tx.payment_id;
+                        j_response["timestamp"]  = static_cast<uint64_t>(xmr_tx.timestamp);
+
+                        vector<XmrInput> inputs;
+
+                        if (xmr_accounts->select_inputs_for_tx(xmr_tx.id, inputs))
+                        {
+                            json j_spent_outputs = json::array();
+
+                            uint64_t total_spent {0};
+
+                            for (XmrInput input: inputs)
+                            {
+                                XmrOutput out;
+
+                                if (xmr_accounts->select_output_with_id(input.output_id, out))
+                                {
+                                    total_spent += input.amount;
+
+                                    j_spent_outputs.push_back({
+                                          {"amount"     , input.amount},
+                                          {"key_image"  , input.key_image},
+                                          {"tx_pub_key" , out.tx_pub_key},
+                                          {"out_index"  , out.out_index},
+                                          {"mixin"      , out.mixin}});
+                                }
+
+                            } // for (XmrInput input: inputs)
+
+                            j_response["total_sent"]    = total_spent;
+
+                            j_response["spent_outputs"] = j_spent_outputs;
+
+                        } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+
+                    }  // if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
+
+                } // if (!tx_in_mempool)
+                else
+                {
+                    // if tx in mempool, mysql will not have this tx, so
+                    // we cant pull info about key images from mysql for this tx.
+
+                    // we have to redo this info from basically from scrach.
+
+                    vector<pair<string, uint64_t>> known_outputs_keys;
+
+                    if (CurrentBlockchainStatus::get_known_outputs_keys(
+                            xmr_address, known_outputs_keys))
+                    {
+                        // we got known_outputs_keys from the search thread.
+                        // so now we can use OutputInputIdentification to
+                        // get info about inputs.
+
+                        // Class that is resposnible for idenficitaction of our outputs
+                        // and inputs in a given tx.
+                        OutputInputIdentification oi_identification
+                                {&address, &viewkey, &tx};
+
+                        // no need mutex here, as this will be exectued only after
+                        // the above. there is no threads here.
+                        oi_identification.identify_inputs(known_outputs_keys);
+
+                        json j_spent_outputs = json::array();
+
+                        uint64_t total_spent {0};
+
+                        for (auto& in_info: oi_identification.identified_inputs)
+                        {
+
+                            // need to get output info from mysql, as we need
+                            // to know output's amount, its orginal
+                            // tx public key and its index in that tx
+                            XmrOutput out;
+
+                            if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                            {
+                                total_spent += out.amount;
+
+                                j_spent_outputs.push_back({
+                                          {"amount"     , in_info.amount},
+                                          {"key_image"  , in_info.key_img},
+                                          {"tx_pub_key" , out.tx_pub_key},
+                                          {"out_index"  , out.out_index},
+                                          {"mixin"      , out.mixin}});
+                            }
+
+                        } //  for (auto& in_info: oi_identification.identified_inputs)
+
+                        j_response["total_sent"]    = total_spent;
+
+                        j_response["spent_outputs"] = j_spent_outputs;
+
+                    } //if (CurrentBlockchainStatus::get_known_outputs_keys(
+                      //    xmr_address, known_outputs_keys))
+
+                } //  else
+
+            } //  if (xmr_accounts->select(xmr_address, acc))
+
+        } //  if (CurrentBlockchainStatus::get_xmr_address_viewkey(address_str, address, viewkey)
+
+        j_response["tx_height"]         = tx_height;
+        j_response["no_confirmations"]  = no_confirmations;
+        j_response["status"]            = "OK";
+        j_response["error"]             = "";
+    }
+    else
+    {
+        cerr << "Cant get tx details for tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant get tx details for tx hash! : " + tx_hash_str;
     }
 
     string response_body = j_response.dump();

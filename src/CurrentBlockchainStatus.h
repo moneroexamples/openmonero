@@ -189,12 +189,29 @@ struct CurrentBlockchainStatus
                         json& transactions);
 
     static bool
+    find_tx_in_mempool(crypto::hash const& tx_hash,
+                       transaction& tx);
+
+    static bool
+    get_tx(crypto::hash const& tx_hash, transaction& tx);
+
+    static bool
+    get_tx(string const& tx_hash_str, transaction& tx);
+
+    static bool
+    get_tx_block_height(crypto::hash const& tx_hash, int64_t& tx_height);
+
+    static bool
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
 
     static bool
     get_searched_blk_no(const string& address,
                         uint64_t& searched_blk_no);
+
+    static bool
+    get_known_outputs_keys(string const& address,
+                           vector<pair<string, uint64_t>>& known_outputs_keys);
 
     static void
     clean_search_thread_map();

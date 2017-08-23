@@ -1,5 +1,7 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
+    mainnetExplorerUrl: "https://xmrchain.net/",
+    testnetExplorerUrl: "http://139.162.32.245:8082/",
     testnet: true,
     coinUnitPlaces: 12,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero

@@ -32,6 +32,7 @@
                 <div class="transaction-address">
                     <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
                     &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+                    <a style="color: #5093eb" show-modal="transaction-details?tx_hash={{ tx.hash }}">more details</a>
                 </div>
             </div>
         </div>

@@ -43,6 +43,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
     $scope.sent_tx = {};
 
 
+    var view_only = AccountService.isViewOnly();
+
+    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
 
     // few multiplayers based on uint64_t wallet2::get_fee_multiplier
     var fee_multiplayers = [1, 4, 20, 166];
@@ -453,7 +456,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
                             payment_id: payment_id,
                             tx_id: tx_hash,
                             tx_prvkey: tx_prvkey,
-                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
+                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/,
+                            explorerLink: explorerUrl + "tx/" + tx_hash
                         };
 
                         $scope.success_page = true;

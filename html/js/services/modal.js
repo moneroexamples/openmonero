@@ -33,13 +33,14 @@ thinwalletServices
         var currentModal = '';
 
         modalService.show = function (modal_name) {
-            console.log("Showing modal: " + modal_name);
+            //console.log("Showing modal: " + modal_name);
             currentModal = modal_name;
         };
 
         modalService.hide = function (modal_name) {
-            console.log("Hiding modal: " + modal_name);
-            if (!modal_name || currentModal === modal_name) {
+            //console.log("Hiding modal: " + modal_name + ", " + currentModal);
+
+            if (!modal_name || currentModal.split("?")[0] === modal_name) {
                 currentModal = '';
             }
         };
@@ -50,8 +51,23 @@ thinwalletServices
 
         modalService.getModalURL = function () {
             if (!currentModal) return '';
-            return "modals/" + currentModal + ".html?1";
+            var split_by_param = currentModal.split("?");
+
+            // we may pass parameters in model window name, e.g.,
+            // transaction-details?tx_hash=963773fce9f1e8f285f59cdc3cc69883f43de1c4edaa7b01cc5522b48cad9631
+            var modal_url = "modals/" + split_by_param[0] + ".html?1";
+
+            return modal_url;
         };
+
+        modalService.getModalUrlParams = function(param_to_get) {
+
+            // the "http://127.0.0.1/" is dummy below, only used
+            // so that URL does not complain
+            var url_parsed = new URL("http://127.0.0.1/" + currentModal);
+            return url_parsed.searchParams.get(param_to_get);
+        };
+
 
         return modalService;
     });

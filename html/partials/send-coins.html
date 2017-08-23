@@ -104,6 +104,10 @@
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_prvkey}}</div>
                     </div>
+                    <label class="send-label" >Soon should be visible in a blockchain explorer</label>
+                    <div class="move-text-div">
+                        <a class="login-link" href="{{ sent_tx.explorerLink }} " target="_blank">{{ sent_tx.explorerLink }}</a>
+                    </div>
                     <input class="w-button send-btn" type="submit" value="Send Another Payment" data-wait="Please wait...">
                 </form>
             </div>
