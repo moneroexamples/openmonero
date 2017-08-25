@@ -42,6 +42,18 @@ include_directories(${Boost_INCLUDE_DIRS})
 # include monero headers
 include_directories("ext/restbed/source")
 
+include_directories(
+    ${MONERO_SOURCE_DIR}/build
+    /usr/local/include
+    /usr/local/include/mysql
+    /usr/local/opt/openssl/include
+)
+
+link_directories(
+    ${MONERO_BUILD_DIR}/src/crypto
+    /usr/local/lib
+    /usr/local/opt/openssl/lib
+)
 
 create_git_version()
 
@@ -98,7 +110,14 @@ target_link_libraries(${PROJECT_NAME}
         ${Boost_LIBRARIES}
         pthread
         unbound
-        unwind
         curl
         dl
         crypto)
+
+if(APPLE)
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit")
+endif()
+
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
+    set(LIBRARIES ${LIBRARIES} unwind)
+endif()
