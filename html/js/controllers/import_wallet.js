@@ -53,10 +53,21 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
                     return;
                 }
 
-                $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
-                $scope.payment_id = data.payment_id;
-                $scope.payment_address = data.payment_address;
-                $scope.import_fee = new JSBigInt(data.import_fee);
+
+                if (data.import_fee !== 0) {
+                    $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
+                    $scope.payment_id = data.payment_id;
+                    $scope.payment_address = data.payment_address;
+                    $scope.import_fee = new JSBigInt(data.import_fee);
+                }
+                else
+                {
+                    $scope.command = 'import is free';
+                    $scope.payment_address = 'N/A';
+                    $scope.import_fee = new JSBigInt(0);
+                    $scope.payment_id = "N/A";
+                }
+
                 $scope.status = data.status;
 
                 if (data.request_fulfilled === true) {
@@ -64,7 +75,12 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
                     //console.log(data);
 
                     if (data.new_request === true) {
-                        $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                        if (data.import_fee !== 0) {
+                            $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                        }
+                        else {
+                            $scope.success = "Import will start shortly. This window will close in few seconds.";
+                        }
                     }
                     else {
                         $scope.success = "The wallet is being imported now or it has already been imported before.";

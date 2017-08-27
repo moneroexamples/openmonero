@@ -10,12 +10,13 @@
         <form id="email-form" name="email-form" data-name="Email Form">
           <div class="move-text-div">
             <div class="review-text">To import all your previous transactions and account
-              balance you have to pay a once-off import fee of <strong>{{import_fee | money:false:true}}</strong> to the
+              balance you might (depends on the backend settings) have to pay a once-off
+              import fee of <strong>{{import_fee | money:false:true}}</strong> to the
               account listed below. An example command to make the payment in
               monero-wallet-cli program
               is shown below.
               <br/>
-              As soon as the transfer is detected in mempool, import process will begin.
+              As soon as the transfer is detected in transaction pool, import process will begin.
               It should not take more than few minutes before your transfer is detected in the mempool.
             </div>
           </div>

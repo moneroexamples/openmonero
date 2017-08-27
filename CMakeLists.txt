@@ -105,8 +105,8 @@ target_link_libraries(${PROJECT_NAME}
         epee
         mysqlpp
         mysqlclient
-        easylogging
         readline
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound

@@ -764,8 +764,35 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
     json j_response;
 
     j_response["request_fulfilled"] = false;
+    j_response["import_fee"]        = CurrentBlockchainStatus::import_fee;
     j_response["status"] = "error";
     j_response["error"]  = "Some error occured";
+
+    // if CurrentBlockchainStatus:: is zero, we just import the wallet.
+    // we dont care about any databases or anything, as importin all wallet is free.
+    // just reset the scanned block height in mysql and finish.
+    if (CurrentBlockchainStatus::import_fee == 0)
+    {
+        // change search blk number in the search thread
+        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+        {
+            cerr << "Updating searched_blk_no failed!" << endl;
+            j_response["error"] = "Updating searched_blk_no failed!";
+        }
+
+        j_response["request_fulfilled"] = true;
+        j_response["status"]            = "Import will start shortly";
+        j_response["new_request"]       = true;
+        j_response["error"]             = "";
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+
+        return;
+    }
 
     // select this payment if its existing one
     if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
