@@ -1379,6 +1379,7 @@ YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes
         {"git_branch_name"     , string {GIT_BRANCH_NAME}},
         {"monero_version_full" , string {MONERO_VERSION_FULL}},
         {"api"                 , OPENMONERO_RPC_VERSION},
+        {"testnet"             , CurrentBlockchainStatus::testnet},
         {"blockchain_height"   , get_current_blockchain_height()}
     };
 

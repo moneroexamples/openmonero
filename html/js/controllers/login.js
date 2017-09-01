@@ -78,7 +78,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
         //var payment_id8 = rand_8();        
         //var integarted_address = get_account_integrated_address(keys.public_addr, payment_id8);
 
-        $scope.decode = true;
+        $scope.decode = false;
 
         return [seed, keys];
     };
