@@ -91,11 +91,6 @@ TxSearch::search()
                 }
             }
 
-//            std::this_thread::sleep_for(std::chrono::seconds(5));
-//            cerr << "Example exception: " << '\n';
-//            throw TxSearchException("Example exception ");
-
-
             if (searched_blk_no > CurrentBlockchainStatus::current_height)
             {
                 fmt::print("searched_blk_no {:d} and current_height {:d}\n",
@@ -319,7 +314,7 @@ TxSearch::search()
                 if (!oi_identification.identified_inputs.empty())
                 {
                     // some inputs were identified as ours in a given tx.
-                    // so now, go over those inputs, and check if
+                    // so now, go over those inputs, and check
                     // get detail info for each found mixin output from database
 
                     vector<XmrInput> inputs_found;
@@ -334,7 +329,7 @@ TxSearch::search()
                                  << out << '\n';
 
                             // seems that this key image is ours.
-                            // so get it infromatoin from database into XmrInput
+                            // so get it information from database into XmrInput
                             // database structure that will be written later
                             // on into database.
 
@@ -413,6 +408,8 @@ TxSearch::search()
                             in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
 
                             uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
+
+                            //todo what shoud we do when insert_input fails?
                         }
 
                     } //  if (!inputs_found.empty())
