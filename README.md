@@ -30,7 +30,8 @@ to MyMonero. They include:
  - transaction confirmation window added to double check tx details before its commited. 
  - ability to select transaction priority. 
  - legacy address + payment_id system replaced with integrated addresses for better privacy.
- - free, time based imports of recent transactions added. 
+ - free, time based imports of recent transactions added.
+ - new transaction details window.
    
 ## Testnet version
 
@@ -47,13 +48,6 @@ Since this is testnet version, frequent changes and database resets are expected
 If you want some testnet monero, please make issue with your testnet address that you can
 obtained from Open Monero.  
 
-
-## Current working branch
-
-All current development (new features, bug fixes, etc) are happening in this branch:
-
- - https://github.com/moneroexamples/openmonero/tree/upgrade_angularjs
-   
 ## Screenshot
 
 ![Open Monero](https://raw.githubusercontent.com/moneroexamples/openmonero/master/screenshot/screen1.png)
@@ -113,6 +107,9 @@ cd ~
 git clone https://github.com/monero-project/monero
 
 cd monero/
+
+# checkout last monero version
+git checkout -b last_release v0.11.0.0
 
 make
 ```
