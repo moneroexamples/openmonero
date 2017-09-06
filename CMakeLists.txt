@@ -86,7 +86,7 @@ set(SOURCE_FILES
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
-target_link_libraries(${PROJECT_NAME}
+set(LIBRARIES
         myxrm
         myext
         restbed
@@ -103,6 +103,7 @@ target_link_libraries(${PROJECT_NAME}
         common
         mnemonics
         epee
+        easylogging
         mysqlpp
         mysqlclient
         readline
@@ -112,6 +113,8 @@ target_link_libraries(${PROJECT_NAME}
         unbound
         curl
         dl
+        cncrypto
+        ssl
         crypto)
 
 if(APPLE)
@@ -121,3 +124,6 @@ endif()
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
     set(LIBRARIES ${LIBRARIES} unwind)
 endif()
+
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
