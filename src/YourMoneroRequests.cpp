@@ -62,6 +62,9 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
     uint64_t acc_id {0};
 
+    // marks if this is new account creation or not
+    bool new_account_created {false};
+
     // first check if new account
     // select this account if its existing one
     if (!xmr_accounts->select(xmr_address, acc))
@@ -69,15 +72,32 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // account does not exist, so create new one
         // for this address
 
+        uint64_t current_blockchain_height = get_current_blockchain_height();
+
+        uint64_t current_blockchain_timestamp {0};
+
+        // get last block so we have its timestamp when
+        // createing the account
+        block last_blk;
+
+        if (CurrentBlockchainStatus::get_block(current_blockchain_height, last_blk))
+        {
+            current_blockchain_timestamp = last_blk.timestamp;
+        }
+
+        DateTime blk_timestamp_mysql_format
+                = XmrTransaction::timestamp_to_DateTime(current_blockchain_timestamp);
+
         // we will save current blockchain height
         // in mysql, so that we know from what block
         // to start searching txs of this new acount
         // make it 1 block lower than current, just in case.
         // this variable will be our using to initialize
         // `scanned_block_height` in mysql Accounts table.
-        if ((acc_id = xmr_accounts->insert(xmr_address,
+        if (acc_id = xmr_accounts->insert(xmr_address,
                                            make_hash(view_key),
-                                           get_current_blockchain_height())) == 0)
+                                           blk_timestamp_mysql_format,
+                                           current_blockchain_height) == 0)
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -86,6 +106,13 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             session_close(session, j_response.dump());
             return;
         }
+
+        // set this flag to indicate that we have just created a
+        // new account in mysql. this information is sent to front-end
+        // as it can disply some greeting window to new users upon
+        // their first install
+        new_account_created = true;
+
     } // if (!xmr_accounts->select(xmr_address, acc))
 
 
@@ -96,7 +123,10 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     {
        // if successfuly logged in and created search thread
         j_response["status"]      = "success";
-        j_response["new_address"] = false;
+
+        // we overwrite what ever was sent in login_and_start_search_thread
+        // for the j_response["new_address"].
+        j_response["new_address"] = new_account_created;
     }
     else
     {
@@ -116,7 +146,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
     json j_response;
     json j_request;
 
-    vector<string> requested_values{"address", "view_key"};
+    vector<string> requested_values {"address", "view_key"};
 
     if (!parse_request(body, requested_values, j_request, j_response))
     {
@@ -133,13 +163,14 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     // initialize json response
     j_response = json {
-            { "total_received"         , 0},    // calculated in this function
-            { "total_received_unlocked", 0},    // calculated in this function
-            { "scanned_height"         , 0},    // not used. it is here to match mymonero
-            { "scanned_block_height"   , 0},    // taken from Accounts table
-            { "start_height"           , 0},    // blockchain hieght when acc was created
-            { "blockchain_height"      , 0},    // current blockchain height
-            { "transactions"           , json::array()}
+            {"total_received"         , 0},    // calculated in this function
+            {"total_received_unlocked", 0},    // calculated in this function
+            {"scanned_height"         , 0},    // not used. it is here to match mymonero
+            {"scanned_block_height"   , 0},    // taken from Accounts table
+            {"scanned_block_timestamp", 0},    // taken from Accounts table
+            {"start_height"           , 0},    // blockchain hieght when acc was created
+            {"blockchain_height"      , 0},    // current blockchain height
+            {"transactions"           , json::array()}
     };
 
     // a placeholder for exciting or new account data
@@ -158,10 +189,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         uint64_t total_received {0};
         uint64_t total_received_unlocked {0};
 
-        j_response["total_received"]       = total_received;
-        j_response["start_height"]         = acc.start_height;
-        j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"]    = get_current_blockchain_height();
+        j_response["total_received"]          = total_received;
+        j_response["start_height"]            = acc.start_height;
+        j_response["scanned_block_height"]    = acc.scanned_block_height;
+        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(acc.scanned_block_timestamp);
+        j_response["blockchain_height"]       = get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
@@ -174,11 +206,12 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                 json j_tx {
                         {"id"             , tx.blockchain_tx_id},
                         {"coinbase"       , bool {tx.coinbase}},
+                        {"tx_pub_key"     , tx.tx_pub_key},
                         {"hash"           , tx.hash},
                         {"height"         , tx.height},
                         {"mixin"          , tx.mixin},
                         {"payment_id"     , tx.payment_id},
-                        {"unlock_time"    , tx.unlock_time},
+                        {"unlock_time"    , tx.unlock_time},                  
                         {"total_sent"     , 0},    // to be field when checking for spent_outputs below
                         {"total_received" , tx.total_received},
                         {"timestamp"      , static_cast<uint64_t>(tx.timestamp)},
@@ -202,11 +235,11 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                             total_spent += input.amount;
 
                             j_spent_outputs.push_back({
-                                                              {"amount"     , input.amount},
-                                                              {"key_image"  , input.key_image},
-                                                              {"tx_pub_key" , out.tx_pub_key},
-                                                              {"out_index"  , out.out_index},
-                                                              {"mixin"      , out.mixin}});
+                              {"amount"     , input.amount},
+                              {"key_image"  , input.key_image},
+                              {"tx_pub_key" , out.tx_pub_key},
+                              {"out_index"  , out.out_index},
+                              {"mixin"      , out.mixin}});
                         }
                     }
 
@@ -313,18 +346,19 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
     string viewkey_hash = make_hash(view_key);
 
     j_response = json {
-            {"locked_funds"        , 0},    // locked xmr (e.g., younger than 10 blocks)
-            {"total_received"      , 0},    // calculated in this function
-            {"total_sent"          , 0},    // calculated in this function
-            {"scanned_height"      , 0},    // not used. it is here to match mymonero
-            {"scanned_block_height", 0},    // taken from Accounts table
-            {"start_height"        , 0},    // not used, but available in Accounts table.
-                                            // it is here to match mymonero
-            {"blockchain_height"   , 0},    // current blockchain height
-            {"spent_outputs"       , nullptr} // list of spent outputs that we think
-                                              // user has spent. client side will
-                                              // filter out false positives since
-                                              // only client has spent key
+            {"locked_funds"           , 0},    // locked xmr (e.g., younger than 10 blocks)
+            {"total_received"         , 0},    // calculated in this function
+            {"total_sent"             , 0},    // calculated in this function
+            {"scanned_height"         , 0},    // not used. it is here to match mymonero
+            {"scanned_block_height"   , 0},    // taken from Accounts table
+            {"scanned_block_timestamp", 0},    // taken from Accounts table
+            {"start_height"           , 0},    // not used, but available in Accounts table.
+                                               // it is here to match mymonero
+            {"blockchain_height"      , 0},    // current blockchain height
+            {"spent_outputs"          , nullptr} // list of spent outputs that we think
+                                               // user has spent. client side will
+                                               // filter out false positives since
+                                               // only client has spent key
     };
 
     // a placeholder for exciting or new account data
@@ -355,10 +389,11 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
             }
         }
 
-        j_response["total_received"]       = total_received;
-        j_response["start_height"]         = acc.start_height;
-        j_response["scanned_block_height"] = acc.scanned_block_height;
-        j_response["blockchain_height"]    = CurrentBlockchainStatus::get_current_blockchain_height();
+        j_response["total_received"]          = total_received;
+        j_response["start_height"]            = acc.start_height;
+        j_response["scanned_block_height"]    = acc.scanned_block_height;
+        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(acc.scanned_block_timestamp);
+        j_response["blockchain_height"]       = get_current_blockchain_height();
 
         uint64_t total_sent {0};
 
@@ -546,7 +581,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                                 {"tx_id"           , out.tx_id},
                                 {"tx_hash"         , tx.hash},
                                 {"tx_prefix_hash"  , tx.prefix_hash},
-                                {"tx_pub_key"      , out.tx_pub_key},
+                                {"tx_pub_key"      , tx.tx_pub_key},
                                 {"timestamp"       , static_cast<uint64_t>(out.timestamp)},
                                 {"height"          , tx.height},
                                 {"spend_key_images", json::array()}
@@ -614,18 +649,27 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
     uint64_t count = j_request["count"];
 
-    vector<uint64_t> amounts;
-
-    // populate amounts vector so that we can pass it directly to
-    // daeamon to get random outputs for these amounts
-    for (json amount: j_request["amounts"])
-    {
-        amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
-    }
-
     json j_response  {
             {"amount_outs", json::array()}
     };
+
+    vector<uint64_t> amounts;
+
+    try
+    {
+        // populate amounts vector so that we can pass it directly to
+        // daeamon to get random outputs for these amounts
+        for (json amount: j_request["amounts"])
+        {
+            amounts.push_back(boost::lexical_cast<uint64_t>(amount.get<string>()));
+        }
+    }
+    catch (boost::bad_lexical_cast& e)
+    {
+        cerr << "Bed lexical cast" << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
 
@@ -712,12 +756,43 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 {
     json j_request = body_to_json(body);
 
-    string xmr_address = j_request["address"];
+    string xmr_address   = j_request["address"];
 
     // a placeholder for existing or new payment data
     xmreg::XmrPayment xmr_payment;
 
     json j_response;
+
+    j_response["request_fulfilled"] = false;
+    j_response["import_fee"]        = CurrentBlockchainStatus::import_fee;
+    j_response["status"] = "error";
+    j_response["error"]  = "Some error occured";
+
+    // if CurrentBlockchainStatus:: is zero, we just import the wallet.
+    // we dont care about any databases or anything, as importin all wallet is free.
+    // just reset the scanned block height in mysql and finish.
+    if (CurrentBlockchainStatus::import_fee == 0)
+    {
+        // change search blk number in the search thread
+        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+        {
+            cerr << "Updating searched_blk_no failed!" << endl;
+            j_response["error"] = "Updating searched_blk_no failed!";
+        }
+
+        j_response["request_fulfilled"] = true;
+        j_response["status"]            = "Import will start shortly";
+        j_response["new_request"]       = true;
+        j_response["error"]             = "";
+
+        string response_body = j_response.dump();
+
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+
+        return;
+    }
 
     // select this payment if its existing one
     if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
@@ -728,88 +803,115 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
         bool request_fulfilled = bool {xmr_payment.request_fulfilled};
 
+        string integrated_address =
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                        xmr_payment.payment_id);
+
         j_response["payment_id"]        = xmr_payment.payment_id;
         j_response["import_fee"]        = xmr_payment.import_fee;
         j_response["new_request"]       = false;
         j_response["request_fulfilled"] = request_fulfilled;
-        j_response["payment_address"]   = xmr_payment.payment_address;
+        j_response["payment_address"]   = integrated_address;
         j_response["status"]            = "Payment not yet received";
 
         string tx_hash_with_payment;
 
-        if (!request_fulfilled
-            && CurrentBlockchainStatus::search_if_payment_made(
-                xmr_payment.payment_id,
-                xmr_payment.import_fee,
-                tx_hash_with_payment))
+        // if payment has not yet been done
+        if (!request_fulfilled)
         {
-            XmrPayment updated_xmr_payment = xmr_payment;
-
-            // updated values
-            updated_xmr_payment.request_fulfilled = true;
-            updated_xmr_payment.tx_hash           = tx_hash_with_payment;
-
-            // save to mysql
-            if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
+            // check if it has just been done now
+            // if yes, mark it in mysql
+            if(CurrentBlockchainStatus::search_if_payment_made(
+                    xmr_payment.payment_id,
+                    xmr_payment.import_fee,
+                    tx_hash_with_payment))
             {
+                XmrPayment updated_xmr_payment = xmr_payment;
 
-                // set scanned_block_height	to 0 to begin
-                // scanning entire blockchain
+                // updated values
+                updated_xmr_payment.request_fulfilled = true;
+                updated_xmr_payment.tx_hash           = tx_hash_with_payment;
 
-                XmrAccount acc;
-
-                if (xmr_accounts->select(xmr_address, acc))
+                // save to mysql
+                if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
                 {
-                    XmrAccount updated_acc = acc;
 
-                    updated_acc.scanned_block_height = 0;
+                    // set scanned_block_height	to 0 to begin
+                    // scanning entire blockchain
 
-                    if (xmr_accounts->update(acc, updated_acc))
+                    XmrAccount acc;
+
+                    if (xmr_accounts->select(xmr_address, acc))
                     {
-                        // if success, set acc to updated_acc;
-                        request_fulfilled = true;
+                        XmrAccount updated_acc = acc;
 
-                        // change search blk number in the search thread
-                        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                        updated_acc.scanned_block_height = 0;
+
+                        if (xmr_accounts->update(acc, updated_acc))
                         {
-                            cerr << "Updating searched_blk_no failed!" << endl;
-                            j_response["status"] = "Updating searched_blk_no failed!";
+                            // if success, set acc to updated_acc;
+                            request_fulfilled = true;
+
+                            // change search blk number in the search thread
+                            if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                            {
+                                cerr << "Updating searched_blk_no failed!" << endl;
+                                j_response["error"] = "Updating searched_blk_no failed!";
+                            }
+
+                            j_response["request_fulfilled"] = request_fulfilled;
+                            j_response["status"]            = "Payment received. Thank you.";
+                            j_response["new_request"]       = true;
+                            j_response["error"]             = "";
                         }
+                    }
+                    else
+                    {
+                        cerr << "Updating accounts due to made payment mysql failed! " << endl;
+                        j_response["error"] = "Updating accounts due to made payment mysql failed!";
                     }
                 }
                 else
                 {
-                    cerr << "Updating accounts due to made payment mysql failed! " << endl;
-                    j_response["status"] = "Updating accounts due to made payment mysql failed!";
+                    cerr << "Updating payment mysql failed! " << endl;
+                    j_response["error"] = "Updating payment mysql failed!";
                 }
-            }
-            else
-            {
-                cerr << "Updating payment mysql failed! " << endl;
-                j_response["status"] = "Updating payment mysql failed!";
-            }
+
+            } // if(CurrentBlockchainStatus::search_if_payment_made(
+
+        }  // if (!request_fulfilled)
+        else
+        {
+            // if payment has been made, and we get new request to import txs
+            // indicate that this is new requeest, but request was fulfiled.
+            // front end should give proper message in this case
+
+            j_response["request_fulfilled"] = request_fulfilled;
+            j_response["status"]            = "Wallet already imported or in the progress.";
+            j_response["new_request"]       = false;
+            j_response["error"]             = "";
         }
 
-        if (request_fulfilled)
-        {
-            j_response["request_fulfilled"] = request_fulfilled;
-            j_response["status"]            = "Payment received. Thank you.";
-        }
-    }
+    } //  if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
     else
     {
-        // payment request is now, so create its entry in
+        // payment request is new, so create its entry in
         // Payments table
 
         uint64_t payment_table_id {0};
 
+        crypto::hash8 random_payment_id8 = crypto::rand<crypto::hash8>();
+
+        string integrated_address =
+                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                        random_payment_id8);
+
         xmr_payment.address           = xmr_address;
-        xmr_payment.payment_id        = pod_to_hex(generated_payment_id());
+        xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
         xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
         xmr_payment.request_fulfilled = false;
         xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
-        xmr_payment.payment_address   = CurrentBlockchainStatus::import_payment_address;
-
+        xmr_payment.payment_address   = integrated_address;
 
         if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)
         {
@@ -821,7 +923,442 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
             j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
             j_response["payment_address"]   = xmr_payment.payment_address;
             j_response["status"]            = "Payment not yet received";
+            j_response["error"]             = "";
         }
+    }
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
+
+void
+YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    bool request_fulfilled {false};
+
+    j_response["request_fulfilled"] = false;
+
+    vector<string> requested_values {"address" , "view_key", "no_blocks_to_import"};
+
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        j_response["Error"] = "Cant parse json body";
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    string xmr_address           = j_request["address"];
+    string view_key              = j_request["view_key"];
+
+    uint64_t no_blocks_to_import {1000};
+
+    try
+    {
+        no_blocks_to_import = boost::lexical_cast<uint64_t>(j_request["no_blocks_to_import"].get<string>());
+    }
+    catch (boost::bad_lexical_cast& e)
+    {
+        string msg = "Cant parse " + j_request["no_blocks_to_import"].get<string>() + " into number";
+
+        cerr << msg << '\n';
+
+        j_response["Error"] = msg;
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    // make sure that we dont import more that the maximum alowed no of blocks
+    no_blocks_to_import = std::min(no_blocks_to_import,
+                                   CurrentBlockchainStatus::max_number_of_blocks_to_import);
+
+    XmrAccount acc;
+
+    if (xmr_accounts->select(xmr_address, acc))
+    {
+        XmrAccount updated_acc = acc;
+
+        // make sure scanned_block_height is larger than  no_blocks_to_import so we dont
+        // end up with overflowing uint64_t.
+
+        if (updated_acc.scanned_block_height > no_blocks_to_import)
+        {
+            // repetead calls to import_recent_wallet_request will be moving the scanning backward.
+            // not sure yet if any protection is needed to make sure that a user does not
+            // go back too much back by importing his/hers wallet multiple times in a row.
+            updated_acc.scanned_block_height = updated_acc.scanned_block_height - no_blocks_to_import;
+
+            if (xmr_accounts->update(acc, updated_acc))
+            {
+                // change search blk number in the search thread
+                if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address,
+                                                                      updated_acc.scanned_block_height))
+                {
+                    cerr << "Updating searched_blk_no failed!" << endl;
+                    j_response["Error"]  = "Updating searched_blk_no failed!";
+                }
+                else
+                {
+                    // if success, makre that request was successful;
+                    request_fulfilled = true;
+                }
+            }
+
+        }  // if (updated_acc.scanned_block_height > no_blocks_to_import)
+    }
+    else
+    {
+        cerr << "Updating account with new scanned_block_height failed! " << endl;
+        j_response["status"] = "Updating account with new scanned_block_height failed!";
+    }
+
+    if (request_fulfilled)
+    {
+        j_response["request_fulfilled"] = request_fulfilled;
+        j_response["status"]            = "Updating account with for importing recent txs successeful.";
+    }
+
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+    session->close( OK, response_body, response_headers);
+}
+
+
+
+void
+YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    vector<string> requested_values {"address" , "view_key", "tx_hash"};
+
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    string const& xmr_address = j_request["address"];
+    string const& view_key    = j_request["view_key"];
+    string const& tx_hash_str = j_request["tx_hash"];
+
+
+    j_response["status"] = "error";
+    j_response["error"]  = "Some error occured";
+
+
+    crypto::hash tx_hash;
+
+    if (!hex_to_pod(tx_hash_str, tx_hash))
+    {
+        cerr << "Cant parse tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant parse tx hash! : " + tx_hash_str;
+        session_close(session, j_response.dump());
+        return;
+    }
+
+
+    transaction tx;
+
+    uint64_t default_timestamp {0};
+
+    bool tx_found {false};
+
+    bool tx_in_mempool {false};
+
+    if (!CurrentBlockchainStatus::get_tx(tx_hash, tx))
+    {
+        // if tx not found in the blockchain, check if its in mempool
+
+        vector<pair<uint64_t, transaction>> mempool_txs =
+                CurrentBlockchainStatus::get_mempool_txs();
+
+        //cout << "serach mempool" << endl;
+
+        for (auto const& mtx: mempool_txs)
+        {
+            //cout << (get_transaction_hash(mtx.second)) << '\n';
+
+            if (get_transaction_hash(mtx.second) == tx_hash)
+            {
+                tx = mtx.second;
+                tx_found = true;
+                tx_in_mempool = true;
+                default_timestamp = mtx.first;
+                break;
+            }
+        }
+    }
+    else
+    {
+        tx_found = true;
+    }
+
+    if (tx_found)
+    {
+        crypto::hash tx_hash = get_transaction_hash(tx);
+
+        // return tx hash. can be used to check if we acctually
+        // delivered the tx that was requested
+        j_response["tx_hash"]  = pod_to_hex(tx_hash);
+
+        j_response["pub_key"]  = pod_to_hex(xmreg::get_tx_pub_key_from_received_outs(tx));
+
+
+        bool coinbase = is_coinbase(tx);
+
+        j_response["coinbase"] = coinbase;
+
+        // key images of inputs
+        vector<txin_to_key> input_key_imgs;
+
+        // public keys and xmr amount of outputs
+        vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+
+        uint64_t xmr_inputs;
+        uint64_t xmr_outputs;
+        uint64_t num_nonrct_inputs;
+        uint64_t fee;
+        uint64_t mixin_no;
+        uint64_t size;
+        uint64_t blk_height;
+
+        // sum xmr in inputs and ouputs in the given tx
+        array<uint64_t, 4> const& sum_data = xmreg::summary_of_in_out_rct(
+                tx, output_pub_keys, input_key_imgs);
+
+        xmr_outputs       = sum_data[0];
+        xmr_inputs        = sum_data[1];
+        mixin_no          = sum_data[2];
+        num_nonrct_inputs = sum_data[3];
+
+        j_response["xmr_outputs"] = xmr_outputs;
+        j_response["xmr_inputs"]  = xmr_inputs;
+        j_response["mixin_no"]    = mixin_no;
+
+        fee = 0;
+
+        if (!coinbase &&  tx.vin.size() > 0)
+        {
+            // check if not miner tx
+            // i.e., for blocks without any user transactions
+            if (tx.vin.at(0).type() != typeid(txin_gen))
+            {
+                // get tx fee
+                fee = get_tx_fee(tx);
+            }
+        }
+
+        j_response["fee"] = fee;
+
+        // get tx size in bytes
+        size = get_object_blobsize(tx);
+
+        j_response["size"] = size;
+
+        // to be field later on using data from OutputInputIdentification
+        j_response["total_sent"] = 0;
+        j_response["total_received"] = 0;
+
+        int64_t tx_height {-1};
+
+        int64_t no_confirmations {-1};
+
+        if (CurrentBlockchainStatus::get_tx_block_height(tx_hash, tx_height))
+        {
+            // get the current blockchain height. Just to check
+            uint64_t bc_height = get_current_blockchain_height();
+
+            no_confirmations = bc_height - tx_height;
+        }
+
+        // Class that is responsible for identification of our outputs
+        // and inputs in a given tx.
+
+        j_response["payment_id"] = string {};
+        j_response["timestamp"]  = default_timestamp;
+
+        account_public_address address;
+        secret_key viewkey;
+
+        // to get info about recived xmr in this tx, we calculate it from
+        // scrach, i.e., search for outputs. We could get this info
+        // directly from the database, but doing it again here, is a good way
+        // to double check tx data in the frontend, and also maybe try doing
+        // it differently than before. Its not great, since we reinvent the wheel
+        // but its worth double checking the mysql data, and also allows for new
+        // implementation in the frontend.
+        if (CurrentBlockchainStatus::get_xmr_address_viewkey(xmr_address, address, viewkey))
+        {
+            OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+
+            oi_identification.identify_outputs();
+
+            uint64_t total_received {0};
+
+            // we just get total amount recieved. we have viewkey,
+            // so this must be correct and front end does not
+            // need to do anything to check this.
+            for (auto& out_info: oi_identification.identified_outputs)
+            {
+                total_received += out_info.amount;
+            }
+
+            j_response["total_received"] = total_received;
+
+            json j_spent_outputs = json::array();
+
+            // to get spendings, we need to have our key_images. but
+            // the backend does not have spendkey, so it cant determine
+            // which key images are really ours or not. this is the task
+            // for the frontend. however, backend can only provide guesses and
+            // nessessery data to the frontend to filter out incorrect
+            // guesses.
+            //
+            // for input identification, we will use our mysql. its just much
+            // faster to use it here, than before. but first we need to
+            // get account id of the user asking for tx details.
+
+            // a placeholder for exciting or new account data
+            XmrAccount acc;
+
+            // select this account if its existing one
+            if (xmr_accounts->select(xmr_address, acc))
+            {
+                // if user exist, get tx data from database
+                // this will work only for tx in the blockchain,
+                // not those in the mempool.
+
+                if (!tx_in_mempool)
+                {
+                    // if not in mempool, but in blockchain, just
+                    // get data aout key images from the mysql
+
+                    XmrTransaction xmr_tx;
+
+                    if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
+                    {
+                        j_response["payment_id"] = xmr_tx.payment_id;
+                        j_response["timestamp"]  = static_cast<uint64_t>(xmr_tx.timestamp);
+
+                        vector<XmrInput> inputs;
+
+                        if (xmr_accounts->select_inputs_for_tx(xmr_tx.id, inputs))
+                        {
+                            json j_spent_outputs = json::array();
+
+                            uint64_t total_spent {0};
+
+                            for (XmrInput input: inputs)
+                            {
+                                XmrOutput out;
+
+                                if (xmr_accounts->select_output_with_id(input.output_id, out))
+                                {
+                                    total_spent += input.amount;
+
+                                    j_spent_outputs.push_back({
+                                          {"amount"     , input.amount},
+                                          {"key_image"  , input.key_image},
+                                          {"tx_pub_key" , out.tx_pub_key},
+                                          {"out_index"  , out.out_index},
+                                          {"mixin"      , out.mixin}});
+                                }
+
+                            } // for (XmrInput input: inputs)
+
+                            j_response["total_sent"]    = total_spent;
+
+                            j_response["spent_outputs"] = j_spent_outputs;
+
+                        } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+
+                    }  // if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
+
+                } // if (!tx_in_mempool)
+                else
+                {
+                    // if tx in mempool, mysql will not have this tx, so
+                    // we cant pull info about key images from mysql for this tx.
+
+                    // we have to redo this info from basically from scrach.
+
+                    vector<pair<string, uint64_t>> known_outputs_keys;
+
+                    if (CurrentBlockchainStatus::get_known_outputs_keys(
+                            xmr_address, known_outputs_keys))
+                    {
+                        // we got known_outputs_keys from the search thread.
+                        // so now we can use OutputInputIdentification to
+                        // get info about inputs.
+
+                        // Class that is resposnible for idenficitaction of our outputs
+                        // and inputs in a given tx.
+                        OutputInputIdentification oi_identification
+                                {&address, &viewkey, &tx};
+
+                        // no need mutex here, as this will be exectued only after
+                        // the above. there is no threads here.
+                        oi_identification.identify_inputs(known_outputs_keys);
+
+                        json j_spent_outputs = json::array();
+
+                        uint64_t total_spent {0};
+
+                        for (auto& in_info: oi_identification.identified_inputs)
+                        {
+
+                            // need to get output info from mysql, as we need
+                            // to know output's amount, its orginal
+                            // tx public key and its index in that tx
+                            XmrOutput out;
+
+                            if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                            {
+                                total_spent += out.amount;
+
+                                j_spent_outputs.push_back({
+                                          {"amount"     , in_info.amount},
+                                          {"key_image"  , in_info.key_img},
+                                          {"tx_pub_key" , out.tx_pub_key},
+                                          {"out_index"  , out.out_index},
+                                          {"mixin"      , out.mixin}});
+                            }
+
+                        } //  for (auto& in_info: oi_identification.identified_inputs)
+
+                        j_response["total_sent"]    = total_spent;
+
+                        j_response["spent_outputs"] = j_spent_outputs;
+
+                    } //if (CurrentBlockchainStatus::get_known_outputs_keys(
+                      //    xmr_address, known_outputs_keys))
+
+                } //  else
+
+            } //  if (xmr_accounts->select(xmr_address, acc))
+
+        } //  if (CurrentBlockchainStatus::get_xmr_address_viewkey(address_str, address, viewkey)
+
+        j_response["tx_height"]         = tx_height;
+        j_response["no_confirmations"]  = no_confirmations;
+        j_response["status"]            = "OK";
+        j_response["error"]             = "";
+    }
+    else
+    {
+        cerr << "Cant get tx details for tx hash! : " << tx_hash_str  << '\n';
+        j_response["status"] = "Cant get tx details for tx hash! : " + tx_hash_str;
     }
 
     string response_body = j_response.dump();
@@ -839,8 +1376,10 @@ YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes
     json j_response {
         {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
         {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
+        {"git_branch_name"     , string {GIT_BRANCH_NAME}},
         {"monero_version_full" , string {MONERO_VERSION_FULL}},
-        {"monero_version_full" , string {MONERO_VERSION_FULL}},
+        {"api"                 , OPENMONERO_RPC_VERSION},
+        {"testnet"             , CurrentBlockchainStatus::testnet},
         {"blockchain_height"   , get_current_blockchain_height()}
     };
 
@@ -875,8 +1414,6 @@ YourMoneroRequests::generic_options_handler( const shared_ptr< Session > session
     const auto request = session->get_request( );
 
     size_t content_length = request->get_header( "Content-Length", 0);
-
-    //cout << "generic_options_handler" << endl;
 
     session->fetch(content_length, [](const shared_ptr< Session > session, const Bytes & body)
     {

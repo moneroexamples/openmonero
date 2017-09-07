@@ -2,14 +2,13 @@
 
 <div class="body-section">
   <div class="w-container">
-    <div>
       <div class="w-row">
         <div class="w-col w-col-6">
           <h1>Account Overview</h1>
           <div class="subhead-text inner overview-page">
             Your account overview and recent transactions.
-            <span ng-show="view_only"><rb/>This is <b>view only</b> wallet.
-              <br/>Balance and transactions do not account for any spendings.
+            <span ng-show="view_only"><br/>This is <b>view only</b> wallet.
+              Balance and transactions do not account for any spendings.
               Thus, if there were any outgoing transactions made,
               the balance here will be incorrect, and those transactions
               not shown.
@@ -17,123 +16,41 @@
           </div>
         </div>
         <div class="w-col w-col-6">
-          <div class="balance-div">
-            <div class="w-clearfix">
-              <div class="balance-header">Your Balance / Unlocked Balance</div>
-            </div>
-            <div class="balance-text" ng-show="!blockchain_height">
-              Fetching initial data... Please wait.
-            </div>
-
-            <div class="balance-text" ng-show="blockchain_height">
-              {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
-              Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
-            </div>
-          </div>
+          <ng-include src="'partials/account-balance.html'"></ng-include>
         </div>
       </div>
-    </div>
-  <div class="w-container middle-container overview-page">
-    <div class="middle-div">
-      <div class="overview-body-head">Address</div>
-      <div class="move-text-div">
-        <p class="middle-text">{{address}}</p>
-      </div>
-    </div>
-    <div>
-      <div class="overview-body-head">
-        <div class="overview-body-head">Transaction History</div>
-      </div>
-    </div>
-    <div class="table-headers overview">
-      <div class="w-row">
-        <div class="w-col w-col-2 responsive-column">
-          <div class="transaction-head">Value (XMR)</div>
-        </div>
-        <div class="w-col w-col-3 responsive-column">
-          <div class="transaction-head">Date Received</div>
-        </div>
-        <div class="w-col w-col-1 responsive-column">
-          <div class="transaction-head">Ring Size</div>
-        </div>
-        <div class="w-col w-col-6 responsive-column">
-          <div class="transaction-head">Transaction ID</div>
-        </div>
-      </div>
-    </div>
-    <div class="received-div" ng-repeat="tx in transactions | limitTo:10">
-      <div class="w-row" ng-click="toggle_tx_detail(tx)">
-        <div class="w-col w-col-2 responsive-column">
-
-          <!--
-          <div class="transaction-detail value-bold" ng-show="tx_is_confirmed(tx)">
-            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
-          </div>
-
-          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="!tx_is_confirmed(tx)">
-            {{tx.amount | money}} (unconfirmed<span ng-show="tx_is_mempool(tx)">, mempool</span>)
-            <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
-          </div>
-          -->
-
-          <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
-            {{tx.amount | money}} (unconfirmed)
-          </div>
-
-          <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
-            {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
-          </div>
-
-
-        </div>
-        <div class="w-col w-col-3 responsive-column">
-          <div class="transaction-detail">{{tx.timestamp | time}}</div>
-        </div>
-        <div class="w-col w-col-1 responsive-column">
-          <div class="transaction-detail">{{tx.mixin}}</div>
-        </div>
-        <div class="w-col w-col-6 responsive-column">
+      <div class="w-container middle-container overview-page">
+        <div class="middle-div">
+          <div class="overview-body-head">Address</div>
           <div class="move-text-div">
-            <div class="transaction-address">{{tx.hash}}</div>
+            <p class="middle-text">{{address}}</p>
           </div>
         </div>
-      </div>
-      <div class="w-row" style="margin-bottom: 15px;" ng-show="showing_tx_detail(tx)">
-        <div class="w-col w-col-11">
-
-          <div class="transaction-detail" style="font-size: 10px;" ng-show="!tx_is_unlocked(tx)">
-            {{tx_locked_reason(tx)}}
+        <div>
+          <div class="overview-body-head">
+            <div class="overview-body-head">Recent transactions</div>
           </div>
-          <div class="transaction-detail transaction-page move-text-div">
-            <div class="transaction-address">
-              <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
-              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
-              &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Is coinbase?:</span> &nbsp;&nbsp;{{tx.coinbase}}
+        </div>
+        <div class="table-headers overview">
+          <div class="w-row">
+            <div class="w-col w-col-2 responsive-column">
+              <div class="transaction-head">Value (XMR)</div>
+            </div>
+            <div class="w-col w-col-3 responsive-column">
+              <div class="transaction-head">Date Received</div>
+            </div>
+            <div class="w-col w-col-1 responsive-column">
+              <div class="transaction-head">Ring Size</div>
+            </div>
+            <div class="w-col w-col-6 responsive-column">
+              <div class="transaction-head">Transaction ID/Hash</div>
             </div>
           </div>
         </div>
+        <div class="received-div" ng-repeat="tx in transactions | limitTo:10">
+          <transaction></transaction>
+        </div>
       </div>
-    </div>
-  </div>
-  <div class="w-container _3-boxes-container">
-    <div class="w-row">
-      <div class="w-col w-col-4">
-        <a class="w-inline-block box-1" href="#/transactions">
-          <div class="box-text">Transactions</div>
-        </a>
-      </div>
-      <div class="w-col w-col-4">
-        <a class="w-inline-block box-2" href="#/send">
-          <div class="box-text">Send</div>
-        </a>
-      </div>
-      <div class="w-col w-col-4">
-        <a class="w-inline-block box-3" href="#/receive">
-          <div class="box-text">Receive</div>
-        </a>
-      </div>
-    </div>
   </div>
 </div>
-
-<script src="js/directives/qr_scanner.js?4"></script>
+<!--<script src="js/directives/qr_scanner.js?4"></script>-->

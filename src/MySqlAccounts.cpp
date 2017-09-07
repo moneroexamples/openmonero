@@ -397,6 +397,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     {
         SimpleResult sr = query.execute(tx_data.hash,
                                         tx_data.prefix_hash,
+                                        tx_data.tx_pub_key,
                                         tx_data.account_id,
                                         tx_data.blockchain_tx_id,
                                         tx_data.total_received,
@@ -739,7 +740,8 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
 uint64_t
 MySqlAccounts::insert(const string& address,
                       const string& viewkey_hash,
-                      const uint64_t& current_blkchain_height)
+                      DateTime const& current_blkchain_timestamp,
+                      uint64_t const& current_blkchain_height)
 {
 
     Query query = conn->query(XmrAccount::INSERT_STMT);
@@ -758,6 +760,7 @@ MySqlAccounts::insert(const string& address,
         SimpleResult sr = query.execute(address,
                                         viewkey_hash,
                                         current_blkchain_height,
+                                        current_blkchain_timestamp,
                                         current_blkchain_height);
 
         if (sr.rows() == 1)
@@ -1102,6 +1105,12 @@ MySqlAccounts::launch_mysql_pinging_thread()
     // run this in the background forever
     // we dont need to wait for it to finish
     ping_thread.detach();
+}
+
+shared_ptr<MySqlConnector>
+MySqlAccounts::get_connection()
+{
+    return conn;
 }
 
 

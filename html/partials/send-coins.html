@@ -26,15 +26,7 @@
                     </div>
                 </div>
                 <div class="w-col w-col-6">
-                    <div class="balance-div">
-                        <div class="w-clearfix">
-                            <div class="balance-header">Your Balance / Unlocked Balance</div>
-                        </div>
-                        <div class="balance-text">
-                            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
-                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
-                        </div>
-                    </div>
+                    <ng-include src="'partials/account-balance.html'"></ng-include>
                 </div>
             </div>
         </div>
@@ -43,33 +35,33 @@
         <div class="middle-div send" ng-show="!success_page">
             <div class="w-form send-form">
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
-                      ng-submit="sendCoins(targets, mixins, payment_id)" form-autofill-fix>
+                      ng-submit="sendCoins(targets, mixins, payment_id)">
                     <label class="send-label" for="receiver-address">Receiver Address</label>
-                    <input class="w-input send-text-box" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
+                    <input class="w-input" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
                            name="Receiver-address" data-name="Receiver address" required="required" ng-model="targets[0].address">
                     <div class="w-row">
                         <div class="w-col w-col-6 responsive-column">
                             <label class="send-label" for="amount">Amount</label>
-                            <input class="w-input send-text-box" id="amount" type="text" placeholder="e.g. 0.5"
+                            <input class="w-input" id="amount" type="text" placeholder="e.g. 0.5"
                                    name="Amount" data-name="Amount" required="required" ng-model="targets[0].amount">
                         </div>
                         <div class="w-col w-col-6 responsive-column">
                             <label class="send-label" for="payment-id">Payment ID (Optional)</label>
-                            <input class="w-input send-text-box" id="payment-id" type="text"
+                            <input class="w-input" id="payment-id" type="text"
                                    placeholder="e.g. 59af9132941ec6e9f6ba3c4867e1cd92f2bd5fbce4325fc7b19bcdb55d640de5" name="Receiver-address-2"
                                    data-name="Receiver Address 2" ng-model="payment_id">
                         </div>
                     </div>
                     <label class="send-label" for="field4">Privacy Level</label>
-                    <select class="w-select" id="field4" name="Select-a-number" data-name="Select a number"
+                    <select class="w-input" id="field4" name="Select-a-number" data-name="Select a number"
                             required="required" ng-model="mixins">
                         <option value="4">Low (ring size 5)</option>
                         <option value="6">Medium (ring size 7)</option>
                         <option value="10">High (ring size 11)</option>
                         <option value="20">Paranoid (ring size 21)</option>
                     </select>
-                    <label class="send-label" for="field4">Priority Level (adjusts miner fee)</label>
-                    <select class="w-select" id="field4" name="Select-a-number" data-name="Select a number"
+                    <label class="send-label" for="field5">Priority Level (adjusts miner fee)</label>
+                    <select class="w-input" id="field5" name="Select-a-number" data-name="Select a number"
                             required="required" ng-model="priority">
                         <option value="1">Low (the cheapest, but might not confirm quickly)</option>
                         <option value="2">Medium (default, usually enough for all transactions)</option>
@@ -111,6 +103,10 @@
                     <label class="send-label" >Transaction Private Key</label>
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_prvkey}}</div>
+                    </div>
+                    <label class="send-label" >Soon should be visible in a blockchain explorer</label>
+                    <div class="move-text-div">
+                        <a class="login-link" href="{{ sent_tx.explorerLink }} " target="_blank">{{ sent_tx.explorerLink }}</a>
                     </div>
                     <input class="w-button send-btn" type="submit" value="Send Another Payment" data-wait="Please wait...">
                 </form>

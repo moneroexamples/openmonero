@@ -177,7 +177,8 @@ public:
     uint64_t
     insert(const string& address,
            const string& viewkey_hash,
-           const uint64_t& current_blkchain_height = 0);
+           DateTime const& current_blkchain_timestamp,
+           uint64_t const& current_blkchain_height = 0);
 
     uint64_t
     insert_tx(const XmrTransaction& tx_data);
@@ -251,6 +252,9 @@ public:
 
     void
     launch_mysql_pinging_thread();
+
+    shared_ptr<MySqlConnector>
+    get_connection();
 };
 
 

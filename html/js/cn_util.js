@@ -27,10 +27,17 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Original Author: Lucas Jones
+// Modified to remove jQuery dep and support modular inclusion of deps by Paul Shapiro (2016)
 // Modified by luigi1111 2017
 
 var cnUtil = (function(initConfig) {
-    var config = $.extend({}, initConfig);
+
+    var config = {};// shallow copy of initConfig
+
+    for (var key in initConfig) {
+        config[key] = initConfig[key];
+    }
+
     config.coinUnits = new JSBigInt(10).pow(config.coinUnitPlaces);
 
     var HASH_STATE_BYTES = 200;
@@ -259,6 +266,11 @@ var cnUtil = (function(initConfig) {
         return mn_random(128);
     };
 
+    // Generate a 64-bit crypto random
+    this.rand_8 = function() {
+        return mn_random(64);
+    };    
+
     this.encode_varint = function(i) {
         i = new JSBigInt(i);
         var out = '';
@@ -383,6 +395,30 @@ var cnUtil = (function(initConfig) {
         var checksum = this.cn_fast_hash(data);
         return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
     };
+
+    this.get_account_integrated_address = function(address, payment_id8) {
+        var decoded_address = decode_address(address);
+
+        var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);        
+        var data = prefix + decoded_address.spend  + decoded_address.view + payment_id8;    
+
+        var checksum = this.cn_fast_hash(data);
+
+        return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
+    };    
+
+
+    this.decrypt_payment_id = function(payment_id8, tx_public_key, acc_prv_view_key) {
+        if (payment_id8.length !== 16) throw "Invalid input length!";  
+
+        var key_derivation = this.generate_key_derivation(tx_public_key, acc_prv_view_key);    
+
+        var pid_key = this.cn_fast_hash(key_derivation + ENCRYPTED_PAYMENT_ID_TAIL.toString(16)).slice(0, INTEGRATED_ID_SIZE * 2);
+
+        var decrypted_payment_id = this.hex_xor(payment_id8, pid_key);
+
+        return decrypted_payment_id;
+    }
 
     // Generate keypair from seed
     this.generate_keys_old = function(seed) {

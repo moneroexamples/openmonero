@@ -35,7 +35,18 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
         $scope.error = '';
     };
 
+    $scope.decode = true;
+
     $scope.mnemonic_language = 'english';
+
+    if (config.testnet == true) {
+        // just some dummy account, as not to fill login form every time.
+        $scope.mnemonic = "volcano gave orange magically present chlorine tyrant across vapidly puck ulcers issued trash tawny agreed ruby niece nifty glide fictional business rash uncle going glide";
+    } else {
+        $scope.decode = false;
+        $scope.address = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";
+        $scope.view_key = "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501" ;
+    }
 
 
     var decode_seed = function(mnemonic, language)
@@ -60,7 +71,14 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
                 seed = mn_decode(mnemonic, language);
                 break;
         }
+
         keys = cnUtil.create_address(seed);
+
+
+        //var payment_id8 = rand_8();        
+        //var integarted_address = get_account_integrated_address(keys.public_addr, payment_id8);
+
+        $scope.decode = false;
 
         return [seed, keys];
     };
@@ -82,6 +100,8 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
             return;
         }
 
+
+
         AccountService.login(keys.public_addr, keys.view.sec, keys.spend.sec, seed, false)
             .then(function() {
                 ModalService.hide('login');
@@ -89,9 +109,9 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
                 if (AccountService.wasAccountImported()) {
                     ModalService.show('imported-account');
                 }
-            }, function(reason) {
-                $scope.error = reason;
-                console.error(reason);
+            }, function(response) {
+                $scope.error = "Error connecting to the backend. Can't login.";
+                //console.error(response);
             });
     };
 
@@ -125,6 +145,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
 
     $scope.login_keys = function(address, view_key, spend_key) {
         $scope.error = '';
+
         AccountService.login(address, view_key, spend_key, undefined, false)
             .then(function(data)
             {

@@ -26,9 +26,15 @@
               <div class="review-text">{{transferConfirmDialog.priority}}</div>
             </div>
           </div>
-          <label class="field-label review" for="Mnemonic-2">Payment ID</label>
-          <div class="move-text-div">
-            <div class="review-text">{{transferConfirmDialog.payment_id || "N/A"}}</div>
+          <div class="w-row">
+            <div class="w-col w-col-8 responsive-column">
+              <label class="field-label review" for="Mnemonic-2">Payment ID</label>
+              <div class="review-text">{{transferConfirmDialog.payment_id || "N/A"}}</div>
+            </div>
+            <div class="w-col w-col-4 responsive-column">
+              <label class="field-label review" for="Mnemonic-2">Size [kB]</label>
+              <div class="review-text">{{transferConfirmDialog.txBlobKBytes}}</div>
+            </div>
           </div>
           <label class="field-label review" for="Mnemonic-2" ng-show="transferConfirmDialog.tx_hash">Transaction ID/Hash</label>
           <div class="move-text-div">

@@ -1,0 +1,41 @@
+<div class="w-row">
+    <div class="w-row" ng-click="toggle_tx_detail(tx)">
+        <div class="w-col w-col-2 responsive-column">
+
+            <div class="transaction-detail value-bold" style="color: #e65a5a;" ng-show="tx_is_mempool(tx)">
+                {{tx.amount | money}} (unconfirmed)
+            </div>
+
+            <div class="transaction-detail value-bold" ng-show="!tx_is_mempool(tx)">
+                {{tx.amount | money}} <span ng-show="!tx_is_unlocked(tx)"><i class="fa fa-lock"></i></span>
+            </div>
+        </div>
+        <div class="w-col w-col-3 responsive-column">
+            <div class="transaction-detail">{{tx.timestamp | time}}</div>
+        </div>
+        <div class="w-col w-col-1 responsive-column">
+            <div class="transaction-detail">{{tx.mixin}}</div>
+        </div>
+        <div class="w-col w-col-6 responsive-column">
+            <div class="move-text-div">
+                <div class="transaction-address">{{tx.hash}}</div>
+            </div>
+        </div>
+    </div>
+    <div class="w-row" style="margin-bottom: 15px;" ng-show="showing_tx_detail(tx)">
+        <div class="w-col w-col-11">
+
+            <div class="transaction-detail" style="font-size: 10px;" ng-show="!tx_is_unlocked(tx)">
+                {{tx_locked_reason(tx)}}
+            </div>
+            <div class="transaction-detail transaction-page move-text-div">
+                <div class="transaction-address">
+                    <span class="bold">Block no:</span> &nbsp;&nbsp;{{tx_is_mempool(tx) ? 'N/A (tx in mempool)' : tx.height}}
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Payment ID:</span> &nbsp;&nbsp;{{tx.payment_id || "N/A"}}
+                    <a style="color: #5093eb" show-modal="transaction-details?tx_hash={{ tx.hash }}">more details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

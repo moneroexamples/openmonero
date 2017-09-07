@@ -7,8 +7,7 @@ project(myext)
 add_subdirectory("restbed")
 
 set(SOURCE_FILES
-        format.cc
-        date/tz.cpp)
+        format.cc)
 
 # make static library called libmyxrm
 # that we are going to link to

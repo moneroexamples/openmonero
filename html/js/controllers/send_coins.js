@@ -26,27 +26,33 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountService, ModalService) {
+thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
+                                                     AccountService, ModalService,
+                                                     ApiCalls)
+{
     "use strict";
     $scope.status = "";
     $scope.error = "";
     $scope.submitting = false;
     $scope.targets = [{}];
     $scope.totalAmount = JSBigInt.ZERO;
-    $scope.mixins = config.defaultMixin;
+    $scope.mixins = config.defaultMixin.toString();
     $scope.view_only = AccountService.isViewOnly();
 
     $scope.success_page = false;
     $scope.sent_tx = {};
 
 
+    var view_only = AccountService.isViewOnly();
+
+    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
 
     // few multiplayers based on uint64_t wallet2::get_fee_multiplier
     var fee_multiplayers = [1, 4, 20, 166];
 
     var default_priority = 2;
 
-    $scope.priority = default_priority;
+    $scope.priority = default_priority.toString();
 
     $scope.openaliasDialog = undefined;
 
@@ -85,8 +91,11 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
     $scope.transferConfirmDialog = undefined;
 
-    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key, payment_id, mixin, priority) {
+    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key,
+                             payment_id, mixin, priority, txBlobKBytes) {
+
         var deferred = $q.defer();
+
         if ($scope.transferConfirmDialog !== undefined) {
             deferred.reject("transferConfirmDialog is already being shown!");
             return;
@@ -102,6 +111,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             tx_prv_key: tx_prv_key,
             payment_id: payment_id,
             mixin: mixin + 1,
+            txBlobKBytes: Math.round(txBlobKBytes*1e3) / 1e3,
             priority: priority_names[priority - 1],
             confirm: function() {
                 $scope.transferConfirmDialog = undefined;
@@ -180,58 +190,61 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     }
                 } else {
                     var domain = target.address.replace(/@/g, ".");
-                    $http.post(config.apiUrl + "get_txt_records", {
-                        domain: domain
-                    }).success(function(data) {
-                        var records = data.records;
-                        var oaRecords = [];
-                        console.log(domain + ": ", data.records);
-                        if (data.dnssec_used) {
-                            if (data.secured) {
-                                console.log("DNSSEC validation successful");
+                    ApiCalls.get_txt_records(domain)
+                        .then(function(response) {
+                            var data = response.data;
+                            var records = data.records;
+                            var oaRecords = [];
+                            console.log(domain + ": ", data.records);
+                            if (data.dnssec_used) {
+                                if (data.secured) {
+                                    console.log("DNSSEC validation successful");
+                                } else {
+                                    deferred.reject("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason);
+                                    return;
+                                }
                             } else {
-                                deferred.reject("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason);
+                                console.log("DNSSEC Not used");
+                            }
+                            for (var i = 0; i < records.length; i++) {
+                                var record = records[i];
+                                if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
+                                    continue;
+                                }
+                                console.log("Found OpenAlias record: " + record);
+                                oaRecords.push(parseOpenAliasRecord(record));
+                            }
+                            if (oaRecords.length === 0) {
+                                deferred.reject("No OpenAlias records found for: " + domain);
                                 return;
                             }
-                        } else {
-                            console.log("DNSSEC Not used");
-                        }
-                        for (var i = 0; i < records.length; i++) {
-                            var record = records[i];
-                            if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
-                                continue;
+                            if (oaRecords.length !== 1) {
+                                deferred.reject("Multiple addresses found for given domain: " + domain);
+                                return;
                             }
-                            console.log("Found OpenAlias record: " + record);
-                            oaRecords.push(parseOpenAliasRecord(record));
-                        }
-                        if (oaRecords.length === 0) {
-                            deferred.reject("No OpenAlias records found for: " + domain);
-                            return;
-                        }
-                        if (oaRecords.length !== 1) {
-                            deferred.reject("Multiple addresses found for given domain: " + domain);
-                            return;
-                        }
-                        console.log("OpenAlias record: ", oaRecords[0]);
-                        var oaAddress = oaRecords[0].address;
-                        try {
-                            cnUtil.decode_address(oaAddress);
-                            confirmOpenAliasAddress(domain, oaAddress, oaRecords[0].name, oaRecords[0].description, data.dnssec_used && data.secured).then(function() {
-                                deferred.resolve({
-                                    address: oaAddress,
-                                    amount: amount,
-                                    domain: domain
+                            console.log("OpenAlias record: ", oaRecords[0]);
+                            var oaAddress = oaRecords[0].address;
+                            try {
+                                cnUtil.decode_address(oaAddress);
+                                confirmOpenAliasAddress(domain, oaAddress,
+                                    oaRecords[0].name, oaRecords[0].description,
+                                    data.dnssec_used && data.secured)
+                                    .then(function() {
+                                        deferred.resolve({
+                                            address: oaAddress,
+                                            amount: amount,
+                                            domain: domain
+                                        });
+                                }, function(err) {
+                                    deferred.reject(err);
                                 });
-                            }, function(err) {
-                                deferred.reject(err);
-                            });
-                        } catch (e) {
-                            deferred.reject("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
-                            return;
-                        }
-                    }).error(function(data) {
-                        deferred.reject("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
-                    });
+                            } catch (e) {
+                                deferred.reject("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
+                                return;
+                            }
+                        }, function(data) {
+                            deferred.reject("Failed to resolve DNS records for '" + domain + "': " + "Unknown error");
+                        });
                 }
             })(deferred, target);
         }
@@ -248,7 +261,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         var feePerKB = new JSBigInt(config.feePerKB);
 
-        var priority = $scope.priority || 2;
+        var priority = $scope.priority || default_priority;
 
         if (!isInt(priority))
         {
@@ -333,8 +346,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 dust_threshold: config.dustThreshold.toString()
             };
 
-            $http.post(config.apiUrl + 'get_unspent_outs', getUnspentOutsRequest)
-                .success(function(data) {
+            ApiCalls.get_unspent_outs(getUnspentOutsRequest)
+                .then(function(request) {
+                    var data = request.data;
                     unspentOuts = checkUnspentOuts(data.outputs || []);
                     unused_outs = unspentOuts.slice(0);
                     using_outs = [];
@@ -345,8 +359,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         neededFee = feePerKB.multiply(13).multiply(fee_multiplayer);
                     }
                     transfer().then(transferSuccess, transferFailure);
-                })
-                .error(function(data) {
+                }, function(data) {
                     $scope.status = "";
                     $scope.submitting = false;
                     if (data && data.Error) {
@@ -390,7 +403,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             var tx_prvkey = tx_h.prvkey;
             // work out per-kb fee for transaction
             var txBlobBytes = raw_tx.length / 2;
-            var numKB = Math.floor((txBlobBytes) / 1024);
+            var txBlobKBytes = txBlobBytes / 1024.0;
+            var numKB = Math.floor(txBlobKBytes);
             if (txBlobBytes % 1024) {
                 numKB++;
             }
@@ -416,12 +430,15 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
             confirmTransfer(realDsts[0].address, realDsts[0].amount,
                             tx_hash, neededFee, tx_prvkey, payment_id,
-                            mixin, priority).then(function() {
+                            mixin, priority, txBlobKBytes).then(function() {
 
                 //alert('Confirmed ');
 
-                $http.post(config.apiUrl + 'submit_raw_tx', request)
-                    .success(function(data) {
+                ApiCalls.submit_raw_tx(request.address, request.view_key, request.tx)
+                    .then(function(response) {
+
+                        var data = response.data;
+
                         if (data.status === "error")
                         {
                             $scope.status = "";
@@ -429,7 +446,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                             $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
                             return;
                         }
-                        console.log("Successfully submitted tx");
+
+                        //console.log("Successfully submitted tx");
                         $scope.targets = [{}];
                         $scope.sent_tx = {
                             address: realDsts[0].address,
@@ -438,16 +456,17 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                             payment_id: payment_id,
                             tx_id: tx_hash,
                             tx_prvkey: tx_prvkey,
-                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/
+                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/,
+                            explorerLink: explorerUrl + "tx/" + tx_hash
                         };
+
                         $scope.success_page = true;
                         $scope.status = "";
                         $scope.submitting = false;
-                    })
-                    .error(function(error) {
+                    }, function(error) {
                         $scope.status = "";
                         $scope.submitting = false;
-                        $scope.error = "Something unexpected occurred when submitting your transaction: " + (error.Error || error);
+                        $scope.error = "Something unexpected occurred when submitting your transaction: ";
                     });
 
             }, function(reason) {
@@ -590,16 +609,13 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         amounts: amounts,
                         count: mixin + 1 // Add one to mixin so we can skip real output key if necessary
                     };
-                    $http.post(config.apiUrl + 'get_random_outs', request)
-                        .success(function(data) {
+
+                    ApiCalls.get_random_outs(request.amounts, request.count)
+                        .then(function(response) {
+                            var data = response.data;
                             createTx(data.amount_outs);
-                        })
-                        .error(function(data) {
-                            if (data && data.Error) {
-                                deferred.reject(data.Error);
-                            } else {
+                        }, function(data) {
                                 deferred.reject('Failed to get unspent outs');
-                            }
                         });
                 } else if (mixin < 0 || isNaN(mixin)) {
                     deferred.reject("Invalid mixin");

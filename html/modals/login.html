@@ -10,7 +10,7 @@
 
                 <div class="subhead-text modal">
                     Don’t yet have an account?&nbsp;
-                    <a class="login-link" data-ix="close-overlay" hide-modal href="#/create-your-account">
+                    <a class="login-link" data-ix="close-overlay" hide-modal href="#!/create-your-account">
                         Create a Monero account
                     </a>
                 </div>
@@ -29,12 +29,13 @@
                         <div class="w-tab-pane" data-w-tab="Tab 1" ng-class="{'w--tab-active': tab_number == 1}">
                             <div class="form-wrapper">
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
-                                      ng-submit="login_mnemonic(mnemonic, mnemonic_language)" form-autofill-fix>
+                                      ng-submit="login_mnemonic(mnemonic, mnemonic_language)" >
                                     <label class="field-label" for="Login-Key">Your Private Login Key</label>
                                     <input class="w-input" id="Login-Key" type="text" placeholder="Enter your Private Login Key here"
                                            name="Login-Key" data-name="Login Key" autocomplete="off" required="required" ng-model="mnemonic">
                                     <label class="field-label" for="Login-Key-Language">Language</label>
-                                    <select class="w-input" id="Login-Key-Language" ng-model="mnemonic_language" selected="english" required="required">
+                                    <select class="w-input" id="Login-Key-Language" ng-model="mnemonic_language"
+                                            selected="english" required="required">
                                         <option value="english">English</option>
                                         <option value="portuguese">Portuguese</option>
                                         <option value="spanish">Spanish</option>
@@ -45,11 +46,13 @@
                                         <input class="w-button login-btn pointer" id="form-submit" type="submit" value="Enter my account"
                                                data-wait="Please wait...">
                                     </div>
+                                    <!--
                                     <div class="subhead-text modal">
                                         <a class="login-link" data-ix="close-overlay" href="" ng-click="decodeSeed(mnemonic, mnemonic_language)">Decode the login key (works offline)</a>
                                     </div>
+                                    -->
 
-                                    <div class="w-form form-wrapper" ng-show="address">
+                                    <div class="w-form form-wrapper" ng-show="address && decode">
                                         <form id="email-form" name="email-form" data-name="Email Form">
                                             <label class="field-label review" for="Mnemonic-2">Account Address (Public)</label>
                                             <div class="move-text-div">
@@ -78,7 +81,7 @@
                         <div class="w-tab-pane" data-w-tab="Tab 2" ng-class="{'w--tab-active': tab_number == 2}">
                             <div class="form-wrapper">
                                 <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html"
-                                      ng-submit="login_keys(address, view_key, spend_key)" form-autofill-fix>
+                                      ng-submit="login_keys(address, view_key, spend_key)" >
                                     <label class="field-label" for="your-address">Your Address</label>
                                     <input class="w-input" id="your-address" type="text" placeholder="Enter your address here"
                                            name="Your-address" data-name="Your address" autocomplete="off" required="required" ng-model="address">

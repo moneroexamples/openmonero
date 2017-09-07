@@ -96,7 +96,7 @@ set(LIBRARIES
         cryptonote_protocol
         cryptonote_basic
         daemonizer
-        cryptoxmr
+        cncrypto
         blocks
         lmdb
         ringct
@@ -106,6 +106,8 @@ set(LIBRARIES
         easylogging
         mysqlpp
         mysqlclient
+        readline
+        easylogging
         ${Boost_LIBRARIES}
         pthread
         unbound
@@ -124,3 +126,4 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+

@@ -60,6 +60,9 @@ public:
     bool
     ping();
 
+    Connection&
+    get_connection();
+
     virtual ~MySqlConnector();
 };
 

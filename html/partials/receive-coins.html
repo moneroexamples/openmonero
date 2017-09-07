@@ -12,76 +12,58 @@
                         </div>
                     </div>
                 </div>
-                <div class="w-col w-col64">
-                    <div class="balance-div">
-                        <div class="w-clearfix">
-                            <div class="balance-header">Your Balance / Unlocked Balance</div>
-                        </div>
-                        <div class="balance-text">
-                            {{balance | money:false:true}} / {{balance_unlocked | money:false:true}}<br/>
-                            Refreshed: {{account_scanned_block_height}} / {{blockchain_height}}
-                        </div>
-                    </div>
+                <div class="w-col w-col-6">
+                    <ng-include src="'partials/account-balance.html'"></ng-include>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="w-container middle-container receive">
         <div class="middle-div receive">
             <div class="w-form send-form receive">
-                <form id="email-form" name="email-form" data-name="Email Form" form-autofill-fix>
-                    <label class="send-label" for="Receiver-address">Address</label>
+                    <label class="send-label" for="Receiver-address">   Integrated Address
+                    </label>
                     <div class="move-text-div">
-                        <div class="middle-text receive">{{address}} </div>
-                    </div>
-                    <div class="w-row">
-                        <div class="w-col w-col-6 responsive-column">
-                            <label class="send-label receive" for="Receiver-address">Amount</label>
-                            <input class="w-input send-text-box receive" id="Receiver-address" type="text"
-                                   ng-model="amount" placeholder="e.g. 0.5" name="Receiver-address"
-                                   data-name="Receiver address">
-                        </div>
-                        <div class="w-col w-col-6 responsive-column">
-                            <label class="send-label receive" for="Amount">Label</label>
-                            <input class="w-input send-text-box receive" id="Amount" type="text" ng-model="label"
-                                   placeholder="e.g. payment for Alice" name="Amount" data-name="Amount">
+                        <div class="middle-text receive">
+                            {{integarted_address}} 
                         </div>
                     </div>
-                    <label class="send-label" for="Receiver-address-3">Payment ID (Optional)</label>
-                    <input class="w-input send-text-box" id="Receiver-address-3" type="text" ng-model="payment_id"
-                           placeholder="e.g. 59af9132941ec6e9f6ba3c4867e1cd92f2bd5fbce4325fc7b19bcdb55d640de5"
-                           name="Receiver-address-3" data-name="Receiver Address 3">
-                    <input scroll-to-marker="qrcode" class="w-button send-btn" id="form-submit" type="submit"
-                           value="Receive" data-wait="Please wait...">
-                </form>
-                <div class="w-form-done">
-                    <p>Thank you! The data has been captured!</p>
-                </div>
-                <div class="w-form-fail">
-                    <p>Oops! Something went wrong while submitting the data :(</p>
-                </div>
+
+
+                    <div class="w-col w-col-6 responsive-column">         
+                        <label class="send-label" for="payment_id8">
+                            Payment ID (max 16 [0-9a-f] characters)
+                        </label>               
+                        <input class="w-input" id="payment_id8" type="text" ng-model="payment_id8"
+                               placeholder="e.g. 671a4f30238c5152"
+                               name="payment_id8" data-name="payment_id8">
+                    </div>
+
+
+                    <div class="w-col w-col-6 responsive-column">
+                        <label class="send-label" for="payment_id8_rendered">
+                            Final payment ID
+                        </label>
+                        <div class="move-text-div">
+                            <div class="middle-text receive">
+                                {{payment_id8_rendered}}
+                            </div>
+                        </div>
+                    </div>    
+
+
+
+                    <div class="submit-div small-top-margin">
+                      <a class="login-btn modals pointer" ng-click="new_payment_id8()">Generate new integrated address</a>
+                    </div>            
+
+
+                    <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+                        <p>{{error}}</p>
+                    </div>                           
+
             </div>
         </div>
-
-        <div class="qr-div" scroll-marker="qrcode">
-            <div class="w-row">
-                <div class="w-col w-col-3 responsive-column">
-                    <div qr-code value="params | paymentUri"></div>
-                    <div id="qrcode-receive-coins" style="width: 220px;"></div>
-                </div>
-                <div class="w-col w-col-9 responsive-column">
-                    <div class="monero-code"><span class="help-text">Use this QR code to quickly receive payments</span>
-                    </div>
-                    <div class="move-text-div">
-                        <a ng-href="{{params | paymentUri}}" class="qr-code-text">{{params | paymentUri}}</a> </span>
-                    </div>
-                    <div class="info-div">
-                        <div class="overview-body-head">Why do I&nbsp;need a QR&nbsp;code?</div>
-                        <div class="middle-text">This QR&nbsp;code will enable you to rapidly receive payments. Instead of emailing or typing out a Monero address, someone sending you funds merely has to scan the QR code using a Monero client that supports this system. If you have entered information in the form above, the QR code will automatically be populated with that information once you click the "Receive" button.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>

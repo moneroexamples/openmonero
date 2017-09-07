@@ -1,0 +1,65 @@
+<div class="review-details-modal" modal-name="transaction-details" ng-controller="TransactionDetailsCtrl">
+  <div class="w-container review-details-container">
+    <div class="w-clearfix review-details-div">
+      <a class="w-inline-block close-modal" data-ix="close-review-details" hide-modal>
+        <div class="close-overlay pointer" data-ix="close-overlay">+</div>
+      </a>
+      <h1 class="head-modal">Transaction details</h1>
+      <div class="subhead-text modal review" style="margin-bottom: 10px">{{ tx_hash }}</div>
+      <div class="w-form form-wrapper">
+        <div class="w-row">
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review" for="Amount">Amount</label>
+            <div class="review-text">{{ tx_amount | money}}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review">Ring Size</label>
+            <div class="review-text">{{ ring_size }}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review">Block no</label>
+            <div class="review-text">{{ tx_height }}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review">Size [kB]</label>
+            <div class="review-text">{{ tx_size }}</div>
+          </div>
+        </div>
+        <div class="w-row">
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review" for="Amount">No of confirmations</label>
+            <div class="review-text">{{no_confirmations}}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review">Fee</label>
+            <div class="review-text">{{fee | money}}</div>
+          </div>
+          <div class="w-col w-col-6 responsive-column">
+            <label class="field-label review">Timestamp (age)</label>
+            <div class="review-text">{{timestamp | time}} ({{ tx_age }})</div>
+          </div>
+        </div>
+        <div class="w-row">
+          <div class="w-col w-col-2 responsive-column">
+            <label class="field-label review">Is coinbase?</label>
+            <div class="review-text">{{coinbase}}</div>
+          </div>
+          <div class="w-col w-col-10 responsive-column">
+            <label class="field-label review" for="Mnemonic-2">Payment ID</label>
+            <div class="review-text">{{payment_id || "N/A"}}</div>
+          </div>
+        </div>
+        <div class="w-row">
+          <div class="w-col w-col-12 responsive-column">
+            <label class="field-label review" for="Mnemonic-2">View in a blockchain explorer for even more details</label>
+            <a class="login-link" href="{{ explorerLink }} " target="_blank">{{ explorerLink }} </a>
+          </div>
+        </div>
+        <br/>
+        <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+          <p>{{error}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

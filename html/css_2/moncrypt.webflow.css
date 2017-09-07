@@ -162,7 +162,7 @@ p {
 }
 .body-section {
   margin-bottom: 0px;
-  padding-top: 60px;
+  padding-top: 30px;
   padding-bottom: 0px;
   background-color: transparent;
   font-size: 14px;
@@ -632,7 +632,7 @@ p {
 }
 .middle-container {
   display: block;
-  margin-top: 50px;
+  margin-top: 20px;
   margin-bottom: 70px;
   /*padding: 60px 35px;*/
   padding: 60px 25px;
@@ -641,7 +641,6 @@ p {
   background-color: #edf5fc;
 }
 .middle-container.send {
-  margin-top: 50px;
   margin-bottom: 30px;
   padding: 0px 0px 35px;
   border-style: none;
@@ -660,12 +659,12 @@ p {
   margin-top: 48px;
   padding-top: 0px;
   padding-right: 0px;
-  padding-left: 0px;
+  /*padding-left: 0px;*/
   border-style: none;
   background-color: transparent;
 }
 .middle-container.overview-page {
-  padding-top: 40px;
+  padding-top: 20px;
   border-color: #dfe8f0;
   border-radius: 3px;
   background-color: #fafdff;
@@ -1263,6 +1262,15 @@ p {
   padding-top: 15px;
   border-radius: 3px;
   background-color: #f55d5d;
+  font-family: Proximanova, sans-serif;
+  color: white;
+  font-weight: 500;
+  text-align: center;
+}
+.success-backing {
+  padding-top: 15px;
+  border-radius: 3px;
+  background-color: #008331;
   font-family: Proximanova, sans-serif;
   color: white;
   font-weight: 500;

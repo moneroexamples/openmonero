@@ -27,7 +27,9 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 thinwalletServices
-    .factory('AccountService', function($rootScope, $http, $q, $location, $route, EVENT_CODES) {
+    .factory('AccountService', function($rootScope, $http, $q,
+                                        $location, $route,
+                                        EVENT_CODES, ApiCalls) {
         "use strict";
         var public_address = '';
         var account_seed = '';
@@ -50,12 +52,19 @@ thinwalletServices
             view_only = false;
             $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
         };
+
         accountService.login = function(address, view_key, spend_key, seed, generated_account) {
+
+            spend_key = spend_key || "";
+
+            generated_account = generated_account || false;
+
             var deferred = $q.defer();
             logging_in = true;
             (function() {
                 accountService.logout();
-                view_only = (spend_key === '');
+
+                view_only = (spend_key === "");
                 if (!view_key || view_key.length !== 64 || (view_only ? false : spend_key.length !== 64)) {
                     return deferred.reject("invalid secret key length");
                 }
@@ -97,28 +106,29 @@ thinwalletServices
                     account_seed = '';
                 }
                 logged_in = true;
-                console.log("logged_in = true;");
-                $http
-                    .post(config.apiUrl + "login", {
-                    	withCredentials: true,
-                        address: public_address,
-                        view_key: view_key,
-                        create_account: true
-                    })
-                    .success(function(data) {
+                // console.log("logged_in = true;");
+
+                ApiCalls.login(public_address, view_key)
+                    .then(function(response) {
                         // set account_imported to true if we are not logging in with a newly generated account, and a new account was created on the server
+
+                        var data = response.data;
+
                         if (data.status === "error")
                         {
                             accountService.logout();
                             deferred.reject(data.reason);
                             return;
                         }
+
+                        //console.log(data);
+
                         account_imported = !generated_account && data.new_address;
                         logging_in = false;
                         $rootScope.$broadcast(EVENT_CODES.authStatusChanged);
                         deferred.resolve(data);
-                    })
-                    .error(function(reason) {
+                    }, function(reason) {
+                        console.log(reason);
                         accountService.logout();
                         deferred.reject((reason || {}).Error || reason || "server error");
                     });

@@ -63,6 +63,12 @@ MySqlConnector::query(const std::string &qstr)
     return conn.query(qstr);
 }
 
+Connection&
+MySqlConnector::get_connection()
+{
+    return conn;
+}
+
 MySqlConnector::~MySqlConnector()
 {
     conn.disconnect();

@@ -26,34 +26,71 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http, AccountService, ModalService, $interval) {
+thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http,
+                                                        AccountService, ModalService,
+                                                        $interval, $timeout, ApiCalls) {
     "use strict";
     $scope.payment_address = '';
     $scope.payment_id = '';
     $scope.import_fee = JSBigInt.ZERO;
     $scope.status = '';
     $scope.command = '';
+    $scope.success = '';
 
     function get_import_request() {
         if ($scope.account_scan_start_height === 0) {
             ModalService.hide('import-wallet');
             return;
         }
-        $http.post(config.apiUrl + "import_wallet_request", {
-            address: AccountService.getAddress(),
-            view_key: AccountService.getViewKey()
-        }).success(function(data) {
-            $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee) + ' ' + data.payment_id;
-            $scope.payment_id = data.payment_id;
-            $scope.payment_address = data.payment_address;
-            $scope.import_fee = new JSBigInt(data.import_fee);
-            $scope.status = data.status;
-            if (data.request_fulfilled) {
-                ModalService.hide('import-wallet');
-            }
-        }).error(function(err) {
-            $scope.error = err.Error || err || "An unexpected server error occurred";
-        });
+        ApiCalls.import_wallet_request(AccountService.getAddress(), AccountService.getViewKey())
+            .then(function(response) {
+
+                var data = response.data;
+
+                if ('status' in data === true && data.status == "error") {
+                    $scope.status = data.error || "Some error occurred";
+                    $scope.error = data.error || "Some error occurred";
+                    return;
+                }
+
+
+                if (data.import_fee !== 0) {
+                    $scope.command = 'transfer ' + data.payment_address + ' ' + cnUtil.formatMoney(data.import_fee);
+                    $scope.payment_id = data.payment_id;
+                    $scope.payment_address = data.payment_address;
+                    $scope.import_fee = new JSBigInt(data.import_fee);
+                }
+                else
+                {
+                    $scope.command = 'import is free';
+                    $scope.payment_address = 'N/A';
+                    $scope.import_fee = new JSBigInt(0);
+                    $scope.payment_id = "N/A";
+                }
+
+                $scope.status = data.status;
+
+                if (data.request_fulfilled === true) {
+
+                    //console.log(data);
+
+                    if (data.new_request === true) {
+                        if (data.import_fee !== 0) {
+                            $scope.success = "Payment received. Import will start shortly. This window will close in few seconds.";
+                        }
+                        else {
+                            $scope.success = "Import will start shortly. This window will close in few seconds.";
+                        }
+                    }
+                    else {
+                        $scope.success = "The wallet is being imported now or it has already been imported before.";
+                    }
+
+                    $timeout(function(){ModalService.hide('import-wallet')}, 5000);
+                }
+            },function(response) {
+                $scope.error = "Error connecting to the backend. Can't get payment import data.";
+            });
     }
 
     var getRequestInterval = $interval(get_import_request, 10 * 1000);
@@ -62,4 +99,5 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
     $scope.$on('$destroy', function() {
         $interval.cancel(getRequestInterval);
     });
+
 });

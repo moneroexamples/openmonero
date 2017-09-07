@@ -26,7 +26,9 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q, $interval, AccountService, EVENT_CODES) {
+thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q,
+                                                   $interval, AccountService,
+                                                   EVENT_CODES, ApiCalls) {
     "use strict";
     $scope.loggedIn = AccountService.loggedIn;
     $scope.logout = AccountService.logout;
@@ -47,6 +49,13 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
     $scope.transactions = [];
     $scope.blockchain_height = 0;
+
+
+    // var private_view_key = AccountService.getViewKey();
+    
+
+    // decrypt_payment_id();
+
 
     $scope.tx_is_confirmed = function(tx) {
        // return ($scope.blockchain_height - tx.height) > config.txMinConfirms;
@@ -108,47 +117,57 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
     $scope.fetchAddressInfo = function() {
         if (AccountService.loggedIn()) {
-            $http.post(config.apiUrl + "get_address_info", {
-                address: AccountService.getAddress(),
-                view_key: AccountService.getViewKey()
-            }).success(function(data) {
+            ApiCalls.fetchAddressInfo(AccountService.getAddress(), AccountService.getViewKey())
+                .then(function(response) {
 
-                var promises = [];
+                    var data = response.data;
 
-                var view_only = AccountService.isViewOnly();
+                    var promises = [];
 
-                for (var i = 0; i < (data.spent_outputs || []).length; ++i)
-                {
-                    var deferred = $q.defer();
-                    promises.push(deferred.promise);
+                    var view_only = AccountService.isViewOnly();
 
-                    if (view_only === false)
+                    for (var i = 0; i < (data.spent_outputs || []).length; ++i)
                     {
-                        (function(deferred, spent_output) {
-                            setTimeout(function() {
-                                var key_image = AccountService.cachedKeyImage(
-                                    spent_output.tx_pub_key,
-                                    spent_output.out_index
-                                );
-                                if (spent_output.key_image !== key_image) {
-                                    data.total_sent = new JSBigInt(data.total_sent).subtract(spent_output.amount);
-                                }
-                                deferred.resolve();
-                            }, 0);
-                        })(deferred, data.spent_outputs[i]);
+                        var deferred = $q.defer();
+                        promises.push(deferred.promise);
+
+                        if (view_only === false)
+                        {
+                            (function(deferred, spent_output) {
+                                setTimeout(function() {
+                                    var key_image = AccountService.cachedKeyImage(
+                                        spent_output.tx_pub_key,
+                                        spent_output.out_index
+                                    );
+                                    if (spent_output.key_image !== key_image) {
+                                        data.total_sent = new JSBigInt(data.total_sent).subtract(spent_output.amount);
+                                    }
+                                    deferred.resolve();
+                                }, 0);
+                            })(deferred, data.spent_outputs[i]);
+                        }
                     }
-                }
-                $q.all(promises).then(function() {
-                    $scope.locked_balance = new JSBigInt(data.locked_funds || 0);
-                    $scope.total_sent = new JSBigInt(data.total_sent || 0);
-                    //$scope.account_scanned_tx_height = data.scanned_height || 0;
-                    $scope.account_scanned_block_height = data.scanned_block_height || 0;
-                    $scope.account_scan_start_height = data.start_height || 0;
-                    //$scope.transaction_height = data.transaction_height || 0;
-                    $scope.blockchain_height = data.blockchain_height || 0;
+                    $q.all(promises).then(function() {
+
+                        var scanned_block_timestamp = data.scanned_block_timestamp || 0;
+
+                        if (scanned_block_timestamp > 0)
+                            scanned_block_timestamp = new Date(scanned_block_timestamp * 1000)
+
+
+                        $scope.locked_balance = new JSBigInt(data.locked_funds || 0);
+                        $scope.total_sent = new JSBigInt(data.total_sent || 0);
+                        //$scope.account_scanned_tx_height = data.scanned_height || 0;
+                        $scope.account_scanned_block_height = data.scanned_block_height || 0;
+                        $scope.account_scanned_block_timestamp = scanned_block_timestamp;
+                        $scope.account_scan_start_height = data.start_height || 0;
+                        //$scope.transaction_height = data.transaction_height || 0;
+                        $scope.blockchain_height = data.blockchain_height || 0;
+                    });
+            }, function(response) {
+                    console.log(response)
                 });
-            });
-        }
+            }
     };
 
     $scope.fetchTransactions = function() {
@@ -157,14 +176,26 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
             var view_only = AccountService.isViewOnly();
 
-            $http.post(config.apiUrl + 'get_address_txs', AccountService.getAddressAndViewKey())
-                .success(function(data) {
+            ApiCalls.get_address_txs(AccountService.getAddress(), AccountService.getViewKey())
+                .then(function(response) {
+
+                    var data = response.data;
+
+                    var scanned_block_timestamp = data.scanned_block_timestamp || 0;
+
+                    if (scanned_block_timestamp > 0)
+                        scanned_block_timestamp = new Date(scanned_block_timestamp * 1000)
+
                     $scope.account_scanned_height = data.scanned_height || 0;
                     $scope.account_scanned_block_height = data.scanned_block_height || 0;
+                    $scope.account_scanned_block_timestamp = scanned_block_timestamp;
                     $scope.account_scan_start_height = data.start_height || 0;
                     //$scope.transaction_height = data.transaction_height || 0;
                     $scope.blockchain_height = data.blockchain_height || 0;
+
+
                     var transactions = data.transactions || [];
+
                     for (var i = 0; i < transactions.length; ++i) {
                         if ((transactions[i].spent_outputs || []).length > 0)
                         {
@@ -186,6 +217,21 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                             }
                         }
                         //console.log(transactions[i].total_received, transactions[i].total_sent);
+
+
+                        // decrypt payment_id8 which results in using
+                        // integrated address
+                        if (transactions[i].payment_id.length == 16) {
+                            if (transactions[i].tx_pub_key) {
+                                var decrypted_payment_id8
+                                    = decrypt_payment_id(transactions[i].payment_id,
+                                                        transactions[i].tx_pub_key,
+                                                        AccountService.getViewKey());
+                                //console.log("decrypted_payment_id8: " + decrypted_payment_id8);
+                                transactions[i].payment_id = decrypted_payment_id8;
+                            }
+                        }
+
 
                         if (view_only === false)
                         {
@@ -218,8 +264,9 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         }
 
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
-                        transactions[i].timestamp = new Date(transactions[i].timestamp);
+                        transactions[i].timestamp = new Date(transactions[i].timestamp * 1000);
                     }
+
                     transactions.sort(function(a, b)
                     {
                         return b.id - a.id; // sort by id in database
@@ -232,6 +279,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                     $scope.transactions = transactions;
                     $scope.total_received = new JSBigInt(data.total_received || 0);
                     $scope.total_received_unlocked = new JSBigInt(data.total_received_unlocked || 0);
+                }, function(response){
+                    console.log("error")
                 });
         }
     };

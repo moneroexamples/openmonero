@@ -31,7 +31,7 @@ class TxSearchException: public std::runtime_error
 class TxSearch
 {
     // how frequently update scanned_block_height in Accounts table
-    static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 10; // seconds
+    static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 5; // seconds
 
     // how long should the search thread be live after no request
     // are coming from the frontend. For example, when a user finishes
@@ -93,6 +93,9 @@ public:
 
     void
     populate_known_outputs();
+
+    vector<pair<string, uint64_t>>
+    get_known_outputs_keys();
 
 
     /**

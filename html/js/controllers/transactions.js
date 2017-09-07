@@ -30,7 +30,7 @@ thinwalletCtrls.controller('TransactionsCtrl', function ($scope, $rootScope, $ht
     "use strict";
 
     $scope.pageNum = 0;
-    $scope.pageSize = 10;
+    $scope.pageSize = 20;
 
     $scope.predicate = 'id';
     $scope.reverse = true;

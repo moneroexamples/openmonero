@@ -1,8 +1,8 @@
 {
   "daemon-url" :
   {
-    "mainnet" : "http:://127.0.0.1:18081",
-    "testnet" : "http:://127.0.0.1:28081"
+    "mainnet" : "http://127.0.0.1:18081",
+    "testnet" : "http://127.0.0.1:28081"
   },
   "blockchain-path" :
   {
@@ -19,7 +19,8 @@
   },
   "wallet_import" :
   {
-    "fee"     : 10000000000,
+    "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xmr is 0.1 x 1e12 = 100000000000",
+    "fee"     : 0,
     "testnet" :
     {
       "address" : "9tzmPMTViHYM3z6NAgQni1Qm1Emzxy5hQFibPgWD3LVTAz91yok5Eni1pH6zKhBHzpTU15GZooPHSGHXFvFuXEdmEG2sWAZ",
@@ -27,17 +28,20 @@
     },
     "mainnet" :
     {
-      "address" : "",
-      "viewkey" : ""
+      "_comment": "these are official monero project donation address and viewkey. change it to yours",
+      "address" : "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A",
+      "viewkey" : "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501"
     }
   },
   "refresh_block_status_every_seconds" : 10,
   "search_thread_life_in_seconds"      : 300,
+  "max_number_of_blocks_to_import"     : 22000,
   "ssl" :
   {
     "enable" : false,
-    "_comment": "below paths to crt and key files need to be given",
-    "ssl-crt": "",
-    "ssl-key": ""
+    "_comment": "below are example paths to crt and key files need to be given",
+    "ssl-key": "file:///tmp/server.key",
+    "ssl-crt": "file:///tmp/server.crt",
+    "dh-pem" : "file:///tmp/dh2048.pem"
   }
 }

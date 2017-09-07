@@ -1,0 +1,18 @@
+<div class="modal-background" modal-name="idle-warning">
+    <div class="w-container">
+        <div class="w-clearfix" ng-idle-countdown="countdown">
+            <a class="w-inline-block close-modal" hide-modal>
+                <div class="close-overlay pointer">+</div>
+            </a>
+            <h1 class="head-modal">You're idle. Do something</h1>
+            <div class="subhead-text modal review">You'll be logged out in {{countdown}} seconds</div>
+            <div class="w-form form-wrapper">
+                <label class="field-label">Logging out</label>
+                <div class="review-text">Do something to prevent being logged out</div>
+                <div class="submit-div">
+                    <a class="login-btn modals pointer" hide-modal>Stop timeout!</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

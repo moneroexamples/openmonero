@@ -95,7 +95,7 @@ function mn_random(bits) {
     'use strict';
     if (bits % 32 !== 0) throw "Something weird went wrong: Invalid number of bits - " + bits;
     var array = new Uint32Array(bits / 32);
-    if (!window.crypto) throw "Unfortunately MyMonero only runs on browsers that support the JavaScript Crypto API";
+
     var i = 0;
 
     function arr_is_zero() {
@@ -106,7 +106,15 @@ function mn_random(bits) {
     }
 
     do {
-        window.crypto.getRandomValues(array);
+        /// Doing this in the loop is chunky, blame Microsoft and the in-flux status of the window.crypto standard
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(array);
+        } else if (typeof window !== 'undefined' && typeof window.msCrypto === 'object' && typeof window.msCrypto.getRandomValues === 'function') {
+            window.msCrypto.getRandomValues(array);
+        } else {
+            throw "Unfortunately MyMonero only runs on browsers that support the JavaScript Crypto API";
+        }
+
         ++i;
     } while (i < 5 && arr_is_zero());
     if (arr_is_zero()) {

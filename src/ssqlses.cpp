@@ -18,11 +18,12 @@ ostream& operator<< (std::ostream& os, const Table& data)
 json
 XmrAccount::to_json() const
 {
-    json j {{"id"                  , id},
-            {"address"             , address},
-            {"viewkey"             , viewkey},
-            {"scanned_block_height", scanned_block_height},
-            {"start_height"        , start_height}
+    json j {{"id"                     , id},
+            {"address"                , address},
+            {"viewkey"                , viewkey},
+            {"scanned_block_height"   , scanned_block_height},
+            {"scanned_block_timestamp", static_cast<uint64_t>(scanned_block_timestamp)},
+            {"start_height"           , start_height}
     };
 
     return j;
@@ -34,6 +35,7 @@ XmrTransaction::to_json() const
     json j {{"id"                  , id},
             {"hash"                , hash},
             {"prefix_hash"         , prefix_hash},
+            {"tx_pub_key"          , tx_pub_key},
             {"account_id"          , account_id},
             {"total_received"      , total_received},
             {"total_sent"          , total_sent},

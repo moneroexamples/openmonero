@@ -1,33 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><style id="dark-reader-style" type="text/css">@media screen {
-
-/* Leading rule */
-html {
-  -webkit-filter: invert(100%) hue-rotate(180deg) brightness(110%) contrast(90%) grayscale(20%) sepia(10%) !important;
-}
-
-/* Contrary rule */
-img, iframe, video, *:not(object):not(body)>embed, object,
-*[style*="background:url"]:empty, *[style*="background-image:url"]:empty,
-*[style*="background: url"]:empty, *[style*="background-image: url"]:empty {
-  -webkit-filter: invert(100%) hue-rotate(180deg) !important;
-}
-
-/* Text contrast */
-html {
-  text-shadow: 0 0 0 !important;
-}
-
-/* Full screen */
-*:-webkit-full-screen, *:-webkit-full-screen * {
-  -webkit-filter: none !important;
-}
-
-/* Page background */
-html {
-  background: rgb(13,13,13) !important;
-}
-
-}</style></head><body><div class="coloured">
+<div class="coloured">
   <div class="w-container">
     <h1 class="slider-heading">That was simple. Your Account has been created</h1>
 
@@ -50,7 +21,7 @@ html {
       </div>
     </div>
     <div class="no-account-div top-box">
-      <div class="info-header middle">Understand the Risks in Using this service</div>
+      <div class="info-header middle">Understand the Risks in Using this Service</div>
       <div class="no-account-text thin middle">
 	This is a web-based interface that allows you to use Monero without running a full Monero node. However, because this convenience
 	comes at a cost: it is extremely difficult to securely deliver its code to your browser. This means that there is
@@ -65,9 +36,9 @@ html {
     </div>
     <div class="mid-div">
       <div class="w-form formwrap login-key-form">
-        <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html" ng-submit="login(seed, mnemonic, mnemonic_confirmation)" form-autofill-fix="">
+        <form id="email-form" name="email-form" data-name="Email Form" data-redirect="/overview.html" ng-submit="login(seed, mnemonic, mnemonic_confirmation)" >
           <label class="info-header form middle" for="Login-Key">Confirm your Private Login Key</label>
-          <input class="w-input form-layout mnemonic-page" id="Login-Key" type="text" ng-model="mnemonic_confirmation" placeholder="Type your Private Login Key out here to confirm it" name="Login-Key" data-name="Login Key" autocomplete="off" required="">
+          <input class="w-input mnemonic-page" id="Login-Key" type="text" ng-model="mnemonic_confirmation" placeholder="Type your Private Login Key out here to confirm it" name="Login-Key" data-name="Login Key" autocomplete="off" required="">
           <input class="w-button mnemonic-login" id="form-submit" type="submit" value="I&#39;ve written down my Private Login Key, log me in!" data-wait="Please wait...">
         </form>
         <div class="w-form-fail" style="display: block;" ng-show="!!error">
@@ -77,4 +48,3 @@ html {
     </div>
   </div>
 </div>
-</body></html>

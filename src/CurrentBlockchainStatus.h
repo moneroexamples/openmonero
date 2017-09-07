@@ -49,16 +49,18 @@ struct CurrentBlockchainStatus
 
     static uint64_t refresh_block_status_every_seconds;
 
+    static uint64_t max_number_of_blocks_to_import;
+
     static uint64_t search_thread_life_in_seconds;
 
-    static string   import_payment_address;
-    static string   import_payment_viewkey;
+    static string   import_payment_address_str;
+    static string   import_payment_viewkey_str;
     static uint64_t import_fee;
     static uint64_t spendable_age;
     static uint64_t spendable_age_coinbase;
 
-    static account_public_address address;
-    static secret_key             viewkey;
+    static account_public_address import_payment_address;
+    static secret_key             import_payment_viewkey;
 
     // vector of mempool transactions that all threads
     // can refer to
@@ -121,6 +123,12 @@ struct CurrentBlockchainStatus
                     const vector<uint64_t>& absolute_offsets,
                     vector<cryptonote::output_data_t>& outputs);
 
+    static string
+    get_account_integrated_address_as_str(crypto::hash8 const& payment_id8);
+
+    static string
+    get_account_integrated_address_as_str(string const& payment_id8_str);
+
     static bool
     get_output(const uint64_t amount,
                const uint64_t global_output_index,
@@ -181,12 +189,29 @@ struct CurrentBlockchainStatus
                         json& transactions);
 
     static bool
+    find_tx_in_mempool(crypto::hash const& tx_hash,
+                       transaction& tx);
+
+    static bool
+    get_tx(crypto::hash const& tx_hash, transaction& tx);
+
+    static bool
+    get_tx(string const& tx_hash_str, transaction& tx);
+
+    static bool
+    get_tx_block_height(crypto::hash const& tx_hash, int64_t& tx_height);
+
+    static bool
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
 
     static bool
     get_searched_blk_no(const string& address,
                         uint64_t& searched_blk_no);
+
+    static bool
+    get_known_outputs_keys(string const& address,
+                           vector<pair<string, uint64_t>>& known_outputs_keys);
 
     static void
     clean_search_thread_map();

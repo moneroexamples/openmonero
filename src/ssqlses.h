@@ -30,11 +30,12 @@ public:
     friend std::ostream& operator<< (std::ostream& stream, const Table& data);
 };
 
-sql_create_7(Accounts, 1, 2,
+sql_create_8(Accounts, 1, 2,
              sql_bigint_unsigned, id,
              sql_varchar        , address,
              sql_char           , viewkey_hash,
              sql_bigint_unsigned, scanned_block_height,
+             sql_timestamp      , scanned_block_timestamp,
              sql_bigint_unsigned, start_height,
              sql_timestamp      , created,
              sql_timestamp      , modified);
@@ -52,9 +53,11 @@ struct XmrAccount : public Accounts, Table
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT INTO `Accounts` (`address`, `viewkey_hash`,`start_height`, `scanned_block_height`)
+        INSERT INTO `Accounts` (`address`, `viewkey_hash`,
+                                `scanned_block_height`,
+                                `scanned_block_timestamp`, `start_height`)
                                 VALUES
-                                (%0q, %1q, %2q, %3q);
+                                (%0q, %1q, %2q, %3q, %4q);
     )";
 
     using Accounts::Accounts;
@@ -69,10 +72,11 @@ struct XmrAccount : public Accounts, Table
 
 };
 
-sql_create_16(Transactions, 1, 2,
+sql_create_17(Transactions, 1, 2,
               sql_bigint_unsigned, id,
               sql_varchar        , hash,
               sql_varchar        , prefix_hash,
+              sql_varchar        , tx_pub_key,
               sql_bigint_unsigned, account_id,
               sql_bigint_unsigned, blockchain_tx_id,
               sql_bigint_unsigned, total_received,
@@ -108,16 +112,18 @@ struct XmrTransaction : public Transactions, Table
     )";
 
     static constexpr const char* INSERT_STMT = R"(
-        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `account_id`, `blockchain_tx_id`,
+        INSERT IGNORE INTO `Transactions` (`hash`, `prefix_hash`, `tx_pub_key`, `account_id`, 
+                                           `blockchain_tx_id`,
                                            `total_received`, `total_sent`, `unlock_time`,
                                            `height`, `coinbase`, `is_rct`, `rct_type`,
                                            `spendable`,
                                            `payment_id`, `mixin`, `timestamp`)
                                 VALUES (%0q, %1q, %2q, %3q,
-                                        %4q, %5q, %6q,
-                                        %7q, %8q, %9q, %10q,
-                                        %11q,
-                                        %12q, %13q, %14q);
+                                        %4q, 
+                                        %5q, %6q, %7q, 
+                                        %8q, %9q, %10q, %11q,
+                                        %12q, 
+                                        %13q, %14q, %15q);
     )";
 
     static constexpr const char* MARK_AS_SPENDABLE_STMT = R"(
