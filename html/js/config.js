@@ -1,6 +1,6 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
-    mainnetExplorerUrl: "https://xmrchain.net/",
+    mainnetExplorerUrl: "https://moneroexplorer.com/",
     testnetExplorerUrl: "http://139.162.32.245:8082/",
     testnet: false,
     coinUnitPlaces: 12,

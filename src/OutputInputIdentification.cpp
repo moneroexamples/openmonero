@@ -249,6 +249,9 @@ OutputInputIdentification::identify_inputs(
             // is without our output, we can assume this tx does
             // not contain any of our spendings.
             //break;
+
+            // this break was disable due to this issue
+            // https://github.com/moneroexamples/openmonero/issues/44
         }
 
     } // for (const txin_to_key& in_key: input_key_imgs)

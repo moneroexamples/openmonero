@@ -16,6 +16,21 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
 
     $scope.error = "";
 
+    // set data to be shown in the modal window
+    $scope.ring_size        = "";
+    $scope.fee              = "";
+    $scope.tx_size          = "";
+    $scope.no_confirmations = "";
+    $scope.tx_height        = "";
+    $scope.tx_pub_key       = "";
+    $scope.coinbase         = "";
+    $scope.timestamp        = "";
+    $scope.tx_age           = "";
+    $scope.payment_id       = "";
+    $scope.tx_amount        = "";
+
+    $scope.fetching = true;
+
     var tx_hash = ModalService.getModalUrlParams("tx_hash");
 
     //console.log(tx_hash);
@@ -102,6 +117,8 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
             }
 
             $scope.payment_id = data.payment_id;
+
+            $scope.fetching = false;
 
              //console.log($scope.tx_amount);
 

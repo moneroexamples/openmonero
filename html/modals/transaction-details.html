@@ -6,7 +6,16 @@
       </a>
       <h1 class="head-modal">Transaction details</h1>
       <div class="subhead-text modal review" style="margin-bottom: 10px">{{ tx_hash }}</div>
-      <div class="w-form form-wrapper">
+
+      <div class="w-form form-wrapper" ng-show="fetching">
+        <div class="w-row">
+          <div class="w-col w-col-12 responsive-column">
+            <div class="review-text">Fetching data. Please wait ...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-form form-wrapper" ng-show="!fetching">
         <div class="w-row">
           <div class="w-col w-col-3 responsive-column">
             <label class="field-label review" for="Amount">Amount</label>
@@ -55,10 +64,10 @@
             <a class="login-link" href="{{ explorerLink }} " target="_blank">{{ explorerLink }} </a>
           </div>
         </div>
-        <br/>
-        <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
-          <p>{{error}}</p>
-        </div>
+      </div>
+      <br/>
+      <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+        <p>{{error}}</p>
       </div>
     </div>
   </div>
