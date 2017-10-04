@@ -807,7 +807,7 @@ ptime_to_time_t(const pt::ptime& in_ptime)
 
 bool
 decode_ringct(const rct::rctSig& rv,
-              const crypto::public_key pub,
+              const crypto::public_key &pub,
               const crypto::secret_key &sec,
               unsigned int i,
               rct::key & mask,
