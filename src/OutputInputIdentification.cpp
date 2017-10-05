@@ -248,10 +248,7 @@ OutputInputIdentification::identify_inputs(
             // in all inputs in a given txs. Thus, if a single input
             // is without our output, we can assume this tx does
             // not contain any of our spendings.
-            //break;
-
-            // this break was disable due to this issue
-            // https://github.com/moneroexamples/openmonero/issues/44
+            break;
         }
 
     } // for (const txin_to_key& in_key: input_key_imgs)
