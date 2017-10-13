@@ -74,7 +74,11 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
         uint64_t current_blockchain_height = get_current_blockchain_height();
 
-        uint64_t current_blockchain_timestamp {0};
+        // initialize current blockchain timestamp with current time
+        // in a moment we will try to get last block timestamp
+        // to replace this value. But if it fails, we just use current
+        // timestamp
+        uint64_t current_blockchain_timestamp = std::time(nullptr);
 
         // get last block so we have its timestamp when
         // createing the account
