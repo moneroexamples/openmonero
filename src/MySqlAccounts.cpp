@@ -1090,7 +1090,7 @@ MySqlAccounts::launch_mysql_pinging_thread()
      {
          while (true)
          {
-             std::this_thread::sleep_for(chrono::seconds(14400)); // 4 hours
+             std::this_thread::sleep_for(chrono::seconds(7200)); // 2 hours
 
              if (!conn_ptr->ping())
              {
