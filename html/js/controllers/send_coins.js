@@ -45,6 +45,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
     var view_only = AccountService.isViewOnly();
 
+    // our address and associated prv view key
+    var changeAddress = AccountService.getAddressAndViewKey();
+
     var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
 
     // few multiplayers based on uint64_t wallet2::get_fee_multiplier
@@ -649,7 +652,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
                             splittedDsts, using_outs,
                             mix_outs, mixin, neededFee,
                             payment_id, pid_encrypt,
-                            realDestViewKey, 0, rct);
+                            realDestViewKey, 0, rct,
+                            changeAddress);
 
                     } catch (e) {
                         deferred.reject("Failed to create transaction: " + e);

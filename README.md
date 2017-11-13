@@ -32,14 +32,11 @@ to MyMonero. They include:
  - legacy address + payment_id system replaced with integrated addresses for better privacy.
  - free, time based imports of recent transactions added.
  - new transaction details window.
+ - sending xmr to a subaddress (not receiving nor generating subaddresses for now).
    
 ## Testnet version
 
 - [http://139.162.32.245:81](http://139.162.32.245:81)
-
-or alternatively, owning to [Gingeropolous](https://github.com/Gingeropolous):
-
-- [http://testwallet.moneroworld.com](http://testwallet.moneroworld.com)
 
 This is Open Monero running on testnet network. You can use it to play around with it. 
 Since this is testnet version, frequent changes and database resets are expected. Also,
@@ -91,7 +88,7 @@ For other Linux operating systems, the instructions are analogical.
 
 #### Monero download and compilation
 
-Download and compile recent Monero realease into your home folder:
+Download and compile recent Monero release into your home folder:
 
 ```bash
 # first install monero dependecines
@@ -109,7 +106,7 @@ git clone https://github.com/monero-project/monero
 cd monero/
 
 # checkout last monero version
-git checkout -b last_release v0.11.0.0
+git checkout -b last_release v0.11.1.0
 
 make
 ```
