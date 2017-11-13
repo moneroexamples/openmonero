@@ -47,11 +47,15 @@ var cnUtil = (function(initConfig) {
     var ENCRYPTED_PAYMENT_ID_TAIL = 141;
     var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
     var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
+    var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefix;
+
     if (config.testnet === true)
     {
         CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixTestnet;
         CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixTestnet;
+        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixTestnet;
     }
+
     var UINT64_MAX = new JSBigInt(2).pow(64);
     var CURRENT_TX_VERSION = 2;
     var OLD_TX_VERSION = 1;
@@ -507,13 +511,21 @@ var cnUtil = (function(initConfig) {
         var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
         return cnBase58.encode(prefix + spend.pub).slice(0, 44);
     };
+
+    this.is_subaddress = function(address) {
+        var dec = cnBase58.decode(address);
+        var expectedPrefixSub = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
+        var prefix = dec.slice(0, expectedPrefixSub.length);
+        return (prefix === expectedPrefixSub);
+    }
     
     this.decode_address = function(address) {
         var dec = cnBase58.decode(address);
         var expectedPrefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
         var expectedPrefixInt = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);
+        var expectedPrefixSub = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
         var prefix = dec.slice(0, expectedPrefix.length);
-        if (prefix !== expectedPrefix && prefix !== expectedPrefixInt) {
+        if (prefix !== expectedPrefix && prefix !== expectedPrefixInt && prefix !== expectedPrefixSub) {
             throw "Invalid address prefix";
         }
         dec = dec.slice(expectedPrefix.length);
@@ -523,7 +535,11 @@ var cnUtil = (function(initConfig) {
             var intPaymentId = dec.slice(128, 128 + (INTEGRATED_ID_SIZE * 2));
             var checksum = dec.slice(128 + (INTEGRATED_ID_SIZE * 2), 128 + (INTEGRATED_ID_SIZE * 2) + (ADDRESS_CHECKSUM_SIZE * 2));
             var expectedChecksum = this.cn_fast_hash(prefix + spend + view + intPaymentId).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+        } else if (prefix === expectedPrefix) {
+            var checksum = dec.slice(128, 128 + (ADDRESS_CHECKSUM_SIZE * 2));
+            var expectedChecksum = this.cn_fast_hash(prefix + spend + view).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
         } else {
+            // if its not regular address, nor integrated, than it must be subaddress
             var checksum = dec.slice(128, 128 + (ADDRESS_CHECKSUM_SIZE * 2));
             var expectedChecksum = this.cn_fast_hash(prefix + spend + view).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
         }
@@ -1629,7 +1645,7 @@ var cnUtil = (function(initConfig) {
         return sigs;
     };
 
-    this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
+    this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress) {
         //we move payment ID stuff here, because we need txkey to encrypt
         var txkey = this.random_keypair();
         console.log(txkey);
@@ -1648,6 +1664,12 @@ var cnUtil = (function(initConfig) {
             console.log("Extra nonce: " + nonce);
             extra = this.add_nonce_to_extra(extra, nonce);
         }
+
+        // for sending to a subaddress, need to generate new tx public key
+
+        //var sub_addr_decoded = this.decode_address(dsts[0].address); // for example dest[0] is subaddress
+        //txkey.pub = ge_scalarmult(sub_addr_decoded.spend, txkey.sec);
+
         var tx = {
             unlock_time: unlock_time,
             version: rct ? CURRENT_TX_VERSION : OLD_TX_VERSION,
@@ -1661,7 +1683,8 @@ var cnUtil = (function(initConfig) {
         } else {
             tx.signatures = [];
         }
-        tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
+
+        //tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
         tx.prvkey = txkey.sec;
 
         var in_contexts  = [];
@@ -1712,12 +1735,33 @@ var cnUtil = (function(initConfig) {
         var outputs_money = JSBigInt.ZERO;
         var out_index = 0;
         var amountKeys = []; //rct only
+
+        // keep generated tx public key, just in case when sending to a subaddress.
+        // when sending to a subaddress, new txkey.pub is generated, but txkey.sec stays same
+        var orginal_tx_pub_key = txkey.pub;
+
         for (i = 0; i < dsts.length; ++i) {
             if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
                 throw "dst.amount < 0"; //amount can be zero if no change
             }
             dsts[i].keys = this.decode_address(dsts[i].address);
-            var out_derivation = this.generate_key_derivation(dsts[i].keys.view, txkey.sec);
+
+            if (this.is_subaddress(dsts[i].address))
+            {
+               txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
+            }
+
+            var out_derivation;
+
+            if (dsts[i].address === changeAddress.address)
+            {
+                out_derivation = this.generate_key_derivation(txkey.pub, changeAddress.view_key);
+            }
+            else
+            {
+                out_derivation = this.generate_key_derivation(dsts[i].keys.view, txkey.sec);
+            }
+
             if (rct) {
                 amountKeys.push(this.derivation_to_scalar(out_derivation, out_index));
             }
@@ -1734,9 +1778,14 @@ var cnUtil = (function(initConfig) {
             ++out_index;
             outputs_money = outputs_money.add(dsts[i].amount);
         }
+
+        tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
+
         if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
             throw "outputs money (" + this.formatMoneyFull(outputs_money) + ") + fee (" + this.formatMoneyFull(fee_amount) + ") > inputs money (" + this.formatMoneyFull(inputs_money) + ")";
         }
+
+
         if (!rct) {
             for (i = 0; i < sources.length; ++i) {
                 var src_keys = [];
@@ -1795,7 +1844,7 @@ var cnUtil = (function(initConfig) {
         console.log(tx);
         return tx;
     };
-    this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
+    this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress) {
         unlock_time = unlock_time || 0;
         mix_outs = mix_outs || [];
         var i, j;
@@ -1915,7 +1964,7 @@ var cnUtil = (function(initConfig) {
         } else if (cmp > 0) {
             throw "Need more money than found! (have: " + cnUtil.formatMoney(found_money) + " need: " + cnUtil.formatMoney(needed_money) + ")";
         }
-        return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct);
+        return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress);
     };
 
     this.estimateRctSize = function(inputs, mixin, outputs) {

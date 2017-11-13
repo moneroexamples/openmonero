@@ -12,8 +12,10 @@ var config = {
     coinUriPrefix: 'monero:',
     addressPrefix: 18,
     integratedAddressPrefix: 19,
+    subAddressPrefix: 42,
     addressPrefixTestnet: 53,
     integratedAddressPrefixTestnet: 54,
+    subAddressPrefixTestnet: 63,
     feePerKB: new JSBigInt('2000000000'),//20^10 - for testnet its not used, as fee is dynamic.
     dustThreshold: new JSBigInt('1000000000'),//10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
     txChargeRatio: 0.5,
