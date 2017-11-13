@@ -1736,10 +1736,6 @@ var cnUtil = (function(initConfig) {
         var out_index = 0;
         var amountKeys = []; //rct only
 
-        // keep generated tx public key, just in case when sending to a subaddress.
-        // when sending to a subaddress, new txkey.pub is generated, but txkey.sec stays same
-        var orginal_tx_pub_key = txkey.pub;
-
         for (i = 0; i < dsts.length; ++i) {
             if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
                 throw "dst.amount < 0"; //amount can be zero if no change
