@@ -41,7 +41,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
 
     if (config.testnet == true) {
         // just some dummy account, as not to fill login form every time.
-        $scope.mnemonic = "teeming boil darted behind ashtray simplest hornet buying last lukewarm testing mocked lending younger medicate sawmill flippant aside victim hive goodbye linen testing arena testing";
+        $scope.mnemonic = "agenda shrugged liquid extra mundane phone nomad oust duckling sifting pledge loyal royal urban skater bawled gusts bounced boil violin mumble gags axle sapling shrugged";
     } else {
         $scope.decode = false;
         $scope.address = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";
