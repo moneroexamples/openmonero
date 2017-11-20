@@ -44,6 +44,13 @@
           <div class="move-text-div">
             <div class="review-text">{{transferConfirmDialog.tx_prv_key}}</div>
           </div>
+          <div class="w-row">
+            <div class="w-col w-col-12 responsive-column">
+              <label class="field-label review" for="raw_tx_data">Raw tx data to be submitted to the backend</label>
+              <textarea id="raw_tx_data" rows="4" cols="100">{{transferConfirmDialog.raw_tx}}</textarea>
+            </div>
+          </div>
+
           <br/>
           <div class="move-text-div">
             <div class="review-text ">After pressing "Confirm", an attempt will be made to

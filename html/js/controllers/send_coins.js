@@ -95,7 +95,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
     $scope.transferConfirmDialog = undefined;
 
     function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key,
-                             payment_id, mixin, priority, txBlobKBytes) {
+                             payment_id, mixin, priority, txBlobKBytes, raw_tx) {
 
         var deferred = $q.defer();
 
@@ -114,6 +114,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
             tx_prv_key: tx_prv_key,
             payment_id: payment_id,
             mixin: mixin + 1,
+            raw_tx: raw_tx,
             txBlobKBytes: Math.round(txBlobKBytes*1e3) / 1e3,
             priority: priority_names[priority - 1],
             confirm: function() {
@@ -433,7 +434,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
             confirmTransfer(realDsts[0].address, realDsts[0].amount,
                             tx_hash, neededFee, tx_prvkey, payment_id,
-                            mixin, priority, txBlobKBytes).then(function() {
+                            mixin, priority, txBlobKBytes, raw_tx).then(function() {
 
                 //alert('Confirmed ');
 

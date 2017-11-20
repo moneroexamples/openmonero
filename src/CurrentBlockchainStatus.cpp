@@ -752,7 +752,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     if (search_thread_exist(acc.address))
     {
         // thread for this address exist, dont make new one
-        cout << "Thread exisist, dont make new one" << endl;
+        cout << "Thread exists, dont make new one" << endl;
         return true; // this is still OK, so return true.
     }
 
