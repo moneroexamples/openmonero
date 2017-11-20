@@ -657,6 +657,15 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
             {"amount_outs", json::array()}
     };
 
+
+    if (count > 21)
+    {
+        cerr << "Request ring size too big" << '\n';
+        j_response["status"] = "error";
+        j_response["error"]  = fmt::format("Request ring size {:d} too large", count);
+        session_close(session, j_response.dump());
+    }
+
     vector<uint64_t> amounts;
 
     try

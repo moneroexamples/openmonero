@@ -617,9 +617,18 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
                     ApiCalls.get_random_outs(request.amounts, request.count)
                         .then(function(response) {
                             var data = response.data;
+
+                            if (data.status === "error")
+                            {
+                                $scope.status = "";
+                                $scope.submitting = false;
+                                $scope.error = "Failed to create transaction: " + data.error;
+                                return;
+                            }
+
                             createTx(data.amount_outs);
                         }, function(data) {
-                                deferred.reject('Failed to get unspent outs');
+                            deferred.reject('Failed to get unspent outs');
                         });
                 } else if (mixin < 0 || isNaN(mixin)) {
                     deferred.reject("Invalid mixin");
