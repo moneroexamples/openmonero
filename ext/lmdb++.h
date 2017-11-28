@@ -812,7 +812,7 @@ namespace lmdb {
   static inline bool cursor_get(MDB_cursor* cursor, MDB_val* key, MDB_val* data, MDB_cursor_op op);
   static inline void cursor_put(MDB_cursor* cursor, MDB_val* key, MDB_val* data, unsigned int flags);
   static inline void cursor_del(MDB_cursor* cursor, unsigned int flags);
-  static inline void cursor_count(MDB_cursor* cursor, std::size_t& count);
+  static inline void cursor_count(MDB_cursor* cursor, mdb_size_t& count);
 }
 
 /**
@@ -916,7 +916,7 @@ lmdb::cursor_del(MDB_cursor* const cursor,
  */
 static inline void
 lmdb::cursor_count(MDB_cursor* const cursor,
-                   std::size_t& count) {
+                   mdb_size_t& count) {
   const int rc = ::mdb_cursor_count(cursor, &count);
   if (rc != MDB_SUCCESS) {
     error::raise("mdb_cursor_count", rc);
