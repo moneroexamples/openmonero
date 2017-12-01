@@ -74,8 +74,8 @@ The Open Monero consists of four components that need to be setup for it to work
 #### Performance
 
 Open Monero is not as fast as MyMonero. This is because it is basic, easy to understand
- and straight forward implementation of the backend. Thus, it does not use any catching
- of transactions, blocks, complex database structures and SQL queries. Also, no ongoing 
+ and straight forward implementation of the backend. Thus, it does not use any special memory
+ buffers/caches for transactions, blocks, complex database structures and SQL queries. Also, no ongoing 
  monitoring of user's transactions is happening, since viewkey is not stored. Transaction
  search threads start when user logs in (viewkey and address are submitted to the search thread), 
  and finish shorty after logout. Once the search threads stop, 
