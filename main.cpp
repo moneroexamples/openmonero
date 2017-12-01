@@ -89,9 +89,11 @@ string deamon_url = testnet
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
+xmreg::MySqlConnector::port     = config_json["database"]["port"];
 xmreg::MySqlConnector::username = config_json["database"]["user"];
 xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
+
 
 // set blockchain status monitoring thread parameters
 xmreg::CurrentBlockchainStatus::blockchain_path

@@ -16,6 +16,7 @@ namespace xmreg {
 
 
 string MySqlConnector::url;
+size_t MySqlConnector::port;
 string MySqlConnector::username;
 string MySqlConnector::password;
 string MySqlConnector::dbname;
@@ -35,7 +36,8 @@ MySqlConnector::connect()
     try
     {
         if (!conn.connect(dbname.c_str(), url.c_str(),
-                          username.c_str(), password.c_str()))
+                          username.c_str(), password.c_str(),
+                          port))
         {
             cerr << "Connection to Mysql failed!" << endl;
             return false;

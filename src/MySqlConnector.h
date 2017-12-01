@@ -42,6 +42,7 @@ class MySqlConnector
 public:
 
     static string url;
+    static size_t port;
     static string username;
     static string password;
     static string dbname;
