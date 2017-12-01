@@ -46,6 +46,16 @@ MySqlConnector::connect()
         MYSQL_EXCEPTION_MSG(e);
         return false;
     }
+    catch (std::exception const& e)
+    {
+        cerr << e.what() << '\n';
+        return false;
+    }
+    catch (...)
+    {
+        cerr << "Unknown exception in MySqlConnector::connect()" << '\n';
+        return false;
+    }
 
     return true;
 }
