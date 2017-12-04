@@ -1645,7 +1645,7 @@ var cnUtil = (function(initConfig) {
         return sigs;
     };
 
-    this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress) {
+    this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         //we move payment ID stuff here, because we need txkey to encrypt
         var txkey = this.random_keypair();
         console.log(txkey);
@@ -1749,9 +1749,11 @@ var cnUtil = (function(initConfig) {
 
             var out_derivation;
 
-            if (dsts[i].address === changeAddress.address)
+            // if destination public view address matches our own public key
+            // we send change to ourself
+            if (dsts[i].keys.view === keys.view.pub)
             {
-                out_derivation = this.generate_key_derivation(txkey.pub, changeAddress.view_key);
+                out_derivation = this.generate_key_derivation(txkey.pub, keys.view.sec);
             }
             else
             {
@@ -1840,7 +1842,7 @@ var cnUtil = (function(initConfig) {
         console.log(tx);
         return tx;
     };
-    this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress) {
+    this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         unlock_time = unlock_time || 0;
         mix_outs = mix_outs || [];
         var i, j;
@@ -1960,7 +1962,7 @@ var cnUtil = (function(initConfig) {
         } else if (cmp > 0) {
             throw "Need more money than found! (have: " + cnUtil.formatMoney(found_money) + " need: " + cnUtil.formatMoney(needed_money) + ")";
         }
-        return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, changeAddress);
+        return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct);
     };
 
     this.estimateRctSize = function(inputs, mixin, outputs) {
