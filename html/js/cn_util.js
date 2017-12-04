@@ -1749,9 +1749,9 @@ var cnUtil = (function(initConfig) {
 
             var out_derivation;
 
-            // if destination public view address matches our own public key
+            // if destination public view and spend keys matches our own public keies
             // we send change to ourself
-            if (dsts[i].keys.view === keys.view.pub)
+            if (dsts[i].keys.view === keys.view.pub && dsts[i].keys.spend === keys.spend.pub)
             {
                 out_derivation = this.generate_key_derivation(txkey.pub, keys.view.sec);
             }
