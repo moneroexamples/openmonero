@@ -53,9 +53,20 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         return;
     }
 
-    string xmr_address = j_request["address"];
-    string view_key    = j_request["view_key"];
+    string xmr_address;
+    string view_key;
 
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     // a placeholder for exciting or new account data
     XmrAccount acc;
@@ -158,8 +169,20 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
         return;
     }
 
-    string xmr_address = j_request["address"];
-    string view_key    = j_request["view_key"];
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -342,8 +365,20 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
         return;
     }
 
-    const string& xmr_address = j_request["address"];
-    const string& view_key    = j_request["view_key"];
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -481,15 +516,36 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         return;
     }
 
-    string xmr_address = j_request["address"];
-    string view_key    = j_request["view_key"];
+    string xmr_address;
+    string view_key;
+    uint64_t mixin {4};
+    bool use_dust {false};
+    uint64_t dust_threshold {1000000000};
+    uint64_t amount {0};
 
-    uint64_t mixin     = j_request["mixin"];
-    bool use_dust      = j_request["use_dust"];
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
 
-    uint64_t dust_threshold = boost::lexical_cast<uint64_t>(j_request["dust_threshold"].get<string>());
-    uint64_t amount         = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
+        mixin       = j_request["mixin"];
+        use_dust    = j_request["use_dust"];
 
+        dust_threshold = boost::lexical_cast<uint64_t>(j_request["dust_threshold"].get<string>());
+        amount         = boost::lexical_cast<uint64_t>(j_request["amount"].get<string>());
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
+    catch (boost::bad_lexical_cast const& e)
+    {
+        cerr << "Bed lexical cast" << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     // make hash of the submited viewkey. we only store
     // hash of viewkey in database, not acctual viewkey.
@@ -649,14 +705,29 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 void
 YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const Bytes & body)
 {
-    json j_request = body_to_json(body);
+    json j_request;
+    json j_response;
 
-    uint64_t count = j_request["count"];
+    vector<string> requested_values;
 
-    json j_response  {
-            {"amount_outs", json::array()}
+    if (!parse_request(body, requested_values, j_request, j_response))
+    {
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    uint64_t count;
+
+    try
+    {
+        count = j_request["count"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
     };
-
 
     if (count > 21)
     {
@@ -968,8 +1039,20 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
         return;
     }
 
-    string xmr_address           = j_request["address"];
-    string view_key              = j_request["view_key"];
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     uint64_t no_blocks_to_import {1000};
 
@@ -1061,10 +1144,22 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         return;
     }
 
-    string const& xmr_address = j_request["address"];
-    string const& view_key    = j_request["view_key"];
-    string const& tx_hash_str = j_request["tx_hash"];
+    string xmr_address;
+    string view_key;
+    string tx_hash_str;
 
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+        tx_hash_str = j_request["tx_hash"];
+    }
+    catch (json::exception const& e)
+    {
+        cerr << "json exception: " << e.what() << '\n';
+        session_close(session, j_response.dump());
+        return;
+    }
 
     j_response["status"] = "error";
     j_response["error"]  = "Some error occured";
@@ -1079,7 +1174,6 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         session_close(session, j_response.dump());
         return;
     }
-
 
     transaction tx;
 
