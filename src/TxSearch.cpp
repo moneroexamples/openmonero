@@ -696,7 +696,7 @@ TxSearch::find_txs_in_mempool(
 }
 
 
-pair<account_public_address, secret_key>
+pair<address_parse_info, secret_key>
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);

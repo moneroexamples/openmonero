@@ -13,6 +13,7 @@
 
 #include "CurrentBlockchainStatus.h"
 #include "MySqlAccounts.h"
+#include "../gen/version.h"
 
 #include "../ext/restbed/source/restbed"
 

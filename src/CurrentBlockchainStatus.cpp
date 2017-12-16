@@ -35,7 +35,7 @@ vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address_str;
 string                  CurrentBlockchainStatus::import_payment_viewkey_str;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
-account_public_address  CurrentBlockchainStatus::import_payment_address;
+address_parse_info      CurrentBlockchainStatus::import_payment_address;
 secret_key              CurrentBlockchainStatus::import_payment_viewkey;
 map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
@@ -329,7 +329,7 @@ CurrentBlockchainStatus::get_account_integrated_address_as_str(
         crypto::hash8 const& payment_id8)
 {
     return cryptonote::get_account_integrated_address_as_str(testnet,
-                    import_payment_address, payment_id8);
+                    import_payment_address.address, payment_id8);
 }
 
 string
@@ -654,7 +654,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
             derive_public_key(derivation,
                               output_idx_in_tx,
-                              import_payment_address.m_spend_public_key,
+                              import_payment_address.address.m_spend_public_key,
                               generated_tx_pubkey);
 
             // check if generated public key matches the current output's key
@@ -846,7 +846,7 @@ CurrentBlockchainStatus::search_thread_exist(const string& address)
 bool
 CurrentBlockchainStatus::get_xmr_address_viewkey(
         const string& address_str,
-        account_public_address& address,
+        address_parse_info& address,
         secret_key& viewkey)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);

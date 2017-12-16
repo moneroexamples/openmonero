@@ -1295,7 +1295,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         j_response["payment_id"] = string {};
         j_response["timestamp"]  = default_timestamp;
 
-        account_public_address address;
+        address_parse_info address_info;
         secret_key viewkey;
 
         // to get info about recived xmr in this tx, we calculate it from
@@ -1305,9 +1305,9 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         // it differently than before. Its not great, since we reinvent the wheel
         // but its worth double checking the mysql data, and also allows for new
         // implementation in the frontend.
-        if (CurrentBlockchainStatus::get_xmr_address_viewkey(xmr_address, address, viewkey))
+        if (CurrentBlockchainStatus::get_xmr_address_viewkey(xmr_address, address_info, viewkey))
         {
-            OutputInputIdentification oi_identification {&address, &viewkey, &tx};
+            OutputInputIdentification oi_identification {&address_info, &viewkey, &tx};
 
             oi_identification.identify_outputs();
 
@@ -1412,7 +1412,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
                         // Class that is resposnible for idenficitaction of our outputs
                         // and inputs in a given tx.
                         OutputInputIdentification oi_identification
-                                {&address, &viewkey, &tx};
+                                {&address_info, &viewkey, &tx};
 
                         // no need mutex here, as this will be exectued only after
                         // the above. there is no threads here.

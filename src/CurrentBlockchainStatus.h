@@ -59,8 +59,8 @@ struct CurrentBlockchainStatus
     static uint64_t spendable_age;
     static uint64_t spendable_age_coinbase;
 
-    static account_public_address import_payment_address;
-    static secret_key             import_payment_viewkey;
+    static address_parse_info import_payment_address;
+    static secret_key         import_payment_viewkey;
 
     // vector of mempool transactions that all threads
     // can refer to
@@ -182,7 +182,7 @@ struct CurrentBlockchainStatus
 
     static bool
     get_xmr_address_viewkey(const string& address_str,
-                            account_public_address& address,
+                            address_parse_info& address,
                             secret_key& viewkey);
     static bool
     find_txs_in_mempool(const string& address_str,

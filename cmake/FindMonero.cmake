@@ -30,7 +30,7 @@
 
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;
 		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;
-                blockchain_db;ringct;wallet;cncrypto)
+		blockchain_db;ringct;wallet;cncrypto;easylogging;version;checkpoints)
 
 set(Xmr_INCLUDE_DIRS "${CPP_MONERO_DIR}")
 
@@ -42,11 +42,11 @@ foreach (l ${LIBS})
 	string(TOUPPER ${l} L)
 
 	find_library(Xmr_${L}_LIBRARY
-		NAMES ${l}
-		PATHS ${CMAKE_LIBRARY_PATH}
-		PATH_SUFFIXES "/src/${l}" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src"
-		NO_DEFAULT_PATH
-	)
+			NAMES ${l}
+			PATHS ${CMAKE_LIBRARY_PATH}
+			PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src" "/external/easylogging++/"
+			NO_DEFAULT_PATH
+			)
 
 	set(Xmr_${L}_LIBRARIES ${Xmr_${L}_LIBRARY})
 
@@ -57,18 +57,11 @@ foreach (l ${LIBS})
 
 endforeach()
 
-
-if (EXISTS ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-	add_library(unbound STATIC IMPORTED)
-	set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
-endif()
-
-
-if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
-	add_library(easylogging STATIC IMPORTED)
-	set_property(TARGET easylogging
-			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
-endif()
+#if (EXISTS ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
+#	add_library(easylogging STATIC IMPORTED)
+#	set_property(TARGET easylogging
+#			PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/easylogging++/libeasylogging.a)
+#endif()
 
 message(STATUS ${MONERO_SOURCE_DIR}/build)
 
