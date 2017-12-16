@@ -90,7 +90,7 @@ For other Linux operating systems, the instructions are analogical.
 
 #### Monero download and compilation
 
-Download and compile recent Monero release into your home folder:
+Download and compile recent Monero into your home folder:
 
 ```bash
 # first install monero dependecines
@@ -107,8 +107,6 @@ git clone https://github.com/monero-project/monero
 
 cd monero/
 
-# checkout last monero version
-git checkout -b last_release v0.11.1.0
 
 make
 ```
