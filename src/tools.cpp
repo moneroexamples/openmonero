@@ -836,12 +836,14 @@ decode_ringct(const rct::rctSig& rv,
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
+            case rct::RCTTypeSimpleBulletproof:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
                                               mask);
                 break;
             case rct::RCTTypeFull:
+            case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,

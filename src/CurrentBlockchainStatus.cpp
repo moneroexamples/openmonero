@@ -473,30 +473,21 @@ CurrentBlockchainStatus::read_mempool()
         // get transaction info of the tx in the mempool
         tx_info _tx_info = mempool_tx_info.at(i);
 
-        crypto::hash mem_tx_hash = null_hash;
+        transaction tx;
+        crypto::hash tx_hash;
+        crypto::hash tx_prefix_hash;
 
-        if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        if (!parse_and_validate_tx_from_blob(
+                _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
         {
-            transaction tx;
+            cerr << "Cant make tx from _tx_info.tx_blob" << endl;
+            return false;
+        }
 
-            if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-            {
-                cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                return false;
-            }
+        (void) tx_hash;
+        (void) tx_prefix_hash;
 
-            if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
-            {
-                cerr << "Hash of reconstructed tx from json does not match "
-                        "what we should get!"
-                     << endl;
-
-                return false;
-            }
-
-            mempool_txs.emplace_back(_tx_info.receive_time, tx);
-
-        } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        mempool_txs.emplace_back(_tx_info.receive_time, tx);
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
 
