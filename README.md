@@ -107,7 +107,6 @@ git clone https://github.com/monero-project/monero
 
 cd monero/
 
-
 make
 ```
 
