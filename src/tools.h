@@ -198,11 +198,6 @@ url_decode(const std::string& in, std::string& out);
 map<std::string, std::string>
 parse_crow_post_data(const string& req_body);
 
-// from wallet2::decrypt
-string
-decrypt(const std::string &ciphertext,
-        const crypto::secret_key &skey,
-        bool authenticated = true);
 
 // based on
 // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
