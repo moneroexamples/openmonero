@@ -35,7 +35,7 @@ to MyMonero. They include:
    
 ## Testnet version
 
-- [http://139.162.32.245:81](http://139.162.32.245:81)
+- [http://139.162.32.245:81](http://139.162.32.245:81) - DOWN due to VPN problems at the moment :-(
 
 This is Open Monero running on testnet network. You can use it to play around with it. 
 Since this is testnet version, frequent changes and database resets are expected. Also,
