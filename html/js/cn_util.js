@@ -1645,6 +1645,17 @@ var cnUtil = (function(initConfig) {
         return sigs;
     };
 
+    // reargances array to specific indices.
+    this.rearrange = function(arr, ind) {
+        var new_arr = [];
+
+        for (j = 0; j < ind.length; j++) {
+            new_arr.push(arr[ind[j]]);
+        }
+
+        return new_arr;
+    };
+
     this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         //we move payment ID stuff here, because we need txkey to encrypt
         var txkey = this.random_keypair();
@@ -1732,6 +1743,35 @@ var cnUtil = (function(initConfig) {
             input_to_key.key_offsets = this.abs_to_rel_offsets(input_to_key.key_offsets);
             tx.vin.push(input_to_key);
         }
+
+
+        // new to sort key_imags and associated variables.
+
+        var ins_order = [];
+
+        for (var i = 0; i < tx.vin.length; i++){
+            ins_order.push(i);
+        }
+
+        // determine indexes whish we shuld sort.
+        ins_order.sort(function(i0, i1) {
+            if (tx.vin[i0].k_image < tx.vin[i1].k_image) {
+                return 1;
+            }
+
+            if (tx.vin[i0].k_image > tx.vin[i1].k_image) {
+                return -1;
+            }
+
+            return 0;
+        });
+
+        // sort key images along with rources and contexts.
+        tx.vin = rearrange(tx.vin , ins_order);
+        sources = rearrange(sources, ins_order);
+        in_contexts = rearrange(in_contexts, ins_order);
+
+
         var outputs_money = JSBigInt.ZERO;
         var out_index = 0;
         var amountKeys = []; //rct only
