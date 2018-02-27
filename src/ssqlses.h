@@ -176,7 +176,7 @@ struct XmrOutput : public Outputs, Table
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
-      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q)
+      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q) ORDER BY amount DESC
     )";
 
     static constexpr const char* SELECT_STMT3 = R"(

@@ -247,7 +247,7 @@ OutputInputIdentification::identify_inputs(
             // in all inputs in a given txs. Thus, if a single input
             // is without our output, we can assume this tx does
             // not contain any of our spendings.
-            break;
+            //break;
         }
 
     } // for (const txin_to_key& in_key: input_key_imgs)

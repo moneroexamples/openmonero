@@ -1659,7 +1659,7 @@ var cnUtil = (function(initConfig) {
     this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         //we move payment ID stuff here, because we need txkey to encrypt
         var txkey = this.random_keypair();
-        console.log(txkey);
+        //console.log(txkey);
         var extra = '';
         if (payment_id) {
             if (pid_encrypt && payment_id.length !== INTEGRATED_ID_SIZE * 2) {
@@ -1697,6 +1697,8 @@ var cnUtil = (function(initConfig) {
 
         //tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
         tx.prvkey = txkey.sec;
+
+        var tx_pub_key = txkey.pub;
 
         var in_contexts  = [];
 
@@ -1776,15 +1778,31 @@ var cnUtil = (function(initConfig) {
         var out_index = 0;
         var amountKeys = []; //rct only
 
+        // // check if we have any subaddress before we start generating outputs
+        // var num_stdaddresses = 0;
+        //
+        // for (i = 0; i < dsts.length; ++i) {
+        //     if (this.is_subaddress(dsts[i].address))
+        //         num_stdaddresses++;
+        // }
+        //
+        //
+        // // if we have subaddress, generate new public tx key
+        // if (num_stdaddresses > 0)
+        //     txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
+
+
         for (i = 0; i < dsts.length; ++i) {
             if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
                 throw "dst.amount < 0"; //amount can be zero if no change
             }
             dsts[i].keys = this.decode_address(dsts[i].address);
 
-            if (this.is_subaddress(dsts[i].address))
-            {
+            if (this.is_subaddress(dsts[i].address)) {
                txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
+            }
+            else {
+                txkey.pub = ge_scalarmult_base(txkey.sec);
             }
 
             var out_derivation;
