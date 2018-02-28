@@ -1778,32 +1778,30 @@ var cnUtil = (function(initConfig) {
         var out_index = 0;
         var amountKeys = []; //rct only
 
-        // // check if we have any subaddress before we start generating outputs
-        // var num_stdaddresses = 0;
-        //
-        // for (i = 0; i < dsts.length; ++i) {
-        //     if (this.is_subaddress(dsts[i].address))
-        //         num_stdaddresses++;
-        // }
-        //
-        //
-        // // if we have subaddress, generate new public tx key
-        // if (num_stdaddresses > 0)
-        //     txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
+        // check if we have any subaddress before we start generating outputs
+        var num_subaddresses = 0;
+        var subaddress_dest_idx = 0;
 
+        for (i = 0; i < dsts.length; ++i) {
+            if (this.is_subaddress(dsts[i].address)) {
+                subaddress_dest_idx = i;
+                num_subaddresses++;
+            }
+        }
+
+        // if we send to a subaddress, generate new public tx key
+        // using sub-addresses public spend key. If not,
+        // no action is required.
+        if (num_subaddresses == 1) {
+            var subaddress_keys = this.decode_address(dsts[subaddress_dest_idx].address);
+            txkey.pub = ge_scalarmult(subaddress_keys.spend, txkey.sec);
+        }
 
         for (i = 0; i < dsts.length; ++i) {
             if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
                 throw "dst.amount < 0"; //amount can be zero if no change
             }
             dsts[i].keys = this.decode_address(dsts[i].address);
-
-            if (this.is_subaddress(dsts[i].address)) {
-               txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
-            }
-            else {
-                txkey.pub = ge_scalarmult_base(txkey.sec);
-            }
 
             var out_derivation;
 
