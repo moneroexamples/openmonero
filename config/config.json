@@ -21,7 +21,7 @@
   "wallet_import" :
   {
     "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xmr is 0.1 x 1e12 = 100000000000",
-    "fee"     : 100000000000,
+    "fee"     : 0,
     "testnet" :
     {
       "address" : "9tzmPMTViHYM3z6NAgQni1Qm1Emzxy5hQFibPgWD3LVTAz91yok5Eni1pH6zKhBHzpTU15GZooPHSGHXFvFuXEdmEG2sWAZ",

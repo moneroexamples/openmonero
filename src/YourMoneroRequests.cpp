@@ -1235,7 +1235,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         uint64_t xmr_inputs;
         uint64_t xmr_outputs;
         uint64_t num_nonrct_inputs;
-        uint64_t fee;
+        uint64_t fee {0};
         uint64_t mixin_no;
         uint64_t size;
         uint64_t blk_height;
@@ -1249,11 +1249,11 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         mixin_no          = sum_data[2];
         num_nonrct_inputs = sum_data[3];
 
-        j_response["xmr_outputs"] = xmr_outputs;
-        j_response["xmr_inputs"]  = xmr_inputs;
-        j_response["mixin_no"]    = mixin_no;
-
-        fee = 0;
+        j_response["xmr_outputs"]    = xmr_outputs;
+        j_response["xmr_inputs"]     = xmr_inputs;
+        j_response["mixin_no"]       = mixin_no;
+        j_response["num_of_outputs"] = output_pub_keys.size();
+        j_response["num_of_inputs"]  = input_key_imgs.size();
 
         if (!coinbase &&  tx.vin.size() > 0)
         {

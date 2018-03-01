@@ -399,7 +399,7 @@ summary_of_in_out_rct(const json& _json)
 
 
 
-    uint64_t
+uint64_t
 sum_money_in_outputs(const transaction& tx)
 {
     uint64_t sum_xmr {0};
