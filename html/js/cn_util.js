@@ -1505,7 +1505,9 @@ var cnUtil = (function(initConfig) {
         return {
             raw: buf,
             hash: hash,
-            prvkey: tx.prvkey
+            prvkey: tx.prvkey,
+            no_inputs: tx.vin.length,
+            no_outputs: tx.vout.length
         };
     };
 
