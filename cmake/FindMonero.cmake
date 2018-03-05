@@ -29,7 +29,7 @@
 #------------------------------------------------------------------------------
 
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;
-		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;
+		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;epee_readline;
 		blockchain_db;ringct;wallet;cncrypto;easylogging;version;checkpoints)
 
 set(Xmr_INCLUDE_DIRS "${CPP_MONERO_DIR}")

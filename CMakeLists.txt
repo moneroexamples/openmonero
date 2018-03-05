@@ -109,6 +109,9 @@ set(LIBRARIES
         easylogging
         mysqlpp
         mysqlclient
+        device
+        epee_readline
+        epee
         readline
         checkpoints
         version

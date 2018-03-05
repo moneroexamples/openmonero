@@ -830,14 +830,16 @@ decode_ringct(const rct::rctSig& rv,
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
-                                              mask);
+                                              mask,
+                                              hw::get_device("default"));
                 break;
             case rct::RCTTypeFull:
             case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,
-                                        mask);
+                                        mask,
+                                        hw::get_device("default"));
                 break;
             default:
                 cerr << "Unsupported rct type: " << rv.type << endl;
