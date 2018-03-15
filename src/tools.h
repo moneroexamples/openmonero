@@ -64,7 +64,7 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage,
 bool
 parse_str_address(const string& address_str,
                   address_parse_info& address_info,
-                  bool testnet = false);
+                  cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 inline bool
 is_separator(char c);

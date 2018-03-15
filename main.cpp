@@ -29,11 +29,13 @@ if (*help_opt)
 
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
+auto stagenet_opt     = opts.get_option<bool>("stagenet");
 auto port_opt         = opts.get_option<string>("port");
 auto config_file_opt  = opts.get_option<string>("config-file");
 
 
 bool testnet          = *testnet_opt;
+bool stagenet         = *stagenet_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
 
@@ -72,6 +74,9 @@ path blockchain_path = testnet
                        ? path(config_json["blockchain-path"]["testnet"].get<string>())
                        : path(config_json["blockchain-path"]["mainnet"].get<string>());
 
+const cryptonote::network_type nettype = testnet ?
+      cryptonote::network_type::TESTNET : stagenet ?
+      cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
 if (!xmreg::get_blockchain_path(blockchain_path, testnet))
 {
@@ -98,8 +103,8 @@ xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 // set blockchain status monitoring thread parameters
 xmreg::CurrentBlockchainStatus::blockchain_path
         =  blockchain_path.string();
-xmreg::CurrentBlockchainStatus::testnet
-        = testnet;
+xmreg::CurrentBlockchainStatus::net_type
+        = nettype;
 xmreg::CurrentBlockchainStatus::do_not_relay
         = do_not_relay;
 xmreg::CurrentBlockchainStatus::deamon_url

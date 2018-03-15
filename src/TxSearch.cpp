@@ -22,9 +22,9 @@ TxSearch::TxSearch(XmrAccount& _acc)
     // creates an mysql connection for this thread
     xmr_accounts = make_shared<MySqlAccounts>();
 
-    bool testnet = CurrentBlockchainStatus::testnet;
+    network_type net_type = CurrentBlockchainStatus::net_type;
 
-    if (!xmreg::parse_str_address(acc->address, address, testnet))
+    if (!xmreg::parse_str_address(acc->address, address, net_type))
     {
         cerr << "Cant parse string address: " << acc->address << endl;
         throw TxSearchException("Cant parse string address: " + acc->address);

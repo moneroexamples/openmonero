@@ -103,6 +103,7 @@ set(LIBRARIES
         blocks
         lmdb
         ringct
+        ringct_basic
         common
         mnemonics
         epee
@@ -110,9 +111,7 @@ set(LIBRARIES
         mysqlpp
         mysqlclient
         device
-        epee_readline
         epee
-        readline
         checkpoints
         version
         ${Boost_LIBRARIES}
@@ -125,11 +124,25 @@ set(LIBRARIES
         crypto)
 
 if(APPLE)
-    set(LIBRARIES ${LIBRARIES} "-framework IOKit")
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework PCSC")
+else()
+    set(LIBRARIES ${LIBRARIES} atomic)
 endif()
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
     set(LIBRARIES ${LIBRARIES} unwind)
+endif()
+
+
+if (WIN32)
+    set(LIBRARIES ${LIBRARIES}
+            wsock32
+            ntdll
+            ws2_32
+            Iphlpapi
+            )
+else()
+    set(LIBRARIES ${LIBRARIES} dl)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})

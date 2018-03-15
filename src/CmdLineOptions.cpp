@@ -23,6 +23,8 @@ namespace xmreg
                  "produce help message")
                 ("testnet,t", value<bool>()->default_value(false)->implicit_value(true),
                  "use testnet blockchain")
+                ("stagenet,s", value<bool>()->default_value(false)->implicit_value(true),
+                 "use stagenet blockchain")
                 ("do-not-relay", value<bool>()->default_value(false)->implicit_value(true),
                  "does not relay txs to other nodes. useful when testing construction and submiting txs")
                 ("port,p", value<string>()->default_value("1984"),

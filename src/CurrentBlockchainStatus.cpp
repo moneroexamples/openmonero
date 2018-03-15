@@ -24,7 +24,7 @@ namespace xmreg
 atomic<uint64_t>        CurrentBlockchainStatus::current_height{0};
 string                  CurrentBlockchainStatus::blockchain_path{"/home/mwo/.blockchain/lmdb"};
 string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
-bool                    CurrentBlockchainStatus::testnet{false};
+network_type            CurrentBlockchainStatus::net_type {network_type::MAINNET};
 bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
@@ -44,7 +44,7 @@ unique_ptr<xmreg::MicroCore>        CurrentBlockchainStatus::mcore;
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
-    bool testnet = CurrentBlockchainStatus::testnet;
+    network_type net_type = CurrentBlockchainStatus::net_type;
 
     TxSearch::set_search_thread_life(search_thread_life_in_seconds);
 
@@ -53,7 +53,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
         if (!xmreg::parse_str_address(
                 import_payment_address_str,
                 import_payment_address,
-                testnet))
+                CurrentBlockchainStatus::net_type))
         {
             cerr << "Cant parse address_str: "
                  << import_payment_address_str
@@ -179,7 +179,7 @@ CurrentBlockchainStatus::is_tx_spendtime_unlocked(
         // XXX: this needs to be fast, so we'd need to get the starting heights
         // from the daemon to be correct once voting kicks in
 
-        uint64_t v2height = testnet ? 624634 : 1009827;
+        uint64_t v2height = net_type == TESTNET ? 624634 : net_type == STAGENET ? (uint64_t)-1/*TODO*/ : 1009827;
 
         uint64_t leeway = block_height < v2height
                           ? CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1
@@ -328,7 +328,7 @@ string
 CurrentBlockchainStatus::get_account_integrated_address_as_str(
         crypto::hash8 const& payment_id8)
 {
-    return cryptonote::get_account_integrated_address_as_str(testnet,
+    return cryptonote::get_account_integrated_address_as_str(net_type,
                     import_payment_address.address, payment_id8);
 }
 
@@ -598,7 +598,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (decrypted_payment_id8 != null_hash8)
         {
-            if (!decrypt_payment_id(decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
+            if (!mcore->get_device()->decrypt_payment_id(
+                    decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
             {
                 cerr << "Cant decrypt  decrypted_payment_id8: "
                      << pod_to_hex(decrypted_payment_id8) << "\n";

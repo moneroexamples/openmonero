@@ -39,7 +39,7 @@ struct CurrentBlockchainStatus
 
     static string deamon_url;
 
-    static bool testnet;
+    static network_type net_type;
 
     static bool do_not_relay;
 
