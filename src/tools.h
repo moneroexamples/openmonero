@@ -91,7 +91,7 @@ operator<< (ostream& os, const address_parse_info& addr);
 
 
 string
-get_default_lmdb_folder(bool testnet = false);
+get_default_lmdb_folder(network_type nettype = network_type::MAINNET);
 
 bool
 generate_key_image(const crypto::key_derivation& derivation,
@@ -102,7 +102,7 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 bool
 get_blockchain_path(bf::path& blockchain_path,
-                    bool testnet = false);
+                    network_type nettype = network_type::MAINNET);
 
 array<uint64_t, 4>
 summary_of_in_out_rct(

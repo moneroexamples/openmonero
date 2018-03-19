@@ -131,10 +131,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
 
     // initialize the core using the blockchain path
     if (!mcore->init(blockchain_path))
-    {
-        cerr << "Error accessing blockchain." << endl;
         return false;
-    }
 
     // get the high level Blockchain object to interact
     // with the blockchain lmdb database

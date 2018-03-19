@@ -39,9 +39,12 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
 
     $scope.mnemonic_language = 'english';
 
-    if (config.testnet == true) {
+    if (config.nettype == 1) {
         // just some dummy account, as not to fill login form every time.
         $scope.mnemonic = "agenda shrugged liquid extra mundane phone nomad oust duckling sifting pledge loyal royal urban skater bawled gusts bounced boil violin mumble gags axle sapling shrugged";
+    } else if (config.nettype == 2) {
+        // just some dummy account, as not to fill login form every time.
+        $scope.mnemonic = "eluded extra boyfriend gels hiding waxing feline unbending drying pancakes dwindling fuming friendly pamphlet myth tepid snug budget android vogue losing each affair afraid affair";
     } else {
         $scope.decode = false;
         $scope.address = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";

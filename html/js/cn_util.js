@@ -49,11 +49,14 @@ var cnUtil = (function(initConfig) {
     var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
     var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefix;
 
-    if (config.testnet === true)
-    {
+    if (config.nettype === 1 /*testnet*/) {
         CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixTestnet;
         CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixTestnet;
         CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixTestnet;
+    } else if (config.nettype === 2 /*stagenet*/) {
+        CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixStagenet;
+        CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixStagenet;
+        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixStagnet;
     }
 
     var UINT64_MAX = new JSBigInt(2).pow(64);

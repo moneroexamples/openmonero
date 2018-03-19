@@ -248,20 +248,23 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 
 string
-get_default_lmdb_folder(bool testnet)
+get_default_lmdb_folder(network_type nettype)
 {
     // default path to monero folder
     // on linux this is /home/<username>/.bitmonero
     string default_monero_dir = tools::get_default_data_dir();
 
-    if (testnet)
+    if (nettype == cryptonote::network_type::TESTNET)
         default_monero_dir += "/testnet";
+    if (nettype == cryptonote::network_type::STAGENET)
+        default_monero_dir += "/stagenet";
 
 
     // the default folder of the lmdb blockchain database
     // is therefore as follows
     return default_monero_dir + string("/lmdb");
 }
+
 
 
 /*
@@ -271,11 +274,10 @@ get_default_lmdb_folder(bool testnet)
  */
 bool
 get_blockchain_path(bf::path& blockchain_path,
-                    bool testnet)
+                    cryptonote::network_type nettype)
 {
     // the default folder of the lmdb blockchain database
-    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(testnet);
-
+    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(nettype);
 
     blockchain_path = !blockchain_path.empty()
                       ? blockchain_path
@@ -284,8 +286,7 @@ get_blockchain_path(bf::path& blockchain_path,
     if (!bf::is_directory(blockchain_path))
     {
         cerr << "Given path \"" << blockchain_path   << "\" "
-             << "is not a folder or does not exist" << " "
-             << endl;
+             << "is not a folder or does not exist \n";
 
         return false;
     }
