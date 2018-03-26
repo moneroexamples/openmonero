@@ -34,15 +34,15 @@ to MyMonero. They include:
  - new transaction details window.
  - sending xmr to a subaddress (not receiving nor generating subaddresses for now).
    
-## Testnet version
+## Stagenet version (Currently offline)
 
 - [http://139.162.32.245:81](http://139.162.32.245:81)
 
-This is Open Monero running on testnet network. You can use it to play around with it. 
-Since this is testnet version, frequent changes and database resets are expected. Also,
+This is Open Monero running on stagenet network. You can use it to play around with it. 
+Since this is stagenet version, frequent changes and database resets are expected. Also,
  it is running on cheap vps, which may result in some lag.
 
-If you want some testnet monero, please make issue with your testnet address that you can
+If you want some testnet or stagenet monero, please make issue with your stagenet address that you can
 obtained from Open Monero.  
 
 ## Screenshot
@@ -195,9 +195,9 @@ Command line options
 
 ```bash
 ./openmonero -h
-
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
+  -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
                                         useful when testing construction and 
                                         submiting txs
@@ -215,11 +215,12 @@ Before running `openmonero`:
  Time library used in Open Monero stores there time zone offsets database that it uses.
  - edit `config/confing.js` file with your settings. Especially set `frontend-url` and `database`
  connection details.
- - set `apiUrl` in `html\js\config.js` and `testnet` flag. Last slash `/` in `apiUrl` is important. 
- If running backend for testnet network, frontend `testnet` flag must be set to `true`.
+ - set `apiUrl` in `html\js\config.js` and `nettype` option. Last slash `/` in `apiUrl` is important. 
+ If running backend for testnet or stagenet networks, frontend `nettype` must be set to  
+ 1 - TESTNET or 2 - STAGENET. 0 is for MAINNET.
  For mainnet, it is set to `false`.
- - make sure monero daemon is running and fully sync. If using testnet network, use daemon
- with testnet flag!
+ - make sure monero daemon is running and fully sync. If using testnet or stagenet networks, use monero daemon
+ with `--testnet` or `--stagenet` flags!
    
 
 To start for mainnet: 
@@ -237,17 +238,16 @@ To start for stagenet:
 ./openmonero -s
 ```
    
-To start for testnet with non-default location of `config.json` file:
+To start for stagenet with non-default location of `config.json` file:
 
 ```bash
-./openmonero -t -c /path/to/config.json
+./openmonero -s -c /path/to/config.json
 ```
 
  
 ## API calls
 
-In the below examples, you can change `127.0.0.1:1984` into `139.162.32.245:1984` to
-query the testnet open monero instance (assuming its up and working well).
+Example calls and their outputs are provided below.
 
 #### get_version
 

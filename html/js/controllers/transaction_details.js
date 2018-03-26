@@ -52,7 +52,14 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
         return;
     }
 
-    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
+    var explorerUrl = '';
+
+    if (config.nettype == 0)
+        explorerUrl = config.mainnetExplorerUrl;
+    else if (config.nettype == 1)
+        explorerUrl = config.testnetExplorerUrl;
+    else
+        explorerUrl = config.stagenetExplorerUrl;
 
     var address = AccountService.getAddress();
     var view_key = AccountService.getViewKey();

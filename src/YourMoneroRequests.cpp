@@ -796,6 +796,11 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
         } // for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount& outs: found_outputs)
 
     } // if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
+    else
+    {
+        j_response["status"] = "error";
+        j_response["error"]  = fmt::format("Error getting random outputs from monero deamon");
+    }
 
     string response_body = j_response.dump();
 

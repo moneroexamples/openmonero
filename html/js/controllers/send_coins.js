@@ -45,7 +45,14 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
     var view_only = AccountService.isViewOnly();
 
-    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
+    var explorerUrl = "";
+
+    if (config.nettype == 0)
+        explorerUrl = config.mainnetExplorerUrl;
+    else if (config.nettype == 1)
+        explorerUrl = config.testnetExplorerUrl;
+    else
+        explorerUrl = config.stagenetExplorerUrl;
 
     // few multiplayers based on uint64_t wallet2::get_fee_multiplier
     var fee_multiplayers = [1, 4, 20, 166];

@@ -56,7 +56,7 @@ var cnUtil = (function(initConfig) {
     } else if (config.nettype === 2 /*stagenet*/) {
         CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixStagenet;
         CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixStagenet;
-        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixStagnet;
+        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixStagenet;
     }
 
     var UINT64_MAX = new JSBigInt(2).pow(64);
