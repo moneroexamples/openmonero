@@ -1777,7 +1777,7 @@ var cnUtil = (function(initConfig) {
         tx.vin = rearrange(tx.vin , ins_order);
         sources = rearrange(sources, ins_order);
         in_contexts = rearrange(in_contexts, ins_order);
-
+        is_rct_coinbases = rearrange(is_rct_coinbases, ins_order);
 
         var outputs_money = JSBigInt.ZERO;
         var out_index = 0;
