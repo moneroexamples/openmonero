@@ -1722,6 +1722,12 @@ var cnUtil = (function(initConfig) {
             }
             sources[i].key_image = res.image;
             sources[i].in_ephemeral = res.in_ephemeral;
+
+            // now we mark if this is ringct coinbase txs. such transactions
+            // will have identity mask. Non-ringct txs will have  sources[i].mask set to null.
+            // this only works if beckend will produce masks in get_unspent_outs for
+            // coinbaser ringct txs.
+            sources[i].is_rct_coinbase = (sources[i].mask ? sources[i].mask === I : 0);
         }
         //sort ins
         sources.sort(function(a,b){
@@ -1829,7 +1835,10 @@ var cnUtil = (function(initConfig) {
                     a: in_contexts[i].mask
                 });
                 inAmounts.push(tx.vin[i].amount);
-                if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
+                if (in_contexts[i].mask !== I || sources[i].is_rct_coinbase === true) {//if input is rct (has a valid mask), 0 out amount
+                    // if input is rct (has a valid mask), 0 out amount
+                    // coinbase ringct txs also have mask === I, so their amount
+                    // must be set to zero when spending them.
                     tx.vin[i].amount = "0";
                 }
                 mixRing[i] = [];
