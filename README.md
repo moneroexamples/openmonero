@@ -82,7 +82,7 @@ Open Monero is not as fast as MyMonero.
    in back, because viewkey is unknown.
 
 
-## Example compilation on Ubuntu 16.04 
+## Example compilation on Ubuntu 18.04 
 
 Below are example and basic instructions on how to setup up and run Open Monero on Ubuntu 16.04. 
 For other Linux operating systems, the instructions are analogical. 
@@ -96,17 +96,17 @@ Download and compile recent Monero into your home folder:
 # first install monero dependecines
 sudo apt update
 
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev
-sudo wget -O /usr/local/include/zmq.hpp https://raw.githubusercontent.com/zeromq/cppzmq/master/zmq.hpp
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev
 
 # go to home folder 
 cd ~
 
-# get latest development version of monero. Monero changes so fast
-# that if something breaks during compilation of open monero, please make an issue
-git clone https://github.com/monero-project/monero
+git clone --recursive https://github.com/monero-project/monero
 
 cd monero/
+
+# checkout last monero version
+git checkout -b last_release v0.12.0.0
 
 make
 ```

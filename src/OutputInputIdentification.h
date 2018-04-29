@@ -82,7 +82,7 @@ public:
     bool is_rct;
     uint8_t rct_type;
 
-    uint64_t mixin_no;
+    uint64_t mixin_no {};
 
     // for each output, in a tx, check if it belongs
     // to the given account of specific address and viewkey
@@ -127,6 +127,18 @@ public:
      */
     void identify_inputs(
             const vector<pair<string, uint64_t>>& known_outputs_keys);
+
+    string const&
+    get_tx_hash_str();
+
+    string const&
+    get_tx_prefix_hash_str();
+
+    string const&
+    get_tx_pub_key_str();
+
+    uint64_t
+    get_mixin_no();
 
 private:
 

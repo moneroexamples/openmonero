@@ -18,13 +18,8 @@ OutputInputIdentification::OutputInputIdentification(
     viewkey = _v;
     tx = _tx;
 
-    tx_hash        = get_transaction_hash(*tx);
-    tx_prefix_hash = get_transaction_prefix_hash(*tx);
+    tx_hash     = get_transaction_hash(*tx);
     tx_pub_key     = xmreg::get_tx_pub_key_from_received_outs(*tx);
-
-    tx_hash_str        = pod_to_hex(tx_hash);
-    tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
-    tx_pub_key_str     = pod_to_hex(tx_pub_key);
 
     tx_is_coinbase = is_coinbase(*tx);
 
@@ -39,7 +34,7 @@ OutputInputIdentification::OutputInputIdentification(
     if (!generate_key_derivation(tx_pub_key, *viewkey, derivation))
     {
         cerr << "Cant get derived key for: "  << "\n"
-             << "pub_tx_key: " << tx_pub_key << " and "
+             << "pub_tx_key: " << get_tx_pub_key_str() << " and "
              << "prv_view_key" << viewkey << endl;
 
         throw OutputInputIdentificationException("Cant get derived key for a tx");
@@ -47,9 +42,18 @@ OutputInputIdentification::OutputInputIdentification(
 
     if (!tx_is_coinbase)
     {
-        mixin_no = get_mixin_no(*tx);
+
     }
 
+}
+
+uint64_t
+OutputInputIdentification::get_mixin_no()
+{
+    if (mixin_no == 0 && !tx_is_coinbase)
+        mixin_no = xmreg::get_mixin_no(*tx);
+
+    return mixin_no;
 }
 
 void
@@ -141,7 +145,7 @@ OutputInputIdentification::identify_outputs()
 
             // found an output associated with the given address and viewkey
             string msg = fmt::format("tx_hash:  {:s}, output_pub_key: {:s}\n",
-                                     tx_hash_str,
+                                     get_tx_hash_str(),
                                      out_key_str);
 
             cout << msg << endl;
@@ -252,6 +256,41 @@ OutputInputIdentification::identify_inputs(
 
     } // for (const txin_to_key& in_key: input_key_imgs)
 
+}
+
+
+string const&
+OutputInputIdentification::get_tx_hash_str()
+{
+    if (tx_hash_str.empty())
+    {
+        tx_hash_str = pod_to_hex(tx_hash);
+    }
+
+
+    return tx_hash_str;
+}
+
+
+string const&
+OutputInputIdentification::get_tx_prefix_hash_str()
+{
+    if (tx_prefix_hash_str.empty())
+    {
+        tx_prefix_hash = get_transaction_prefix_hash(*tx);
+        tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
+    }
+
+    return tx_prefix_hash_str;
+}
+
+string const&
+OutputInputIdentification::get_tx_pub_key_str()
+{
+    if (tx_pub_key_str.empty())
+        tx_pub_key_str = pod_to_hex(tx_pub_key);
+
+    return tx_pub_key_str;
 }
 
 }
