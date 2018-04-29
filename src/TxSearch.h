@@ -64,7 +64,7 @@ class TxSearch
     shared_ptr<MySqlAccounts> xmr_accounts;
 
     // address and viewkey for this search thread.
-    account_public_address address;
+    address_parse_info address;
     secret_key viewkey;
 
 public:
@@ -125,7 +125,7 @@ public:
     json
     find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
 
-    pair<account_public_address, secret_key>
+    pair<address_parse_info, secret_key>
     get_xmr_address_viewkey() const;
 
     static void

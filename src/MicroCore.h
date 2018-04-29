@@ -32,6 +32,8 @@ class MicroCore {
     tx_memory_pool m_mempool;
     Blockchain m_blockchain_storage;
 
+    hw::device* m_device;
+
 public:
     MicroCore();
 
@@ -78,7 +80,8 @@ public:
                                 const uint64_t& no_of_outputs,
                                 vector<pair<uint64_t, public_key>>& found_outputs);
 
-
+    hw::device* const
+    get_device() const;
 
     virtual ~MicroCore();
 

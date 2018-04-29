@@ -22,9 +22,9 @@ TxSearch::TxSearch(XmrAccount& _acc)
     // creates an mysql connection for this thread
     xmr_accounts = make_shared<MySqlAccounts>();
 
-    bool testnet = CurrentBlockchainStatus::testnet;
+    network_type net_type = CurrentBlockchainStatus::net_type;
 
-    if (!xmreg::parse_str_address(acc->address, address, testnet))
+    if (!xmreg::parse_str_address(acc->address, address, net_type))
     {
         cerr << "Cant parse string address: " << acc->address << endl;
         throw TxSearchException("Cant parse string address: " + acc->address);
@@ -196,31 +196,39 @@ TxSearch::search()
                 // save them into mysql.
                 if (!oi_identification.identified_outputs.empty())
                 {
-                    // before adding this tx and its outputs to mysql
-                    // check if it already exists. So that we dont
-                    // do it twice.
-
-                    XmrTransaction tx_data_existing;
-
-                    if (xmr_accounts->tx_exists(acc->id,
-                                                oi_identification.tx_hash_str,
-                                                tx_data_existing))
-                    {
-                        cout << "\nTransaction " << oi_identification.tx_hash_str
-                             << " already present in mysql"
-                             << endl;
-
-                        // if tx is already present for that user,
-                        // we remove it, as we get it data from scrach
-
-                        if (xmr_accounts->delete_tx(tx_data_existing.id) == 0)
-                        {
-                            string msg = fmt::format("xmr_accounts->delete_tx(%d)",
-                                                     tx_data_existing.id);
-                            cerr << msg << endl;
-                            throw TxSearchException(msg);
-                        }
-                    }
+//                     before adding this tx and its outputs to mysql
+//                     check if it already exists. So that we dont
+//                     do it twice.
+//
+//                     2018:02:01 Dont know why I added this before?
+//                     this results in incorrect balances in some cases
+//                     as it removes already existing tx data? Dont know
+//                     why it was added.
+//                     Maybe I added it to enable rescanning blockchain? Thus
+//                     it would be deleting already exisitng tx when rescanning
+//                     blockchain
+//
+//                    XmrTransaction tx_data_existing;
+//
+//                    if (xmr_accounts->tx_exists(acc->id,
+//                                                oi_identification.tx_hash_str,
+//                                                tx_data_existing))
+//                    {
+//                        cout << "\nTransaction " << oi_identification.tx_hash_str
+//                             << " already present in mysql"
+//                             << endl;
+//
+//                        // if tx is already present for that user,
+//                        // we remove it, as we get it data from scrach
+//
+//                        if (xmr_accounts->delete_tx(tx_data_existing.id) == 0)
+//                        {
+//                            string msg = fmt::format("xmr_accounts->delete_tx(%d)",
+//                                                     tx_data_existing.id);
+//                            cerr << msg << endl;
+//                            throw TxSearchException(msg);
+//                        }
+//                    }
 
                     XmrTransaction tx_data;
 
@@ -397,6 +405,9 @@ TxSearch::search()
                             {
                                 //cerr << "tx_mysql_id is zero!" << endl;
                                 //throw TxSearchException("tx_mysql_id is zero!");
+                                // it did not insert this tx, because maybe it already
+                                // exisits in the MySQL. So maybe can now
+                                // check if we have it and get tx_mysql_id this way.
                                 //todo what should be done when insert_tx fails?
                             }
 
@@ -696,7 +707,7 @@ TxSearch::find_txs_in_mempool(
 }
 
 
-pair<account_public_address, secret_key>
+pair<address_parse_info, secret_key>
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);

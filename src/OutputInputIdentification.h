@@ -97,7 +97,7 @@ public:
     vector<output_info> identified_outputs;
     vector<input_info>  identified_inputs;
 
-    OutputInputIdentification(const account_public_address* _a,
+    OutputInputIdentification(const address_parse_info* _a,
                               const secret_key* _v,
                               const transaction* _tx);
 
@@ -131,7 +131,7 @@ public:
 private:
 
     // address and viewkey for this search thread.
-    const account_public_address* address;
+    const address_parse_info* address_info;
     const secret_key* viewkey;
 
     // transaction that is beeing search

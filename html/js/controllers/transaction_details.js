@@ -52,7 +52,14 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
         return;
     }
 
-    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
+    var explorerUrl = '';
+
+    if (config.nettype == 0)
+        explorerUrl = config.mainnetExplorerUrl;
+    else if (config.nettype == 1)
+        explorerUrl = config.testnetExplorerUrl;
+    else
+        explorerUrl = config.stagenetExplorerUrl;
 
     var address = AccountService.getAddress();
     var view_key = AccountService.getViewKey();
@@ -76,6 +83,8 @@ thinwalletCtrls.controller('TransactionDetailsCtrl', function ($scope,
             $scope.tx_pub_key       = data.pub_key;
             $scope.coinbase         = data.coinbase;
             $scope.timestamp        = new Date(data.timestamp * 1000);
+            $scope.no_outputs       = data.num_of_outputs;
+            $scope.no_inputs        = data.num_of_inputs;
 
             var age_duration = moment.duration(new Date() - new Date(data.timestamp * 1000));
 

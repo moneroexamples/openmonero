@@ -47,11 +47,18 @@ var cnUtil = (function(initConfig) {
     var ENCRYPTED_PAYMENT_ID_TAIL = 141;
     var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
     var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
-    if (config.testnet === true)
-    {
+    var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefix;
+
+    if (config.nettype === 1 /*testnet*/) {
         CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixTestnet;
         CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixTestnet;
+        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixTestnet;
+    } else if (config.nettype === 2 /*stagenet*/) {
+        CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefixStagenet;
+        CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefixStagenet;
+        CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefixStagenet;
     }
+
     var UINT64_MAX = new JSBigInt(2).pow(64);
     var CURRENT_TX_VERSION = 2;
     var OLD_TX_VERSION = 1;
@@ -507,13 +514,21 @@ var cnUtil = (function(initConfig) {
         var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
         return cnBase58.encode(prefix + spend.pub).slice(0, 44);
     };
+
+    this.is_subaddress = function(address) {
+        var dec = cnBase58.decode(address);
+        var expectedPrefixSub = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
+        var prefix = dec.slice(0, expectedPrefixSub.length);
+        return (prefix === expectedPrefixSub);
+    }
     
     this.decode_address = function(address) {
         var dec = cnBase58.decode(address);
         var expectedPrefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
         var expectedPrefixInt = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);
+        var expectedPrefixSub = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
         var prefix = dec.slice(0, expectedPrefix.length);
-        if (prefix !== expectedPrefix && prefix !== expectedPrefixInt) {
+        if (prefix !== expectedPrefix && prefix !== expectedPrefixInt && prefix !== expectedPrefixSub) {
             throw "Invalid address prefix";
         }
         dec = dec.slice(expectedPrefix.length);
@@ -523,7 +538,11 @@ var cnUtil = (function(initConfig) {
             var intPaymentId = dec.slice(128, 128 + (INTEGRATED_ID_SIZE * 2));
             var checksum = dec.slice(128 + (INTEGRATED_ID_SIZE * 2), 128 + (INTEGRATED_ID_SIZE * 2) + (ADDRESS_CHECKSUM_SIZE * 2));
             var expectedChecksum = this.cn_fast_hash(prefix + spend + view + intPaymentId).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+        } else if (prefix === expectedPrefix) {
+            var checksum = dec.slice(128, 128 + (ADDRESS_CHECKSUM_SIZE * 2));
+            var expectedChecksum = this.cn_fast_hash(prefix + spend + view).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
         } else {
+            // if its not regular address, nor integrated, than it must be subaddress
             var checksum = dec.slice(128, 128 + (ADDRESS_CHECKSUM_SIZE * 2));
             var expectedChecksum = this.cn_fast_hash(prefix + spend + view).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
         }
@@ -1489,7 +1508,9 @@ var cnUtil = (function(initConfig) {
         return {
             raw: buf,
             hash: hash,
-            prvkey: tx.prvkey
+            prvkey: tx.prvkey,
+            no_inputs: tx.vin.length,
+            no_outputs: tx.vout.length
         };
     };
 
@@ -1629,6 +1650,17 @@ var cnUtil = (function(initConfig) {
         return sigs;
     };
 
+    // reargances array to specific indices.
+    this.rearrange = function(arr, ind) {
+        var new_arr = [];
+
+        for (j = 0; j < ind.length; j++) {
+            new_arr.push(arr[ind[j]]);
+        }
+
+        return new_arr;
+    };
+
     this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         //we move payment ID stuff here, because we need txkey to encrypt
         var txkey = this.random_keypair();
@@ -1664,44 +1696,51 @@ var cnUtil = (function(initConfig) {
         tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
         tx.prvkey = txkey.sec;
 
-        var in_contexts  = [];
-
-        var is_rct_coinbases = []; // monkey patching to solve problem of
+        var in_contexts = [];
+        //var is_rct_coinbases = []; // monkey patching to solve problem of
                                    // not being able to spend coinbase ringct txs.
-
         var inputs_money = JSBigInt.ZERO;
         var i, j;
-
         console.log('Sources: ');
-
-        for (i = 0; i < sources.length; i++)
-        {
+        //run the for loop twice to sort ins by key image
+        //first generate key image and other construction data to sort it all in one go
+        for (i = 0; i < sources.length; i++) {
             console.log(i + ': ' + this.formatMoneyFull(sources[i].amount));
             if (sources[i].real_out >= sources[i].outputs.length) {
                 throw "real index >= outputs.length";
             }
-            inputs_money = inputs_money.add(sources[i].amount);
-
-            // sets res.mask among other things. mask is identity for non-rct transactions
-            // and for coinbase ringct (type = 0) txs.
             var res = this.generate_key_image_helper_rct(keys, sources[i].real_out_tx_key, sources[i].real_out_in_tx, sources[i].mask); //mask will be undefined for non-rct
-
-            in_contexts.push(res.in_ephemeral);
 
             // now we mark if this is ringct coinbase txs. such transactions
             // will have identity mask. Non-ringct txs will have  sources[i].mask set to null.
             // this only works if beckend will produce masks in get_unspent_outs for
             // coinbaser ringct txs.
-            is_rct_coinbases.push((sources[i].mask ? sources[i].mask === I : 0));
-
+            //is_rct_coinbases.push((sources[i].mask ? sources[i].mask === I : 0));
 
             if (res.in_ephemeral.pub !== sources[i].outputs[sources[i].real_out].key) {
                 throw "in_ephemeral.pub != source.real_out.key";
             }
+            sources[i].key_image = res.image;
+            sources[i].in_ephemeral = res.in_ephemeral;
+
+            // now we mark if this is ringct coinbase txs. such transactions
+            // will have identity mask. Non-ringct txs will have  sources[i].mask set to null.
+            // this only works if beckend will produce masks in get_unspent_outs for
+            // coinbaser ringct txs.
+            sources[i].is_rct_coinbase = (sources[i].mask ? sources[i].mask === I : 0);
+        }
+        //sort ins
+        sources.sort(function(a,b){
+            return JSBigInt.parse(a.key_image, 16).compare(JSBigInt.parse(b.key_image, 16)) < 0
+        });
+        //copy the sorted sources data to tx
+        for (i = 0; i < sources.length; i++) {
+            inputs_money = inputs_money.add(sources[i].amount);
+            in_contexts.push(sources[i].in_ephemeral);
             var input_to_key = {};
             input_to_key.type = "input_to_key";
             input_to_key.amount = sources[i].amount;
-            input_to_key.k_image = res.image;
+            input_to_key.k_image = sources[i].key_image;
             input_to_key.key_offsets = [];
             for (j = 0; j < sources[i].outputs.length; ++j) {
                 input_to_key.key_offsets.push(sources[i].outputs[j].index);
@@ -1709,15 +1748,49 @@ var cnUtil = (function(initConfig) {
             input_to_key.key_offsets = this.abs_to_rel_offsets(input_to_key.key_offsets);
             tx.vin.push(input_to_key);
         }
+
         var outputs_money = JSBigInt.ZERO;
         var out_index = 0;
         var amountKeys = []; //rct only
+
+        // check if we have any subaddress before we start generating outputs
+        var num_subaddresses = 0;
+        var subaddress_dest_idx = 0;
+
+        for (i = 0; i < dsts.length; ++i) {
+            if (this.is_subaddress(dsts[i].address)) {
+                subaddress_dest_idx = i;
+                num_subaddresses++;
+            }
+        }
+
+        // if we send to a subaddress, generate new public tx key
+        // using sub-addresses public spend key. If not,
+        // no action is required.
+        if (num_subaddresses == 1) {
+            var subaddress_keys = this.decode_address(dsts[subaddress_dest_idx].address);
+            txkey.pub = ge_scalarmult(subaddress_keys.spend, txkey.sec);
+        }
+
         for (i = 0; i < dsts.length; ++i) {
             if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
                 throw "dst.amount < 0"; //amount can be zero if no change
             }
             dsts[i].keys = this.decode_address(dsts[i].address);
-            var out_derivation = this.generate_key_derivation(dsts[i].keys.view, txkey.sec);
+
+            var out_derivation;
+
+            // if destination public view and spend keys matches our own public keies
+            // we send change to ourself
+            if (dsts[i].keys.view === keys.view.pub && dsts[i].keys.spend === keys.spend.pub)
+            {
+                out_derivation = this.generate_key_derivation(txkey.pub, keys.view.sec);
+            }
+            else
+            {
+                out_derivation = this.generate_key_derivation(dsts[i].keys.view, txkey.sec);
+            }
+
             if (rct) {
                 amountKeys.push(this.derivation_to_scalar(out_derivation, out_index));
             }
@@ -1734,6 +1807,8 @@ var cnUtil = (function(initConfig) {
             ++out_index;
             outputs_money = outputs_money.add(dsts[i].amount);
         }
+        tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
+
         if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
             throw "outputs money (" + this.formatMoneyFull(outputs_money) + ") + fee (" + this.formatMoneyFull(fee_amount) + ") > inputs money (" + this.formatMoneyFull(inputs_money) + ")";
         }
@@ -1761,19 +1836,12 @@ var cnUtil = (function(initConfig) {
                     a: in_contexts[i].mask
                 });
                 inAmounts.push(tx.vin[i].amount);
-
-                //if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
-                    //tx.vin[i].amount = "0";
-                //}
-
-                if (in_contexts[i].mask !== I || is_rct_coinbases[i] === true)
-                {
+                if (in_contexts[i].mask !== I || sources[i].is_rct_coinbase === true) {//if input is rct (has a valid mask), 0 out amount
                     // if input is rct (has a valid mask), 0 out amount
                     // coinbase ringct txs also have mask === I, so their amount
                     // must be set to zero when spending them.
                     tx.vin[i].amount = "0";
                 }
-
                 mixRing[i] = [];
                 for (j = 0; j < sources[i].outputs.length; j++) {
                     mixRing[i].push({
@@ -1795,6 +1863,7 @@ var cnUtil = (function(initConfig) {
         console.log(tx);
         return tx;
     };
+
     this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
         unlock_time = unlock_time || 0;
         mix_outs = mix_outs || [];

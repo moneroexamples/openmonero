@@ -21,7 +21,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/algorithm/string.hpp>
 
 
 #include <string>
@@ -42,9 +42,8 @@ using namespace crypto;
 using namespace std;
 
 namespace bf = boost::filesystem;
-namespace pt = boost::posix_time;
-namespace gt = boost::gregorian;
-namespace lt = boost::local_time;
+//namespace pt = boost::posix_time;
+//namespace gt = boost::gregorian;
 
 
 using json = nlohmann::json;
@@ -64,14 +63,14 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage,
 
 bool
 parse_str_address(const string& address_str,
-                  account_public_address& address,
-                  bool testnet = false);
+                  address_parse_info& address_info,
+                  cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
 
 inline bool
 is_separator(char c);
 
 string
-print_address(const account_public_address& address,
+print_address(const address_parse_info& address,
               bool testnet = false);
 
 string
@@ -88,11 +87,11 @@ string
 timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
-operator<< (ostream& os, const account_public_address& addr);
+operator<< (ostream& os, const address_parse_info& addr);
 
 
 string
-get_default_lmdb_folder(bool testnet = false);
+get_default_lmdb_folder(network_type nettype = network_type::MAINNET);
 
 bool
 generate_key_image(const crypto::key_derivation& derivation,
@@ -103,7 +102,7 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 bool
 get_blockchain_path(bf::path& blockchain_path,
-                    bool testnet = false);
+                    network_type nettype = network_type::MAINNET);
 
 array<uint64_t, 4>
 summary_of_in_out_rct(
@@ -184,8 +183,6 @@ timestamps_time_scale(const vector<uint64_t>& timestamps,
                   uint64_t time0 = 1397818193 /* timestamp of the second block */);
 
 
-time_t
-ptime_to_time_t(const pt::ptime& in_ptime);
 
 bool
 decode_ringct(const rct::rctSig & rv,
@@ -201,11 +198,6 @@ url_decode(const std::string& in, std::string& out);
 map<std::string, std::string>
 parse_crow_post_data(const string& req_body);
 
-// from wallet2::decrypt
-string
-decrypt(const std::string &ciphertext,
-        const crypto::secret_key &skey,
-        bool authenticated = true);
 
 // based on
 // crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const

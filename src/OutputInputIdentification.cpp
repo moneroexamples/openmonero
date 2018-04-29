@@ -9,12 +9,12 @@ namespace xmreg
 {
 
 OutputInputIdentification::OutputInputIdentification(
-    const account_public_address* _a,
+    const address_parse_info* _a,
     const secret_key* _v,
     const transaction* _tx)
     : total_received {0}, mixin_no {0}
 {
-    address = _a;
+    address_info = _a;
     viewkey = _v;
     tx = _tx;
 
@@ -61,7 +61,6 @@ OutputInputIdentification::identify_outputs()
     outputs = get_ouputs_tuple(*tx);
 
 
-
     for (auto& out: outputs)
     {
         txout_to_key txout_k      = std::get<0>(out);
@@ -75,7 +74,7 @@ OutputInputIdentification::identify_outputs()
 
         derive_public_key(derivation,
                           output_idx_in_tx,
-                          address->m_spend_public_key,
+                          address_info->address.m_spend_public_key,
                           generated_tx_pubkey);
 
         // check if generated public key matches the current output's key

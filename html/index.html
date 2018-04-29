@@ -105,8 +105,9 @@
         </div>
         <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#!/overview' : '#!/'}}">
             <span style="font-size: 32px; font-weight: bold;">OPEN MONERO</span>
-            <span style="color:white" ng-hide="testnet == false"><br/>testnet monero network</span>
-            <span style="color:white" ng-hide="testnet == true"><br/>mainnet monero network</span>
+            <span style="color:white" ng-show="nettype == 0"><br/>mainnet monero network</span>
+            <span style="color:white" ng-show="nettype == 1"><br/>testnet monero network</span>
+            <span style="color:white" ng-show="nettype == 2"><br/>stagenet monero network</span>
         </a>
     </div>
 </div>
