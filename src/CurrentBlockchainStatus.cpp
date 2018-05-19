@@ -244,7 +244,7 @@ CurrentBlockchainStatus::tx_exist(const string& tx_hash_str, uint64_t& tx_index)
         return tx_exist(tx_hash, tx_index);
     }
 
-    false;
+    return false;
 }
 
 bool
@@ -879,6 +879,20 @@ CurrentBlockchainStatus::find_tx_in_mempool(
         transaction& tx)
 {
 
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto const& mtx: mempool_txs)
+    {
+        const transaction &m_tx = mtx.second;
+
+        if (get_transaction_hash(m_tx) == tx_hash)
+        {
+            tx = m_tx;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool

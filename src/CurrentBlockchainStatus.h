@@ -33,6 +33,12 @@ static mutex getting_mempool_txs;
 */
 struct CurrentBlockchainStatus
 {
+
+    // vector of mempool transactions that all threads
+    // can refer to
+    //           <recieved_time, transaction>
+    using mempool_txs_t = vector<pair<uint64_t, transaction>>;
+
     static string blockchain_path;
 
     static atomic<uint64_t> current_height;
@@ -65,7 +71,7 @@ struct CurrentBlockchainStatus
     // vector of mempool transactions that all threads
     // can refer to
     //           <recieved_time, transaction>
-    static vector<pair<uint64_t, transaction>> mempool_txs;
+    static mempool_txs_t mempool_txs;
 
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
