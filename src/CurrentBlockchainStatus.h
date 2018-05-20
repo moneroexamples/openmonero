@@ -199,6 +199,12 @@ struct CurrentBlockchainStatus
                        transaction& tx);
 
     static bool
+    find_key_images_in_mempool(std::vector<txin_v> const& vin);
+
+    static bool
+    find_key_images_in_mempool(transaction const& tx);
+
+    static bool
     get_tx(crypto::hash const& tx_hash, transaction& tx);
 
     static bool
