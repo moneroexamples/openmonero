@@ -114,6 +114,7 @@ set(LIBRARIES
         epee
         checkpoints
         version
+        pcsclite
         ${Boost_LIBRARIES}
         pthread
         unbound
@@ -146,4 +147,3 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
-
