@@ -109,10 +109,10 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // make it 1 block lower than current, just in case.
         // this variable will be our using to initialize
         // `scanned_block_height` in mysql Accounts table.
-        if (acc_id = xmr_accounts->insert(xmr_address,
+        if ((acc_id = xmr_accounts->insert(xmr_address,
                                            make_hash(view_key),
                                            blk_timestamp_mysql_format,
-                                           current_blockchain_height) == 0)
+                                           current_blockchain_height)) == 0)
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -821,17 +821,56 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
 
     string error_msg;
 
+    // before we submit the tx into the deamon, we are going to do a few checks.
+    // first, we parse the hexbuffer submmited by the frontend into binary buffer block
+    // second, we are going to check if we can construct valid transaction object
+    // fromt that binary buffer.
+    // third, we are going to check if any key image in this tx is in any of the txs
+    // in the mempool. This allows us to make a clear comment that the tx
+    // uses outputs just spend. This happens we a users submits few txs, one after another
+    // before previous txs get included in a block and are still present in the mempool.
+
+    std::string tx_blob;
+
+    if(!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_blob, tx_blob))
+    {
+        j_response["status"] = "error";
+        j_response["error"]  = "Tx faild parse_hexstr_to_binbuff";
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    transaction tx_to_be_submitted;
+
+    if (!parse_and_validate_tx_from_blob(tx_blob, tx_to_be_submitted))
+    {
+        j_response["status"] = "error";
+        j_response["error"]  = "Tx faild parse_and_validate_tx_from_blob";
+        session_close(session, j_response.dump());
+        return;
+    }
+
+    if (CurrentBlockchainStatus::find_key_images_in_mempool(tx_to_be_submitted))
+    {
+        j_response["status"] = "error";
+        j_response["error"]  = "Tx uses your outputs that area already in the mempool. "
+                               "Please wait till your previous tx(s) get mined";
+        session_close(session, j_response.dump());
+        return;
+    }
+
     if (!CurrentBlockchainStatus::commit_tx(
             raw_tx_blob, error_msg,
             CurrentBlockchainStatus::do_not_relay))
     {
         j_response["status"] = "error";
         j_response["error"]  = error_msg;
+        session_close(session, j_response.dump());
+        return;
     }
-    else
-    {
-        j_response["status"] = "success";
-    }
+
+    j_response["status"] = "success";
+
 
     string response_body = j_response.dump();
 

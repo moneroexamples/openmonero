@@ -33,6 +33,12 @@ static mutex getting_mempool_txs;
 */
 struct CurrentBlockchainStatus
 {
+
+    // vector of mempool transactions that all threads
+    // can refer to
+    //           <recieved_time, transaction>
+    using mempool_txs_t = vector<pair<uint64_t, transaction>>;
+
     static string blockchain_path;
 
     static atomic<uint64_t> current_height;
@@ -65,7 +71,7 @@ struct CurrentBlockchainStatus
     // vector of mempool transactions that all threads
     // can refer to
     //           <recieved_time, transaction>
-    static vector<pair<uint64_t, transaction>> mempool_txs;
+    static mempool_txs_t mempool_txs;
 
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
@@ -191,6 +197,12 @@ struct CurrentBlockchainStatus
     static bool
     find_tx_in_mempool(crypto::hash const& tx_hash,
                        transaction& tx);
+
+    static bool
+    find_key_images_in_mempool(std::vector<txin_v> const& vin);
+
+    static bool
+    find_key_images_in_mempool(transaction const& tx);
 
     static bool
     get_tx(crypto::hash const& tx_hash, transaction& tx);
