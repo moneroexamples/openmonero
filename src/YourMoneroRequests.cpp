@@ -729,7 +729,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
         return;
     };
 
-    if (count > 21)
+    if (count > 41)
     {
         cerr << "Request ring size too big" << '\n';
         j_response["status"] = "error";
