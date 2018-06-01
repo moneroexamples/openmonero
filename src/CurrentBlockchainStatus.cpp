@@ -130,7 +130,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
     mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
 
     // initialize the core using the blockchain path
-    if (!mcore->init(blockchain_path))
+    if (!mcore->init(blockchain_path, net_type))
         return false;
 
     // get the high level Blockchain object to interact

@@ -46,31 +46,6 @@
                                         <input class="w-button login-btn pointer" id="form-submit" type="submit" value="Enter my account"
                                                data-wait="Please wait...">
                                     </div>
-                                    <!--
-                                    <div class="subhead-text modal">
-                                        <a class="login-link" data-ix="close-overlay" href="" ng-click="decodeSeed(mnemonic, mnemonic_language)">Decode the login key (works offline)</a>
-                                    </div>
-                                    -->
-
-                                    <div class="w-form form-wrapper" ng-show="address && decode">
-                                        <form id="email-form" name="email-form" data-name="Email Form">
-                                            <label class="field-label review" for="Mnemonic-2">Account Address (Public)</label>
-                                            <div class="move-text-div">
-                                                <div class="review-text address">{{address}} </div>
-                                            </div>
-                                            <label class="field-label review" for="Mnemonic-2">View Key (Private)</label>
-                                            <div class="move-text-div">
-                                                <div class="review-text">{{view_key}} </div>
-                                            </div>
-                                            <label class="field-label review" for="Mnemonic-2">Spend Key (Private)</label>
-                                            <div class="move-text-div">
-                                                <div class="review-text">{{spend_key}} </div>
-                                            </div>
-                                            <div class="submit-div">
-                                                <a class="login-btn modals pointer" data-ix="close-review-details" hide-modal>Ok, thanks!</a>
-                                            </div>
-                                        </form>
-                                    </div>
 
                                     <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
                                         <p>{{error}}</p>

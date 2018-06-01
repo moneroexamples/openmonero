@@ -35,7 +35,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
         $scope.error = '';
     };
 
-    $scope.decode = true;
+    $scope.decode = false;
 
     $scope.mnemonic_language = 'english';
 
@@ -46,7 +46,6 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
         // just some dummy account, as not to fill login form every time.
         $scope.mnemonic = "eluded extra boyfriend gels hiding waxing feline unbending drying pancakes dwindling fuming friendly pamphlet myth tepid snug budget android vogue losing each affair afraid affair";
     } else {
-        $scope.decode = false;
         $scope.address = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";
         $scope.view_key = "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501" ;
     }
@@ -80,8 +79,6 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
 
         //var payment_id8 = rand_8();        
         //var integarted_address = get_account_integrated_address(keys.public_addr, payment_id8);
-
-        $scope.decode = false;
 
         return [seed, keys];
     };

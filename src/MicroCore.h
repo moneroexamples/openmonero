@@ -34,11 +34,13 @@ class MicroCore {
 
     hw::device* m_device;
 
+    network_type nettype;
+
 public:
     MicroCore();
 
     bool
-    init(const string& _blockchain_path);
+    init(const string& _blockchain_path, network_type nt);
 
     Blockchain&
     get_core();
@@ -96,8 +98,8 @@ public:
 bool
 init_blockchain(const string& path,
                 MicroCore& mcore,
-                Blockchain*& core_storage);
-
+                Blockchain*& core_storage,
+                network_type nt);
 
 
 }
