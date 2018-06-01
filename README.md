@@ -208,14 +208,11 @@ Other backend options are in `confing/config.json`.
 
 Before running `openmonero`:
 
- - make sure you have `Downloads` folder in your home directory.
- Time library used in Open Monero stores there time zone offsets database that it uses.
- - edit `config/confing.js` file with your settings. Especially set `frontend-url` and `database`
+ - edit `config/config.js` file with your settings. Especially set `frontend-url` and `database`
  connection details.
  - set `apiUrl` in `html\js\config.js` and `nettype` option. Last slash `/` in `apiUrl` is important.
  If running backend for testnet or stagenet networks, frontend `nettype` must be set to  
  1 - TESTNET or 2 - STAGENET. 0 is for MAINNET.
- For mainnet, it is set to `false`.
  - make sure monero daemon is running and fully sync. If using testnet or stagenet networks, use monero daemon
  with `--testnet` or `--stagenet` flags!
 
