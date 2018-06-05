@@ -1444,7 +1444,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                     // we have to redo this info from basically from scrach.
 
-                    vector<pair<string, uint64_t>> known_outputs_keys;
+                    vector<pair<public_key, uint64_t>> known_outputs_keys;
 
                     if (CurrentBlockchainStatus::get_known_outputs_keys(
                             xmr_address, known_outputs_keys))
@@ -1474,7 +1474,9 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
                             // tx public key and its index in that tx
                             XmrOutput out;
 
-                            if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                            string out_pub_key = pod_to_hex(in_info.out_pub_key);
+
+                            if (xmr_accounts->output_exists(out_pub_key, out))
                             {
                                 total_spent += out.amount;
 

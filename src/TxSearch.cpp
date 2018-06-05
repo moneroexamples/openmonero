@@ -177,13 +177,6 @@ TxSearch::search()
                 // it will be used mostly to sort txs in the frontend.
                 uint64_t blockchain_tx_id {0};
 
-                if (!CurrentBlockchainStatus::tx_exist(oi_identification.tx_hash, blockchain_tx_id))
-                {
-                    cerr << "Tx " << oi_identification.get_tx_hash_str()
-                         << "not found in blockchain !" << '\n';
-                    continue;
-                }
-
                 // FIRSt step.
                 oi_identification.identify_outputs();
 
@@ -251,6 +244,14 @@ TxSearch::search()
                     }
 
 
+                    if (!CurrentBlockchainStatus::tx_exist(oi_identification.tx_hash, blockchain_tx_id))
+                    {
+                        cerr << "Tx " << oi_identification.get_tx_hash_str()
+                             << "not found in blockchain !" << '\n';
+                        continue;
+                    }
+
+
                     XmrTransaction tx_data;
 
                     tx_data.hash             = oi_identification.get_tx_hash_str();
@@ -303,7 +304,7 @@ TxSearch::search()
 
                         out_data.account_id   = acc->id;
                         out_data.tx_id        = tx_mysql_id;
-                        out_data.out_pub_key  = out_info.pub_key;
+                        out_data.out_pub_key  = pod_to_hex(out_info.pub_key);
                         out_data.tx_pub_key   = oi_identification.get_tx_pub_key_str();
                         out_data.amount       = out_info.amount;
                         out_data.out_index    = out_info.idx_in_tx;
@@ -365,6 +366,15 @@ TxSearch::search()
 
                     }
 
+                    if (blockchain_tx_id == 0)
+                    {
+                        if (!CurrentBlockchainStatus::tx_exist(oi_identification.tx_hash, blockchain_tx_id))
+                        {
+                            cerr << "Tx " << oi_identification.get_tx_hash_str()
+                                 << "not found in blockchain !" << '\n';
+                            continue;
+                        }
+                    }
 
                     vector<XmrInput> inputs_found;
 
@@ -372,7 +382,7 @@ TxSearch::search()
                     {
                         XmrOutput out;
 
-                        if (xmr_accounts->output_exists(in_info.out_pub_key, out))
+                        if (xmr_accounts->output_exists(pod_to_hex(in_info.out_pub_key), out))
                         {
                             cout << "input uses some mixins which are our outputs"
                                  << out << '\n';
@@ -575,12 +585,16 @@ TxSearch::populate_known_outputs()
     {
         for (const XmrOutput& out: outs)
         {
-            known_outputs_keys.push_back(make_pair(out.out_pub_key, out.amount));
+            public_key out_pub_key;
+
+            hex_to_pod(out.out_pub_key, out_pub_key);
+
+            known_outputs_keys.push_back(make_pair(out_pub_key, out.amount));
         }
     }
 }
 
-vector<pair<string, uint64_t>>
+TxSearch::known_outputs_t
 TxSearch::get_known_outputs_keys()
 {
     std::lock_guard<std::mutex> lck (getting_known_outputs_keys);
@@ -595,7 +609,7 @@ TxSearch::find_txs_in_mempool(
 
     uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
 
-    vector<pair<string, uint64_t>> known_outputs_keys_copy = get_known_outputs_keys();
+    known_outputs_t known_outputs_keys_copy = get_known_outputs_keys();
 
     // since find_txs_in_mempool can be called outside of this thread,
     // we need to use local connection. we cant use connection that the
@@ -677,7 +691,7 @@ TxSearch::find_txs_in_mempool(
                 // tx public key and its index in that tx
                 XmrOutput out;
 
-                if (local_xmr_accounts->output_exists(in_info.out_pub_key, out))
+                if (local_xmr_accounts->output_exists(pod_to_hex(in_info.out_pub_key), out))
                 {
                     total_sent += out.amount;
 

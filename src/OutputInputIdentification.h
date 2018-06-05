@@ -52,12 +52,12 @@ public:
     // outputs that we can need in later parts.
     struct output_info
     {
-        string    pub_key;
-        uint64_t  amount;
-        uint64_t  idx_in_tx;
-        string    rtc_outpk;
-        string    rtc_mask;
-        string    rtc_amount;
+        public_key pub_key;
+        uint64_t   amount;
+        uint64_t   idx_in_tx;
+        string     rtc_outpk;
+        string     rtc_mask;
+        string     rtc_amount;
     };
 
     // define a structure to keep information about found
@@ -66,7 +66,7 @@ public:
     {
         string key_img;
         uint64_t amount;
-        string out_pub_key;
+        public_key out_pub_key;
     };
 
     crypto::hash tx_hash;
@@ -126,7 +126,7 @@ public:
      *
      */
     void identify_inputs(
-            const vector<pair<string, uint64_t>>& known_outputs_keys);
+            const vector<pair<public_key, uint64_t>>& known_outputs_keys);
 
     string const&
     get_tx_hash_str();
