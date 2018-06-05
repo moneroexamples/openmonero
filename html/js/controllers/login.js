@@ -44,7 +44,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
         $scope.mnemonic = "agenda shrugged liquid extra mundane phone nomad oust duckling sifting pledge loyal royal urban skater bawled gusts bounced boil violin mumble gags axle sapling shrugged";
     } else if (config.nettype == 2) {
         // just some dummy account, as not to fill login form every time.
-        $scope.mnemonic = "eluded extra boyfriend gels hiding waxing feline unbending drying pancakes dwindling fuming friendly pamphlet myth tepid snug budget android vogue losing each affair afraid affair";
+        $scope.mnemonic = "gels lair teeming cease nanny utility inexact leisure civilian emerge zippers skew gasp enjoy fugitive nanny candy nuance muppet scrub uneven yard ulcers unquoted yard";
     } else {
         $scope.address = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";
         $scope.view_key = "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501" ;
