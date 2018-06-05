@@ -31,15 +31,13 @@ to MyMonero. They include:
  - new transaction details window.
  - sending xmr to a subaddress (not receiving nor generating subaddresses for now).
 
-## Stagenet version (Currently offline)
+## Live stagenet version
 
-- [http://139.162.32.245:81](http://139.162.32.245:81) - DOWN due to problems with
-my VPS hosting.
+- [http://172.104.45.209:81](http://172.104.45.209:81)
 
 This is Open Monero running on stagnet network. You can use it to play around with it.
-Since this is stagnet version, frequent changes and database resets are expected. Also,
-
- it is running on cheap VPS, which may result in some lag.
+Please note that the live version isis running on cheap VPS, which may result in
+performance issues.
 
 
 ## Screenshot
