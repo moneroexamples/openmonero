@@ -40,11 +40,6 @@ OutputInputIdentification::OutputInputIdentification(
         throw OutputInputIdentificationException("Cant get derived key for a tx");
     }
 
-    if (!tx_is_coinbase)
-    {
-
-    }
-
 }
 
 uint64_t

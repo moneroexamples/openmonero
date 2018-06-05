@@ -197,6 +197,22 @@ CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
     return mcore->get_block_from_height(height, blk);
 }
 
+vector<block>
+CurrentBlockchainStatus::get_blocks_range(
+        uint64_t const& h1, uint64_t const& h2)
+{
+    try
+    {
+        return core_storage->get_db().get_blocks_range(h1, h2);
+    }
+    catch (BLOCK_DNE& e)
+    {
+        cerr << e.what() << endl;
+    }
+
+    return {};
+}
+
 bool
 CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk_txs)
 {

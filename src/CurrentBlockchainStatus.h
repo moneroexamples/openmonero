@@ -105,6 +105,9 @@ struct CurrentBlockchainStatus
     static bool
     get_block(uint64_t height, block &blk);
 
+    static vector<block>
+    get_blocks_range(uint64_t const& h1, uint64_t const& h2);
+
     static bool
     get_block_txs(const block &blk, list <transaction> &blk_txs);
 
