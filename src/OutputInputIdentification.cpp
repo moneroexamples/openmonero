@@ -172,6 +172,8 @@ OutputInputIdentification::identify_inputs(
 {
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(*tx);
 
+    size_t search_misses = {0};
+
     // make timescale maps for mixins in input
     for (const txin_to_key& in_key: input_key_imgs)
     {
@@ -251,7 +253,12 @@ OutputInputIdentification::identify_inputs(
             // in all inputs in a given txs. Thus, if a single input
             // is without our output, we can assume this tx does
             // not contain any of our spendings.
-            //break;
+
+            // just to be sure before we break out of this loop,
+            // do it only after two misses
+
+            if (++search_misses > 2)
+                break;
         }
 
     } // for (const txin_to_key& in_key: input_key_imgs)

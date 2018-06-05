@@ -49,7 +49,7 @@ thinwalletCtrls.controller("ImportAccountCtrl", function($scope, $location,
     // as its much less complicated that importAll.
     $scope.importLast = function()
     {
-        if ($scope.no_blocks_to_import > 22000) {
+        if ($scope.no_blocks_to_import > 132000) {
             ModalService.hide('imported-account');
             return;
         }
