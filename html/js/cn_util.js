@@ -1693,7 +1693,7 @@ var cnUtil = (function(initConfig) {
         } else {
             tx.signatures = [];
         }
-        tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
+
         tx.prvkey = txkey.sec;
 
         var in_contexts = [];
@@ -1807,6 +1807,7 @@ var cnUtil = (function(initConfig) {
             ++out_index;
             outputs_money = outputs_money.add(dsts[i].amount);
         }
+
         tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
 
         if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
