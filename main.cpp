@@ -83,6 +83,8 @@ xmreg::CurrentBlockchainStatus::do_not_relay
         = do_not_relay;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
         = config_json["refresh_block_status_every_seconds"];
+xmreg::CurrentBlockchainStatus::blocks_search_lookahead
+        = config_json["blocks_search_lookahead"];
 xmreg::CurrentBlockchainStatus::max_number_of_blocks_to_import
         = config_json["max_number_of_blocks_to_import"];
 xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds

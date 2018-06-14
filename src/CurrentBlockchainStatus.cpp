@@ -28,7 +28,8 @@ network_type            CurrentBlockchainStatus::net_type {network_type::MAINNET
 bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
-uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{20};
+uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{10};
+uint64_t                CurrentBlockchainStatus::blocks_search_lookahead {100};
 uint64_t                CurrentBlockchainStatus::max_number_of_blocks_to_import{8000};
 uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
 vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
@@ -214,16 +215,18 @@ CurrentBlockchainStatus::get_blocks_range(
 }
 
 bool
-CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk_txs)
+CurrentBlockchainStatus::get_block_txs(
+        const block &blk,
+        list<transaction>& blk_txs,
+        list<crypto::hash>& missed_txs)
 {
     // get all transactions in the block found
     // initialize the first list with transaction for solving
     // the block i.e. coinbase tx.
     blk_txs.push_back(blk.miner_tx);
 
-    list <crypto::hash> missed_txs;
-
-    if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs)) {
+    if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+    {
         cerr << "Cant get transactions in block: " << get_block_hash(blk) << endl;
         return false;
     }
@@ -231,6 +234,20 @@ CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk
     return true;
 }
 
+bool
+CurrentBlockchainStatus::get_txs(
+        vector<crypto::hash> const& txs_to_get,
+        list<transaction>& txs,
+        list<crypto::hash>& missed_txs)
+{
+    if (!core_storage->get_transactions(txs_to_get, txs, missed_txs))
+    {
+        cerr << "CurrentBlockchainStatus::get_txs: cant get transactions!\n";
+        return false;
+    }
+
+    return true;
+}
 
 bool
 CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash)
@@ -546,8 +563,9 @@ CurrentBlockchainStatus::search_if_payment_made(
         }
 
         list <cryptonote::transaction> blk_txs;
+        list<crypto::hash> missed_txs;
 
-        if (!get_block_txs(blk, blk_txs))
+        if (!get_block_txs(blk, blk_txs, missed_txs))
         {
             cerr << "Cant get transactions in block: " << to_string(blk_i) << endl;
             return false;
@@ -757,7 +775,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     if (search_thread_exist(acc.address))
     {
         // thread for this address exist, dont make new one
-        cout << "Thread exists, dont make new one" << endl;
+        //cout << "Thread exists, dont make new one\n";
         return true; // this is still OK, so return true.
     }
 
@@ -777,6 +795,8 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     // start the thread for the created object
     std::thread t1 {&TxSearch::search, searching_threads[acc.address].get()};
     t1.detach();
+
+    cout << "Search thread created\n";
 
     return true;
 }
@@ -821,7 +841,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
 bool
 CurrentBlockchainStatus::get_known_outputs_keys(
         string const& address,
-        vector<pair<public_key, uint64_t>>& known_outputs_keys)
+        unordered_map<public_key, uint64_t>& known_outputs_keys)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
@@ -1089,4 +1109,58 @@ CurrentBlockchainStatus::construct_output_rct_field(
 };
 
 
+
+bool
+CurrentBlockchainStatus::get_txs_in_blocks(
+        vector<block> const& blocks,
+        vector<txs_tuple_t>& txs_data)
+{
+    // get height of the first block
+    uint64_t h1 = get_block_height(blocks[0]);
+
+    for(uint64_t blk_i = 0; blk_i < blocks.size(); blk_i++)
+    {
+        block const& blk = blocks[blk_i];
+        uint64_t blk_height = h1 + blk_i;
+
+        // first insert miner_tx
+        txs_data.emplace_back(get_transaction_hash(blk.miner_tx),
+                              transaction{}, blk_height, blk.timestamp, true);
+
+        // now insert hashes of regular txs to be fatched later
+        // so for now, theys txs are null pointers
+        for (auto& tx_hash: blk.tx_hashes)
+            txs_data.emplace_back(tx_hash, transaction{}, blk_height, blk.timestamp, false);
+    }
+
+    // prepare vector<tx_hash> for CurrentBlockchainStatus::get_txs to fetch
+    // the correspoding transactions
+    std::vector<crypto::hash> txs_to_get;
+
+    for (auto const& tx_tuple: txs_data)
+        txs_to_get.push_back(std::get<0>(tx_tuple));
+
+    // fetch all txs from the blocks that we are analyzing in this iteration
+    std::list<cryptonote::transaction> txs;
+    std::list<crypto::hash> missed_txs;
+
+    if (!CurrentBlockchainStatus::get_txs(txs_to_get, txs, missed_txs) || !missed_txs.empty())
+    {
+        cerr << "Cant get transactions in blocks from : " << h1 << '\n';
+        return false;
+    }
+
+    size_t tx_idx {0};
+
+    for (auto& tx: txs)
+    {
+        auto& tx_tuple = txs_data[tx_idx++];
+        //assert(std::get<0>(tx_tuple) == get_transaction_hash(tx));
+        std::get<1>(tx_tuple) = std::move(tx);
+    }
+
+    return true;
 }
+
+}
+

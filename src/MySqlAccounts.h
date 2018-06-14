@@ -54,6 +54,9 @@ public:
     uint64_t
     insert(const XmrInput& in_data);
 
+    uint64_t
+    insert(vector<XmrInput> const& in_data);
+
 };
 
 
@@ -79,10 +82,11 @@ public:
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
 
-
-
     uint64_t
     insert(const XmrOutput& out_data);
+
+    uint64_t
+    insert(vector<XmrOutput> const& out_data);
 
 };
 
@@ -187,7 +191,13 @@ public:
     insert_output(const XmrOutput& tx_out);
 
     uint64_t
+    insert_output(vector<XmrOutput> const& out_data);
+
+    uint64_t
     insert_input(const XmrInput& tx_in);
+
+    uint64_t
+    insert_input(vector<XmrInput> const& in_data);
 
     bool
     select_txs(const string& xmr_address, vector<XmrTransaction>& txs);

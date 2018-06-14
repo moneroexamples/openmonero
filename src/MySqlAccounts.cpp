@@ -111,12 +111,10 @@ MysqlInputs::insert(const XmrInput& in_data)
 
     try
     {
-        SimpleResult sr = query.execute(in_data.account_id,
-                                        in_data.tx_id,
-                                        in_data.output_id,
-                                        in_data.key_image,
-                                        in_data.amount,
-                                        in_data.timestamp);
+        query.insert(in_data);
+
+        SimpleResult sr = query.execute();
+
 
         if (sr.rows() == 1)
             return sr.insert_id();
@@ -137,6 +135,34 @@ MysqlInputs::insert(const XmrInput& in_data)
     return 0;
 }
 
+uint64_t
+MysqlInputs::insert(vector<XmrInput> const& in_data)
+{
+    Query query = conn->query(XmrInput::INSERT_STMT);
+    query.parse();
+
+    try
+    {
+        query.insert(in_data.begin(), in_data.end());
+        SimpleResult sr = query.execute();
+
+        return sr.rows();
+
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
+}
 
 
 MysqlOutpus::MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
@@ -276,18 +302,9 @@ MysqlOutpus::insert(const XmrOutput& out_data)
 
     try
     {
-        SimpleResult sr = query.execute(out_data.account_id,
-                                        out_data.tx_id,
-                                        out_data.out_pub_key,
-                                        out_data.tx_pub_key,
-                                        out_data.rct_outpk,
-                                        out_data.rct_mask,
-                                        out_data.rct_amount,
-                                        out_data.amount,
-                                        out_data.global_index,
-                                        out_data.out_index,
-                                        out_data.mixin,
-                                        out_data.timestamp);
+        query.insert(out_data);
+
+        SimpleResult sr = query.execute();
 
         if (sr.rows() == 1)
             return sr.insert_id();
@@ -308,9 +325,39 @@ MysqlOutpus::insert(const XmrOutput& out_data)
     return 0;
 }
 
+uint64_t
+MysqlOutpus::insert(vector<XmrOutput> const& out_data)
+{
+    Query query = conn->query(XmrOutput::INSERT_STMT);
+    query.parse();
 
+    // cout << query << endl;
 
-MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
+    try
+    {
+        query.insert(out_data.begin(), out_data.end());
+
+        SimpleResult sr = query.execute();
+
+        return sr.rows();
+
+    }
+    catch (mysqlpp::Exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
+}
+
+    MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
 bool
@@ -772,9 +819,21 @@ MySqlAccounts::insert_output(const XmrOutput& tx_out)
 }
 
 uint64_t
+MySqlAccounts::insert_output(vector<XmrOutput> const& out_data)
+{
+    return mysql_out->insert(out_data);
+}
+
+    uint64_t
 MySqlAccounts::insert_input(const XmrInput& tx_in)
 {
     return mysql_in->insert(tx_in);
+}
+
+uint64_t
+MySqlAccounts::insert_input(vector<XmrInput> const& in_data)
+{
+    return mysql_in->insert(in_data);
 }
 
 bool

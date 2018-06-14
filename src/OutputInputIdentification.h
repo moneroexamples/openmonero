@@ -8,6 +8,8 @@
 #include "CurrentBlockchainStatus.h"
 #include "tools.h"
 
+#include <map>
+
 namespace xmreg
 {
 
@@ -99,13 +101,16 @@ public:
 
     OutputInputIdentification(const address_parse_info* _a,
                               const secret_key* _v,
-                              const transaction* _tx);
+                              const transaction* _tx,
+                              crypto::hash const& _tx_hash,
+                              bool is_coinbase);
 
     /**
      * FIRST step. search for the incoming xmr using address, viewkey and
      * outputs public keys.
      */
-    void identify_outputs();
+    void
+    identify_outputs();
 
 
     /**
@@ -125,8 +130,8 @@ public:
      * known_outputs_keys is pair of <output public key, output amount>
      *
      */
-    void identify_inputs(
-            const vector<pair<public_key, uint64_t>>& known_outputs_keys);
+    void
+    identify_inputs(unordered_map<public_key, uint64_t> const& known_outputs_keys);
 
     string const&
     get_tx_hash_str();

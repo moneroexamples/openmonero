@@ -11,17 +11,19 @@ namespace xmreg
 OutputInputIdentification::OutputInputIdentification(
     const address_parse_info* _a,
     const secret_key* _v,
-    const transaction* _tx)
+    const transaction* _tx,
+    crypto::hash const& _tx_hash,
+    bool is_coinbase)
     : total_received {0}, mixin_no {0}
 {
     address_info = _a;
     viewkey = _v;
     tx = _tx;
 
-    tx_hash     = get_transaction_hash(*tx);
     tx_pub_key  = xmreg::get_tx_pub_key_from_received_outs(*tx);
 
-    tx_is_coinbase = is_coinbase(*tx);
+    tx_is_coinbase = is_coinbase;
+    tx_hash = _tx_hash;
 
     is_rct = (tx->version == 2);
 
@@ -55,16 +57,13 @@ void
 OutputInputIdentification::identify_outputs()
 {
     //          <public_key  , amount  , out idx>
-    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
-
-    outputs = get_ouputs_tuple(*tx);
-
+    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs = get_ouputs_tuple(*tx);
 
     for (auto& out: outputs)
     {
-        txout_to_key txout_k      = std::get<0>(out);
-        uint64_t amount           = std::get<1>(out);
-        uint64_t output_idx_in_tx = std::get<2>(out);
+        txout_to_key const& txout_k = std::get<0>(out);
+        uint64_t amount             = std::get<1>(out);
+        uint64_t output_idx_in_tx   = std::get<2>(out);
 
         // get the tx output public key
         // that normally would be generated for us,
@@ -78,11 +77,6 @@ OutputInputIdentification::identify_outputs()
 
         // check if generated public key matches the current output's key
         bool mine_output = (txout_k.key == generated_tx_pubkey);
-
-
-        //cout  << "Chekcing output: "  << pod_to_hex(txout_k.key) << " "
-        //      << "mine_output: " << mine_output << endl;
-
 
         // placeholder variable for ringct outputs info
         // that we need to save in database
@@ -130,22 +124,13 @@ OutputInputIdentification::identify_outputs()
                 }
 
                 amount = rct_amount_val;
-            }
+
+            } // if (!tx_is_coinbase)
 
         } // if (mine_output && tx.version == 2)
 
         if (mine_output)
         {
-            string out_key_str = pod_to_hex(txout_k.key);
-
-            // found an output associated with the given address and viewkey
-            string msg = fmt::format("tx_hash:  {:s}, output_pub_key: {:s}\n",
-                                     get_tx_hash_str(),
-                                     out_key_str);
-
-            cout << msg << endl;
-
-
             total_received += amount;
 
             identified_outputs.emplace_back(
@@ -163,14 +148,14 @@ OutputInputIdentification::identify_outputs()
 
 void
 OutputInputIdentification::identify_inputs(
-        const vector<pair<public_key, uint64_t>>& known_outputs_keys)
+        unordered_map<public_key, uint64_t> const& known_outputs_keys)
 {
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(*tx);
 
-    size_t search_misses = {0};
+    size_t search_misses {0};
 
     // make timescale maps for mixins in input
-    for (const txin_to_key& in_key: input_key_imgs)
+    for (txin_to_key const& in_key: input_key_imgs)
     {
         // get absolute offsets of mixins
         std::vector<uint64_t> absolute_offsets
@@ -189,7 +174,6 @@ OutputInputIdentification::identify_inputs(
             continue;
         }
 
-
         // mixin counter
         size_t count = 0;
 
@@ -202,39 +186,27 @@ OutputInputIdentification::identify_inputs(
             // get basic information about mixn's output
             cryptonote::output_data_t output_data = mixin_outputs[count];
 
-            //string output_public_key_str = pod_to_hex(output_data.pubkey);
-
             //cout << " - output_public_key_str: " << output_public_key_str << endl;
 
             // before going to the mysql, check our known outputs cash
             // if the key exists. Its much faster than going to mysql
             // for this.
 
+            auto it = known_outputs_keys.find(output_data.pubkey);
 
-            auto it =  std::find_if(
-                    known_outputs_keys.begin(),
-                    known_outputs_keys.end(),
-                    [&output_data](pair<public_key, uint64_t> const& known_output)
-                    {
-                        return output_data.pubkey == known_output.first;
-                    });
-
-            if (it == known_outputs_keys.end())
+            if (it != known_outputs_keys.end())
             {
-                // this mixins's output is unknown.
-                ++count;
-                continue;
+                // this seems to be our mixin.
+                // save it into identified_inputs vector
+
+                identified_inputs.push_back(input_info {
+                        pod_to_hex(in_key.k_image),
+                        it->second, // amount
+                        output_data.pubkey});
+
+                found_a_match = true;
+
             }
-
-            // this seems to be our mixin.
-            // save it into identified_inputs vector
-
-            identified_inputs.push_back(input_info {
-                    pod_to_hex(in_key.k_image),
-                    (*it).second, // amount
-                    output_data.pubkey});
-
-            found_a_match = true;
 
             ++count;
 
@@ -265,10 +237,7 @@ string const&
 OutputInputIdentification::get_tx_hash_str()
 {
     if (tx_hash_str.empty())
-    {
         tx_hash_str = pod_to_hex(tx_hash);
-    }
-
 
     return tx_hash_str;
 }
