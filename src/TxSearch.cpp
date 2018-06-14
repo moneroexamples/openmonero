@@ -262,7 +262,7 @@ TxSearch::search()
                         //todo what should be done when insert_tx fails?
                     }
 
-                    //vector<XmrOutput> outputs_found;
+                    vector<XmrOutput> outputs_found;
 
                     // now add the found outputs into Outputs tables
                     for (auto& out_info: oi_identification.identified_outputs)
@@ -282,17 +282,7 @@ TxSearch::search()
                         out_data.mixin        = tx_data.mixin;
                         out_data.timestamp    = tx_data.timestamp;
 
-                        //outputs_found.push_back(out_data);
-
-                        // insert output into mysql's outputs table
-                        uint64_t out_mysql_id = xmr_accounts->insert_output(out_data);
-
-                        if (out_mysql_id == 0)
-                        {
-                            throw TxSearchException("out_mysql_id is zero!");
-                            //todo what should be done when insert_tx fails?
-                        }
-
+                        outputs_found.push_back(out_data);
 
                         {
                             // add the outputs found into known_outputs_keys map
@@ -304,15 +294,13 @@ TxSearch::search()
 
 
                     // insert all outputs found into mysql's outputs table
-                    // DOES not work in ubuntu 16.04, but works in arch.
-                    // back to inserting one by one above
-//                    uint64_t no_rows_inserted = xmr_accounts->insert_output(outputs_found);
-//
-//                    if (no_rows_inserted == 0)
-//                    {
-//                        //cerr << "out_mysql_id is zero!" << endl;
-//                        throw TxSearchException("no_rows_inserted is zero!");
-//                    }
+                    uint64_t no_rows_inserted = xmr_accounts->insert_output(outputs_found);
+
+                    if (no_rows_inserted == 0)
+                    {
+                        //cerr << "out_mysql_id is zero!" << endl;
+                        throw TxSearchException("no_rows_inserted is zero!");
+                    }
 
                 } // if (!found_mine_outputs.empty())
 
@@ -456,30 +444,14 @@ TxSearch::search()
 
                         // save all input found into database at once
                         // but first update tx_mysql_id for these inputs
-                        // UPDATE: remove this as it does not work in Ubuntu 18.04.
-                        // mysql throws. But works fine in Arch. What a garbage.
-//                        for (XmrInput& in_data: inputs_found)
-//                            in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
-//
-//                        uint64_t no_rows_inserted = xmr_accounts->insert_input(inputs_found);
-//
-//                        if (no_rows_inserted == 0)
-//                        {
-//                            throw TxSearchException("no_rows_inserted is zero!");
-//                        }
-
-                        // save all input found into database
                         for (XmrInput& in_data: inputs_found)
-                        {
                             in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
 
-                            uint64_t in_mysql_id = xmr_accounts->insert_input(in_data);
+                        uint64_t no_rows_inserted = xmr_accounts->insert_input(inputs_found);
 
-                            if (in_mysql_id == 0)
-                            {
-                                throw TxSearchException("in_mysql_id is zero!");
-                                //todo what shoud we do when insert_input fails?
-                            }
+                        if (no_rows_inserted == 0)
+                        {
+                            throw TxSearchException("no_rows_inserted is zero!");
                         }
 
                     } //  if (!inputs_found.empty())
