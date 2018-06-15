@@ -5,7 +5,7 @@ set(PROJECT_NAME
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
@@ -14,6 +14,8 @@ endif()
 if (NOT MONERO_DIR)
     set(MONERO_DIR ~/monero)
 endif()
+
+option(BUILD_TEST "Build tests for the project" ON)
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
@@ -118,7 +120,6 @@ set(LIBRARIES
         pthread
         unbound
         curl
-        dl
         cncrypto
         ssl
         crypto)
@@ -146,3 +147,12 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
+
+include_directories(
+        ${CMAKE_SOURCE_DIR}/tests/googletest/googletest/include
+        ${CMAKE_SOURCE_DIR}/tests/googletest/googlemock/include)
+
+enable_testing()
+add_subdirectory(ext/googletest)
+add_subdirectory(tests)
