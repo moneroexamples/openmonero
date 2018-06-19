@@ -171,6 +171,7 @@ public:
 
     MySqlAccounts();
 
+    MySqlAccounts(shared_ptr<MySqlConnector> _conn);
 
     bool
     select(const string& address, XmrAccount& account);
@@ -265,6 +266,9 @@ public:
 
     shared_ptr<MySqlConnector>
     get_connection();
+
+private:
+    void _init();
 };
 
 

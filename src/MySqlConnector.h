@@ -49,6 +49,8 @@ public:
 
     MySqlConnector();
 
+    MySqlConnector(Option* _option);
+
     Query
     query(const char* qstr = 0);
 
@@ -65,6 +67,11 @@ public:
     get_connection();
 
     virtual ~MySqlConnector();
+
+private:
+
+    void _init();
+
 };
 
 

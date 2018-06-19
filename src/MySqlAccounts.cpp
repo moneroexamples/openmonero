@@ -677,13 +677,16 @@ MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
 MySqlAccounts::MySqlAccounts()
 {
     // create connection to the mysql
-    conn            = make_shared<MySqlConnector>();
+    conn = make_shared<MySqlConnector>();
 
-    // use same connection when working with other tables
-    mysql_tx        = make_shared<MysqlTransactions>(conn);
-    mysql_out       = make_shared<MysqlOutpus>(conn);
-    mysql_in        = make_shared<MysqlInputs>(conn);
-    mysql_payment   = make_shared<MysqlPayments>(conn);
+    _init();
+}
+
+MySqlAccounts::MySqlAccounts(shared_ptr<MySqlConnector> _conn)
+{
+    conn = _conn;
+
+    _init();
 }
 
 
@@ -1155,6 +1158,15 @@ MySqlAccounts::get_connection()
     return conn;
 }
 
+void
+MySqlAccounts::_init()
+{
 
+    // use same connection when working with other tables
+    mysql_tx        = make_shared<MysqlTransactions>(conn);
+    mysql_out       = make_shared<MysqlOutpus>(conn);
+    mysql_in        = make_shared<MysqlInputs>(conn);
+    mysql_payment   = make_shared<MysqlPayments>(conn);
+}
 
 }

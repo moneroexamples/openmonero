@@ -30,7 +30,7 @@ USE `openmonero`;
 
 DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
-  `id` bigint(10) UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `address` varchar(95) NOT NULL,
   `viewkey_hash` char(64) NOT NULL,
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
@@ -178,7 +178,7 @@ ALTER TABLE `Transactions`
 -- AUTO_INCREMENT for table `Accounts`
 --
 ALTER TABLE `Accounts`
-  MODIFY `id` bigint(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 --
 -- AUTO_INCREMENT for table `Inputs`
 --

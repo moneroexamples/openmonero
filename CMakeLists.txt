@@ -5,7 +5,7 @@ set(PROJECT_NAME
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
@@ -62,6 +62,7 @@ link_directories(
 create_git_version()
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_BINARY_DIR}/config)
+
 
 # find boost
 find_package(Boost COMPONENTS
@@ -152,6 +153,8 @@ target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 include_directories(
         ${CMAKE_SOURCE_DIR}/tests/googletest/googletest/include
         ${CMAKE_SOURCE_DIR}/tests/googletest/googlemock/include)
+
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
 
 enable_testing()
 add_subdirectory(ext/googletest)

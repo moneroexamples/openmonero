@@ -23,8 +23,13 @@ string MySqlConnector::dbname;
 
 MySqlConnector::MySqlConnector()
 {
-    if (!connect())
-        throw std::runtime_error("Connection to Mysql failed!");
+    _init();
+}
+
+MySqlConnector::MySqlConnector(Option* _option)
+{
+    conn.set_option(_option);
+    _init();
 }
 
 bool
@@ -91,5 +96,12 @@ MySqlConnector::~MySqlConnector()
 {
     conn.disconnect();
 };
+
+void
+MySqlConnector::_init()
+{
+    if (!connect())
+        throw std::runtime_error("Connection to Mysql failed!");
+}
 
 }

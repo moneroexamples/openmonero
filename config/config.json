@@ -22,6 +22,15 @@
     "user"     : "root",
     "password" : "root"
   },
+  "database_test":
+  {
+    "_comment" : "how should the backend connect to the test mysql database",
+    "url"      : "127.0.0.1",
+    "port"     : 3306,
+    "dbname"   : "openmonero_test",
+    "user"     : "root",
+    "password" : "root"
+  },
   "wallet_import" :
   {
     "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xmr is 0.1 x 1e12 = 100000000000",
