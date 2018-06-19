@@ -1336,5 +1336,17 @@ make_hash(const string& in_str)
 }
 
 
+bool
+hex_to_tx(string const& tx_hex, transaction& tx, crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash)
+{
+    std::string tx_blob;
+
+    epee::string_tools::parse_hexstr_to_binbuff(tx_hex, tx_blob);
+
+    return parse_and_validate_tx_from_blob(tx_blob, tx, tx_hash, tx_prefix_hash);
+}
+
+
+
 }
 

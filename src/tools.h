@@ -264,6 +264,10 @@ get_human_readable_timestamp(uint64_t ts);
 string
 make_hash(const string& in_str);
 
+bool
+hex_to_tx(string const& tx_hex, transaction& tx,
+          crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash);
+
 }
 
 #endif //XMREG01_TOOLS_H
