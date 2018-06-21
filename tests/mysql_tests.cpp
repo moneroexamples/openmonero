@@ -134,7 +134,7 @@ TEST_F(MYSQL_TEST, GetAccount)
     EXPECT_TRUE(is_success);
 
     EXPECT_EQ(acc.id, 129);
-    EXPECT_EQ(acc.scanned_block_height, 100968);
+    EXPECT_EQ(acc.scanned_block_height, 101610);
     EXPECT_EQ(acc.viewkey_hash, "1acf92d12101afe2ce7392169a38d2d547bd042373148eaaab323a3b5185a9ba");
 }
 
@@ -228,7 +228,7 @@ TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
 
     xmr_accounts->select_txs(acc.id, txs);
 
-    EXPECT_EQ(txs.size(), 8);
+    EXPECT_EQ(txs.size(), 16);
 
 }
 

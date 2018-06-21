@@ -279,9 +279,8 @@ public:
      */
     template <typename T>
     uint64_t
-    get_next_primary_id(T table_class)
+    get_next_primary_id(T&& table_class)
     {
-
         static_assert(std::is_base_of<Table, T>::value, "given class is not Table");
 
         string sql {"SELECT `auto_increment` FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '"};
