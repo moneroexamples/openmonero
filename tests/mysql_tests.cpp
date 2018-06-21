@@ -94,10 +94,8 @@ protected:
         {
             bool is_success = query.exec();
 
-            for (size_t i = 1; query.more_results(); ++i)
-            {
-                is_success = query.store_next();
-            }
+            while(query.more_results())
+                query.store_next();
         }
         catch (std::exception &e)
         {
@@ -126,7 +124,6 @@ TEST_F(MYSQL_TEST, Connection)
 
 TEST_F(MYSQL_TEST, GetAccount)
 {
-
     // existing address
     string xmr_addr{"57Hx8QpLUSMjhgoCNkvJ2Ch91mVyxcffESCprnRPrtbphMCv8iGUEfCUJxrpUWUeWrS9vPWnFrnMmTwnFpSKJrSKNuaXc5q"};
 
@@ -137,7 +134,7 @@ TEST_F(MYSQL_TEST, GetAccount)
     EXPECT_TRUE(is_success);
 
     EXPECT_EQ(acc.id, 129);
-    EXPECT_EQ(acc.scanned_block_height, 100488);
+    EXPECT_EQ(acc.scanned_block_height, 100968);
     EXPECT_EQ(acc.viewkey_hash, "1acf92d12101afe2ce7392169a38d2d547bd042373148eaaab323a3b5185a9ba");
 }
 
@@ -155,17 +152,20 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
     string view_key {"f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501"};
     string view_key_hash {"cdd3ae89cbdae1d14b178c7e7c6ba380630556cb9892bd24eb61a9a517e478cd"};
 
+
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(xmreg::XmrAccount());
+
     int64_t acc_id = xmr_accounts->insert(xmr_addr, view_key_hash,
                                           blk_timestamp_mysql_format,
                                           mock_current_blockchain_height);
 
-    EXPECT_EQ(acc_id, 132);
+    EXPECT_EQ(acc_id, expected_primary_id);
 
     xmreg::XmrAccount acc;
 
     bool is_success = xmr_accounts->select(xmr_addr, acc);
 
-    EXPECT_EQ(acc.id, 132);
+    EXPECT_EQ(acc.id, expected_primary_id);
     EXPECT_EQ(acc.scanned_block_height, mock_current_blockchain_height);
     EXPECT_EQ(acc.scanned_block_timestamp, mock_current_blockchain_timestamp);
     EXPECT_EQ(acc.viewkey_hash, view_key_hash);
@@ -212,16 +212,24 @@ TEST_F(MYSQL_TEST, SelectSingleTx)
     EXPECT_TRUE(static_cast<int>(mysql_tx.rct_type) == 1);
     EXPECT_EQ(mysql_tx.payment_id, string{});
     EXPECT_EQ(mysql_tx.mixin, 8);
-
-
 }
 
+TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
+{
+    // existing address
+    string owner_addr {"5AjfkEY7RFgNGDYvoRQkncfwHXT6Fh7oJBisqFUX5u96i3ZepxDPocQK29tmAwBDuvKRpskZnfA6N8Ra58qFzA4bSA3QZFp"};
 
-//    bool
-//    MySqlAccounts::select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs)
-//    {
-//        return mysql_tx->select(account_id, txs);
-//    }
+    xmreg::XmrAccount acc;
 
+    ASSERT_TRUE(xmr_accounts->select(owner_addr, acc));
+
+
+    vector<xmreg::XmrTransaction> txs;
+
+    xmr_accounts->select_txs(acc.id, txs);
+
+    EXPECT_EQ(txs.size(), 8);
+
+}
 
 }

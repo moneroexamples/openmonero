@@ -30,7 +30,7 @@ class XmrTransaction;
 class XmrPayment;
 class XmrAccount;
 class TxSearch;
-
+class Table;
 
 
 class MysqlInputs
@@ -266,6 +266,44 @@ public:
 
     shared_ptr<MySqlConnector>
     get_connection();
+
+    /**
+     * DONT use!!!
+     *
+     * Its only useful in unit tests when you know that nothing will insert
+     * any row between calling this and using the returned id
+     *
+     * @tparam T
+     * @param table_class
+     * @return
+     */
+    template <typename T>
+    uint64_t
+    get_next_primary_id(T table_class)
+    {
+
+        static_assert(std::is_base_of<Table, T>::value, "given class is not Table");
+
+        string sql {"SELECT `auto_increment` FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '"};
+        sql += table_class.table_name() + "'";
+
+        Query query = conn->query(sql);
+        query.parse();
+
+        try
+        {
+            StoreQueryResult  sr = query.store();
+
+            if (!sr.empty())
+                return sr[0][0];
+        }
+        catch (std::exception& e)
+        {
+            MYSQL_EXCEPTION_MSG(e);
+        }
+
+        return 0;
+    }
 
 private:
     void _init();
