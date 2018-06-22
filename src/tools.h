@@ -268,6 +268,9 @@ bool
 hex_to_tx(string const& tx_hex, transaction& tx,
           crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash);
 
+string
+tx_to_hex(transaction const& tx);
+
 }
 
 #endif //XMREG01_TOOLS_H

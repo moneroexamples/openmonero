@@ -154,6 +154,8 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/tests/googletest/googletest/include
         ${CMAKE_SOURCE_DIR}/tests/googletest/googlemock/include)
 
+#include_directories(${MONERO_DIR}/tests/core_tests)
+
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
 
 enable_testing()

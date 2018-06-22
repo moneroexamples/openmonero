@@ -5,6 +5,9 @@
 #include "../src/MicroCore.h"
 #include "../src/YourMoneroRequests.h"
 
+//#include "chaingen.h"
+//#include "chaingen_tests_list.h"
+
 #include "gtest/gtest.h"
 
 
@@ -218,6 +221,31 @@ TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
 {
     // existing address
     string owner_addr {"5AjfkEY7RFgNGDYvoRQkncfwHXT6Fh7oJBisqFUX5u96i3ZepxDPocQK29tmAwBDuvKRpskZnfA6N8Ra58qFzA4bSA3QZFp"};
+    // stagenet wallet: boxes smash cajun fences ouch hamburger heron pulp  initiate hubcaps academy acumen weird pliers powder jive soil tissue skydive bygones nobody sifting novelty ounce sifting
+    // the list of txs containing our outputs and also when used in key images
+    // ./xmr2csv --stagenet -m -a 5AjfkEY7RFgNGDYvoRQkncfwHXT6Fh7oJBisqFUX5u96i3ZepxDPocQK29tmAwBDuvKRpskZnfA6N8Ra58qFzA4bSA3QZFp -v 3ee772709dcf834a881c432fc15625d84585e4462d7905c42460dd478a315008 -t 100000  -g 101610
+
+    // Txs associates with the stagenet address and viewkey are, based on the xmr2csv csv files
+
+    //    Block_no	Tx_hash
+    //    100938	efa653785fd536ec42283985666612eca961a0bf6a8d56c4c43b1027d173a32c
+    //    100939	00458128c40886b22d15cbf3c02fcbb1a0860cab654d81230dba216b50fe887d
+    //    100943	fc619eeccfa0626f4be78cb1002a232e0ae8c8be6826f800341977d23a5a8e1e
+    //    100943	9ba6fa1c6f0277651e38b9f076a2cf674d92d683beac42ad93db1f3cc429cffe
+    //    100948	da22b85e51644b7c5df30f65b33f4f00bb58278e8189f9073e0573eb6df1fc1f
+    //    100949	3fb5d474378431bfa1b01e61965dcd5a62e1753cb7b3064ba7adb98bcfd398cd
+    //    100964	ac715b386010bd95a506fde0ac0405aa8ad72080b1d7cef257b5b112d9ed84bb
+    //    100968	9bfe477f2df750dd31b2a3939b32a5017323586a11bad6cd81650cfd2d54113d
+    //    100985	380ff7683774c989c1fd7348b90cd37b76d68ee6f93bd5239ecc3bb3794030bf
+    //    100993	8901400e2cac9fa26a47a06d76c8c0ee499ff691df9d22bad2a0183943532040
+    //    101028	6e1368cd8c48636ee7a327c165fae95496a7098191398c950fe26031246287f1
+    //    101048	c3004a573547e5cd671c79a6f33f7907e2e6193d4abe47a3c5328f533b3d6cdc
+    //    101081	fc4b8d5956b30dc4a353b171b4d974697dfc32730778f138a8e7f16c11907691
+    //    101085	ad3f3d9ff1e2dd2145067950d68d24cbd53db6f9d771f0d275c33fd88e458cf0
+    //    101553	dcb792bba1da7a9872f9c36772ee8625282b1f144380288fbd8acb968f6de56a
+    //    101554	c8965d4f54de1e39033b07e88bb20cacaa725a0dc266444e2efde6f624b9245d
+
+
 
     xmreg::XmrAccount acc;
 
@@ -229,7 +257,58 @@ TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
     xmr_accounts->select_txs(acc.id, txs);
 
     EXPECT_EQ(txs.size(), 16);
+    EXPECT_EQ(txs[0].hash    , string{"efa653785fd536ec42283985666612eca961a0bf6a8d56c4c43b1027d173a32c"});
+    EXPECT_EQ(txs.back().hash, string{"c8965d4f54de1e39033b07e88bb20cacaa725a0dc266444e2efde6f624b9245d"});
 
 }
+
+//TEST(TEST_CHAIN, GenerateTestChain)
+//{
+//    uint64_t ts_start = 1338224400;
+//
+//    std::vector<test_event_entry> events;
+//
+//    GENERATE_ACCOUNT(miner);
+//    GENERATE_ACCOUNT(alice);
+//
+//    MAKE_GENESIS_BLOCK(events, blk_0, miner, ts_start);
+//    MAKE_NEXT_BLOCK(events, blk_1, blk_0, miner);
+//    MAKE_NEXT_BLOCK(events, blk_1_side, blk_0, miner);
+//    MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner);
+//
+//    std::vector<cryptonote::block> chain;
+//    map_hash2tx_t mtx;
+//
+//
+//    REWIND_BLOCKS(events, blk_2r, blk_2, miner);
+//    MAKE_TX_LIST_START(events, txlist_0, miner, alice, MK_COINS(1), blk_2);
+//    MAKE_TX_LIST(events, txlist_0, miner, alice, MK_COINS(2), blk_2);
+//    MAKE_TX_LIST(events, txlist_0, miner, alice, MK_COINS(4), blk_2);
+//    MAKE_NEXT_BLOCK_TX_LIST(events, blk_3, blk_2r, miner, txlist_0);
+//    REWIND_BLOCKS(events, blk_3r, blk_3, miner);
+//    MAKE_TX(events, tx_1, miner, alice, MK_COINS(50), blk_3);
+//    MAKE_NEXT_BLOCK_TX1(events, blk_4, blk_3r, miner, tx_1);
+//    REWIND_BLOCKS(events, blk_4r, blk_4, miner);
+//    MAKE_TX(events, tx_2, miner, alice, MK_COINS(50), blk_4);
+//    MAKE_NEXT_BLOCK_TX1(events, blk_5, blk_4r, miner, tx_2);
+//    REWIND_BLOCKS(events, blk_5r, blk_5, miner);
+//    MAKE_TX(events, tx_3, miner, alice, MK_COINS(50), blk_5);
+//    MAKE_NEXT_BLOCK_TX1(events, blk_6, blk_5r, miner, tx_3);
+//    REWIND_BLOCKS(events, blk_6r, blk_6, miner);
+//    MAKE_TX(events, tx_4, alice, miner, MK_COINS(20), blk_6);
+//    MAKE_NEXT_BLOCK_TX1(events, blk_7, blk_6r, miner, tx_4);
+//
+//    find_block_chain(events, chain, mtx, get_block_hash(blk_7));
+//
+//
+//    std::cout << "Alice BALANCE = " << get_balance(alice, chain, mtx) << std::endl;
+//
+//    cout << get_account_address_as_str(network_type::MAINNET, false, alice.get_keys().m_account_address) << endl;
+//    cout << pod_to_hex(alice.get_keys().m_view_secret_key) << endl;
+//    cout << pod_to_hex(alice.get_keys().m_spend_secret_key) << endl;
+//
+//    cout << '\n\n' << xmreg::tx_to_hex(tx_4) << '\n';
+//
+//}
 
 }

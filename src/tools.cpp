@@ -1346,7 +1346,11 @@ hex_to_tx(string const& tx_hex, transaction& tx, crypto::hash& tx_hash,  crypto:
     return parse_and_validate_tx_from_blob(tx_blob, tx, tx_hash, tx_prefix_hash);
 }
 
-
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
 
 }
 
