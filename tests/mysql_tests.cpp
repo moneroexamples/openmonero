@@ -180,6 +180,13 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
     EXPECT_EQ(acc.scanned_block_height, mock_current_blockchain_height);
     EXPECT_EQ(acc.scanned_block_timestamp, mock_current_blockchain_timestamp);
     EXPECT_EQ(acc.viewkey_hash, view_key_hash);
+
+    // now try inserting same account. it should fail
+    acc_id = xmr_accounts->insert(xmr_addr, view_key_hash,
+                                  blk_timestamp_mysql_format,
+                                  mock_current_blockchain_height);
+
+    EXPECT_EQ(acc_id, 0);
 }
 
 

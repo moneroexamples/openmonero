@@ -788,16 +788,10 @@ MySqlAccounts::insert(const string& address,
             return sr.insert_id();
 
     }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-        //return 0;
-    }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
+        //return 0;
     }
 
     return 0;
