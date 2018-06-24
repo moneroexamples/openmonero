@@ -29,7 +29,12 @@ using namespace epee::string_tools;
     string tx_hash_str = pod_to_hex(tx_hash);                                   \
     string tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
-/**
+#define TX_AND_ACC_FROM_HEX(HEX_TX, HEX_ACC_ADDR) \
+         TX_FROM_HEX(HEX_TX)                      \
+         xmreg::XmrAccount acc;                   \
+         ASSERT_TRUE(xmr_accounts->select(HEX_ACC_ADDR, acc));
+
+    /**
 * Fixture that connects to openmonero_test database
 * and repopulates it with known data for each test.
 */
@@ -197,14 +202,12 @@ const string tx_4b40_hex {"0200010200089832f68b01b2a601a21ec01da83ffe0139a716780
 
 TEST_F(MYSQL_TEST, SelectSingleTx)
 {
-    TX_FROM_HEX(tx_4b40_hex);
+   // TX_FROM_HEX(tx_4b40_hex);
 
     // existing address
     string owner_addr {"57Hx8QpLUSMjhgoCNkvJ2Ch91mVyxcffESCprnRPrtbphMCv8iGUEfCUJxrpUWUeWrS9vPWnFrnMmTwnFpSKJrSKNuaXc5q"};
 
-    xmreg::XmrAccount acc;
-
-    ASSERT_TRUE(xmr_accounts->select(owner_addr, acc));
+    TX_AND_ACC_FROM_HEX(tx_4b40_hex, owner_addr);
 
     xmreg::XmrTransaction mysql_tx;
     xmr_accounts->tx_exists(acc.id, tx_hash_str, mysql_tx);
@@ -269,11 +272,7 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToSameAccount)
 {
 
     // we should not be able to insert same tx twice for the same account
-    TX_FROM_HEX(tx_fc4_hex);
-
-    xmreg::XmrAccount acc;
-
-    ASSERT_TRUE(xmr_accounts->select(owner_addr_5Ajfk, acc));
+    TX_AND_ACC_FROM_HEX(tx_4b40_hex, owner_addr_5Ajfk);
 
     xmreg::XmrTransaction tx_data;
 
@@ -291,14 +290,11 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToDifferentAccount)
 {
     // we should  be able to insert same tx to different account
     // even though it exisits already for other account
-    TX_FROM_HEX(tx_fc4_hex);
-
-    xmreg::XmrAccount acc;
 
     // for different account we can have same tx in the Transaction table
     string addres_of_different_acc {"57hGLsqr6eLjUDoqWwP3Ko9nCJ4GFN5AyezdxNXwpa1PMt6M4AbsBgcHH21hVe2MJrLGSM9C7UTqcEmyBepdhvFE4eyW3Kd"};
 
-    ASSERT_TRUE(xmr_accounts->select(addres_of_different_acc, acc));
+    TX_AND_ACC_FROM_HEX(tx_4b40_hex, addres_of_different_acc);
 
     xmreg::XmrTransaction tx_data;
 
