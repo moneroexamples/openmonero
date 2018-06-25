@@ -272,7 +272,7 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToSameAccount)
 {
 
     // we should not be able to insert same tx twice for the same account
-    TX_AND_ACC_FROM_HEX(tx_4b40_hex, owner_addr_5Ajfk);
+    TX_AND_ACC_FROM_HEX(tx_fc4_hex, owner_addr_5Ajfk);
 
     xmreg::XmrTransaction tx_data;
 
@@ -294,7 +294,7 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToDifferentAccount)
     // for different account we can have same tx in the Transaction table
     string addres_of_different_acc {"57hGLsqr6eLjUDoqWwP3Ko9nCJ4GFN5AyezdxNXwpa1PMt6M4AbsBgcHH21hVe2MJrLGSM9C7UTqcEmyBepdhvFE4eyW3Kd"};
 
-    TX_AND_ACC_FROM_HEX(tx_4b40_hex, addres_of_different_acc);
+    TX_AND_ACC_FROM_HEX(tx_fc4_hex, addres_of_different_acc);
 
     xmreg::XmrTransaction tx_data;
 
