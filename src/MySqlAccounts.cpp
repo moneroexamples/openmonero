@@ -409,7 +409,7 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     }
     catch (std::exception& e)
     {
-        MYSQL_EXCEPTION_MSG(e);
+        //MYSQL_EXCEPTION_MSG(e);
         //throw  e;
     }
 
@@ -420,6 +420,28 @@ uint64_t
 MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
 {
     Query query = conn->query(XmrTransaction::MARK_AS_SPENDABLE_STMT);
+    query.parse();
+
+    try
+    {
+        SimpleResult sr = query.execute(tx_id_no);
+
+        return sr.rows();
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
+}
+
+
+uint64_t
+MysqlTransactions::mark_nonspendable(const uint64_t& tx_id_no)
+{
+    Query query = conn->query(XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
     query.parse();
 
     try
@@ -731,7 +753,7 @@ MySqlAccounts::insert(const string& address,
     }
     catch (std::exception& e)
     {
-        MYSQL_EXCEPTION_MSG(e);
+        //MYSQL_EXCEPTION_MSG(e);
         //return 0;
     }
 
@@ -949,6 +971,12 @@ uint64_t
 MySqlAccounts::mark_tx_spendable(const uint64_t& tx_id_no)
 {
     return mysql_tx->mark_spendable(tx_id_no);
+}
+
+uint64_t
+MySqlAccounts::mark_tx_nonspendable(const uint64_t& tx_id_no)
+{
+    return mysql_tx->mark_nonspendable(tx_id_no);
 }
 
 uint64_t

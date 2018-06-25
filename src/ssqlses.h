@@ -131,6 +131,11 @@ struct XmrTransaction : public Transactions, Table
                              WHERE `id` = %0q;
     )";
 
+    static constexpr const char* MARK_AS_NONSPENDABLE_STMT = R"(
+       UPDATE `Transactions` SET `spendable` = 0,  `timestamp` = CURRENT_TIMESTAMP
+                             WHERE `id` = %0q;
+    )";
+
     static constexpr const char* SUM_XMR_RECIEVED = R"(
         SELECT SUM(`total_received`) AS total_received
                FROM `Transactions`

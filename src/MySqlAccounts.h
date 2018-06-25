@@ -112,6 +112,9 @@ public:
     mark_spendable(const uint64_t& tx_id_no);
 
     uint64_t
+    mark_nonspendable(const uint64_t& tx_id_no);
+
+    uint64_t
     delete_tx(const uint64_t& tx_id_no);
 
 
@@ -236,6 +239,9 @@ public:
 
     uint64_t
     mark_tx_spendable(const uint64_t& tx_id_no);
+
+    uint64_t
+    mark_tx_nonspendable(const uint64_t& tx_id_no);
 
     uint64_t
     delete_tx(const uint64_t& tx_id_no);
