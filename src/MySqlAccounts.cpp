@@ -521,7 +521,7 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
     {
         StoreQueryResult sqr = query.store(account_id);
 
-        if (!sqr)
+        if (sqr.empty())
             return 0;
 
         Row row = sqr.at(0);

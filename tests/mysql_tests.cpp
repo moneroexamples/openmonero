@@ -29,12 +29,16 @@ using namespace epee::string_tools;
     string tx_hash_str = pod_to_hex(tx_hash);                                   \
     string tx_prefix_hash_str = pod_to_hex(tx_prefix_hash);
 
-#define TX_AND_ACC_FROM_HEX(HEX_TX, HEX_ACC_ADDR)                               \
-         TX_FROM_HEX(HEX_TX)                                                    \
+#define ACC_FROM_HEX(hex_address)                                               \
          xmreg::XmrAccount acc;                                                 \
-         ASSERT_TRUE(xmr_accounts->select(HEX_ACC_ADDR, acc));
+         ASSERT_TRUE(xmr_accounts->select(hex_address, acc));
 
-    /**
+
+#define TX_AND_ACC_FROM_HEX(hex_tx, hex_address)                                \
+         TX_FROM_HEX(hex_tx);                                                   \
+         ACC_FROM_HEX(hex_address);
+
+/**
 * Fixture that connects to openmonero_test database
 * and repopulates it with known data for each test.
 */
@@ -143,11 +147,7 @@ TEST_F(MYSQL_TEST, GetAccount)
     // existing address
     string xmr_addr{"57Hx8QpLUSMjhgoCNkvJ2Ch91mVyxcffESCprnRPrtbphMCv8iGUEfCUJxrpUWUeWrS9vPWnFrnMmTwnFpSKJrSKNuaXc5q"};
 
-    xmreg::XmrAccount acc;
-
-    bool is_success = xmr_accounts->select(xmr_addr, acc);
-
-    EXPECT_TRUE(is_success);
+    ACC_FROM_HEX(xmr_addr);
 
     EXPECT_EQ(acc.id, 129);
     EXPECT_EQ(acc.scanned_block_height, 101610);
@@ -275,7 +275,6 @@ string addres_of_different_acc {"57hGLsqr6eLjUDoqWwP3Ko9nCJ4GFN5AyezdxNXwpa1PMt6
 
 TEST_F(MYSQL_TEST, TryInsertingExistingTxToSameAccount)
 {
-
     // we should not be able to insert same tx twice for the same account
     TX_AND_ACC_FROM_HEX(tx_fc4_hex, owner_addr_5Ajfk);
 
@@ -387,7 +386,40 @@ TEST_F(MYSQL_TEST, MarkTxSpendableAndNonSpendable)
     EXPECT_TRUE(static_cast<bool>(tx_data.spendable));
 }
 
+// seed fall lava tudor nucleus hemlock afar tuition poaching waffle palace roped nifty wipeout fierce mystery thumbs hubcaps toffee maps etiquette jolted symptoms winter abyss fall
+string addr_55Zb {"55ZbQdMnZHPFS8pmrhHN5jMpgJwnnTXpTDmmM5wkrBBx4xD6aEnpZq7dPkeDeWs67TV9HunDQtT3qF2UGYWzGGxq3zYWCBE"};
 
+TEST_F(MYSQL_TEST, GetTotalRecievedByAnAddress)
+{
+    // this will include all change as well. So its not the same
+    // as balance in the monero wallet, but more like a balance
+    // in a viewonly wallet.
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    uint64_t total_recieved = xmr_accounts->get_total_recieved(acc.id);
+
+    // the exected value obtained using viewonly wallet
+    EXPECT_EQ(total_recieved, 697348926585540ull);
+
+    ASSERT_TRUE(xmr_accounts->select(addr_55Zb, acc));
+
+    total_recieved = xmr_accounts->get_total_recieved(acc.id);
+
+    //cout << "\n\ntotal_recieved " << total_recieved << '\n';
+
+    // the expected value obtained using viewonly wallet
+    // the balanace is for regular address and does not include sub-addresses
+    EXPECT_EQ(total_recieved, 1046498996045077ull);
+
+    // total for an non-existing address should be 0.
+
+    uint64_t non_existing_acc_id {5444444444};
+    total_recieved = xmr_accounts->get_total_recieved(non_existing_acc_id);
+    EXPECT_EQ(total_recieved, 0);
+
+
+}
 
 //TEST(TEST_CHAIN, GenerateTestChain)
 //{
