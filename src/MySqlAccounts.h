@@ -290,7 +290,7 @@ public:
         static_assert(std::is_base_of<Table, std::decay_t<T>>::value, "given class is not Table");
 
         string sql {"SELECT `auto_increment` FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '"};
-        sql += table_class.table_name() + "'";
+        sql += table_class.table_name() + "' AND table_schema = '" +  MySqlConnector::dbname + "'";
 
         Query query = conn->query(sql);
         query.parse();
