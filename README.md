@@ -373,7 +373,7 @@ Output (only part shown):
 
 #### get_address_info
 
-Get the list of all outouts for the given account.
+Get the list of all possible spendings. Used when calcualted the wallet balance.
 
 ```bash
 curl  -w "\n" -X POST http://127.0.0.1:1984/get_address_info -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
@@ -441,6 +441,10 @@ Output (only part shown):
 
 #### get_unspent_outs
 
+Get the list of all outputs with key images which could mean that the outouts
+had already been spent, thus can't be used again. It is job of the frontend
+to filterout spent outputs based on the key images provided.
+
 ```bash
 curl  -w "\n" -X POST http://127.0.0.1:1984/get_unspent_outs -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400","amount":"0","mixin":4,"use_dust":false,"dust_threshold":"1000000000"}'
 ```
@@ -491,7 +495,7 @@ Output (only part shown):
 #### get_random_outs
 
 Get random outputs from the monero daemon to be used as ring members
-for making a tx.
+for making a tx by the frontend.
 
 ```bash
 curl  -w "\n" -X POST http://127.0.0.1:1984/get_random_outs -d '{"amounts":["0","0"],"count":5}'
@@ -555,7 +559,7 @@ Output:
 #### import_wallet_request
 
 Request to import wallet using entire blockchain. This can be associated
-with fee to be paid for this service.
+with fee to be paid for this service, or can be free. Its optional.
 
 ```bash
 curl  -w "\n" -X POST http://127.0.0.1:1984/import_wallet_request -d '{"address":"57GLuXxxxAqdm5wT9sFJ4aDQGo2NkanFJXmDoZZbBeUFZ5b7QQ7pJvYjfkvBe9PsiZ4mGY9h7s2uxEiqS945eR6RL2yWikX", "view_key":"5e05a2aae20eafd68443e4d972ea8400cb7309ed85d339104f9f21542e45c403"'}
