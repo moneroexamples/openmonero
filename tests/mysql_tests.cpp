@@ -44,7 +44,7 @@ using namespace epee::string_tools;
 */
 class MYSQL_TEST : public ::testing::Test
 {
-protected:
+public:
 
     static void SetUpTestCase()
     {
@@ -101,6 +101,8 @@ protected:
 
         db_data = xmreg::read("../sql/openmonero_test.sql");
     }
+
+protected:
 
     virtual void SetUp()
     {
@@ -273,6 +275,10 @@ string tx_fc4_hex {"020001020007ae8c01df25afec02bd15ba0bb405b20117d3a9c98911f1a4
 string addres_of_different_acc {"57hGLsqr6eLjUDoqWwP3Ko9nCJ4GFN5AyezdxNXwpa1PMt6M4AbsBgcHH21hVe2MJrLGSM9C7UTqcEmyBepdhvFE4eyW3Kd"};
 
 
+// seed: fall lava tudor nucleus hemlock afar tuition poaching waffle palace roped nifty wipeout fierce mystery thumbs hubcaps toffee maps etiquette jolted symptoms winter abyss fall
+string addr_55Zb {"55ZbQdMnZHPFS8pmrhHN5jMpgJwnnTXpTDmmM5wkrBBx4xD6aEnpZq7dPkeDeWs67TV9HunDQtT3qF2UGYWzGGxq3zYWCBE"};
+
+
 TEST_F(MYSQL_TEST, TryInsertingExistingTxToSameAccount)
 {
     // we should not be able to insert same tx twice for the same account
@@ -386,40 +392,38 @@ TEST_F(MYSQL_TEST, MarkTxSpendableAndNonSpendable)
     EXPECT_TRUE(static_cast<bool>(tx_data.spendable));
 }
 
-// seed: fall lava tudor nucleus hemlock afar tuition poaching waffle palace roped nifty wipeout fierce mystery thumbs hubcaps toffee maps etiquette jolted symptoms winter abyss fall
-string addr_55Zb {"55ZbQdMnZHPFS8pmrhHN5jMpgJwnnTXpTDmmM5wkrBBx4xD6aEnpZq7dPkeDeWs67TV9HunDQtT3qF2UGYWzGGxq3zYWCBE"};
 
-TEST_F(MYSQL_TEST, GetTotalRecievedByAnAddress)
+// now we can test total number of incoming xmr (only outputs)
+// for serveral addresses. For this we can use
+// parametrized fixture
+
+                                          // addr, expected recieved xmr
+using address_incoming_balance = std::pair<string, uint64_t>;
+
+class MYSQL_TEST_PARAM :
+        public MYSQL_TEST,
+        public ::testing::WithParamInterface<address_incoming_balance>
+{};
+
+TEST_P(MYSQL_TEST_PARAM, GetTotalRecievedByAnAddress)
 {
-    // this will include all change as well. So its not the same
-    // as balance in the monero wallet, but more like a balance
-    // in a viewonly wallet.
+    auto const& own_addr          = GetParam().first;
+    auto const& expected_recieved = GetParam().second;
 
-    ACC_FROM_HEX(owner_addr_5Ajfk);
+    ACC_FROM_HEX(own_addr);
 
     uint64_t total_recieved = xmr_accounts->get_total_recieved(acc.id);
 
-    // the exected value obtained using viewonly wallet
-    EXPECT_EQ(total_recieved, 697348926585540ull);
-
-    ASSERT_TRUE(xmr_accounts->select(addr_55Zb, acc));
-
-    total_recieved = xmr_accounts->get_total_recieved(acc.id);
-
-    //cout << "\n\ntotal_recieved " << total_recieved << '\n';
-
-    // the expected value obtained using viewonly wallet
-    // the balanace is for regular address and does not include sub-addresses
-    EXPECT_EQ(total_recieved, 1046498996045077ull);
-
-    // total for an non-existing address should be 0.
-
-    uint64_t non_existing_acc_id {5444444444};
-    total_recieved = xmr_accounts->get_total_recieved(non_existing_acc_id);
-    EXPECT_EQ(total_recieved, 0);
-
-
+    EXPECT_EQ(total_recieved, expected_recieved);
 }
+
+INSTANTIATE_TEST_CASE_P(
+        RecivedXmrTest, MYSQL_TEST_PARAM,
+                ::testing::Values(
+                        make_pair(owner_addr_5Ajfk, 697348926585540ull),
+                        make_pair(addr_55Zb       , 1046498996045077ull)
+                ));
+
 
 //TEST(TEST_CHAIN, GenerateTestChain)
 //{
