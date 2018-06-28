@@ -2,7 +2,7 @@
 // detail/reactive_socket_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -109,6 +109,7 @@ public:
   // Move-construct a new socket implementation from another protocol type.
   template <typename Protocol1>
   void converting_move_construct(implementation_type& impl,
+      reactive_socket_service<Protocol1>&,
       typename reactive_socket_service<
         Protocol1>::implementation_type& other_impl)
   {
@@ -231,7 +232,7 @@ public:
       asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_write(impl.socket_, impl.state_, ec);
+    socket_ops::poll_write(impl.socket_, impl.state_, -1, ec);
 
     return 0;
   }
@@ -310,7 +311,7 @@ public:
       asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_read(impl.socket_, impl.state_, ec);
+    socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
 
     // Reset endpoint since it can be given no sensible value at this time.
     sender_endpoint = endpoint_type();

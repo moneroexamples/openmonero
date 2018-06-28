@@ -2,7 +2,7 @@
 // detail/resolver_service_base.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@
 #include "asio/io_context.hpp"
 #include "asio/detail/mutex.hpp"
 #include "asio/detail/noncopyable.hpp"
-#include "asio/detail/operation.hpp"
+#include "asio/detail/resolve_op.hpp"
 #include "asio/detail/socket_ops.hpp"
 #include "asio/detail/socket_types.hpp"
 #include "asio/detail/scoped_ptr.hpp"
@@ -72,7 +72,7 @@ public:
 
 protected:
   // Helper function to start an asynchronous resolve operation.
-  ASIO_DECL void start_resolve_op(operation* op);
+  ASIO_DECL void start_resolve_op(resolve_op* op);
 
 #if !defined(ASIO_WINDOWS_RUNTIME)
   // Helper class to perform exception-safe cleanup of addrinfo objects.

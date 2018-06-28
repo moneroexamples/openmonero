@@ -1,6 +1,6 @@
-# Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
 
-find_path( asio_INCLUDE asio.hpp HINTS "${CMAKE_SOURCE_DIR}/ext/restbed/dependency/asio/asio/include" "/usr/include" "/usr/local/include" "/opt/local/include" )
+find_path( asio_INCLUDE asio.hpp HINTS "${PROJECT_SOURCE_DIR}/dependency/asio/asio/include" "/usr/include" "/usr/local/include" "/opt/local/include" )
 
 if ( asio_INCLUDE )
     set( ASIO_FOUND TRUE )

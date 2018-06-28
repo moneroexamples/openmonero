@@ -2,7 +2,7 @@
 // detail/win_iocp_socket_service_base.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -116,6 +116,10 @@ public:
   ASIO_DECL asio::error_code close(
       base_implementation_type& impl, asio::error_code& ec);
 
+  // Release ownership of the socket.
+  ASIO_DECL socket_type release(
+      base_implementation_type& impl, asio::error_code& ec);
+
   // Cancel all operations associated with the socket.
   ASIO_DECL asio::error_code cancel(
       base_implementation_type& impl, asio::error_code& ec);
@@ -188,13 +192,13 @@ public:
     switch (w)
     {
     case socket_base::wait_read:
-      socket_ops::poll_read(impl.socket_, impl.state_, ec);
+      socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
       break;
     case socket_base::wait_write:
-      socket_ops::poll_write(impl.socket_, impl.state_, ec);
+      socket_ops::poll_write(impl.socket_, impl.state_, -1, ec);
       break;
     case socket_base::wait_error:
-      socket_ops::poll_error(impl.socket_, impl.state_, ec);
+      socket_ops::poll_error(impl.socket_, impl.state_, -1, ec);
       break;
     default:
       ec = asio::error::invalid_argument;
@@ -260,7 +264,7 @@ public:
       socket_base::message_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_write(impl.socket_, impl.state_, ec);
+    socket_ops::poll_write(impl.socket_, impl.state_, -1, ec);
 
     return 0;
   }
@@ -326,7 +330,7 @@ public:
       socket_base::message_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_read(impl.socket_, impl.state_, ec);
+    socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
 
     return 0;
   }
@@ -395,7 +399,7 @@ public:
       socket_base::message_flags& out_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_read(impl.socket_, impl.state_, ec);
+    socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
 
     // Clear out_flags, since we cannot give it any other sensible value when
     // performing a null_buffers operation.
@@ -528,6 +532,15 @@ protected:
   ASIO_DECL connect_ex_fn get_connect_ex(
       base_implementation_type& impl, int type);
 
+  // The type of a NtSetInformationFile function pointer.
+  typedef LONG (NTAPI *nt_set_info_fn)(HANDLE, ULONG_PTR*, void*, ULONG, ULONG);
+
+  // Helper function to get the NtSetInformationFile function pointer. If no
+  // NtSetInformationFile pointer has been obtained yet, one is obtained using
+  // GetProcAddress and the pointer is cached. Returns a null pointer if
+  // NtSetInformationFile is not available.
+  ASIO_DECL nt_set_info_fn get_nt_set_info();
+
   // Helper function to emulate InterlockedCompareExchangePointer functionality
   // for:
   // - very old Platform SDKs; and
@@ -553,6 +566,9 @@ protected:
 
   // Pointer to ConnectEx implementation.
   void* connect_ex_;
+
+  // Pointer to NtSetInformationFile implementation.
+  void* nt_set_info_;
 
   // Mutex to protect access to the linked list of implementations. 
   asio::detail::mutex mutex_;

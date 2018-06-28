@@ -2,7 +2,7 @@
 // detail/win_iocp_io_context.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -200,6 +200,12 @@ public:
       typename timer_queue<Time_Traits>::per_timer_data& to,
       typename timer_queue<Time_Traits>::per_timer_data& from);
 
+  // Get the concurrency hint that was used to initialise the io_context.
+  int concurrency_hint() const
+  {
+    return concurrency_hint_;
+  }
+
 private:
 #if defined(WINVER) && (WINVER < 0x0500)
   typedef DWORD dword_ptr_t;
@@ -302,6 +308,9 @@ private:
 
   // The operations that are ready to dispatch.
   op_queue<win_iocp_operation> completed_ops_;
+
+  // The concurrency hint used to initialise the io_context.
+  const int concurrency_hint_;
 };
 
 } // namespace detail

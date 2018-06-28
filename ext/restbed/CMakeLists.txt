@@ -1,9 +1,9 @@
-# Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
 cmake_minimum_required( VERSION 2.8.10 )
 
-project( "restbed" )
+project( restbed CXX )
 set( restbed_VERSION_MAJOR 4 )
-set( restbed_VERSION_MINOR 5.0 )
+set( restbed_VERSION_MINOR 6.0 )
 set( restbed_VERSION ${restbed_VERSION_MAJOR}.${restbed_VERSION_MINOR} )
 set( PACKAGE_VERSION ${restbed_VERSION} )
 set( VERSION "${restbed_VERSION}" )
@@ -19,14 +19,14 @@ option( BUILD_SSL      "Build secure socket layer support."  ON )
 #
 # Configuration
 #
-include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/configuration.cmake" )
+include( "${PROJECT_SOURCE_DIR}/cmake/configuration.cmake" )
 
-message( "   ${Blue}Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.${Reset}" )
+message( "   ${Blue}Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.${Reset}" )
 
 #
 # Dependencies
 #
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/modules" )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules" )
 
 find_package( asio REQUIRED )
 include_directories( SYSTEM ${asio_INCLUDE} )
@@ -42,7 +42,7 @@ endif ( )
 #
 # Build
 #
-include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/manifest.cmake" )
+include( "${PROJECT_SOURCE_DIR}/cmake/manifest.cmake" )
 
 include_directories( ${INCLUDE_DIR} )
 
@@ -58,10 +58,11 @@ else ( )
     target_link_libraries( ${PROJECT_NAME} )
 endif ( )
 
+
 #
 # Install
 #
-include( "${CMAKE_SOURCE_DIR}/ext/restbed/cmake/artifacts.cmake" )
+include( "${PROJECT_SOURCE_DIR}/cmake/artifacts.cmake" )
 
 if ( NOT DEFINED CMAKE_INSTALL_LIBDIR )
     set( CMAKE_INSTALL_LIBDIR library )

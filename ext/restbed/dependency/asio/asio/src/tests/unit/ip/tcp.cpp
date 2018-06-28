@@ -2,7 +2,7 @@
 // tcp.cpp
 // ~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -303,6 +303,9 @@ void test()
 
     socket1.close();
     socket1.close(ec);
+
+    socket1.release();
+    socket1.release(ec);
 
     ip::tcp::socket::native_handle_type native_socket4
       = socket1.native_handle();
@@ -783,7 +786,8 @@ private:
 struct move_accept_handler
 {
   move_accept_handler() {}
-  void operator()(const asio::error_code&, asio::ip::tcp::socket) {}
+  void operator()(
+      const asio::error_code&, asio::ip::tcp::socket) {}
   move_accept_handler(move_accept_handler&&) {}
 private:
   move_accept_handler(const move_accept_handler&) {}
@@ -868,6 +872,9 @@ void test()
 
     acceptor1.close();
     acceptor1.close(ec);
+
+    acceptor1.release();
+    acceptor1.release(ec);
 
     ip::tcp::acceptor::native_handle_type native_acceptor4
       = acceptor1.native_handle();
@@ -1269,7 +1276,90 @@ void test()
   }
 }
 
-} // namespace ip_tcp_resolver_compile
+} // namespace ip_tcp_resolver_entry_compile
+
+//------------------------------------------------------------------------------
+
+// ip_tcp_iostream_compile test
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The following test checks that all public types and member functions on the
+// class ip::tcp::iostream compile and link correctly. Runtime failures are
+// ignored.
+
+namespace ip_tcp_iostream_compile {
+
+void test()
+{
+#if !defined(ASIO_NO_IOSTREAM)
+  using namespace asio;
+  namespace ip = asio::ip;
+
+  asio::io_context ioc;
+  asio::ip::tcp::socket sock(ioc);
+
+  // basic_socket_iostream typedefs.
+
+  (void)static_cast<ip::tcp::iostream::protocol_type*>(0);
+  (void)static_cast<ip::tcp::iostream::endpoint_type*>(0);
+  (void)static_cast<ip::tcp::iostream::clock_type*>(0);
+  (void)static_cast<ip::tcp::iostream::time_point*>(0);
+  (void)static_cast<ip::tcp::iostream::duration*>(0);
+  (void)static_cast<ip::tcp::iostream::traits_type*>(0);
+
+  // basic_socket_iostream constructors.
+
+  ip::tcp::iostream ios1;
+
+#if defined(ASIO_HAS_STD_IOSTREAM_MOVE)
+  ip::tcp::iostream ios2(std::move(sock));
+#endif // defined(ASIO_HAS_STD_IOSTREAM_MOVE)
+
+  ip::tcp::iostream ios3("hostname", "service");
+
+  // basic_socket_iostream operators.
+
+#if defined(ASIO_HAS_STD_IOSTREAM_MOVE)
+  ios1 = ip::tcp::iostream();
+
+  ios2 = std::move(ios1);
+#endif // defined(ASIO_HAS_STD_IOSTREAM_MOVE)
+
+  // basic_socket_iostream members.
+
+  ios1.connect("hostname", "service");
+
+  ios1.close();
+
+  (void)static_cast<std::streambuf*>(ios1.rdbuf());
+
+#if defined(ASIO_ENABLE_OLD_SERVICES)
+  basic_socket<ip::tcp, stream_socket_service<ip::tcp> >& sref = ios1.socket();
+#else // defined(ASIO_ENABLE_OLD_SERVICES)
+  basic_socket<ip::tcp>& sref = ios1.socket();
+#endif // defined(ASIO_ENABLE_OLD_SERVICES)
+  (void)sref;
+
+  error_code ec = ios1.error();
+  (void)ec;
+
+  ip::tcp::iostream::time_point tp = ios1.expiry();
+  (void)tp;
+
+  ios1.expires_at(tp);
+
+  ip::tcp::iostream::duration d;
+  ios1.expires_after(d);
+
+  // iostream operators.
+
+  int i = 0;
+  ios1 >> i;
+  ios1 << i;
+#endif // !defined(ASIO_NO_IOSTREAM)
+}
+
+} // namespace ip_tcp_iostream_compile
+
 //------------------------------------------------------------------------------
 
 ASIO_TEST_SUITE
@@ -1283,4 +1373,6 @@ ASIO_TEST_SUITE
   ASIO_TEST_CASE(ip_tcp_acceptor_runtime::test)
   ASIO_TEST_CASE(ip_tcp_resolver_compile::test)
   ASIO_TEST_CASE(ip_tcp_resolver_entry_compile::test)
+  ASIO_TEST_CASE(ip_tcp_resolver_entry_compile::test)
+  ASIO_COMPILE_TEST_CASE(ip_tcp_iostream_compile::test)
 )
