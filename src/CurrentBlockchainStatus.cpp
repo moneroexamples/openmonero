@@ -217,8 +217,8 @@ CurrentBlockchainStatus::get_blocks_range(
 bool
 CurrentBlockchainStatus::get_block_txs(
         const block &blk,
-        list<transaction>& blk_txs,
-        list<crypto::hash>& missed_txs)
+        vector<transaction>& blk_txs,
+        vector<crypto::hash>& missed_txs)
 {
     // get all transactions in the block found
     // initialize the first list with transaction for solving
@@ -237,8 +237,8 @@ CurrentBlockchainStatus::get_block_txs(
 bool
 CurrentBlockchainStatus::get_txs(
         vector<crypto::hash> const& txs_to_get,
-        list<transaction>& txs,
-        list<crypto::hash>& missed_txs)
+        vector<transaction>& txs,
+        vector<crypto::hash>& missed_txs)
 {
     if (!core_storage->get_transactions(txs_to_get, txs, missed_txs))
     {
@@ -562,8 +562,8 @@ CurrentBlockchainStatus::search_if_payment_made(
             return false;
         }
 
-        list <cryptonote::transaction> blk_txs;
-        list<crypto::hash> missed_txs;
+        vector<cryptonote::transaction> blk_txs;
+        vector<crypto::hash> missed_txs;
 
         if (!get_block_txs(blk, blk_txs, missed_txs))
         {
@@ -1141,8 +1141,8 @@ CurrentBlockchainStatus::get_txs_in_blocks(
         txs_to_get.push_back(std::get<0>(tx_tuple));
 
     // fetch all txs from the blocks that we are analyzing in this iteration
-    std::list<cryptonote::transaction> txs;
-    std::list<crypto::hash> missed_txs;
+    vector<cryptonote::transaction> txs;
+    vector<crypto::hash> missed_txs;
 
     if (!CurrentBlockchainStatus::get_txs(txs_to_get, txs, missed_txs) || !missed_txs.empty())
     {

@@ -116,13 +116,13 @@ struct CurrentBlockchainStatus
 
     static bool
     get_block_txs(const block &blk,
-                  list<transaction> &blk_txs,
-                  list<crypto::hash>& missed_txs);
+                  vector<transaction> &blk_txs,
+                  vector<crypto::hash>& missed_txs);
 
     static bool
     get_txs(vector<crypto::hash> const& txs_to_get,
-            list<transaction>& txs,
-            list<crypto::hash>& missed_txs);
+            vector<transaction>& txs,
+            vector<crypto::hash>& missed_txs);
 
     static bool
     tx_exist(const crypto::hash& tx_hash);
