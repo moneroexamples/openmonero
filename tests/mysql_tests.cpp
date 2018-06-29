@@ -542,10 +542,27 @@ TEST_F(MYSQL_TEST, InsertSeverlOutputsAtOnce)
         mock_outputs_data.back().account_id = acc.id.data;
     }
 
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(xmreg::XmrOutput());
+
     // first time insert should be fine
     uint64_t no_inserted_rows = xmr_accounts->insert(mock_outputs_data);
 
     EXPECT_EQ(no_inserted_rows, mock_outputs_data.size());
+
+    // after inserting 10 rows, the expected ID should be before + 11
+    uint64_t expected_primary_id2 = xmr_accounts->get_next_primary_id(xmreg::XmrOutput());
+
+    EXPECT_EQ(expected_primary_id2, expected_primary_id + mock_outputs_data.size());
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+        uint64_t output_id_to_get = expected_primary_id + i;
+
+        xmreg::XmrOutput out_data;
+        xmr_accounts->select_output_with_id(output_id_to_get, out_data);
+
+        EXPECT_EQ(mock_outputs_data[i].out_pub_key, out_data.out_pub_key);
+    }
 
 }
 
