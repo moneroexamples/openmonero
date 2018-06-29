@@ -103,16 +103,17 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         DateTime blk_timestamp_mysql_format
                 = XmrTransaction::timestamp_to_DateTime(current_blockchain_timestamp);
 
-        // we will save current blockchain height
-        // in mysql, so that we know from what block
-        // to start searching txs of this new acount
-        // make it 1 block lower than current, just in case.
-        // this variable will be our using to initialize
-        // `scanned_block_height` in mysql Accounts table.
-        if ((acc_id = xmr_accounts->insert(xmr_address,
-                                           make_hash(view_key),
-                                           blk_timestamp_mysql_format,
-                                           current_blockchain_height)) == 0)
+
+        // create new account
+        XmrAccount new_account(mysqlpp::null,
+                               xmr_address,
+                               make_hash(view_key),
+                               current_blockchain_height, /* for scanned_block_height */
+                               blk_timestamp_mysql_format,
+                               current_blockchain_height);
+
+        // insert the new account into the mysql
+        if ((acc_id = xmr_accounts->insert(new_account)) == 0)
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -224,7 +225,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
         vector<XmrTransaction> txs;
 
-        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
+        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs))
         {
             json j_txs = json::array();
 
@@ -247,7 +248,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 vector<XmrInput> inputs;
 
-                if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+                if (xmr_accounts->select_inputs_for_tx(tx.id.data, inputs))
                 {
                     json j_spent_outputs = json::array();
 
@@ -438,7 +439,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
         vector<XmrTransaction> txs;
 
-        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
+        if (xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs))
         {
             json j_spent_outputs = json::array();
 
@@ -446,14 +447,14 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
             {
                 vector<XmrOutput> outs;
 
-                if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
+                if (xmr_accounts->select_outputs_for_tx(tx.id.data, outs))
                 {
                     for (XmrOutput &out: outs)
                     {
                         // check if the output, has been spend
                         vector<XmrInput> ins;
 
-                        if (xmr_accounts->select_inputs_for_out(out.id, ins))
+                        if (xmr_accounts->select_inputs_for_out(out.id.data, ins))
                         {
                             for (XmrInput& in: ins)
                             {
@@ -572,7 +573,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         vector<XmrTransaction> txs;
 
         // retrieve txs from mysql associated with the given address
-        if (xmr_accounts->select_txs(acc.id, txs))
+        if (xmr_accounts->select_txs(acc.id.data, txs))
         {
             // we found some txs.
 
@@ -597,7 +598,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                 vector<XmrOutput> outs;
 
-                if (xmr_accounts->select_outputs_for_tx(tx.id, outs))
+                if (xmr_accounts->select_outputs_for_tx(tx.id.data, outs))
                 {
                     for (XmrOutput &out: outs)
                     {
@@ -649,7 +650,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                         vector<XmrInput> ins;
 
-                        if (xmr_accounts->select_inputs_for_out(out.id, ins))
+                        if (xmr_accounts->select_inputs_for_out(out.id.data, ins))
                         {
                             json& j_ins = j_out["spend_key_images"];
 
@@ -1034,6 +1035,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                 CurrentBlockchainStatus::get_account_integrated_address_as_str(
                         random_payment_id8);
 
+        xmr_payment.id                = mysqlpp::null;
         xmr_payment.address           = xmr_address;
         xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
         xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
@@ -1041,11 +1043,11 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
         xmr_payment.payment_address   = integrated_address;
 
-        if ((payment_table_id = xmr_accounts->insert_payment(xmr_payment)) != 0)
+        if ((payment_table_id = xmr_accounts->insert(xmr_payment)) != 0)
         {
             // payment entry created
 
-            j_response["payment_id"]        = xmr_payment.payment_id;
+            j_response["payment_id"]        = payment_table_id;
             j_response["import_fee"]        = xmr_payment.import_fee;
             j_response["new_request"]       = true;
             j_response["request_fulfilled"] = bool {xmr_payment.request_fulfilled};
@@ -1401,14 +1403,14 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                     XmrTransaction xmr_tx;
 
-                    if (xmr_accounts->tx_exists(acc.id, tx_hash_str, xmr_tx))
+                    if (xmr_accounts->tx_exists(acc.id.data, tx_hash_str, xmr_tx))
                     {
                         j_response["payment_id"] = xmr_tx.payment_id;
                         j_response["timestamp"]  = static_cast<uint64_t>(xmr_tx.timestamp);
 
                         vector<XmrInput> inputs;
 
-                        if (xmr_accounts->select_inputs_for_tx(xmr_tx.id, inputs))
+                        if (xmr_accounts->select_inputs_for_tx(xmr_tx.id.data, inputs))
                         {
                             json j_spent_outputs = json::array();
 

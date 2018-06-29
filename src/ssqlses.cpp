@@ -18,7 +18,7 @@ ostream& operator<< (std::ostream& os, const Table& data)
 json
 XmrAccount::to_json() const
 {
-    json j {{"id"                     , id},
+    json j {{"id"                     , id.data},
             {"address"                , address},
             {"viewkey"                , viewkey},
             {"scanned_block_height"   , scanned_block_height},
@@ -32,7 +32,7 @@ XmrAccount::to_json() const
 json
 XmrTransaction::to_json() const
 {
-    json j {{"id"                  , id},
+    json j {{"id"                  , id.data},
             {"hash"                , hash},
             {"prefix_hash"         , prefix_hash},
             {"tx_pub_key"          , tx_pub_key},
@@ -69,7 +69,7 @@ ostream& operator<< (std::ostream& os, const XmrTransaction& acc)
 json
 XmrOutput::to_json() const
 {
-    json j {{"id"                  , id},
+    json j {{"id"                  , id.data},
             {"account_id"          , account_id},
             {"tx_id"               , tx_id},
             {"out_pub_key"         , out_pub_key},
@@ -94,7 +94,7 @@ ostream& operator<< (std::ostream& os, const XmrOutput& out) {
 json
 XmrInput::to_json() const
 {
-    json j {{"id"                  , id},
+    json j {{"id"                  , id.data},
             {"account_id"          , account_id},
             {"tx_id"               , tx_id},
             {"output_id"           , output_id},
@@ -117,7 +117,7 @@ ostream& operator<< (std::ostream& os, const XmrInput& out)
 json
 XmrPayment::to_json() const
 {
-    json j {{"id"               , id},
+    json j {{"id"               , id.data},
             {"address"          , address},
             {"payment_id"       , payment_id},
             {"tx_hash"          , tx_hash},

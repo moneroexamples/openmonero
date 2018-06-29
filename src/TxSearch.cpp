@@ -219,10 +219,11 @@ TxSearch::search()
 
                     XmrTransaction tx_data;
 
+                    tx_data.id               = mysqlpp::null;
                     tx_data.hash             = oi_identification.get_tx_hash_str();
                     tx_data.prefix_hash      = oi_identification.get_tx_prefix_hash_str();
                     tx_data.tx_pub_key       = oi_identification.get_tx_pub_key_str();
-                    tx_data.account_id       = acc->id;
+                    tx_data.account_id       = acc->id.data;
                     tx_data.blockchain_tx_id = blockchain_tx_id;
                     tx_data.total_received   = oi_identification.total_received;
                     tx_data.total_sent       = 0; // at this stage we don't have any
@@ -245,7 +246,7 @@ TxSearch::search()
 
 
                     // insert tx_data into mysql's Transactions table
-                    tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+                    tx_mysql_id = xmr_accounts->insert(tx_data);
 
                     // get amount specific (i.e., global) indices of outputs
                     if (!CurrentBlockchainStatus::get_amount_specific_indices(
@@ -269,7 +270,8 @@ TxSearch::search()
                     {
                         XmrOutput out_data;
 
-                        out_data.account_id   = acc->id;
+                        out_data.id           = mysqlpp::null;
+                        out_data.account_id   = acc->id.data;
                         out_data.tx_id        = tx_mysql_id;
                         out_data.out_pub_key  = pod_to_hex(out_info.pub_key);
                         out_data.tx_pub_key   = oi_identification.get_tx_pub_key_str();
@@ -282,7 +284,7 @@ TxSearch::search()
                         out_data.mixin        = tx_data.mixin;
                         out_data.timestamp    = tx_data.timestamp;
 
-                        outputs_found.push_back(out_data);
+                        outputs_found.push_back(std::move(out_data));
 
                         {
                             // add the outputs found into known_outputs_keys map
@@ -294,7 +296,7 @@ TxSearch::search()
 
 
                     // insert all outputs found into mysql's outputs table
-                    uint64_t no_rows_inserted = xmr_accounts->insert_output(outputs_found);
+                    uint64_t no_rows_inserted = xmr_accounts->insert(outputs_found);
 
                     if (no_rows_inserted == 0)
                     {
@@ -374,9 +376,10 @@ TxSearch::search()
 
                             XmrInput in_data;
 
-                            in_data.account_id  = acc->id;
+                            in_data.id          = mysqlpp::null;
+                            in_data.account_id  = acc->id.data;
                             in_data.tx_id       = 0; // for now zero, later we set it
-                            in_data.output_id   = out.id;
+                            in_data.output_id   = out.id.data;
                             in_data.key_image   = in_info.key_img;
                             in_data.amount      = out.amount; // must match corresponding output's amount
                             in_data.timestamp   = *blk_timestamp_mysql_format;
@@ -410,10 +413,11 @@ TxSearch::search()
 
                             XmrTransaction tx_data;
 
+                            tx_data.id               = mysqlpp::null;
                             tx_data.hash             = oi_identification.get_tx_hash_str();
                             tx_data.prefix_hash      = oi_identification.get_tx_prefix_hash_str();
                             tx_data.tx_pub_key       = oi_identification.get_tx_pub_key_str();
-                            tx_data.account_id       = acc->id;
+                            tx_data.account_id       = acc->id.data;
                             tx_data.blockchain_tx_id = blockchain_tx_id;
                             tx_data.total_received   = 0; // because this is spending, total_recieved is 0
                             tx_data.total_sent       = total_sent;
@@ -428,7 +432,7 @@ TxSearch::search()
                             tx_data.timestamp        = *blk_timestamp_mysql_format;
 
                             // insert tx_data into mysql's Transactions table
-                            tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+                            tx_mysql_id = xmr_accounts->insert(tx_data);
 
                             if (tx_mysql_id == 0)
                             {
@@ -447,7 +451,7 @@ TxSearch::search()
                         for (XmrInput& in_data: inputs_found)
                             in_data.tx_id = tx_mysql_id; // set tx id now. before we made it 0
 
-                        uint64_t no_rows_inserted = xmr_accounts->insert_input(inputs_found);
+                        uint64_t no_rows_inserted = xmr_accounts->insert(inputs_found);
 
                         if (no_rows_inserted == 0)
                         {
@@ -561,7 +565,7 @@ TxSearch::populate_known_outputs()
 {
     vector<XmrOutput> outs;
 
-    if (xmr_accounts->select_outputs(acc->id, outs))
+    if (xmr_accounts->select_outputs(acc->id.data, outs))
     {
         for (const XmrOutput& out: outs)
         {
@@ -770,14 +774,14 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
 {
     XmrTransaction tx_data_existing;
 
-    if (xmr_accounts->tx_exists(acc->id, tx_hash, tx_data_existing))
+    if (xmr_accounts->tx_exists(acc->id.data, tx_hash, tx_data_existing))
     {
         cout << "\nTransaction " << tx_hash << " already present in mysql, so remove it\n";
 
         // if tx is already present for that user,
         // we remove it, as we get it data from scrach
 
-        if (xmr_accounts->delete_tx(tx_data_existing.id) == 0)
+        if (xmr_accounts->delete_tx(tx_data_existing.id.data) == 0)
         {
             cerr << "cant remove tx " << tx_hash << '\n';
             return false;

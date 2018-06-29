@@ -50,13 +50,6 @@ public:
 
     bool
     select_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
-
-    uint64_t
-    insert(const XmrInput& in_data);
-
-    uint64_t
-    insert(vector<XmrInput> const& in_data);
-
 };
 
 
@@ -81,13 +74,6 @@ public:
 
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
-
-    uint64_t
-    insert(const XmrOutput& out_data);
-
-    uint64_t
-    insert(vector<XmrOutput> const& out_data);
-
 };
 
 
@@ -104,10 +90,6 @@ public:
     bool
     select(const uint64_t& address_id, vector<XmrTransaction>& txs);
 
-
-    uint64_t
-    insert(const XmrTransaction& tx_data);
-
     uint64_t
     mark_spendable(const uint64_t& tx_id_no);
 
@@ -117,10 +99,8 @@ public:
     uint64_t
     delete_tx(const uint64_t& tx_id_no);
 
-
     bool
     exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx);
-
 
     uint64_t
     get_total_recieved(const uint64_t& account_id);
@@ -143,15 +123,8 @@ public:
     bool
     select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments);
 
-
-    uint64_t
-    insert(const XmrPayment& payment_data);
-
-
     bool
     update(XmrPayment& payment_orginal, XmrPayment& payment_new);
-
-
 };
 
 class TxSearch;
@@ -182,26 +155,13 @@ public:
     bool
     select(const int64_t& acc_id, XmrAccount& account);
 
+    template <typename T>
     uint64_t
-    insert(const string& address,
-           const string& viewkey_hash,
-           DateTime const& current_blkchain_timestamp,
-           uint64_t const& current_blkchain_height = 0);
+    insert(const T& data_to_insert);
 
+    template <typename T>
     uint64_t
-    insert_tx(const XmrTransaction& tx_data);
-
-    uint64_t
-    insert_output(const XmrOutput& tx_out);
-
-    uint64_t
-    insert_output(vector<XmrOutput> const& out_data);
-
-    uint64_t
-    insert_input(const XmrInput& tx_in);
-
-    uint64_t
-    insert_input(vector<XmrInput> const& in_data);
+    insert(const vector<T>& data_to_insert);
 
     bool
     select_txs(const string& xmr_address, vector<XmrTransaction>& txs);
@@ -245,9 +205,6 @@ public:
 
     uint64_t
     delete_tx(const uint64_t& tx_id_no);
-
-    uint64_t
-    insert_payment(const XmrPayment& payment);
 
     bool
     select_payment_by_id(const string& payment_id, vector<XmrPayment>& payments);

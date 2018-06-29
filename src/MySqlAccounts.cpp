@@ -102,69 +102,6 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 }
 
 
-uint64_t
-MysqlInputs::insert(const XmrInput& in_data)
-{
-
-    Query query = conn->query(XmrInput::INSERT_STMT);
-    query.parse();
-
-    try
-    {
-        query.insert(in_data);
-
-        SimpleResult sr = query.execute();
-
-
-        if (sr.rows() == 1)
-            return sr.insert_id();
-
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-        //return 0;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
-uint64_t
-MysqlInputs::insert(vector<XmrInput> const& in_data)
-{
-    Query query = conn->query(XmrInput::INSERT_STMT);
-    query.parse();
-
-    try
-    {
-        query.insert(in_data.begin(), in_data.end());
-        SimpleResult sr = query.execute();
-
-        return sr.rows();
-
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-        //return 0;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
-
 MysqlOutpus::MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
@@ -291,80 +228,7 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
 }
 
 
-
-uint64_t
-MysqlOutpus::insert(const XmrOutput& out_data)
-{
-    Query query = conn->query(XmrOutput::INSERT_STMT);
-    query.parse();
-
-    //Query query = conn->query();
-
-    try
-    {
-//        query.insert(out_data);
-//
-//        SimpleResult sr = query.execute();
-
-        SimpleResult sr = query.execute(out_data.account_id,
-                                        out_data.tx_id,
-                                        out_data.out_pub_key,
-                                        out_data.tx_pub_key,
-                                        out_data.rct_outpk,
-                                        out_data.rct_mask,
-                                        out_data.rct_amount,
-                                        out_data.amount,
-                                        out_data.global_index,
-                                        out_data.out_index,
-                                        out_data.mixin,
-                                        out_data.timestamp);
-
-        if (sr.rows() == 1)
-            return sr.insert_id();
-
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-        //return 0;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
-uint64_t
-MysqlOutpus::insert(vector<XmrOutput> const& out_data)
-{
-    Query query = conn->query(XmrOutput::INSERT_STMT);
-    query.parse();
-
-    // cout << query << endl;
-
-    try
-    {
-        query.insert(out_data.begin(), out_data.end());
-
-        SimpleResult sr = query.execute();
-
-        return sr.rows();
-
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
-    MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
+MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
 bool
@@ -386,47 +250,6 @@ MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& tx
     }
 
     return false;
-}
-
-
-uint64_t
-MysqlTransactions::insert(const XmrTransaction& tx_data)
-{
-    Query query = conn->query(XmrTransaction::INSERT_STMT);
-    query.parse();
-
-    // cout << query << endl;
-
-    try
-    {
-        SimpleResult sr = query.execute(tx_data.hash,
-                                        tx_data.prefix_hash,
-                                        tx_data.tx_pub_key,
-                                        tx_data.account_id,
-                                        tx_data.blockchain_tx_id,
-                                        tx_data.total_received,
-                                        tx_data.total_sent,
-                                        tx_data.unlock_time,
-                                        tx_data.height,
-                                        tx_data.coinbase,
-                                        tx_data.is_rct,
-                                        tx_data.rct_type,
-                                        tx_data.spendable,
-                                        tx_data.payment_id,
-                                        tx_data.mixin,
-                                        tx_data.timestamp);
-
-        if (sr.rows() == 1)
-            return sr.insert_id();
-
-    }
-    catch (std::exception& e)
-    {
-        //MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
 }
 
 uint64_t
@@ -597,39 +420,6 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     return false;
 }
 
-
-uint64_t
-MysqlPayments::insert(const XmrPayment& payment_data)
-{
-
-    Query query = conn->query(XmrPayment::INSERT_STMT);
-    query.parse();
-
-    // cout << query << endl;
-
-    try
-    {
-        SimpleResult sr = query.execute(payment_data.address,
-                                        payment_data.payment_id,
-                                        payment_data.tx_hash,
-                                        payment_data.request_fulfilled,
-                                        payment_data.payment_address,
-                                        payment_data.import_fee);
-
-        if (sr.rows() == 1)
-            return sr.insert_id();
-
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
-
 bool
 MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
 {
@@ -734,31 +524,17 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
     return false;
 }
 
+template <typename T>
 uint64_t
-MySqlAccounts::insert(const string& address,
-                      const string& viewkey_hash,
-                      DateTime const& current_blkchain_timestamp,
-                      uint64_t const& current_blkchain_height)
+MySqlAccounts::insert(const T& data_to_insert)
 {
-
-    Query query = conn->query(XmrAccount::INSERT_STMT);
-    query.parse();
-
-    // cout << query << endl;
+    Query query = conn->query();
 
     try
     {
-        // scanned_block_height and start_height are
-        // set to current blockchain height
-        // when account is created.
+        query.insert(data_to_insert);
 
-        //cout << "insert address: " << address << endl;
-
-        SimpleResult sr = query.execute(address,
-                                        viewkey_hash,
-                                        current_blkchain_height,
-                                        current_blkchain_timestamp,
-                                        current_blkchain_height);
+        SimpleResult sr = query.execute();
 
         if (sr.rows() == 1)
             return sr.insert_id();
@@ -766,42 +542,53 @@ MySqlAccounts::insert(const string& address,
     }
     catch (std::exception& e)
     {
-        //MYSQL_EXCEPTION_MSG(e);
-        //return 0;
+        ;
     }
 
     return 0;
 }
 
+// Explicitly instantiate insert template for our tables
+template
+uint64_t MySqlAccounts::insert<XmrAccount>(const XmrAccount& data_to_insert);
+template
+uint64_t MySqlAccounts::insert<XmrTransaction>(const XmrTransaction& data_to_insert);
+template
+uint64_t MySqlAccounts::insert<XmrOutput>(const XmrOutput& data_to_insert);
+template
+uint64_t MySqlAccounts::insert<XmrInput>(const XmrInput& data_to_insert);
+template
+uint64_t MySqlAccounts::insert<XmrPayment>(const XmrPayment& data_to_insert);
+
+template <typename T>
 uint64_t
-MySqlAccounts::insert_tx(const XmrTransaction& tx_data)
+MySqlAccounts::insert(const vector<T>& data_to_insert)
 {
-    return mysql_tx->insert(tx_data);
+    Query query = conn->query();
+
+    try
+    {
+        query.insert(data_to_insert.begin(), data_to_insert.end());
+
+        SimpleResult sr = query.execute();
+
+        return sr.rows();
+
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
 }
 
-uint64_t
-MySqlAccounts::insert_output(const XmrOutput& tx_out)
-{
-    return mysql_out->insert(tx_out);
-}
-
-uint64_t
-MySqlAccounts::insert_output(vector<XmrOutput> const& out_data)
-{
-    return mysql_out->insert(out_data);
-}
-
-    uint64_t
-MySqlAccounts::insert_input(const XmrInput& tx_in)
-{
-    return mysql_in->insert(tx_in);
-}
-
-uint64_t
-MySqlAccounts::insert_input(vector<XmrInput> const& in_data)
-{
-    return mysql_in->insert(in_data);
-}
+// Explicitly instantiate insert template for our tables
+template
+uint64_t MySqlAccounts::insert<XmrOutput>(const vector<XmrOutput>& data_to_insert);
+template
+uint64_t MySqlAccounts::insert<XmrInput>(const vector<XmrInput>& data_to_insert);
 
 bool
 MySqlAccounts::select_txs(const string& xmr_address, vector<XmrTransaction>& txs)
@@ -819,7 +606,7 @@ MySqlAccounts::select_txs(const string& xmr_address, vector<XmrTransaction>& txs
         return false;
     }
 
-    return mysql_tx->select(acc.id, txs);
+    return mysql_tx->select(acc.id.data, txs);
 }
 
 bool
@@ -857,7 +644,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                 // it is spendable. Meaning, that its older than 10 blocks.
                 // so mark it as spendable, so that its permanet.
 
-                uint64_t no_row_updated = mark_tx_spendable(tx.id);
+                uint64_t no_row_updated = mark_tx_spendable(tx.id.data);
 
                 if (no_row_updated != 1)
                 {
@@ -888,7 +675,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                     // tx does not exist in blockchain, or its blockchain_id changed
                     // for example, it was orhpaned, and then readded.
 
-                    uint64_t no_row_updated = delete_tx(tx.id);
+                    uint64_t no_row_updated = delete_tx(tx.id.data);
 
                     if (no_row_updated != 1)
                     {
@@ -996,12 +783,6 @@ uint64_t
 MySqlAccounts::delete_tx(const uint64_t& tx_id_no)
 {
     return mysql_tx->delete_tx(tx_id_no);
-}
-
-uint64_t
-MySqlAccounts::insert_payment(const XmrPayment& payment)
-{
-    return mysql_payment->insert(payment);
 }
 
 bool

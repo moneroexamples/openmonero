@@ -151,7 +151,7 @@ TEST_F(MYSQL_TEST, GetAccount)
 
     ACC_FROM_HEX(xmr_addr);
 
-    EXPECT_EQ(acc.id, 129);
+    EXPECT_EQ(acc.id.data, 129);
     EXPECT_EQ(acc.scanned_block_height, 101610);
     EXPECT_EQ(acc.viewkey_hash, "1acf92d12101afe2ce7392169a38d2d547bd042373148eaaab323a3b5185a9ba");
 }
@@ -173,9 +173,14 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
 
     uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(xmreg::XmrAccount());
 
-    int64_t acc_id = xmr_accounts->insert(xmr_addr, view_key_hash,
-                                          blk_timestamp_mysql_format,
-                                          mock_current_blockchain_height);
+    xmreg::XmrAccount new_account(mysqlpp::null,
+                                  xmr_addr,
+                                  view_key_hash,
+                                  mock_current_blockchain_height, /* for scanned_block_height */
+                                  blk_timestamp_mysql_format,
+                                  mock_current_blockchain_height);
+
+    int64_t acc_id = xmr_accounts->insert(new_account);
 
     EXPECT_EQ(acc_id, expected_primary_id);
 
@@ -183,15 +188,13 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
 
     bool is_success = xmr_accounts->select(xmr_addr, acc);
 
-    EXPECT_EQ(acc.id, expected_primary_id);
+    EXPECT_EQ(acc.id.data, expected_primary_id);
     EXPECT_EQ(acc.scanned_block_height, mock_current_blockchain_height);
     EXPECT_EQ(acc.scanned_block_timestamp, mock_current_blockchain_timestamp);
     EXPECT_EQ(acc.viewkey_hash, view_key_hash);
 
     // now try inserting same account. it should fail
-    acc_id = xmr_accounts->insert(xmr_addr, view_key_hash,
-                                  blk_timestamp_mysql_format,
-                                  mock_current_blockchain_height);
+    acc_id = xmr_accounts->insert(new_account);
 
     EXPECT_EQ(acc_id, 0);
 }
@@ -212,7 +215,7 @@ TEST_F(MYSQL_TEST, SelectSingleTx)
     TX_AND_ACC_FROM_HEX(tx_4b40_hex, owner_addr);
 
     xmreg::XmrTransaction mysql_tx;
-    xmr_accounts->tx_exists(acc.id, tx_hash_str, mysql_tx);
+    xmr_accounts->tx_exists(acc.id.data, tx_hash_str, mysql_tx);
 
     EXPECT_EQ(mysql_tx.hash       , tx_hash_str);
     EXPECT_EQ(mysql_tx.prefix_hash, tx_prefix_hash_str);
@@ -261,7 +264,7 @@ TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
 
     vector<xmreg::XmrTransaction> txs;
 
-    xmr_accounts->select_txs(acc.id, txs);
+    xmr_accounts->select_txs(acc.id.data, txs);
 
     EXPECT_EQ(txs.size(), 16);
     EXPECT_EQ(txs[0].hash    , string{"efa653785fd536ec42283985666612eca961a0bf6a8d56c4c43b1027d173a32c"});
@@ -287,10 +290,10 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToSameAccount)
     xmreg::XmrTransaction tx_data;
 
     tx_data.hash             = tx_hash_str;
-    tx_data.account_id       = acc.id;
+    tx_data.account_id       = acc.id.data;
     // rest of fields is not important
 
-    uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+    uint64_t tx_mysql_id = xmr_accounts->insert(tx_data);
 
     // if zero than the insert failed
     EXPECT_EQ(tx_mysql_id, 0);
@@ -305,13 +308,14 @@ TEST_F(MYSQL_TEST, TryInsertingExistingTxToDifferentAccount)
 
     xmreg::XmrTransaction tx_data;
 
+    tx_data.id               = mysqlpp::null;
     tx_data.hash             = tx_hash_str;
-    tx_data.account_id       = acc.id;
+    tx_data.account_id       = acc.id.data;
     // rest of fields is not important
 
     uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(tx_data);
 
-    uint64_t tx_mysql_id = xmr_accounts->insert_tx(tx_data);
+    uint64_t tx_mysql_id = xmr_accounts->insert(tx_data);
 
     EXPECT_EQ(tx_mysql_id, expected_primary_id);
 }
@@ -323,7 +327,7 @@ TEST_F(MYSQL_TEST, IfTxExistsForInOnwnerAccount)
 
     xmreg::XmrTransaction tx_data;
 
-    EXPECT_TRUE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    EXPECT_TRUE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 }
 
 
@@ -333,7 +337,7 @@ TEST_F(MYSQL_TEST, IfTxExistsForInNoneOnwnerAccount)
 
     xmreg::XmrTransaction tx_data;
 
-    EXPECT_FALSE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    EXPECT_FALSE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 }
 
 
@@ -343,9 +347,9 @@ TEST_F(MYSQL_TEST, DeleteExistingTx)
 
     xmreg::XmrTransaction tx_data;
 
-    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 
-    uint64_t no_of_deleted_rows = xmr_accounts->delete_tx(tx_data.id);
+    uint64_t no_of_deleted_rows = xmr_accounts->delete_tx(tx_data.id.data);
 
     EXPECT_EQ(no_of_deleted_rows, 1);
 }
@@ -367,27 +371,27 @@ TEST_F(MYSQL_TEST, MarkTxSpendableAndNonSpendable)
     xmreg::XmrTransaction tx_data;
 
 
-    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 
     // this particular tx is marked as spendable in mysql
     EXPECT_TRUE(static_cast<bool>(tx_data.spendable));
 
-    uint64_t no_of_changed_rows = xmr_accounts->mark_tx_nonspendable(tx_data.id);
+    uint64_t no_of_changed_rows = xmr_accounts->mark_tx_nonspendable(tx_data.id.data);
 
     EXPECT_EQ(no_of_changed_rows, 1);
 
     // fetch tx_data again and check if its not-spendable now
-    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 
     EXPECT_FALSE(static_cast<bool>(tx_data.spendable));
 
     // mark it as spendable
-    no_of_changed_rows = xmr_accounts->mark_tx_spendable(tx_data.id);
+    no_of_changed_rows = xmr_accounts->mark_tx_spendable(tx_data.id.data);
 
     EXPECT_EQ(no_of_changed_rows, 1);
 
     // fetch it again, and check if its spendable
-    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id, tx_hash_str, tx_data));
+    ASSERT_TRUE(xmr_accounts->tx_exists(acc.id.data, tx_hash_str, tx_data));
 
     EXPECT_TRUE(static_cast<bool>(tx_data.spendable));
 }
@@ -412,7 +416,7 @@ TEST_P(MYSQL_TEST_PARAM, GetTotalRecievedByAnAddress)
 
     ACC_FROM_HEX(own_addr);
 
-    uint64_t total_recieved = xmr_accounts->get_total_recieved(acc.id);
+    uint64_t total_recieved = xmr_accounts->get_total_recieved(acc.id.data);
 
     EXPECT_EQ(total_recieved, expected_recieved);
 }
@@ -426,13 +430,16 @@ INSTANTIATE_TEST_CASE_P(
 
 
 xmreg::XmrOutput
-make_mock_output_data()
+make_mock_output_data(string last_char_pub_key = "4")
 {
     xmreg::XmrOutput mock_output_data ;
 
+    mock_output_data.id           = mysqlpp::null;
     // mock_output_data.account_id   = acc.id; need to be set when used
     mock_output_data.tx_id        = 106086; // some tx id for this output
-    mock_output_data.out_pub_key  = "18c6a80311d6f455ac1e5abdce7e86828d1ecf911f78da12a56ce8fdd5c716f4";
+    mock_output_data.out_pub_key  = "18c6a80311d6f455ac1e5abdce7e86828d1ecf911f78da12a56ce8fdd5c716f"
+                                    + last_char_pub_key; // out_pub_key is unique field, so to make
+                                                         // few public keys, we just change its last char.
     mock_output_data.tx_pub_key   = "38ae1d790bce890c3750b20ba8d35b8edee439fc8fb4218d50cec39a0cb7844a";
     mock_output_data.amount       = 999916984840000ull;
     mock_output_data.out_index    = 1;
@@ -453,10 +460,10 @@ TEST_F(MYSQL_TEST, InsertOneOutput)
 
     xmreg::XmrOutput mock_output_data = make_mock_output_data();
 
-    mock_output_data.account_id = acc.id;
+    mock_output_data.account_id = acc.id.data;
 
     uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(mock_output_data);
-    uint64_t inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+    uint64_t inserted_output_id = xmr_accounts->insert(mock_output_data);
 
     EXPECT_EQ(inserted_output_id, expected_primary_id);
 
@@ -485,18 +492,89 @@ TEST_F(MYSQL_TEST, TryToInsertSameOutputTwice)
 
     xmreg::XmrOutput mock_output_data = make_mock_output_data();
 
-    mock_output_data.account_id = acc.id;
+    mock_output_data.account_id = acc.id.data;
 
     // first time insert should be fine
-    uint64_t inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+    uint64_t inserted_output_id = xmr_accounts->insert(mock_output_data);
 
     EXPECT_GT(inserted_output_id, 0);
 
     // second insert should fail and result in 0
-    inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+    inserted_output_id = xmr_accounts->insert(mock_output_data);
 
     EXPECT_EQ(inserted_output_id, 0);
 }
+
+TEST_F(MYSQL_TEST, TryToInsertSameOutputTwiceToDifferent)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    xmreg::XmrOutput mock_output_data = make_mock_output_data();
+
+    mock_output_data.account_id = acc.id.data;
+
+    // first time insert should be fine
+    uint64_t inserted_output_id = xmr_accounts->insert(mock_output_data);
+
+    EXPECT_GT(inserted_output_id, 0);
+
+    xmreg::XmrAccount acc2;                                                 \
+    ASSERT_TRUE(xmr_accounts->select(addr_55Zb, acc2));
+
+    mock_output_data.account_id = acc2.id.data;
+
+    // second insert should fail and result in 0
+    inserted_output_id = xmr_accounts->insert(mock_output_data);
+
+    EXPECT_EQ(inserted_output_id, 0);
+}
+
+TEST_F(MYSQL_TEST, InsertSeverlOutputsAtOnce)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    // create vector of several outputs to be written into database
+    vector<xmreg::XmrOutput> mock_outputs_data;
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+        mock_outputs_data.push_back(make_mock_output_data(std::to_string(i)));
+        mock_outputs_data.back().account_id = acc.id.data;
+    }
+
+    // first time insert should be fine
+    uint64_t no_inserted_rows = xmr_accounts->insert(mock_outputs_data);
+
+    EXPECT_EQ(no_inserted_rows, mock_outputs_data.size());
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //TEST(TEST_CHAIN, GenerateTestChain)
 //{
