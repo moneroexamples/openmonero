@@ -298,13 +298,26 @@ MysqlOutpus::insert(const XmrOutput& out_data)
     Query query = conn->query(XmrOutput::INSERT_STMT);
     query.parse();
 
-    // cout << query << endl;
+    //Query query = conn->query();
 
     try
     {
-        query.insert(out_data);
+//        query.insert(out_data);
+//
+//        SimpleResult sr = query.execute();
 
-        SimpleResult sr = query.execute();
+        SimpleResult sr = query.execute(out_data.account_id,
+                                        out_data.tx_id,
+                                        out_data.out_pub_key,
+                                        out_data.tx_pub_key,
+                                        out_data.rct_outpk,
+                                        out_data.rct_mask,
+                                        out_data.rct_amount,
+                                        out_data.amount,
+                                        out_data.global_index,
+                                        out_data.out_index,
+                                        out_data.mixin,
+                                        out_data.timestamp);
 
         if (sr.rows() == 1)
             return sr.insert_id();

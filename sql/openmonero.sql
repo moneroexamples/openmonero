@@ -1,13 +1,16 @@
 -- phpMyAdmin SQL Dump
--- version 4.6.5.2
+-- version 4.8.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Mar 12, 2017 at 08:38 AM
--- Server version: 10.1.21-MariaDB
--- PHP Version: 7.1.2
+-- Generation Time: Jun 29, 2018 at 03:46 AM
+-- Server version: 10.1.34-MariaDB
+-- PHP Version: 7.2.7
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
 SET time_zone = "+00:00";
 
 
@@ -17,10 +20,8 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `openmonero`
+-- Database: `openmonero_test`
 --
-CREATE DATABASE IF NOT EXISTS `openmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `openmonero`;
 
 -- --------------------------------------------------------
 
@@ -29,15 +30,17 @@ USE `openmonero`;
 --
 
 DROP TABLE IF EXISTS `Accounts`;
-CREATE TABLE `Accounts` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS `Accounts` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `address` varchar(95) NOT NULL,
   `viewkey_hash` char(64) NOT NULL,
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `scanned_block_timestamp` timestamp NOT NULL DEFAULT 0,
+  `scanned_block_timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `start_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `address` (`address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -47,14 +50,18 @@ CREATE TABLE `Accounts` (
 --
 
 DROP TABLE IF EXISTS `Inputs`;
-CREATE TABLE `Inputs` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS `Inputs` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `tx_id` bigint(20) UNSIGNED NOT NULL,
   `output_id` bigint(20) UNSIGNED NOT NULL,
   `key_image` varchar(64) NOT NULL DEFAULT '',
   `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT '00000000000000000000',
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `account_id2` (`account_id`),
+  KEY `tx_id2` (`tx_id`),
+  KEY `output_id2` (`output_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -64,8 +71,8 @@ CREATE TABLE `Inputs` (
 --
 
 DROP TABLE IF EXISTS `Outputs`;
-CREATE TABLE `Outputs` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS `Outputs` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `tx_id` bigint(20) UNSIGNED NOT NULL,
   `out_pub_key` varchar(64) NOT NULL,
@@ -77,7 +84,11 @@ CREATE TABLE `Outputs` (
   `global_index` bigint(20) UNSIGNED NOT NULL,
   `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `out_pub_key` (`out_pub_key`),
+  KEY `tx_id` (`tx_id`),
+  KEY `account_id` (`account_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -87,8 +98,8 @@ CREATE TABLE `Outputs` (
 --
 
 DROP TABLE IF EXISTS `Payments`;
-CREATE TABLE `Payments` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS `Payments` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `address` varchar(95) NOT NULL,
   `payment_id` varchar(64) NOT NULL,
   `tx_hash` varchar(64) NOT NULL DEFAULT '',
@@ -96,7 +107,9 @@ CREATE TABLE `Payments` (
   `payment_address` varchar(95) NOT NULL,
   `import_fee` bigint(20) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payment_id` (`payment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -106,8 +119,8 @@ CREATE TABLE `Payments` (
 --
 
 DROP TABLE IF EXISTS `Transactions`;
-CREATE TABLE `Transactions` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS `Transactions` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `hash` varchar(64) NOT NULL,
   `prefix_hash` varchar(64) NOT NULL DEFAULT '',
   `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
@@ -123,82 +136,12 @@ CREATE TABLE `Transactions` (
   `rct_type` int(4) NOT NULL DEFAULT '-1',
   `payment_id` varchar(64) NOT NULL DEFAULT '',
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `hash` (`hash`,`account_id`),
+  KEY `account_id_2` (`account_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `Accounts`
---
-ALTER TABLE `Accounts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `address` (`address`);
-
---
--- Indexes for table `Inputs`
---
-ALTER TABLE `Inputs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `account_id2` (`account_id`),
-  ADD KEY `tx_id2` (`tx_id`),
-  ADD KEY `output_id2` (`output_id`);
-
---
--- Indexes for table `Outputs`
---
-ALTER TABLE `Outputs`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `account_id_2` (`account_id`,`out_pub_key`),
-  ADD KEY `account_id` (`account_id`),
-  ADD KEY `tx_id` (`tx_id`);
-
---
--- Indexes for table `Payments`
---
-ALTER TABLE `Payments`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `payment_id` (`payment_id`);
-
---
--- Indexes for table `Transactions`
---
-ALTER TABLE `Transactions`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `hash` (`hash`,`account_id`),
-  ADD KEY `account_id_2` (`account_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `Accounts`
---
-ALTER TABLE `Accounts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
---
--- AUTO_INCREMENT for table `Inputs`
---
-ALTER TABLE `Inputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1738;
---
--- AUTO_INCREMENT for table `Outputs`
---
-ALTER TABLE `Outputs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4373;
---
--- AUTO_INCREMENT for table `Payments`
---
-ALTER TABLE `Payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
---
--- AUTO_INCREMENT for table `Transactions`
---
-ALTER TABLE `Transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3702;
 --
 -- Constraints for dumped tables
 --
@@ -223,6 +166,8 @@ ALTER TABLE `Outputs`
 --
 ALTER TABLE `Transactions`
   ADD CONSTRAINT `account_id_FK` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE;
+SET FOREIGN_KEY_CHECKS=1;
+COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

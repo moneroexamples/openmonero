@@ -425,6 +425,79 @@ INSTANTIATE_TEST_CASE_P(
                 ));
 
 
+xmreg::XmrOutput
+make_mock_output_data()
+{
+    xmreg::XmrOutput mock_output_data ;
+
+    // mock_output_data.account_id   = acc.id; need to be set when used
+    mock_output_data.tx_id        = 106086; // some tx id for this output
+    mock_output_data.out_pub_key  = "18c6a80311d6f455ac1e5abdce7e86828d1ecf911f78da12a56ce8fdd5c716f4";
+    mock_output_data.tx_pub_key   = "38ae1d790bce890c3750b20ba8d35b8edee439fc8fb4218d50cec39a0cb7844a";
+    mock_output_data.amount       = 999916984840000ull;
+    mock_output_data.out_index    = 1;
+    mock_output_data.rct_outpk    = "e17cdc23fac1d92f2de196b567c8dd55ecd4cac52d6fef4eb446b6de4edb1d01";
+    mock_output_data.rct_mask     = "03cea1ffc18193639f7432287432c058a70551ceebed0db2c9d18088b423a255";
+    mock_output_data.rct_amount   = "f02e6d9dd504e6b428170d37b79344cad5538a4ad32f3f7dcebd5b96ac522e07";
+    mock_output_data.global_index = 64916;
+    mock_output_data.mixin        = 7;
+    mock_output_data.timestamp    = mysqlpp::DateTime(static_cast<time_t>(44434554));;
+
+    return mock_output_data;
+}
+
+
+TEST_F(MYSQL_TEST, InsertOneOutput)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    xmreg::XmrOutput mock_output_data = make_mock_output_data();
+
+    mock_output_data.account_id = acc.id;
+
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(mock_output_data);
+    uint64_t inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+
+    EXPECT_EQ(inserted_output_id, expected_primary_id);
+
+    // now we fetch the inserted output and compare its values
+
+    xmreg::XmrOutput out_data2;
+
+    EXPECT_TRUE(xmr_accounts->select_output_with_id(inserted_output_id, out_data2));
+
+    EXPECT_EQ(out_data2.tx_id, mock_output_data.tx_id);
+    EXPECT_EQ(out_data2.out_pub_key, mock_output_data.out_pub_key);
+    EXPECT_EQ(out_data2.tx_pub_key, mock_output_data.tx_pub_key);
+    EXPECT_EQ(out_data2.amount, mock_output_data.amount);
+    EXPECT_EQ(out_data2.out_index, mock_output_data.out_index);
+    EXPECT_EQ(out_data2.rct_outpk, mock_output_data.rct_outpk);
+    EXPECT_EQ(out_data2.rct_mask, mock_output_data.rct_mask);
+    EXPECT_EQ(out_data2.rct_amount, mock_output_data.rct_amount);
+    EXPECT_EQ(out_data2.global_index, mock_output_data.global_index);
+    EXPECT_EQ(out_data2.mixin, mock_output_data.mixin);
+    EXPECT_EQ(out_data2.timestamp, mock_output_data.timestamp);
+}
+
+TEST_F(MYSQL_TEST, TryToInsertSameOutputTwice)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    xmreg::XmrOutput mock_output_data = make_mock_output_data();
+
+    mock_output_data.account_id = acc.id;
+
+    // first time insert should be fine
+    uint64_t inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+
+    EXPECT_GT(inserted_output_id, 0);
+
+    // second insert should fail and result in 0
+    inserted_output_id = xmr_accounts->insert_output(mock_output_data);
+
+    EXPECT_EQ(inserted_output_id, 0);
+}
+
 //TEST(TEST_CHAIN, GenerateTestChain)
 //{
 //    uint64_t ts_start = 1338224400;

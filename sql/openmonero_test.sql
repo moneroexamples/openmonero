@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 26, 2018 at 04:26 AM
+-- Generation Time: Jun 29, 2018 at 03:45 AM
 -- Server version: 10.1.34-MariaDB
 -- PHP Version: 7.2.7
 
@@ -20,7 +20,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `openmonero`
+-- Database: `openmonero_test`
 --
 
 -- --------------------------------------------------------
@@ -43,6 +43,11 @@ CREATE TABLE IF NOT EXISTS `Accounts` (
   UNIQUE KEY `address` (`address`)
 ) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=utf8;
 
+--
+-- Truncate table before insert `Accounts`
+--
+
+TRUNCATE TABLE `Accounts`;
 --
 -- Dumping data for table `Accounts`
 --
@@ -76,6 +81,11 @@ CREATE TABLE IF NOT EXISTS `Inputs` (
   KEY `output_id2` (`output_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=60809 DEFAULT CHARSET=utf8;
 
+--
+-- Truncate table before insert `Inputs`
+--
+
+TRUNCATE TABLE `Inputs`;
 --
 -- Dumping data for table `Inputs`
 --
@@ -175,10 +185,16 @@ CREATE TABLE IF NOT EXISTS `Outputs` (
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `account_id` (`account_id`),
-  KEY `tx_id` (`tx_id`)
+  UNIQUE KEY `out_pub_key` (`out_pub_key`),
+  KEY `tx_id` (`tx_id`),
+  KEY `account_id` (`account_id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=140460833003782 DEFAULT CHARSET=utf8;
 
+--
+-- Truncate table before insert `Outputs`
+--
+
+TRUNCATE TABLE `Outputs`;
 --
 -- Dumping data for table `Outputs`
 --
@@ -262,6 +278,11 @@ CREATE TABLE IF NOT EXISTS `Payments` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 --
+-- Truncate table before insert `Payments`
+--
+
+TRUNCATE TABLE `Payments`;
+--
 -- Dumping data for table `Payments`
 --
 
@@ -298,6 +319,11 @@ CREATE TABLE IF NOT EXISTS `Transactions` (
   KEY `account_id_2` (`account_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=106092 DEFAULT CHARSET=utf8;
 
+--
+-- Truncate table before insert `Transactions`
+--
+
+TRUNCATE TABLE `Transactions`;
 --
 -- Dumping data for table `Transactions`
 --
