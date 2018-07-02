@@ -64,13 +64,10 @@ public:
     MysqlOutpus(shared_ptr<MySqlConnector> _conn);
 
     bool
-    select(const uint64_t& address_id, vector<XmrOutput>& outs);
+    select(uint64_t out_id, XmrOutput& outs);
 
     bool
     select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs);
-
-    bool
-    select(const uint64_t& out_id, XmrOutput& out);
 
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
@@ -87,9 +84,6 @@ public:
 
     MysqlTransactions(shared_ptr<MySqlConnector> _conn);
 
-    bool
-    select(const uint64_t& address_id, vector<XmrTransaction>& txs);
-
     uint64_t
     mark_spendable(const uint64_t& tx_id_no);
 
@@ -104,8 +98,6 @@ public:
 
     uint64_t
     get_total_recieved(const uint64_t& account_id);
-
-
 };
 
 class MysqlPayments
@@ -163,11 +155,9 @@ public:
     uint64_t
     insert(const vector<T>& data_to_insert);
 
+    template <typename T>
     bool
-    select_txs(const string& xmr_address, vector<XmrTransaction>& txs);
-
-    bool
-    select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs);
+    select(uint64_t account_id, vector<T>& selected_data);
 
     bool
     select_txs_for_account_spendability_check(const uint64_t& account_id,
@@ -177,13 +167,7 @@ public:
     select_output_with_id(const uint64_t& out_id, XmrOutput& out);
 
     bool
-    select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs);
-
-    bool
     select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs);
-
-    bool
-    select_inputs(const uint64_t& account_id, vector<XmrInput>& ins);
 
     bool
     select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins);

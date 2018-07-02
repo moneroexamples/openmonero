@@ -19,34 +19,6 @@ MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn)
 {}
 
 bool
-MysqlInputs::select(const uint64_t& address_id, vector<XmrInput>& ins)
-{
-
-    Query query = conn->query(XmrInput::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        query.storein(ins, address_id);
-
-        return !ins.empty();
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-
-bool
 MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
 {
 
@@ -106,34 +78,7 @@ MysqlOutpus::MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
 bool
-MysqlOutpus::select(const uint64_t& address_id, vector<XmrOutput>& outs)
-{
-    Query query = conn->query(XmrOutput::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        query.storein(outs, address_id);
-
-        return !outs.empty();
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-
-bool
-MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
+MysqlOutpus::select(uint64_t out_id, XmrOutput& out)
 {
     Query query = conn->query(XmrOutput::SELECT_STMT3);
     query.parse();
@@ -146,14 +91,9 @@ MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
 
         if (!outs.empty())
         {
-            out = outs.at(0);
+            out = std::move(outs.at(0));
             return true;
         }
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
     }
     catch (std::exception& e)
     {
@@ -230,27 +170,6 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
 
 MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
-
-bool
-MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& txs)
-{
-    Query query = conn->query(XmrTransaction::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        query.storein(txs, address_id);
-
-        return !txs.empty();
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
 
 uint64_t
 MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
@@ -590,31 +509,36 @@ uint64_t MySqlAccounts::insert<XmrOutput>(const vector<XmrOutput>& data_to_inser
 template
 uint64_t MySqlAccounts::insert<XmrInput>(const vector<XmrInput>& data_to_insert);
 
+template <typename T>
 bool
-MySqlAccounts::select_txs(const string& xmr_address, vector<XmrTransaction>& txs)
+MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 {
-    // having address first get its address_id
+    Query query = conn->query(T::SELECT_STMT);
+    query.parse();
 
-
-    // a placeholder for exciting or new account data
-    xmreg::XmrAccount acc;
-
-    // select this account if its existing one
-    if (!select(xmr_address, acc))
+    try
     {
-        cerr << "Address" << xmr_address << "does not exist in database" << endl;
-        return false;
+        query.storein(selected_data, account_id);
+
+        return !selected_data.empty();
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
-    return mysql_tx->select(acc.id.data, txs);
+    return false;
 }
 
-bool
-MySqlAccounts::select_txs(const uint64_t& account_id, vector<XmrTransaction>& txs)
-{
-    return mysql_tx->select(account_id, txs);
-}
+template
+bool MySqlAccounts::select<XmrTransaction>(uint64_t account_id, vector<XmrTransaction>& selected_data);
 
+template
+bool MySqlAccounts::select<XmrOutput>(uint64_t account_id, vector<XmrOutput>& selected_data);
+
+template
+bool MySqlAccounts::select<XmrInput>(uint64_t account_id, vector<XmrInput>& selected_data);
 
 bool
 MySqlAccounts::select_txs_for_account_spendability_check(
@@ -623,7 +547,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 {
     vector<XmrTransaction> txs_tmp;
 
-    if (!select_txs(account_id, txs_tmp))
+    if (!select(account_id, txs_tmp))
         return false;
 
     for (XmrTransaction& tx: txs_tmp)
@@ -715,14 +639,6 @@ MySqlAccounts::select_txs_for_account_spendability_check(
     return true;
 }
 
-
-
-bool
-MySqlAccounts::select_outputs(const uint64_t& account_id, vector<XmrOutput>& outs)
-{
-    return mysql_out->select(account_id, outs);
-}
-
 bool
 MySqlAccounts::select_output_with_id(const uint64_t& out_id, XmrOutput& out)
 {
@@ -734,13 +650,6 @@ MySqlAccounts::select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& o
 {
     return mysql_out->select_for_tx(tx_id, outs);
 }
-
-bool
-MySqlAccounts::select_inputs(const uint64_t& account_id, vector<XmrInput>& ins)
-{
-    return mysql_in->select(account_id, ins);
-}
-
 
 bool
 MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins)

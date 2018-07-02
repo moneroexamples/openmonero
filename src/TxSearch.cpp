@@ -565,7 +565,7 @@ TxSearch::populate_known_outputs()
 {
     vector<XmrOutput> outs;
 
-    if (xmr_accounts->select_outputs(acc->id.data, outs))
+    if (xmr_accounts->select(acc->id.data, outs))
     {
         for (const XmrOutput& out: outs)
         {

@@ -573,7 +573,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         vector<XmrTransaction> txs;
 
         // retrieve txs from mysql associated with the given address
-        if (xmr_accounts->select_txs(acc.id.data, txs))
+        if (xmr_accounts->select(acc.id.data, txs))
         {
             // we found some txs.
 

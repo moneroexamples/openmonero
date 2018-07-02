@@ -264,7 +264,7 @@ TEST_F(MYSQL_TEST, SelectAllTxsForAnAccount)
 
     vector<xmreg::XmrTransaction> txs;
 
-    xmr_accounts->select_txs(acc.id.data, txs);
+    xmr_accounts->select(acc.id.data, txs);
 
     EXPECT_EQ(txs.size(), 16);
     EXPECT_EQ(txs[0].hash    , string{"efa653785fd536ec42283985666612eca961a0bf6a8d56c4c43b1027d173a32c"});
