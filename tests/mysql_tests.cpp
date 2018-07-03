@@ -689,18 +689,26 @@ TEST_F(MYSQL_TEST, SelectInputsForOutput)
     // select all inputs associated with given output
     // i.e., where the output is used as a ring member
 
-    // out pub key: 2f7d943cf75ee1d1d55f87bb1bcd938c0b2e16856d02cac4958044a0acedec56
-    // tx hash: aa9485f537c19bfe92e699b2f0d9ff688dcd29ba9de6764b68ddce670bbdc35c
-    uint64_t output_id {428899};
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrOutput> outputs;
+
+    ASSERT_TRUE(xmr_accounts->select(acc.id.data, outputs));
+
+
+    // we check only for the first output
+    // for second output we should have three key images
+    // out pub key: 7f03cbcf4f9ddc763543959f0152bb5e66147359b6097bccf8fa0bbd748e1445
+    uint64_t output_id = outputs.at(1).id.data;
 
     vector<xmreg::XmrInput> inputs;
 
     ASSERT_TRUE(xmr_accounts->select_inputs_for_out(output_id, inputs));
 
-    EXPECT_EQ(inputs.size(), 4);
+    EXPECT_EQ(inputs.size(), 3);
 
-    EXPECT_EQ(inputs.front().key_image, "1a82a659622fcf0f5da0198a217e13d6fc315babeef1bdb69aabafffd0f7af39");
-    EXPECT_EQ(inputs.back().key_image, "45d3cf7b4f5db9d614602e9e956c63c35cf3da6f7b93740c514e06c898fb0da2");
+    EXPECT_EQ(inputs.front().key_image, "7d8e2a1f1755ef12ce28185821e6b19cb6023d535411bbb7abdced139c923bad");
+    EXPECT_EQ(inputs.back().key_image, "abc529357f90641d501d5108f822617049c19461569eafa45cb5400ee45bef33");
 
     inputs.clear();
 
