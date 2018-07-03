@@ -43,14 +43,15 @@ sql_create_8(Accounts, 1, 6,
 
 struct XmrAccount : public Accounts, Table
 {
-
     static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `Accounts` WHERE `id` = (%0q)
+    )";
+
+
+    static constexpr const char* SELECT_STMT2 = R"(
         SELECT * FROM `Accounts` WHERE `address` = (%0q)
     )";
 
-    static constexpr const char* SELECT_STMT2 = R"(
-        SELECT * FROM `Accounts` WHERE `id` = (%0q)
-    )";
 
     static constexpr const char* INSERT_STMT = R"(
         INSERT INTO `Accounts` (`address`, `viewkey_hash`,

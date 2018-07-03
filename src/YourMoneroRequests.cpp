@@ -248,7 +248,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
                 vector<XmrInput> inputs;
 
-                if (xmr_accounts->select_inputs_for_tx(tx.id.data, inputs))
+                if (xmr_accounts->select_for_tx(tx.id.data, inputs))
                 {
                     json j_spent_outputs = json::array();
 
@@ -447,7 +447,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
             {
                 vector<XmrOutput> outs;
 
-                if (xmr_accounts->select_outputs_for_tx(tx.id.data, outs))
+                if (xmr_accounts->select_for_tx(tx.id.data, outs))
                 {
                     for (XmrOutput &out: outs)
                     {
@@ -598,7 +598,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
                 vector<XmrOutput> outs;
 
-                if (xmr_accounts->select_outputs_for_tx(tx.id.data, outs))
+                if (xmr_accounts->select_for_tx(tx.id.data, outs))
                 {
                     for (XmrOutput &out: outs)
                     {
@@ -1410,7 +1410,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                         vector<XmrInput> inputs;
 
-                        if (xmr_accounts->select_inputs_for_tx(xmr_tx.id.data, inputs))
+                        if (xmr_accounts->select_for_tx(xmr_tx.id.data, inputs))
                         {
                             json j_spent_outputs = json::array();
 

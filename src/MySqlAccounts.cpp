@@ -19,34 +19,6 @@ MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn)
 {}
 
 bool
-MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
-{
-
-    Query query = conn->query(XmrInput::SELECT_STMT2);
-    query.parse();
-
-    try
-    {
-        query.storein(ins, address_id);
-
-        return !ins.empty();
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-
-bool
 MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 {
 
@@ -104,33 +76,6 @@ MysqlOutpus::select(uint64_t out_id, XmrOutput& out)
     return false;
 }
 
-
-
-bool
-MysqlOutpus::select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
-{
-    Query query = conn->query(XmrOutput::SELECT_STMT2);
-    query.parse();
-
-    try
-    {
-        query.storein(outs, tx_id);
-
-        return !outs.empty();
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
 
 
 bool
@@ -383,49 +328,13 @@ bool
 MySqlAccounts::select(const string& address, XmrAccount& account)
 {
 
-    Query query = conn->query(XmrAccount::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        vector<XmrAccount> res;
-        query.storein(res, address);
-
-        if (!res.empty())
-        {
-            account = res.at(0);
-            return true;
-        }
-
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-bool
-MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
-{
-
-    if (!conn->connect())
-    {
-        cerr << __FUNCTION__ << ":" << __LINE__
-             <<  " failed connecting to mysql"
-             << endl;
-        return false;
-    }
-
     Query query = conn->query(XmrAccount::SELECT_STMT2);
     query.parse();
 
     try
     {
         vector<XmrAccount> res;
-        query.storein(res, acc_id);
+        query.storein(res, address);
 
         if (!res.empty())
         {
@@ -509,11 +418,11 @@ uint64_t MySqlAccounts::insert<XmrOutput>(const vector<XmrOutput>& data_to_inser
 template
 uint64_t MySqlAccounts::insert<XmrInput>(const vector<XmrInput>& data_to_insert);
 
-template <typename T>
+template <typename T, size_t query_no>
 bool
 MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 {
-    Query query = conn->query(T::SELECT_STMT);
+    Query query = conn->query((query_no == 1 ? T::SELECT_STMT : T::SELECT_STMT2));
     query.parse();
 
     try
@@ -532,13 +441,38 @@ MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 }
 
 template
+bool MySqlAccounts::select<XmrAccount>(uint64_t account_id, vector<XmrAccount>& selected_data);
+
+template
 bool MySqlAccounts::select<XmrTransaction>(uint64_t account_id, vector<XmrTransaction>& selected_data);
 
 template
 bool MySqlAccounts::select<XmrOutput>(uint64_t account_id, vector<XmrOutput>& selected_data);
 
+template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
+bool MySqlAccounts::select<XmrOutput, 2>(uint64_t tx_id, vector<XmrOutput>& selected_data);
+
 template
 bool MySqlAccounts::select<XmrInput>(uint64_t account_id, vector<XmrInput>& selected_data);
+
+template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
+bool MySqlAccounts::select<XmrInput, 2>(uint64_t tx_id, vector<XmrInput>& selected_data);
+
+
+template <typename T>
+bool
+MySqlAccounts::select_for_tx(uint64_t tx_id, vector<T>& selected_data)
+{
+    return select<T, 2>(tx_id, selected_data);
+}
+
+template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
+bool MySqlAccounts::select_for_tx<XmrOutput>(uint64_t tx_id, vector<XmrOutput>& selected_data);
+
+
+template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
+bool MySqlAccounts::select_for_tx<XmrInput>(uint64_t tx_id, vector<XmrInput>& selected_data);
+
 
 bool
 MySqlAccounts::select_txs_for_account_spendability_check(
@@ -643,18 +577,6 @@ bool
 MySqlAccounts::select_output_with_id(const uint64_t& out_id, XmrOutput& out)
 {
     return mysql_out->select(out_id, out);
-}
-
-bool
-MySqlAccounts::select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
-{
-    return mysql_out->select_for_tx(tx_id, outs);
-}
-
-bool
-MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins)
-{
-    return mysql_in->select_for_tx(tx_id, ins);
 }
 
 

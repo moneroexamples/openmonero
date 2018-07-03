@@ -46,9 +46,6 @@ public:
     select(const uint64_t& address_id, vector<XmrInput>& ins);
 
     bool
-    select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins);
-
-    bool
     select_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
 };
 
@@ -65,9 +62,6 @@ public:
 
     bool
     select(uint64_t out_id, XmrOutput& outs);
-
-    bool
-    select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs);
 
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
@@ -144,9 +138,6 @@ public:
     bool
     select(const string& address, XmrAccount& account);
 
-    bool
-    select(const int64_t& acc_id, XmrAccount& account);
-
     template <typename T>
     uint64_t
     insert(const T& data_to_insert);
@@ -155,9 +146,21 @@ public:
     uint64_t
     insert(const vector<T>& data_to_insert);
 
-    template <typename T>
+    /**
+     *
+     * @tparam T
+     * @tparam query_no which query to use, for SELECT_STMT or SELECT_STMT2
+     * @param account_id
+     * @param selected_data
+     * @return
+     */
+    template <typename T, size_t query_no = 1>
     bool
     select(uint64_t account_id, vector<T>& selected_data);
+
+    template <typename T>
+    bool
+    select_for_tx(uint64_t tx_id, vector<T>& selected_data);
 
     bool
     select_txs_for_account_spendability_check(const uint64_t& account_id,
@@ -165,12 +168,6 @@ public:
 
     bool
     select_output_with_id(const uint64_t& out_id, XmrOutput& out);
-
-    bool
-    select_outputs_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs);
-
-    bool
-    select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins);
 
     bool
     select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
