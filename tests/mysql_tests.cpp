@@ -684,7 +684,29 @@ TEST_F(MYSQL_TEST, SelectInputsForTransaction)
 }
 
 
+TEST_F(MYSQL_TEST, SelectInputsForOutput)
+{
+    // select all inputs associated with given output
+    // i.e., where the output is used as a ring member
 
+    // out pub key: 2f7d943cf75ee1d1d55f87bb1bcd938c0b2e16856d02cac4958044a0acedec56
+    // tx hash: aa9485f537c19bfe92e699b2f0d9ff688dcd29ba9de6764b68ddce670bbdc35c
+    uint64_t output_id {428899};
+
+    vector<xmreg::XmrInput> inputs;
+
+    ASSERT_TRUE(xmr_accounts->select_inputs_for_out(output_id, inputs));
+
+    EXPECT_EQ(inputs.size(), 4);
+
+    EXPECT_EQ(inputs.front().key_image, "1a82a659622fcf0f5da0198a217e13d6fc315babeef1bdb69aabafffd0f7af39");
+    EXPECT_EQ(inputs.back().key_image, "45d3cf7b4f5db9d614602e9e956c63c35cf3da6f7b93740c514e06c898fb0da2");
+
+    inputs.clear();
+
+    // for non exisitng output
+    ASSERT_FALSE(xmr_accounts->select_inputs_for_out(444444, inputs));
+}
 
 
 

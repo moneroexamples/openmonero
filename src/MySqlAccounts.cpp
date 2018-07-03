@@ -31,11 +31,6 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 
         return !ins.empty();
     }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
