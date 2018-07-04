@@ -52,6 +52,11 @@ struct XmrAccount : public Accounts, Table
         SELECT * FROM `Accounts` WHERE `address` = (%0q)
     )";
 
+    // SELECT_STMT3 same as SELECT_STMT which is fine
+    // easier to work with templates later
+    static constexpr const char* SELECT_STMT3 = R"(
+        SELECT * FROM `Accounts` WHERE `id` = (%0q)
+    )";
 
     static constexpr const char* INSERT_STMT = R"(
         INSERT INTO `Accounts` (`address`, `viewkey_hash`,
@@ -101,6 +106,11 @@ struct XmrTransaction : public Transactions, Table
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
+        SELECT * FROM `Transactions` WHERE `id` = (%0q)
+    )";
+
+    // same as SELECT_STMT2 for similicity later on
+    static constexpr const char* SELECT_STMT3 = R"(
         SELECT * FROM `Transactions` WHERE `id` = (%0q)
     )";
 
@@ -182,7 +192,7 @@ struct XmrOutput : public Outputs, Table
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
-      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q) ORDER BY amount
+      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q)
     )";
 
     static constexpr const char* SELECT_STMT3 = R"(
@@ -246,6 +256,10 @@ struct XmrInput : public Inputs, Table
     )";
 
     static constexpr const char* SELECT_STMT3 = R"(
+      SELECT * FROM `Inputs` WHERE `id` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT4 = R"(
      SELECT * FROM `Inputs` WHERE `output_id` = (%0q)
     )";
 
@@ -266,12 +280,12 @@ struct XmrInput : public Inputs, Table
 
 sql_create_9(Payments, 1, 7,
              sql_bigint_unsigned_null, id,
-             sql_varchar             , address,
+             sql_bigint_unsigned     , account_id,
              sql_varchar             , payment_id,
              sql_varchar             , tx_hash,
              sql_boolean             , request_fulfilled,
-             sql_varchar             , payment_address,
              sql_bigint_unsigned     , import_fee,
+             sql_varchar             , payment_address,
              sql_timestamp           , created,
              sql_timestamp           , modified);
 
@@ -280,19 +294,22 @@ struct XmrPayment : public Payments, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
-      SELECT * FROM `Payments` WHERE `address` = (%0q)
+      SELECT * FROM `Payments` WHERE `account_id` = (%0q)
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
        SELECT * FROM `Payments` WHERE `payment_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT3 = R"(
+      SELECT * FROM `Payments` WHERE `id` = (%0q)
+    )";
 
     static constexpr const char* INSERT_STMT = R"(
-       INSERT IGNORE INTO `Payments` (`address`, `payment_id`, `tx_hash`,
-                                 `request_fulfilled`, `payment_address`, `import_fee`)
-                    VALUES (%0q, %1q, %2q,
-                            %3q, %4q, %5q);
+       INSERT IGNORE INTO `Payments` (`account_id`, `payment_id`, `tx_hash`,
+                                 `request_fulfilled`, `import_fee`,
+                                 `payment_address`)
+                    VALUES (%0q, %1q, %2q, %3q, %4q, %5q);
     )";
 
 

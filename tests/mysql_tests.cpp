@@ -46,6 +46,27 @@ class MYSQL_TEST : public ::testing::Test
 {
 public:
 
+    static void initDatabase()
+    {
+        mysqlpp::Query query = xmr_accounts
+                ->get_connection()->get_connection().query(db_data);
+
+        query.parse();
+
+        try
+        {
+            ASSERT_TRUE(query.exec());
+
+            while(query.more_results())
+                query.store_next();
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << e.what() << '\n';
+            throw e;
+        }
+    }
+
     static void SetUpTestCase()
     {
         // read in confing json file and get test db info
@@ -102,29 +123,16 @@ public:
         db_data = xmreg::read("../sql/openmonero_test.sql");
     }
 
+    static void TearDownTestCase()
+    {
+        initDatabase();
+    }
+
 protected:
 
     virtual void SetUp()
     {
-
-        mysqlpp::Query query = xmr_accounts
-                ->get_connection()->get_connection().query(db_data);
-
-        query.parse();
-
-        try
-        {
-            bool is_success = query.exec();
-
-            while(query.more_results())
-                query.store_next();
-        }
-        catch (std::exception &e)
-        {
-            std::cerr << e.what() << '\n';
-            throw e;
-        }
-
+        initDatabase();
     }
 
     static std::string db_data;
@@ -477,7 +485,7 @@ INSTANTIATE_TEST_CASE_P(
                 ));
 
 
-xmreg::XmrOutput
+auto
 make_mock_output_data(string last_char_pub_key = "4")
 {
     xmreg::XmrOutput mock_output_data ;
@@ -511,6 +519,8 @@ TEST_F(MYSQL_TEST, SelectOutputsForAccount)
 
     ASSERT_TRUE(xmr_accounts->select(acc.id.data, outputs));
 
+    // can use this command to get list of outputs
+    // ./xmr2csv --stagenet -m -a 5AjfkEY7RFgNGDYvoRQkncfwHXT6Fh7oJBisqFUX5u96i3ZepxDPocQK29tmAwBDuvKRpskZnfA6N8Ra58qFzA4bSA3QZFp -v 3ee772709dcf834a881c432fc15625d84585e4462d7905c42460dd478a315008 -t 90000 -g 101610
     EXPECT_EQ(outputs.size(), 9);
 }
 
@@ -552,7 +562,7 @@ TEST_F(MYSQL_TEST, InsertOneOutput)
 
     xmreg::XmrOutput out_data2;
 
-    EXPECT_TRUE(xmr_accounts->select_output_with_id(inserted_output_id, out_data2));
+    EXPECT_TRUE(xmr_accounts->select_by_primary_id(inserted_output_id, out_data2));
 
     EXPECT_EQ(out_data2.tx_id, mock_output_data.tx_id);
     EXPECT_EQ(out_data2.out_pub_key, mock_output_data.out_pub_key);
@@ -640,7 +650,7 @@ TEST_F(MYSQL_TEST, InsertSeverlOutputsAtOnce)
         uint64_t output_id_to_get = expected_primary_id + i;
 
         xmreg::XmrOutput out_data;
-        xmr_accounts->select_output_with_id(output_id_to_get, out_data);
+        xmr_accounts->select_by_primary_id(output_id_to_get, out_data);
 
         EXPECT_EQ(mock_outputs_data[i].out_pub_key, out_data.out_pub_key);
     }
@@ -658,6 +668,8 @@ TEST_F(MYSQL_TEST, SelectInputsForAccount)
 
     ASSERT_TRUE(xmr_accounts->select(acc.id.data, inputs));
 
+    // can use this command to get the list of ring members
+    // ./xmr2csv --stagenet -m -a 5AjfkEY7RFgNGDYvoRQkncfwHXT6Fh7oJBisqFUX5u96i3ZepxDPocQK29tmAwBDuvKRpskZnfA6N8Ra58qFzA4bSA3QZFp -v 3ee772709dcf834a881c432fc15625d84585e4462d7905c42460dd478a315008 -t 90000 -g 101610
     EXPECT_EQ(inputs.size(), 12);
 }
 
@@ -707,7 +719,7 @@ TEST_F(MYSQL_TEST, SelectInputsForOutput)
 
     EXPECT_EQ(inputs.size(), 3);
 
-    EXPECT_EQ(inputs.front().key_image, "7d8e2a1f1755ef12ce28185821e6b19cb6023d535411bbb7abdced139c923bad");
+    EXPECT_EQ(inputs.front().key_image, "00dd88b3a16b3616d342faec2bc47b24add433407ef79b9a00b55b75d96239a4");
     EXPECT_EQ(inputs.back().key_image, "abc529357f90641d501d5108f822617049c19461569eafa45cb5400ee45bef33");
 
     inputs.clear();
@@ -718,22 +730,199 @@ TEST_F(MYSQL_TEST, SelectInputsForOutput)
 
 
 
+auto
+make_mock_input_data(string last_char_pub_key = "0")
+{
+    xmreg::XmrInput mock_data;
+
+    mock_data.id           = mysqlpp::null;
+    // mock_output_data.account_id   = acc.id; need to be set when used
+    mock_data.tx_id        = 106086; // some tx id for this output
+    mock_data.output_id    = 428900; // some output id
+    mock_data.key_image    = "18c6a80311d6f455ac1e5abdce7e86828d1ecf911f78da12a56ce8fdd5c716f"
+                                    + last_char_pub_key; // out_pub_key is unique field, so to make
+    // few public keys, we just change its last char.
+    mock_data.amount       = 999916984840000ull;
+    mock_data.timestamp    = mysqlpp::DateTime(static_cast<time_t>(44434554));;
+
+    return mock_data;
+}
+
+
+TEST_F(MYSQL_TEST, InsertOneInput)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    xmreg::XmrInput mock_input_data = make_mock_input_data();
+
+    mock_input_data.account_id = acc.id.data;
+
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(mock_input_data);
+    uint64_t inserted_id  = xmr_accounts->insert(mock_input_data);
+
+    EXPECT_EQ(expected_primary_id, inserted_id);
+
+    // now we fetch the inserted input and compare its values
+
+    xmreg::XmrInput in_data2;
+
+    EXPECT_TRUE(xmr_accounts->select_by_primary_id(inserted_id, in_data2));
+
+    EXPECT_EQ(in_data2.account_id, mock_input_data.account_id);
+    EXPECT_EQ(in_data2.tx_id, mock_input_data.tx_id);
+    EXPECT_EQ(in_data2.amount, mock_input_data.amount);
+    EXPECT_EQ(in_data2.key_image, mock_input_data.key_image);
+    EXPECT_EQ(in_data2.output_id, mock_input_data.output_id);
+    EXPECT_EQ(in_data2.timestamp, mock_input_data.timestamp);
+}
 
 
 
+TEST_F(MYSQL_TEST, InsertSeverlInputsAtOnce)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    // create vector of several inputs to be written into database
+    vector<xmreg::XmrInput> mock_data;
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+        mock_data.push_back(make_mock_input_data(std::to_string(i)));
+        mock_data.back().account_id = acc.id.data;
+    }
+
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(xmreg::XmrInput());
+
+    // first time insert should be fine
+    uint64_t no_inserted_rows = xmr_accounts->insert(mock_data);
+
+    EXPECT_EQ(no_inserted_rows, mock_data.size());
+
+    // after inserting 10 rows, the expected ID should be before + 11
+    uint64_t expected_primary_id2 = xmr_accounts->get_next_primary_id(xmreg::XmrInput());
+
+    EXPECT_EQ(expected_primary_id2, expected_primary_id + mock_data.size());
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+        uint64_t id_to_get = expected_primary_id + i;
+
+        xmreg::XmrInput out_data;
+        xmr_accounts->select_by_primary_id(id_to_get, out_data);
+
+        EXPECT_EQ(mock_data[i].key_image, out_data.key_image);
+    }
+
+}
+
+
+TEST_F(MYSQL_TEST, TryToInsertSameInputTwice)
+{
+    // the input table requires a row to be unique for pair
+    // of key_image + output_id
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    xmreg::XmrInput mock_data = make_mock_input_data();
+
+    mock_data.account_id = acc.id.data;
+
+    // first time insert should be fine
+    uint64_t inserted_id = xmr_accounts->insert(mock_data);
+
+    EXPECT_GT(inserted_id, 0);
+
+    // second insert should fail and result in 0
+    inserted_id = xmr_accounts->insert(mock_data);
+
+    EXPECT_EQ(inserted_id, 0);
+}
+
+
+TEST_F(MYSQL_TEST, SelectPaymentForAccount)
+{
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrPayment> payments;
+
+    ASSERT_TRUE(xmr_accounts->select(acc.id.data, payments));
+
+    EXPECT_EQ(payments.size(), 1);
+    EXPECT_EQ(payments[0].payment_id, "74854c1cd490e148");
+    EXPECT_EQ(payments[0].payment_address, "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLK4Tiiy");
+    EXPECT_FALSE(static_cast<bool>(payments[0].request_fulfilled));
+
+    //check if there is no payment for the given account id
+    EXPECT_FALSE(xmr_accounts->select(5555, payments));
+}
 
 
 
+auto
+make_mock_payment_data(string last_char_pub_key = "0")
+{
+    xmreg::XmrPayment mock_data;
+
+    mock_data.id                = mysqlpp::null;
+    // mock_output_data.account_id   = acc.id; need to be set when used
+    mock_data.payment_id        = pod_to_hex(crypto::rand<crypto::hash8>());
+    mock_data.import_fee        = 10000000010ull; // xmr
+    mock_data.request_fulfilled = false;
+    mock_data.tx_hash           = ""; // no tx_hash yet with the payment
+    mock_data.payment_address   = "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLK4Tiiy";
+
+    return mock_data;
+}
 
 
 
+TEST_F(MYSQL_TEST, InsertOnePayment)
+{
+    ACC_FROM_HEX(addr_55Zb);
+
+    xmreg::XmrPayment mock_data = make_mock_payment_data();
+
+    mock_data.account_id = acc.id.data;
+
+    uint64_t expected_primary_id = xmr_accounts->get_next_primary_id(mock_data);
+    uint64_t inserted_id  = xmr_accounts->insert(mock_data);
+
+    EXPECT_EQ(expected_primary_id, inserted_id);
+
+    // now we fetch the inserted input and compare its values
+
+    xmreg::XmrPayment in_data2;
+
+    EXPECT_TRUE(xmr_accounts->select_by_primary_id(inserted_id, in_data2));
+
+    EXPECT_EQ(in_data2.account_id, mock_data.account_id);
+    EXPECT_EQ(in_data2.payment_id, mock_data.payment_id);
+    EXPECT_EQ(in_data2.import_fee, mock_data.import_fee);
+    EXPECT_EQ(in_data2.payment_address, mock_data.payment_address);
+    EXPECT_EQ(in_data2.request_fulfilled, mock_data.request_fulfilled);
+}
 
 
+TEST_F(MYSQL_TEST, TryToInsertSamePaymentTwice)
+{
+    // the input table requires a row to be unique for pair
+    // of key_image + output_id
 
+    ACC_FROM_HEX(addr_55Zb);
 
+    xmreg::XmrPayment mock_data = make_mock_payment_data();
 
+    mock_data.account_id = acc.id.data;
 
+    uint64_t inserted_id  = xmr_accounts->insert(mock_data);
 
+    EXPECT_GT(inserted_id, 0);
+
+    // second insert should fail and result in 0
+    inserted_id = xmr_accounts->insert(mock_data);
+
+    EXPECT_EQ(inserted_id, 0);
+}
 
 
 

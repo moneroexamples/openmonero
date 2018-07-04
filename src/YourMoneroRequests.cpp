@@ -258,7 +258,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
                     {
                         XmrOutput out;
 
-                        if (xmr_accounts->select_output_with_id(input.output_id, out))
+                        if (xmr_accounts->select_by_primary_id(input.output_id, out))
                         {
                             total_spent += input.amount;
 
@@ -887,9 +887,6 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
 
     string xmr_address   = j_request["address"];
 
-    // a placeholder for existing or new payment data
-    xmreg::XmrPayment xmr_payment;
-
     json j_response;
 
     j_response["request_fulfilled"] = false;
@@ -923,12 +920,45 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         return;
     }
 
+    XmrAccount acc;
+
+    if (!xmr_accounts->select(xmr_address, acc))
+    {
+        cerr << "xmr_address does not exists! " << endl;
+        j_response["error"] = "The account does not exists!";
+
+        string response_body = j_response.dump();
+        auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+        session->close( OK, response_body, response_headers);
+        return;
+    }
+
+
+    // a placeholder for existing or new payment data
+    vector<XmrPayment> xmr_payments;
+
+
     // select this payment if its existing one
-    if (xmr_accounts->select_payment_by_address(xmr_address, xmr_payment))
+    if (xmr_accounts->select(acc.id.data, xmr_payments))
     {
         // payment record exists, so now we need to check if
         // actually payment has been done, and updated
         // mysql record accordingly.
+
+        if (xmr_payments.size() > 1)
+        {
+            cerr << "More than one payment record found! " << endl;
+            j_response["error"] = "TMore than one payment record found!";
+
+            string response_body = j_response.dump();
+            auto response_headers = make_headers({{ "Content-Length", to_string(response_body.size())}});
+
+            session->close( OK, response_body, response_headers);
+            return;
+        }
+
+        XmrPayment& xmr_payment = xmr_payments[0];
 
         bool request_fulfilled = bool {xmr_payment.request_fulfilled};
 
@@ -1035,8 +1065,10 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                 CurrentBlockchainStatus::get_account_integrated_address_as_str(
                         random_payment_id8);
 
+        XmrPayment xmr_payment;
+
         xmr_payment.id                = mysqlpp::null;
-        xmr_payment.address           = xmr_address;
+        xmr_payment.account_id        = acc.id.data;
         xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
         xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
         xmr_payment.request_fulfilled = false;
@@ -1420,7 +1452,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
                             {
                                 XmrOutput out;
 
-                                if (xmr_accounts->select_output_with_id(input.output_id, out))
+                                if (xmr_accounts->select_by_primary_id(input.output_id, out))
                                 {
                                     total_spent += input.amount;
 

@@ -22,7 +22,7 @@ bool
 MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 {
 
-    Query query = conn->query(XmrInput::SELECT_STMT3);
+    Query query = conn->query(XmrInput::SELECT_STMT4);
     query.parse();
 
     try
@@ -43,33 +43,6 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 
 MysqlOutpus::MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
-
-bool
-MysqlOutpus::select(uint64_t out_id, XmrOutput& out)
-{
-    Query query = conn->query(XmrOutput::SELECT_STMT3);
-    query.parse();
-
-    try
-    {
-        vector<XmrOutput> outs;
-
-        query.storein(outs, out_id);
-
-        if (!outs.empty())
-        {
-            out = std::move(outs.at(0));
-            return true;
-        }
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
 
 
 
@@ -236,28 +209,6 @@ MysqlPayments::MysqlPayments(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
 bool
-MysqlPayments::select(const string& address, vector<XmrPayment>& payments)
-{
-
-    Query query = conn->query(XmrPayment::SELECT_STMT);
-    query.parse();
-
-    try
-    {
-        query.storein(payments, address);
-
-        return !payments.empty();
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-bool
 MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments)
 {
 
@@ -422,6 +373,8 @@ MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 
     try
     {
+        selected_data.clear();
+
         query.storein(selected_data, account_id);
 
         return !selected_data.empty();
@@ -450,6 +403,9 @@ bool MySqlAccounts::select<XmrOutput, 2>(uint64_t tx_id, vector<XmrOutput>& sele
 template
 bool MySqlAccounts::select<XmrInput>(uint64_t account_id, vector<XmrInput>& selected_data);
 
+template
+bool MySqlAccounts::select<XmrPayment>(uint64_t account_id, vector<XmrPayment>& selected_data);
+
 template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
 bool MySqlAccounts::select<XmrInput, 2>(uint64_t tx_id, vector<XmrInput>& selected_data);
 
@@ -468,6 +424,48 @@ bool MySqlAccounts::select_for_tx<XmrOutput>(uint64_t tx_id, vector<XmrOutput>& 
 template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
 bool MySqlAccounts::select_for_tx<XmrInput>(uint64_t tx_id, vector<XmrInput>& selected_data);
 
+
+
+template <typename T>
+bool
+MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
+{
+    Query query = conn->query(T::SELECT_STMT3);
+    query.parse();
+
+    try
+    {
+        vector<T> outs;
+
+        query.storein(outs, id);
+
+        if (!outs.empty())
+        {
+            selected_data = std::move(outs.at(0));
+            return true;
+        }
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return false;
+}
+
+
+template
+bool MySqlAccounts::select_by_primary_id<XmrTransaction>(uint64_t id, XmrTransaction& selected_data);
+
+template
+bool MySqlAccounts::select_by_primary_id<XmrInput>(uint64_t id, XmrInput& selected_data);
+
+template
+bool MySqlAccounts::select_by_primary_id<XmrOutput>(uint64_t id, XmrOutput& selected_data);
+
+template
+bool MySqlAccounts::select_by_primary_id<XmrPayment>(uint64_t id, XmrPayment& selected_data);
 
 bool
 MySqlAccounts::select_txs_for_account_spendability_check(
@@ -568,11 +566,6 @@ MySqlAccounts::select_txs_for_account_spendability_check(
     return true;
 }
 
-bool
-MySqlAccounts::select_output_with_id(const uint64_t& out_id, XmrOutput& out)
-{
-    return mysql_out->select(out_id, out);
-}
 
 
 bool
@@ -616,33 +609,6 @@ MySqlAccounts::select_payment_by_id(const string& payment_id, vector<XmrPayment>
 {
     return mysql_payment->select_by_payment_id(payment_id, payments);
 }
-
-bool
-MySqlAccounts::select_payment_by_address(const string& address, vector<XmrPayment>& payments)
-{
-    return mysql_payment->select(address, payments);
-}
-
-bool
-MySqlAccounts::select_payment_by_address(const string& address, XmrPayment& payment)
-{
-
-    vector<XmrPayment> payments;
-
-    bool r = mysql_payment->select(address, payments);
-
-    if (!r)
-        return false;
-
-    if (payments.empty())
-        return false;
-
-    // always get last payment details.
-    payment = payments.back();
-
-    return r;
-}
-
 
 bool
 MySqlAccounts::update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new)

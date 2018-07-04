@@ -43,9 +43,6 @@ public:
     MysqlInputs(shared_ptr<MySqlConnector> _conn);
 
     bool
-    select(const uint64_t& address_id, vector<XmrInput>& ins);
-
-    bool
     select_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
 };
 
@@ -59,9 +56,6 @@ class MysqlOutpus
 public:
 
     MysqlOutpus(shared_ptr<MySqlConnector> _conn);
-
-    bool
-    select(uint64_t out_id, XmrOutput& outs);
 
     bool
     exist(const string& output_public_key_str, XmrOutput& out);
@@ -102,9 +96,6 @@ class MysqlPayments
 public:
 
     MysqlPayments(shared_ptr<MySqlConnector> _conn);
-
-    bool
-    select(const string& address, vector<XmrPayment>& payments);
 
     bool
     select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments);
@@ -162,12 +153,13 @@ public:
     bool
     select_for_tx(uint64_t tx_id, vector<T>& selected_data);
 
+    template <typename T>
+    bool
+    select_by_primary_id(uint64_t id, T& selected_data);
+
     bool
     select_txs_for_account_spendability_check(const uint64_t& account_id,
                                               vector<XmrTransaction>& txs);
-
-    bool
-    select_output_with_id(const uint64_t& out_id, XmrOutput& out);
 
     bool
     select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins);
@@ -189,12 +181,6 @@ public:
 
     bool
     select_payment_by_id(const string& payment_id, vector<XmrPayment>& payments);
-
-    bool
-    select_payment_by_address(const string& address, vector<XmrPayment>& payments);
-
-    bool
-    select_payment_by_address(const string& address, XmrPayment& payment);
 
     bool
     update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new);

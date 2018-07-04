@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS `Inputs` (
   `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT '00000000000000000000',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `output_id` (`output_id`,`key_image`),
   KEY `account_id2` (`account_id`),
   KEY `tx_id2` (`tx_id`),
   KEY `output_id2` (`output_id`)
@@ -265,17 +266,18 @@ INSERT INTO `Outputs` (`id`, `account_id`, `tx_id`, `out_pub_key`, `rct_outpk`, 
 DROP TABLE IF EXISTS `Payments`;
 CREATE TABLE IF NOT EXISTS `Payments` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `address` varchar(95) NOT NULL,
-  `payment_id` varchar(64) NOT NULL,
+  `account_id` bigint(20) UNSIGNED NOT NULL,
+  `payment_id` varchar(16) NOT NULL,
   `tx_hash` varchar(64) NOT NULL DEFAULT '',
   `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
-  `payment_address` varchar(95) NOT NULL,
   `import_fee` bigint(20) NOT NULL,
+  `payment_address` varchar(95) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `account_id` (`account_id`) USING BTREE,
   UNIQUE KEY `payment_id` (`payment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 --
 -- Truncate table before insert `Payments`
@@ -286,8 +288,9 @@ TRUNCATE TABLE `Payments`;
 -- Dumping data for table `Payments`
 --
 
-INSERT INTO `Payments` (`id`, `address`, `payment_id`, `tx_hash`, `request_fulfilled`, `payment_address`, `import_fee`, `created`, `modified`) VALUES
-(1, '57Hx8QpLUSMjhgoCNkvJ2Ch91mVyxcffESCprnRPrtbphMCv8iGUEfCUJxrpUWUeWrS9vPWnFrnMmTwnFpSKJrSKNuaXc5q', 'c3a7db070babeb64', 'be2ee71be2adf0da1b966c7a3c0573e2f340fc61374ca3c7e87e82cb0118b752', 1, '5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLN4Ptby', 100000000000, '2018-06-14 05:20:15', '2018-06-14 05:20:15');
+INSERT INTO `Payments` (`id`, `account_id`, `payment_id`, `tx_hash`, `request_fulfilled`, `import_fee`, `payment_address`, `created`, `modified`) VALUES
+(1, 129, 'e410eb43e14a28fb', '', 0, 100000000000, '5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLPHdavp', '2018-07-03 23:54:55', '2018-07-03 23:54:55'),
+(2, 134, '74854c1cd490e148', '', 0, 100000000000, '5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLK4Tiiy', '2018-07-03 23:55:57', '2018-07-03 23:55:57');
 
 -- --------------------------------------------------------
 
@@ -437,6 +440,12 @@ ALTER TABLE `Inputs`
 ALTER TABLE `Outputs`
   ADD CONSTRAINT `account_id3_FK` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `transaction_id_FK` FOREIGN KEY (`tx_id`) REFERENCES `Transactions` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `Payments`
+--
+ALTER TABLE `Payments`
+  ADD CONSTRAINT `account_id` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `Transactions`

@@ -118,12 +118,12 @@ json
 XmrPayment::to_json() const
 {
     json j {{"id"               , id.data},
-            {"address"          , address},
+            {"account_id"       , account_id},
             {"payment_id"       , payment_id},
             {"tx_hash"          , tx_hash},
             {"request_fulfilled", bool {request_fulfilled}},
+            {"import_fee"       , import_fee},
             {"payment_address"  , payment_address},
-            {"import_fee"       , import_fee}
     };
 
     return j;
