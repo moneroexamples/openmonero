@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 29, 2018 at 03:46 AM
+-- Generation Time: Jul 05, 2018 at 12:58 AM
 -- Server version: 10.1.34-MariaDB
 -- PHP Version: 7.2.7
 
@@ -101,15 +101,16 @@ CREATE TABLE IF NOT EXISTS `Outputs` (
 DROP TABLE IF EXISTS `Payments`;
 CREATE TABLE IF NOT EXISTS `Payments` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `address` varchar(95) NOT NULL,
-  `payment_id` varchar(64) NOT NULL,
+  `account_id` bigint(20) UNSIGNED NOT NULL,
+  `payment_id` varchar(16) NOT NULL,
   `tx_hash` varchar(64) NOT NULL DEFAULT '',
   `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
-  `payment_address` varchar(95) NOT NULL,
   `import_fee` bigint(20) NOT NULL,
+  `payment_address` varchar(95) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `account_id` (`account_id`) USING BTREE,
   UNIQUE KEY `payment_id` (`payment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -161,6 +162,12 @@ ALTER TABLE `Inputs`
 ALTER TABLE `Outputs`
   ADD CONSTRAINT `account_id3_FK` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `transaction_id_FK` FOREIGN KEY (`tx_id`) REFERENCES `Transactions` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `Payments`
+--
+ALTER TABLE `Payments`
+  ADD CONSTRAINT `account_id` FOREIGN KEY (`account_id`) REFERENCES `Accounts` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `Transactions`

@@ -230,30 +230,6 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     return false;
 }
 
-bool
-MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
-{
-
-    Query query = conn->query();
-
-    try
-    {
-        query.update(payment_orginal, payment_new);
-
-        SimpleResult sr = query.execute();
-
-        return sr.rows() == 1;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
-
 MySqlAccounts::MySqlAccounts()
 {
     // create connection to the mysql
@@ -409,6 +385,36 @@ bool MySqlAccounts::select<XmrPayment>(uint64_t account_id, vector<XmrPayment>& 
 template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
 bool MySqlAccounts::select<XmrInput, 2>(uint64_t tx_id, vector<XmrInput>& selected_data);
 
+
+template <typename T>
+bool
+MySqlAccounts::update(T const& orginal_row, T const& new_row)
+{
+
+    Query query = conn->query();
+
+    try
+    {
+        query.update(orginal_row, new_row);
+
+        SimpleResult sr = query.execute();
+
+        return sr.rows() == 1;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return false;
+}
+
+template
+bool MySqlAccounts::update<XmrAccount>(XmrAccount const& orginal_row, XmrAccount const& new_row);
+
+template
+bool MySqlAccounts::update<XmrPayment>(XmrPayment const& orginal_row, XmrPayment const& new_row);
 
 template <typename T>
 bool
@@ -610,48 +616,11 @@ MySqlAccounts::select_payment_by_id(const string& payment_id, vector<XmrPayment>
     return mysql_payment->select_by_payment_id(payment_id, payments);
 }
 
-bool
-MySqlAccounts::update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new)
-{
-    return mysql_payment->update(payment_orginal, payment_new);
-}
-
 uint64_t
 MySqlAccounts::get_total_recieved(const uint64_t& account_id)
 {
     return mysql_tx->get_total_recieved(account_id);
 }
-
-
-bool
-MySqlAccounts::update(XmrAccount& acc_orginal, XmrAccount& acc_new)
-{
-
-    Query query = conn->query();
-
-    try
-    {
-        query.update(acc_orginal, acc_new);
-
-        SimpleResult sr = query.execute();
-
-        return sr.rows() == 1;
-    }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-        //return false;
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return false;
-}
-
 
 
 /**

@@ -992,7 +992,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                 updated_xmr_payment.tx_hash           = tx_hash_with_payment;
 
                 // save to mysql
-                if (xmr_accounts->update_payment(xmr_payment, updated_xmr_payment))
+                if (xmr_accounts->update(xmr_payment, updated_xmr_payment))
                 {
 
                     // set scanned_block_height	to 0 to begin

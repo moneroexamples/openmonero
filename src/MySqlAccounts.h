@@ -99,9 +99,6 @@ public:
 
     bool
     select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments);
-
-    bool
-    update(XmrPayment& payment_orginal, XmrPayment& payment_new);
 };
 
 class TxSearch;
@@ -151,6 +148,10 @@ public:
 
     template <typename T>
     bool
+    update(T const& orginal_row, T const& new_row);
+
+    template <typename T>
+    bool
     select_for_tx(uint64_t tx_id, vector<T>& selected_data);
 
     template <typename T>
@@ -188,8 +189,6 @@ public:
     uint64_t
     get_total_recieved(const uint64_t& account_id);
 
-    bool
-    update(XmrAccount& acc_orginal, XmrAccount& acc_new);
 
     void
     launch_mysql_pinging_thread();
