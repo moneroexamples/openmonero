@@ -1,5 +1,3 @@
-#set(CMAKE_CXX_FLAGS_DEBUG "-fno-limit-debug-info")
-#set(CMAKE_C_FLAGS_DEBUG "-fno-limit-debug-info")
 
 
 macro(add_om_test _TEST_NAME)

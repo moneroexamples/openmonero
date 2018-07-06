@@ -40,11 +40,16 @@ include(MyUtils)
 
 include(CodeCoverage)
 APPEND_COVERAGE_COMPILER_FLAGS()
+#set(COVERAGE_EXCLUDES
+#        '${CMAKE_SOURCE_DIR}/ext/*'
+#        'asio/*'
+#        '${MONERO_SOURCE_DIR}/*'
+#        '${CMAKE_SOURCE_DIR}/tests/*')
+
 set(COVERAGE_EXCLUDES
-        '${CMAKE_SOURCE_DIR}/ext/*'
-        'asio/*'
-        '${MONERO_SOURCE_DIR}/*'
-        '${CMAKE_SOURCE_DIR}/tests/*')
+                '${CMAKE_SOURCE_DIR}/ext/*'
+                'asio/*'
+                '${MONERO_SOURCE_DIR}/*')
 
 find_package(Monero)
 
@@ -163,8 +168,8 @@ target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 #set(COVERAGE_EXCLUDES 'ext/*' '${MONERO_DIR}/*')
 
 include_directories(
-        ${CMAKE_SOURCE_DIR}/tests/googletest/googletest/include
-        ${CMAKE_SOURCE_DIR}/tests/googletest/googlemock/include)
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include)
 
 #include_directories(${MONERO_DIR}/tests/core_tests)
 

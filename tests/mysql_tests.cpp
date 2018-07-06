@@ -8,6 +8,7 @@
 //#include "chaingen.h"
 //#include "chaingen_tests_list.h"
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 
@@ -20,6 +21,9 @@ using namespace std;
 using namespace mysqlpp;
 using namespace cryptonote;
 using namespace epee::string_tools;
+
+using ::testing::AtLeast;
+using ::testing::Return;
 
 #define TX_FROM_HEX(hex_string)                                                 \
     transaction tx;                                                             \
@@ -87,7 +91,6 @@ TEST(MYSQL_CONNECTION, CantConnect)
     xmreg::MySqlConnector::password = "wrong_pass";
     xmreg::MySqlConnector::dbname = "wrong_name";
 
-
     try
     {
         auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>();
@@ -125,7 +128,7 @@ TEST(MYSQL_CONNECTION, CanConnect)
         // it should not perform the connection again, bust just return true;
         EXPECT_TRUE(xmr_accounts->get_connection()->connect());
     }
-    catch(...)
+    catch(std::exception const& e)
     {
         FAIL();
     }
@@ -634,6 +637,22 @@ TEST_F(MYSQL_TEST, SelectOutputsForTransaction)
 
     EXPECT_EQ(outputs.size(), 1);
     EXPECT_EQ(outputs[0].out_pub_key, "a9d876b01eb972db944b78899b4c90c2b66a3c81fe04bf54ff61565f3db53419");
+
+
+    // now use output_exists
+
+    xmreg::XmrOutput out;
+
+    EXPECT_TRUE(xmr_accounts->output_exists(outputs[0].out_pub_key, out));
+
+    EXPECT_EQ(outputs[0], out);
+
+    // use output_exists on non-exisiting output
+
+    string non_exist_key {"a9d876b01eb972db944b78899b4c90c2b66a3c81fe04bf54ff61565f3db53000"};
+
+    EXPECT_FALSE(xmr_accounts->output_exists(non_exist_key, out));
+
 }
 
 TEST_F(MYSQL_TEST, InsertOneOutput)
@@ -667,6 +686,7 @@ TEST_F(MYSQL_TEST, InsertOneOutput)
     EXPECT_EQ(out_data2.mixin, mock_output_data.mixin);
     EXPECT_EQ(out_data2.timestamp, mock_output_data.timestamp);
 }
+
 
 TEST_F(MYSQL_TEST, TryToInsertSameOutputTwice)
 {
@@ -947,8 +967,24 @@ TEST_F(MYSQL_TEST, SelectPaymentForAccount)
     EXPECT_FALSE(xmr_accounts->select(5555, payments));
 }
 
+TEST_F(MYSQL_TEST, SelectPaymentUsingPaymentID)
+{
+    string exising_id {"e410eb43e14a28fb"};
+
+    vector<xmreg::XmrPayment> payments;
+
+    EXPECT_TRUE(xmr_accounts->select_payment_by_id(exising_id, payments));
+
+    EXPECT_EQ(payments.size(), 1);
 
 
+    string non_exising_id {"e410eb43e140000"};
+
+    EXPECT_FALSE(xmr_accounts->select_payment_by_id(non_exising_id, payments));
+
+    EXPECT_EQ(payments.size(), 0);
+
+}
 auto
 make_mock_payment_data(string last_char_pub_key = "0")
 {

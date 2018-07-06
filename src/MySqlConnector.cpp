@@ -89,7 +89,10 @@ void
 MySqlConnector::_init()
 {
     if (!connect())
+    {
+        cerr << "Connection to Mysql failed!" << endl;
         throw std::runtime_error("Connection to Mysql failed!");
+    }
 }
 
 }

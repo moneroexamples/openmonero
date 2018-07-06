@@ -62,7 +62,7 @@ public:
     Query
     query(const std::string& qstr);
 
-    bool
+    virtual bool
     connect();
 
     bool
@@ -73,7 +73,7 @@ public:
 
     virtual ~MySqlConnector();
 
-private:
+protected:
 
     void _init();
 

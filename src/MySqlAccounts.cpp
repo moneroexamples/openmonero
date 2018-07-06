@@ -63,7 +63,7 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
         if (outs.empty())
             return false;
 
-        out = outs.at(0);
+        out = std::move(outs.at(0));
 
     }
     catch (std::exception& e)
@@ -191,6 +191,7 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
 
     try
     {
+        payments.clear();
         query.storein(payments, payment_id);
 
         return !payments.empty();
@@ -234,7 +235,7 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
 
         if (!res.empty())
         {
-            account = res.at(0);
+            account = std::move(res.at(0));
             return true;
         }
 
