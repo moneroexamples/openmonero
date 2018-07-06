@@ -51,6 +51,11 @@ public:
 
     MySqlConnector(Option* _option);
 
+    // dont want any copies of connection object.
+    // pass it around through shared or unique pointer
+    MySqlConnector (const MySqlConnector&) = delete;
+    MySqlConnector& operator= (const MySqlConnector&) = delete;
+
     Query
     query(const char* qstr = 0);
 

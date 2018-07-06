@@ -36,6 +36,16 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
 
 include(MyUtils)
 
+#get_filename_component(ABSOLUTE_PATH ${RELATIVE_PATH} ABSOLUTE)
+
+include(CodeCoverage)
+APPEND_COVERAGE_COMPILER_FLAGS()
+set(COVERAGE_EXCLUDES
+        '${CMAKE_SOURCE_DIR}/ext/*'
+        'asio/*'
+        '${MONERO_SOURCE_DIR}/*'
+        '${CMAKE_SOURCE_DIR}/tests/*')
+
 find_package(Monero)
 
 include_directories(/usr/include/mysql)
@@ -150,6 +160,8 @@ endif()
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 
+#set(COVERAGE_EXCLUDES 'ext/*' '${MONERO_DIR}/*')
+
 include_directories(
         ${CMAKE_SOURCE_DIR}/tests/googletest/googletest/include
         ${CMAKE_SOURCE_DIR}/tests/googletest/googlemock/include)
@@ -157,6 +169,8 @@ include_directories(
 #include_directories(${MONERO_DIR}/tests/core_tests)
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
+
+
 
 enable_testing()
 add_subdirectory(ext/googletest)

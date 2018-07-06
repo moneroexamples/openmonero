@@ -1,5 +1,6 @@
-set(CMAKE_CXX_FLAGS_DEBUG "-fno-limit-debug-info")
-set(CMAKE_C_FLAGS_DEBUG "-fno-limit-debug-info")
+#set(CMAKE_CXX_FLAGS_DEBUG "-fno-limit-debug-info")
+#set(CMAKE_C_FLAGS_DEBUG "-fno-limit-debug-info")
+
 
 macro(add_om_test _TEST_NAME)
 
@@ -20,3 +21,7 @@ endmacro()
 resource_dir("./res")
 
 add_om_test(mysql)
+
+SETUP_TARGET_FOR_COVERAGE(
+        NAME test_mysql_coverage                    # New target name
+        EXECUTABLE mysql_tests)

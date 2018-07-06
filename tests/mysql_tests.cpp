@@ -38,6 +38,102 @@ using namespace epee::string_tools;
          TX_FROM_HEX(hex_tx);                                                   \
          ACC_FROM_HEX(hex_address);
 
+
+json
+readin_config()
+{
+    // read in confing json file and get test db info
+
+    std::string config_json_path{"../config/config.json"};
+
+    // check if config-file provided exist
+    if (!boost::filesystem::exists(config_json_path))
+    {
+        std::cerr << "Config file " << config_json_path
+                  << " does not exist\n";
+
+        return {};
+    }
+
+    json config_json;
+
+    try
+    {
+        // try reading and parsing json config file provided
+        std::ifstream i(config_json_path);
+        i >> config_json;
+
+        return config_json["database_test"];
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error reading confing file "
+                  << config_json_path << ": "
+                  << e.what() << '\n';
+        return {};
+    }
+
+    return {};
+}
+
+
+TEST(MYSQL_CONNECTION, CantConnect)
+{
+    // we did specify wrong mysql details so this should throw.
+
+    xmreg::MySqlConnector::url = "127.0.0.1";
+    xmreg::MySqlConnector::port = 3306;
+    xmreg::MySqlConnector::username = "wrong_user";
+    xmreg::MySqlConnector::password = "wrong_pass";
+    xmreg::MySqlConnector::dbname = "wrong_name";
+
+
+    try
+    {
+        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>();
+    }
+    catch(...) {
+        EXPECT_TRUE(true);
+        return;
+    }
+
+    FAIL() << "Should have thrown exception";
+}
+
+
+TEST(MYSQL_CONNECTION, CanConnect)
+{
+    // we did specify wrong mysql details so this should throw.
+
+    json db_config = readin_config();
+
+    if (db_config.empty())
+        FAIL() << "Cant readin_config()";
+
+    xmreg::MySqlConnector::url = db_config["url"];
+    xmreg::MySqlConnector::port = db_config["port"];
+    xmreg::MySqlConnector::username = db_config["user"];
+    xmreg::MySqlConnector::password = db_config["password"];
+    xmreg::MySqlConnector::dbname = db_config["dbname"];
+
+
+    try
+    {
+        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>();
+
+        // try to connect again
+        // it should not perform the connection again, bust just return true;
+        EXPECT_TRUE(xmr_accounts->get_connection()->connect());
+    }
+    catch(...)
+    {
+        FAIL();
+    }
+
+    EXPECT_TRUE(true);
+}
+
+
 /**
 * Fixture that connects to openmonero_test database
 * and repopulates it with known data for each test.
@@ -69,36 +165,11 @@ public:
 
     static void SetUpTestCase()
     {
-        // read in confing json file and get test db info
 
-        std::string config_json_path{"../config/config.json"};
+        db_config = readin_config();
 
-        // check if config-file provided exist
-        if (!boost::filesystem::exists(config_json_path))
-        {
-            std::cerr << "Config file " << config_json_path
-                      << " does not exist\n";
-
-            return;
-        }
-
-        json config_json;
-
-        try
-        {
-            // try reading and parsing json config file provided
-            std::ifstream i(config_json_path);
-            i >> config_json;
-
-            db_config = config_json["database_test"];
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "Error reading confing file "
-                      << config_json_path << ": "
-                      << e.what() << '\n';
-            throw e;
-        }
+        if (db_config.empty())
+            FAIL() << "Cant readin_config()";
 
         xmreg::MySqlConnector::url = db_config["url"];
         xmreg::MySqlConnector::port = db_config["port"];

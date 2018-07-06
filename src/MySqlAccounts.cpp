@@ -66,11 +66,6 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
         out = outs.at(0);
 
     }
-    catch (mysqlpp::Exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
@@ -85,9 +80,11 @@ MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_c
 {}
 
 uint64_t
-MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
+MysqlTransactions::mark_spendable(const uint64_t& tx_id_no, bool spendable)
 {
-    Query query = conn->query(XmrTransaction::MARK_AS_SPENDABLE_STMT);
+    Query query = conn->query(spendable ?
+                              XmrTransaction::MARK_AS_SPENDABLE_STMT
+                              : XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
     query.parse();
 
     try
@@ -104,29 +101,6 @@ MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
 
     return 0;
 }
-
-
-uint64_t
-MysqlTransactions::mark_nonspendable(const uint64_t& tx_id_no)
-{
-    Query query = conn->query(XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
-    query.parse();
-
-    try
-    {
-        SimpleResult sr = query.execute(tx_id_no);
-
-        return sr.rows();
-    }
-    catch (std::exception& e)
-    {
-        MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
-    }
-
-    return 0;
-}
-
 
 uint64_t
 MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
@@ -601,7 +575,7 @@ MySqlAccounts::mark_tx_spendable(const uint64_t& tx_id_no)
 uint64_t
 MySqlAccounts::mark_tx_nonspendable(const uint64_t& tx_id_no)
 {
-    return mysql_tx->mark_nonspendable(tx_id_no);
+    return mysql_tx->mark_spendable(tx_id_no, false);
 }
 
 uint64_t

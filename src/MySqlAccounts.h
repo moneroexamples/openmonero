@@ -73,10 +73,7 @@ public:
     MysqlTransactions(shared_ptr<MySqlConnector> _conn);
 
     uint64_t
-    mark_spendable(const uint64_t& tx_id_no);
-
-    uint64_t
-    mark_nonspendable(const uint64_t& tx_id_no);
+    mark_spendable(const uint64_t& tx_id_no, bool spendable = true);
 
     uint64_t
     delete_tx(const uint64_t& tx_id_no);
