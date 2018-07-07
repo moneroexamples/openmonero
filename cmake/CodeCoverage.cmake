@@ -151,23 +151,25 @@ function(SETUP_TARGET_FOR_COVERAGE)
     add_custom_target(${Coverage_NAME}
 
         # Cleanup lcov
-        COMMAND ${LCOV_PATH} --directory . --zerocounters
+        #COMMAND ${LCOV_PATH} --directory . --zerocounters
 
         # Create baseline to make sure untouched files show up in the report
-        COMMAND ${LCOV_PATH} -c -i -d . -o ${Coverage_NAME}.base
+        #COMMAND ${LCOV_PATH} -c -i -d . -o ${Coverage_NAME}.base
 
         # Run tests
-        COMMAND ${Coverage_EXECUTABLE}
+        #COMMAND ${Coverage_EXECUTABLE}
 
         # Capturing lcov counters and generating report
-        COMMAND ${LCOV_PATH} --directory . --capture --output-file ${Coverage_NAME}.info
+        #COMMAND ${LCOV_PATH} --directory . --capture --output-file ${Coverage_NAME}.info
 
         # add baseline counters
-        COMMAND ${LCOV_PATH} -a ${Coverage_NAME}.base -a ${Coverage_NAME}.info --output-file ${Coverage_NAME}.total
+        #COMMAND ${LCOV_PATH} -a ${Coverage_NAME}.base -a ${Coverage_NAME}.info --output-file ${Coverage_NAME}.total
         #COMMAND ${LCOV_PATH} --remove ${Coverage_NAME}.total '/usr/include/*' '/usr/lib/*'  ${COVERAGE_EXCLUDES} --output-file ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
         #COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
-        COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info
+        #COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info
         #COMMAND ${CMAKE_COMMAND} -E remove ${Coverage_NAME}.base ${Coverage_NAME}.total ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
+
+        COMMAND gcovr -r ${PROJECT_BINARY_DIR} --exclude='.*/ext/.*' --html --html-details -o /tmp/index.html
 
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         DEPENDS ${Coverage_DEPENDENCIES}

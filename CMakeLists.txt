@@ -40,16 +40,16 @@ include(MyUtils)
 
 include(CodeCoverage)
 APPEND_COVERAGE_COMPILER_FLAGS()
-#set(COVERAGE_EXCLUDES
-#        '${CMAKE_SOURCE_DIR}/ext/*'
-#        'asio/*'
-#        '${MONERO_SOURCE_DIR}/*'
-#        '${CMAKE_SOURCE_DIR}/tests/*')
-
 set(COVERAGE_EXCLUDES
-                '${CMAKE_SOURCE_DIR}/ext/*'
-                'asio/*'
-                '${MONERO_SOURCE_DIR}/*')
+        '${CMAKE_SOURCE_DIR}/ext/*'
+        'asio/*'
+        '${MONERO_SOURCE_DIR}/*'
+        '${CMAKE_SOURCE_DIR}/tests/*')
+
+#set(COVERAGE_EXCLUDES
+#                '${CMAKE_SOURCE_DIR}/ext/*'
+#                'asio/*'
+#                '${MONERO_SOURCE_DIR}/*')
 
 find_package(Monero)
 

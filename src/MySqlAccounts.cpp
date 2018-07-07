@@ -405,8 +405,6 @@ bool MySqlAccounts::select_for_tx<XmrOutput>(uint64_t tx_id, vector<XmrOutput>& 
 template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
 bool MySqlAccounts::select_for_tx<XmrInput>(uint64_t tx_id, vector<XmrInput>& selected_data);
 
-
-
 template <typename T>
 bool
 MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
@@ -435,9 +433,8 @@ MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
     return false;
 }
 
-
-template
-bool MySqlAccounts::select_by_primary_id<XmrTransaction>(uint64_t id, XmrTransaction& selected_data);
+//template
+//bool MySqlAccounts::select_by_primary_id<XmrTransaction>(uint64_t id, XmrTransaction& selected_data);
 
 template
 bool MySqlAccounts::select_by_primary_id<XmrInput>(uint64_t id, XmrInput& selected_data);
@@ -450,8 +447,7 @@ bool MySqlAccounts::select_by_primary_id<XmrPayment>(uint64_t id, XmrPayment& se
 
 bool
 MySqlAccounts::select_txs_for_account_spendability_check(
-        const uint64_t& account_id,
-        vector<XmrTransaction>& txs)
+        const uint64_t& account_id, vector<XmrTransaction>& txs)
 {
     vector<XmrTransaction> txs_tmp;
 
@@ -471,7 +467,6 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
             if (CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
             {
-
                 // this tx was before marked as unspendable, but now
                 // it is spendable. Meaning, that its older than 10 blocks.
                 // so mark it as spendable, so that its permanet.
