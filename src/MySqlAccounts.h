@@ -81,8 +81,8 @@ public:
     bool
     exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx);
 
-    uint64_t
-    get_total_recieved(const uint64_t& account_id);
+    bool
+    get_total_recieved(const uint64_t& account_id, uint64_t& amount);
 };
 
 class MysqlPayments
@@ -183,8 +183,8 @@ public:
     bool
     update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new);
 
-    uint64_t
-    get_total_recieved(const uint64_t& account_id);
+    bool
+    get_total_recieved(const uint64_t& account_id, uint64_t& amount);
 
 
     void

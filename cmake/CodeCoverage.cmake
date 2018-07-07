@@ -157,7 +157,7 @@ function(SETUP_TARGET_FOR_COVERAGE)
         #COMMAND ${LCOV_PATH} -c -i -d . -o ${Coverage_NAME}.base
 
         # Run tests
-        #COMMAND ${Coverage_EXECUTABLE}
+        COMMAND ${Coverage_EXECUTABLE}
 
         # Capturing lcov counters and generating report
         #COMMAND ${LCOV_PATH} --directory . --capture --output-file ${Coverage_NAME}.info
@@ -169,7 +169,9 @@ function(SETUP_TARGET_FOR_COVERAGE)
         #COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info
         #COMMAND ${CMAKE_COMMAND} -E remove ${Coverage_NAME}.base ${Coverage_NAME}.total ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
 
-        COMMAND gcovr -r ${PROJECT_BINARY_DIR} --exclude='.*/ext/.*' --html --html-details -o /tmp/index.html
+        COMMAND ${GCOVR_PATH} -v -s -r .. --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
+
+        #COMMAND ${GCOVR_PATH} -r .. -s --exclude='.*/ext/.*'
 
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         DEPENDS ${Coverage_DEPENDENCIES}

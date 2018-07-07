@@ -153,8 +153,8 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
 }
 
 
-uint64_t
-MysqlTransactions::get_total_recieved(const uint64_t& account_id)
+bool
+MysqlTransactions::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
 {
     Query query = conn->query(XmrTransaction::SUM_XMR_RECIEVED);
     query.parse();
@@ -163,12 +163,11 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
     {
         StoreQueryResult sqr = query.store(account_id);
 
-        if (sqr.empty())
-            return 0;
-
-        Row row = sqr.at(0);
-
-        return row["total_received"];
+        if (!sqr.empty())
+        {
+            amount = sqr.at(0)["total_received"];
+            return true;
+        }
     }
     catch (mysqlpp::Exception& e)
     {
@@ -176,7 +175,7 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
         //throw  e;
     }
 
-    return 0;
+    return false;
 }
 
 MysqlPayments::MysqlPayments(shared_ptr<MySqlConnector> _conn): conn {_conn}
@@ -586,10 +585,10 @@ MySqlAccounts::select_payment_by_id(const string& payment_id, vector<XmrPayment>
     return mysql_payment->select_by_payment_id(payment_id, payments);
 }
 
-uint64_t
-MySqlAccounts::get_total_recieved(const uint64_t& account_id)
+bool
+MySqlAccounts::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
 {
-    return mysql_tx->get_total_recieved(account_id);
+    return mysql_tx->get_total_recieved(account_id, amount);
 }
 
 

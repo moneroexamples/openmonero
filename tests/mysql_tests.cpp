@@ -566,7 +566,9 @@ TEST_P(MYSQL_TEST_PARAM, GetTotalRecievedByAnAddress)
 
     ACC_FROM_HEX(own_addr);
 
-    uint64_t total_recieved = xmr_accounts->get_total_recieved(acc.id.data);
+    uint64_t total_recieved;
+
+    EXPECT_TRUE(xmr_accounts->get_total_recieved(acc.id.data, total_recieved));
 
     EXPECT_EQ(total_recieved, expected_recieved);
 }
