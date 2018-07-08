@@ -21,12 +21,11 @@ MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn)
 bool
 MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 {
-
-    Query query = conn->query(XmrInput::SELECT_STMT4);
-    query.parse();
-
     try
     {
+        Query query = conn->query(XmrInput::SELECT_STMT4);
+        query.parse();
+
         query.storein(ins, output_id);
 
         return !ins.empty();
@@ -224,11 +223,11 @@ bool
 MySqlAccounts::select(const string& address, XmrAccount& account)
 {
 
-    Query query = conn->query(XmrAccount::SELECT_STMT2);
-    query.parse();
-
     try
     {
+        Query query = conn->query(XmrAccount::SELECT_STMT2);
+        query.parse();
+
         vector<XmrAccount> res;
         query.storein(res, address);
 

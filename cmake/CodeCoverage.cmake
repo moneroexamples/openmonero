@@ -90,6 +90,10 @@ endif()
 set(COVERAGE_COMPILER_FLAGS "-g -O0 --coverage -fprofile-arcs -ftest-coverage"
     CACHE INTERNAL "")
 
+#set(COVERAGE_COMPILER_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage"
+#    CACHE INTERNAL "")
+
+
 set(CMAKE_CXX_FLAGS_COVERAGE
     ${COVERAGE_COMPILER_FLAGS}
     CACHE STRING "Flags used by the C++ compiler during coverage builds."
@@ -169,6 +173,7 @@ function(SETUP_TARGET_FOR_COVERAGE)
         #COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info
         #COMMAND ${CMAKE_COMMAND} -E remove ${Coverage_NAME}.base ${Coverage_NAME}.total ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
 
+        #COMMAND ${GCOVR_PATH} -v -s -r .. --gcov-executable="llvm-cov gcov" --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
         COMMAND ${GCOVR_PATH} -v -s -r .. --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
 
         #COMMAND ${GCOVR_PATH} -r .. -s --exclude='.*/ext/.*'

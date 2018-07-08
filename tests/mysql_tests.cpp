@@ -145,8 +145,31 @@ class MYSQL_TEST : public ::testing::Test
 {
 public:
 
+    static bool connect()
+    {
+        try
+        {
+            auto conn = std::make_shared<xmreg::MySqlConnector>(
+                    new mysqlpp::MultiStatementsOption(true));
+
+            // MySqlAccounts will try connecting to the mysql database
+            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(conn);
+        }
+        catch (std::exception const &e)
+        {
+            std::cerr << e.what() << '\n';
+            return false;
+        }
+
+        return xmr_accounts->get_connection()->get_connection().connected();
+    }
+
     static void initDatabase()
     {
+
+        if (!xmr_accounts->get_connection()->get_connection().connected())
+            ASSERT_TRUE(connect());
+
         mysqlpp::Query query = xmr_accounts
                 ->get_connection()->get_connection().query(db_data);
 
@@ -180,19 +203,7 @@ public:
         xmreg::MySqlConnector::password = db_config["password"];
         xmreg::MySqlConnector::dbname = db_config["dbname"];
 
-        try
-        {
-            auto conn = std::make_shared<xmreg::MySqlConnector>(
-                    new mysqlpp::MultiStatementsOption(true));
-
-            // MySqlAccounts will try connecting to the mysql database
-            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(conn);
-        }
-        catch (std::exception const &e)
-        {
-            std::cerr << e.what() << '\n';
-            throw e;
-        }
+        ASSERT_TRUE(connect());
 
         db_data = xmreg::read("../sql/openmonero_test.sql");
     }
@@ -239,6 +250,10 @@ TEST_F(MYSQL_TEST, GetAccount)
     EXPECT_EQ(acc.id.data, 129);
     EXPECT_EQ(acc.scanned_block_height, 101610);
     EXPECT_EQ(acc.viewkey_hash, "1acf92d12101afe2ce7392169a38d2d547bd042373148eaaab323a3b5185a9ba");
+
+    xmr_accounts->get_connection()->get_connection().disconnect();
+    //xmr_accounts->select(addr_57H_hex, acc);
+    //ASSERT_FALSE(xmr_accounts->select(addr_57H_hex, acc));
 }
 
 
