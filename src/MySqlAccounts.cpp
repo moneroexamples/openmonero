@@ -23,6 +23,8 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 {
     try
     {
+        conn->check_if_connected();
+
         Query query = conn->query(XmrInput::SELECT_STMT4);
         query.parse();
 
@@ -30,7 +32,7 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
 
         return !ins.empty();
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -48,12 +50,12 @@ MysqlOutpus::MysqlOutpus(shared_ptr<MySqlConnector> _conn): conn {_conn}
 bool
 MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
 {
-
-    Query query = conn->query(XmrOutput::EXIST_STMT);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(XmrOutput::EXIST_STMT);
+        query.parse();
 
         vector<XmrOutput> outs;
 
@@ -65,10 +67,10 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
         out = std::move(outs.at(0));
 
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
+        return false;
     }
 
     return true;
@@ -81,18 +83,21 @@ MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_c
 uint64_t
 MysqlTransactions::mark_spendable(const uint64_t& tx_id_no, bool spendable)
 {
-    Query query = conn->query(spendable ?
-                              XmrTransaction::MARK_AS_SPENDABLE_STMT
-                              : XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(spendable ?
+                                  XmrTransaction::MARK_AS_SPENDABLE_STMT
+                                            : XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
+        query.parse();
+
+
         SimpleResult sr = query.execute(tx_id_no);
 
         return sr.rows();
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -104,16 +109,18 @@ MysqlTransactions::mark_spendable(const uint64_t& tx_id_no, bool spendable)
 uint64_t
 MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
 {
-    Query query = conn->query(XmrTransaction::DELETE_STMT);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(XmrTransaction::DELETE_STMT);
+        query.parse();
+
         SimpleResult sr = query.execute(tx_id_no);
 
         return sr.rows();
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -126,12 +133,13 @@ MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
 bool
 MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
 {
-
-    Query query = conn->query(XmrTransaction::EXIST_STMT);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(XmrTransaction::EXIST_STMT);
+        query.parse();
+
         vector<XmrTransaction> outs;
 
         query.storein(outs, account_id, tx_hash_str);
@@ -142,10 +150,10 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
         tx = outs.at(0);
 
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
+        return false;
     }
 
     return true;
@@ -155,11 +163,13 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
 bool
 MysqlTransactions::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
 {
-    Query query = conn->query(XmrTransaction::SUM_XMR_RECIEVED);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(XmrTransaction::SUM_XMR_RECIEVED);
+        query.parse();
+
         StoreQueryResult sqr = query.store(account_id);
 
         if (!sqr.empty())
@@ -168,10 +178,9 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id, uint64_t& amou
             return true;
         }
     }
-    catch (mysqlpp::Exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        //throw  e;
     }
 
     return false;
@@ -184,17 +193,19 @@ bool
 MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments)
 {
 
-    Query query = conn->query(XmrPayment::SELECT_STMT2);
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(XmrPayment::SELECT_STMT2);
+        query.parse();
+
         payments.clear();
         query.storein(payments, payment_id);
 
         return !payments.empty();
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -222,9 +233,10 @@ MySqlAccounts::MySqlAccounts(shared_ptr<MySqlConnector> _conn)
 bool
 MySqlAccounts::select(const string& address, XmrAccount& account)
 {
-
     try
     {
+        conn->check_if_connected();
+
         Query query = conn->query(XmrAccount::SELECT_STMT2);
         query.parse();
 
@@ -238,7 +250,7 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
         }
 
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -251,10 +263,12 @@ template <typename T>
 uint64_t
 MySqlAccounts::insert(const T& data_to_insert)
 {
-    Query query = conn->query();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query();
+
         query.insert(data_to_insert);
 
         SimpleResult sr = query.execute();
@@ -263,7 +277,7 @@ MySqlAccounts::insert(const T& data_to_insert)
             return sr.insert_id();
 
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         ;
     }
@@ -287,10 +301,12 @@ template <typename T>
 uint64_t
 MySqlAccounts::insert(const vector<T>& data_to_insert)
 {
-    Query query = conn->query();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query();
+
         query.insert(data_to_insert.begin(), data_to_insert.end());
 
         SimpleResult sr = query.execute();
@@ -298,7 +314,7 @@ MySqlAccounts::insert(const vector<T>& data_to_insert)
         return sr.rows();
 
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -317,18 +333,20 @@ template <typename T, size_t query_no>
 bool
 MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 {
-    Query query = conn->query((query_no == 1 ? T::SELECT_STMT : T::SELECT_STMT2));
-    query.parse();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query((query_no == 1 ? T::SELECT_STMT : T::SELECT_STMT2));
+        query.parse();
+
         selected_data.clear();
 
         query.storein(selected_data, account_id);
 
         return !selected_data.empty();
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -363,18 +381,19 @@ template <typename T>
 bool
 MySqlAccounts::update(T const& orginal_row, T const& new_row)
 {
-
-    Query query = conn->query();
-
     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query();
+
         query.update(orginal_row, new_row);
 
         SimpleResult sr = query.execute();
 
         return sr.rows() == 1;
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -407,11 +426,13 @@ template <typename T>
 bool
 MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
 {
-    Query query = conn->query(T::SELECT_STMT3);
-    query.parse();
-
-    try
+     try
     {
+        conn->check_if_connected();
+
+        Query query = conn->query(T::SELECT_STMT3);
+        query.parse();
+
         vector<T> outs;
 
         query.storein(outs, id);
@@ -422,7 +443,7 @@ MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
             return true;
         }
     }
-    catch (std::exception& e)
+    catch (std::exception const& e)
     {
         MYSQL_EXCEPTION_MSG(e);
         //throw  e;
@@ -456,7 +477,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
     {
         // first we check if txs stored in db are already spendable
         // it means if they are older than 10 blocks. If  yes,
-        // we mark them as spendable, as we assumet that blocks
+        // we mark them as spendable, as we assume that blocks
         // older than 10 blocks are permanent, i.e, they wont get
         // orphaned.
 
@@ -588,6 +609,12 @@ bool
 MySqlAccounts::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
 {
     return mysql_tx->get_total_recieved(account_id, amount);
+}
+
+void
+MySqlAccounts::disconnect()
+{
+    get_connection()->get_connection().disconnect();
 }
 
 

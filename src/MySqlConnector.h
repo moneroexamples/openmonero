@@ -71,6 +71,14 @@ public:
     Connection&
     get_connection();
 
+    // this throws exception if not connected
+    inline void
+    check_if_connected()
+    {
+        if (!conn.connected())
+            throw std::runtime_error("No connection to the mysqldb");
+    }
+
     virtual ~MySqlConnector();
 
 protected:
