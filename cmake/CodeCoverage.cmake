@@ -174,7 +174,7 @@ function(SETUP_TARGET_FOR_COVERAGE)
         #COMMAND ${CMAKE_COMMAND} -E remove ${Coverage_NAME}.base ${Coverage_NAME}.total ${PROJECT_BINARY_DIR}/${Coverage_NAME}.info.cleaned
 
         #COMMAND ${GCOVR_PATH} -v -s -r .. --gcov-executable="llvm-cov gcov" --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
-        COMMAND ${GCOVR_PATH} -v -s -r .. --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
+        COMMAND ${GCOVR_PATH} -s -r .. --exclude='.*/ext/.*' --exclude='.*/tests/.*' --html --html-details -o /tmp/index.html
 
         #COMMAND ${GCOVR_PATH} -r .. -s --exclude='.*/ext/.*'
 

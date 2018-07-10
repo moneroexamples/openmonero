@@ -35,7 +35,7 @@ using ::testing::Return;
 
 #define ACC_FROM_HEX(hex_address)                                               \
          xmreg::XmrAccount acc;                                                 \
-         ASSERT_TRUE(xmr_accounts->select(hex_address, acc));
+         ASSERT_TRUE(this->xmr_accounts->select(hex_address, acc));
 
 
 #define TX_AND_ACC_FROM_HEX(hex_tx, hex_address)                                \
@@ -145,7 +145,26 @@ class MYSQL_TEST : public ::testing::Test
 {
 public:
 
-    static bool connect()
+    static void SetUpTestCase()
+    {
+
+        db_config = readin_config();
+
+        if (db_config.empty())
+            FAIL() << "Cant readin_config()";
+
+        xmreg::MySqlConnector::url = db_config["url"];
+        xmreg::MySqlConnector::port = db_config["port"];
+        xmreg::MySqlConnector::username = db_config["user"];
+        xmreg::MySqlConnector::password = db_config["password"];
+        xmreg::MySqlConnector::dbname = db_config["dbname"];
+
+        db_data = xmreg::read("../sql/openmonero_test.sql");
+    }
+
+protected:
+
+    virtual bool connect(std::shared_ptr<xmreg::CurrentBlockchainStatus> _bc_status)
     {
         try
         {
@@ -153,7 +172,7 @@ public:
                     new mysqlpp::MultiStatementsOption(true));
 
             // MySqlAccounts will try connecting to the mysql database
-            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(current_bc_status, conn);
+            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(_bc_status, conn);
         }
         catch (std::exception const &e)
         {
@@ -164,12 +183,9 @@ public:
         return xmr_accounts->get_connection()->get_connection().connected();
     }
 
-    static void initDatabase()
+
+    virtual void initDatabase()
     {
-
-        if (!xmr_accounts->get_connection()->get_connection().connected())
-            ASSERT_TRUE(connect());
-
         mysqlpp::Query query = xmr_accounts
                 ->get_connection()->get_connection().query(db_data);
 
@@ -189,48 +205,27 @@ public:
         }
     }
 
-    static void SetUpTestCase()
-    {
-
-        db_config = readin_config();
-
-        if (db_config.empty())
-            FAIL() << "Cant readin_config()";
-
-        xmreg::MySqlConnector::url = db_config["url"];
-        xmreg::MySqlConnector::port = db_config["port"];
-        xmreg::MySqlConnector::username = db_config["user"];
-        xmreg::MySqlConnector::password = db_config["password"];
-        xmreg::MySqlConnector::dbname = db_config["dbname"];
-
-        ASSERT_TRUE(connect());
-
-        db_data = xmreg::read("../sql/openmonero_test.sql");
-    }
-
-    static void TearDownTestCase()
-    {
-        initDatabase();
-    }
-
-protected:
 
     virtual void SetUp()
     {
         current_bc_status = nullptr;
+        connect(current_bc_status);
         initDatabase();
+    }
+
+    virtual void TearDown()
+    {
+        xmr_accounts->disconnect();
     }
 
     static std::string db_data;
     static json db_config;
-    static std::shared_ptr<xmreg::MySqlAccounts> xmr_accounts;
-    static std::shared_ptr<xmreg::CurrentBlockchainStatus> current_bc_status;
+    std::shared_ptr<xmreg::MySqlAccounts> xmr_accounts;
+    std::shared_ptr<xmreg::CurrentBlockchainStatus> current_bc_status;
 };
 
 std::string MYSQL_TEST::db_data;
 json MYSQL_TEST::db_config;
-std::shared_ptr<xmreg::MySqlAccounts> MYSQL_TEST::xmr_accounts;
-std::shared_ptr<xmreg::CurrentBlockchainStatus> MYSQL_TEST::current_bc_status {nullptr};
 
 
 TEST_F(MYSQL_TEST, Connection)
@@ -1163,7 +1158,114 @@ TEST_F(MYSQL_TEST, UpdatePayment)
     EXPECT_EQ(payments2.at(0).tx_hash, updated_payment.tx_hash);
 }
 
+//
+//class MockCurrentBlockchainStatus : public xmreg::CurrentBlockchainStatus
+//{
+//public:
+//    MockCurrentBlockchainStatus()
+//            : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup()) {}
+//
+//    MOCK_METHOD2(is_tx_unlocked, bool(uint64_t unlock_time, uint64_t block_height));
+//    MOCK_METHOD2(tx_exist, bool(crypto::hash const&, uint64_t& tx_index));
+//};
+//
 
+/*
+ * Dont want to use real blockchain data, so we are going to
+ * mock xmreg::CurrentBlockchainStatus
+ */
+class MockCurrentBlockchainStatus1 : public xmreg::CurrentBlockchainStatus
+{
+public:
+    MockCurrentBlockchainStatus1()
+            : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup()) {}
+
+    virtual bool
+    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height) override
+    {
+        return true;
+    }
+
+    virtual bool
+    tx_exist(const string& tx_hash_str, uint64_t& tx_index) override
+    {
+        return true;
+    }
+};
+
+// now mock when tx is locked
+class MockCurrentBlockchainStatus2 : public MockCurrentBlockchainStatus1
+{
+public:
+
+    virtual bool
+    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height) override
+    {
+        return false;
+    }
+};
+
+
+// use MockCurrentBlockchainStatus
+template <typename T>
+class MYSQL_TEST2 : public MYSQL_TEST
+{
+
+    virtual void SetUp() override
+    {
+        current_bc_status = make_shared<T>();
+        connect(current_bc_status);
+        initDatabase();
+    }
+
+};
+
+typedef testing::Types<MockCurrentBlockchainStatus1, MockCurrentBlockchainStatus2> Implementations;
+
+TYPED_TEST_CASE(MYSQL_TEST2, Implementations);
+
+// Execute tests for two cases where CurrentBlockchainStatus::is_tx_unlocked
+// returns true or false
+//
+TYPED_TEST(MYSQL_TEST2, SelectTxsForAccountSpendabilityCheck)
+{
+
+    vector<xmreg::XmrTransaction> txs;
+
+    // first check if we select for account with any txs
+    EXPECT_FALSE(this->xmr_accounts->select_txs_for_account_spendability_check(55555, txs));
+
+    txs.clear();
+
+    // so now check for account that has some txs
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    // we mark have of txs for this account as non_spendable
+    // so that we have something to work with in this test
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    for (size_t i = 0; i < txs.size() / 2; ++i)
+        this->xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+
+    EXPECT_TRUE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+}
+//
+//TEST_F(MYSQL_TEST2, SelectTxsForAccountSpendabilityCheck)
+//{
+//    ACC_FROM_HEX(owner_addr_5Ajfk);
+//
+//    vector<xmreg::XmrTransaction> txs;
+//
+//    // we mark have of txs for this account as non_spendable
+//    // so that we have something to work with in this test
+//    ASSERT_TRUE(xmr_accounts->select(acc.id.data, txs));
+//
+//    for (size_t i = 0; i < txs.size() / 2; ++i)
+//        xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+//
+//    EXPECT_TRUE(xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+//}
 
 
 //TEST(TEST_CHAIN, GenerateTestChain)
