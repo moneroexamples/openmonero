@@ -71,27 +71,26 @@ catch (const std::exception& e)
 //cast port number in string to uint16
 uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
+
+
 // get the network type
 cryptonote::network_type nettype = testnet ?
   cryptonote::network_type::TESTNET : stagenet ?
   cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
-// set blockchain status monitoring thread parameters
-xmreg::CurrentBlockchainStatus::net_type
-        = nettype;
-xmreg::CurrentBlockchainStatus::do_not_relay
-        = do_not_relay;
-xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
-        = config_json["refresh_block_status_every_seconds"];
-xmreg::CurrentBlockchainStatus::blocks_search_lookahead
-        = config_json["blocks_search_lookahead"];
-xmreg::CurrentBlockchainStatus::max_number_of_blocks_to_import
-        = config_json["max_number_of_blocks_to_import"];
-xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds
-        = config_json["search_thread_life_in_seconds"];
-xmreg::CurrentBlockchainStatus::import_fee
-        = config_json["wallet_import"]["fee"];
 
+// create blockchainsetup instance and set its parameters
+// suc as blockchain status monitoring thread parameters
+
+xmreg::BlockchainSetup bc_setup;
+
+bc_setup.net_type                            = nettype;
+bc_setup.do_not_relay                       = do_not_relay;
+bc_setup.refresh_block_status_every_seconds = config_json["refresh_block_status_every_seconds"];
+bc_setup.blocks_search_lookahead            = config_json["blocks_search_lookahead"];
+bc_setup.max_number_of_blocks_to_import     = config_json["max_number_of_blocks_to_import"];
+bc_setup.search_thread_life_in_seconds      = config_json["search_thread_life_in_seconds"];
+bc_setup.import_fee                         = config_json["wallet_import"]["fee"];
 
 string deamon_url;
 
@@ -105,25 +104,25 @@ switch (nettype)
     case cryptonote::network_type::MAINNET:
         blockchain_path = path(config_json["blockchain-path"]["mainnet"].get<string>());
         deamon_url = config_json["daemon-url"]["mainnet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
+        bc_setup.import_payment_address_str
                 = config_json["wallet_import"]["mainnet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+        bc_setup.import_payment_viewkey_str
                 = config_json["wallet_import"]["mainnet"]["viewkey"];
         break;
     case cryptonote::network_type::TESTNET:
         blockchain_path = path(config_json["blockchain-path"]["testnet"].get<string>());
         deamon_url = config_json["daemon-url"]["testnet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
+        bc_setup.import_payment_address_str
                 = config_json["wallet_import"]["testnet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+        bc_setup.import_payment_viewkey_str
                 = config_json["wallet_import"]["testnet"]["viewkey"];
         break;
     case cryptonote::network_type::STAGENET:
         blockchain_path = path(config_json["blockchain-path"]["stagenet"].get<string>());
         deamon_url = config_json["daemon-url"]["stagenet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
+        bc_setup.import_payment_address_str
                 = config_json["wallet_import"]["stagenet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+        bc_setup.import_payment_viewkey_str
                 = config_json["wallet_import"]["stagenet"]["viewkey"];
         break;
     default:
@@ -139,12 +138,10 @@ if (!xmreg::get_blockchain_path(blockchain_path, nettype))
 }
 
 // set remaining  blockchain status variables that depend on the network type
-xmreg::CurrentBlockchainStatus::blockchain_path
-        =  blockchain_path.string();
-xmreg::CurrentBlockchainStatus::deamon_url
-        = deamon_url;
+bc_setup.blockchain_path         =  blockchain_path.string();
+bc_setup.deamon_url              = deamon_url;
 
-cout << "Blockchain path: " << blockchain_path.string() << endl;
+cout << "Using blockchain path: " << blockchain_path.string() << endl;
 
 
 // set mysql/mariadb connection details
@@ -155,19 +152,13 @@ xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 
-// try connecting to the mysql
-shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
+// once we have all the parameters for the blockchain and our backend
+// we can create and instance of  CurrentBlockchainStatus class.
+// we are going to this through a shared pointer. This way we will
+// have only once instance of this class, which we can easly inject
+// and pass around other class which need to access blockchain data
 
-try
-{
-    // MySqlAccounts will try connecting to the mysql database
-    mysql_accounts = make_shared<xmreg::MySqlAccounts>();
-}
-catch(std::exception const& e)
-{
-    cerr << e.what() << '\n';
-    return EXIT_FAILURE;
-}
+auto current_bc_status = make_shared<xmreg::CurrentBlockchainStatus>(bc_setup);
 
 
 // since CurrentBlockchainStatus class monitors current status
@@ -178,7 +169,7 @@ catch(std::exception const& e)
 // There are here, and this is the only class that
 // has direct access to blockchain and talks (using rpc calls)
 // with the deamon.
-if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+if (!current_bc_status->init_monero_blockchain())
 {
     cerr << "Error accessing blockchain." << endl;
     return EXIT_FAILURE;
@@ -188,12 +179,25 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 // info, e.g., current height. Information from this thread is used
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
-xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+current_bc_status->start_monitor_blockchain_thread();
 
 
+// try connecting to the mysql
+shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
+
+try
+{
+    // MySqlAccounts will try connecting to the mysql database
+    mysql_accounts = make_shared<xmreg::MySqlAccounts>(current_bc_status);
+}
+catch(std::exception const& e)
+{
+    cerr << e.what() << '\n';
+    return EXIT_FAILURE;
+}
 
 // create REST JSON API services
-xmreg::YourMoneroRequests open_monero(mysql_accounts);
+xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);

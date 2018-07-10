@@ -68,7 +68,9 @@ class TxSearch
     // its better to when each thread has its own mysql connection object.
     // this way if one thread crashes, it want take down
     // connection for the entire service
-    shared_ptr<MySqlAccounts> xmr_accounts;
+    std::shared_ptr<MySqlAccounts> xmr_accounts;
+
+    std::shared_ptr<CurrentBlockchainStatus> current_bc_status;
 
     // address and viewkey for this search thread.
     address_parse_info address;
@@ -76,7 +78,7 @@ class TxSearch
 
 public:
 
-    TxSearch(XmrAccount& _acc);
+    TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     void
     search();

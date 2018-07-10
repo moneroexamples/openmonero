@@ -15,14 +15,15 @@
 namespace xmreg
 {
 
-TxSearch::TxSearch(XmrAccount& _acc)
+TxSearch::TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _current_bc_status)
+    : current_bc_status {_current_bc_status}
 {
     acc = make_shared<XmrAccount>(_acc);
 
     // creates an mysql connection for this thread
-    xmr_accounts = make_shared<MySqlAccounts>();
+    xmr_accounts = make_shared<MySqlAccounts>(current_bc_status);
 
-    network_type net_type = CurrentBlockchainStatus::net_type;
+    network_type net_type = current_bc_status->get_bc_setup().net_type;
 
     if (!xmreg::parse_str_address(acc->address, address, net_type))
     {
@@ -55,7 +56,7 @@ TxSearch::search()
 
     last_ping_timestamp = current_timestamp;
 
-    uint64_t blocks_lookahead = CurrentBlockchainStatus::blocks_search_lookahead;
+    uint64_t blocks_lookahead = current_bc_status->get_bc_setup().blocks_search_lookahead;
 
     // we put everything in massive catch, as there are plenty ways in which
     // an exceptions can be thrown here. Mostly from mysql.
@@ -68,12 +69,12 @@ TxSearch::search()
         {
             uint64_t loop_timestamp {current_timestamp};
 
-            uint64_t last_block_height = CurrentBlockchainStatus::current_height;
+            uint64_t last_block_height = current_bc_status->current_height;
 
             uint64_t h1 = searched_blk_no;
             uint64_t h2 = std::min(h1 + blocks_lookahead - 1, last_block_height);
 
-            vector<block> blocks = CurrentBlockchainStatus::get_blocks_range(h1, h2);
+            vector<block> blocks = current_bc_status->get_blocks_range(h1, h2);
 
             if (blocks.empty())
             {
@@ -81,7 +82,7 @@ TxSearch::search()
 
                 std::this_thread::sleep_for(
                         std::chrono::seconds(
-                                CurrentBlockchainStatus::refresh_block_status_every_seconds)
+                                current_bc_status->get_bc_setup().refresh_block_status_every_seconds)
                 );
 
                 loop_timestamp = get_current_timestamp();
@@ -111,7 +112,7 @@ TxSearch::search()
 
             vector<CurrentBlockchainStatus::txs_tuple_t> txs_data;
 
-            if (!CurrentBlockchainStatus::get_txs_in_blocks(blocks, txs_data))
+            if (!current_bc_status->get_txs_in_blocks(blocks, txs_data))
             {
                 cout << "Cant get tx in blocks from " << h1 << " to " << h2 << '\n';
                 return;
@@ -150,13 +151,14 @@ TxSearch::search()
                 // Class that is responsible for identification of our outputs
                 // and inputs in a given tx.
                 OutputInputIdentification oi_identification {&address, &viewkey, &tx,
-                                                             tx_hash, is_coinbase};
+                                                             tx_hash, is_coinbase,
+                                                             current_bc_status};
 
                 // flag indicating whether the txs in the given block are spendable.
                 // this is true when block number is more than 10 blocks from current
                 // blockchain height.
 
-                bool is_spendable = CurrentBlockchainStatus::is_tx_unlocked(
+                bool is_spendable = current_bc_status->is_tx_unlocked(
                         tx.unlock_time, blk_height);
 
 
@@ -205,7 +207,7 @@ TxSearch::search()
                     }
 
 
-                    if (!CurrentBlockchainStatus::tx_exist(tx_hash, blockchain_tx_id))
+                    if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
                     {
                         cerr << "Tx " << oi_identification.get_tx_hash_str()
                              << " " << pod_to_hex(tx_hash)
@@ -240,7 +242,7 @@ TxSearch::search()
                     tx_data.is_rct           = oi_identification.is_rct;
                     tx_data.rct_type         = oi_identification.rct_type;
                     tx_data.spendable        = is_spendable;
-                    tx_data.payment_id       = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                    tx_data.payment_id       = current_bc_status->get_payment_id_as_string(tx);
                     tx_data.mixin            = oi_identification.get_mixin_no();
                     tx_data.timestamp        = *blk_timestamp_mysql_format;
 
@@ -249,7 +251,7 @@ TxSearch::search()
                     tx_mysql_id = xmr_accounts->insert(tx_data);
 
                     // get amount specific (i.e., global) indices of outputs
-                    if (!CurrentBlockchainStatus::get_amount_specific_indices(
+                    if (!current_bc_status->get_amount_specific_indices(
                             tx_hash, amount_specific_indices))
                     {
                         cerr << "cant get_amount_specific_indices!" << endl;
@@ -348,7 +350,7 @@ TxSearch::search()
 
                     if (blockchain_tx_id == 0)
                     {
-                        if (!CurrentBlockchainStatus::tx_exist(oi_identification.tx_hash, blockchain_tx_id))
+                        if (!current_bc_status->tx_exist(oi_identification.tx_hash, blockchain_tx_id))
                         {
                             cerr << "Tx " << oi_identification.get_tx_hash_str()
                                  << "not found in blockchain !" << '\n';
@@ -427,7 +429,7 @@ TxSearch::search()
                             tx_data.is_rct           = oi_identification.is_rct;
                             tx_data.rct_type         = oi_identification.rct_type;
                             tx_data.spendable        = is_spendable;
-                            tx_data.payment_id       = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                            tx_data.payment_id       = current_bc_status->get_payment_id_as_string(tx);
                             tx_data.mixin            = oi_identification.get_mixin_no();
                             tx_data.timestamp        = *blk_timestamp_mysql_format;
 
@@ -591,7 +593,7 @@ TxSearch::find_txs_in_mempool(
 {
     json j_transactions = json::array();
 
-    uint64_t current_height = CurrentBlockchainStatus::get_current_blockchain_height();
+    uint64_t current_height = current_bc_status->get_current_blockchain_height();
 
     known_outputs_t known_outputs_keys_copy = get_known_outputs_keys();
 
@@ -602,7 +604,7 @@ TxSearch::find_txs_in_mempool(
     // time in a single connection.
     // so we create local connection here, only to be used in this method.
 
-    shared_ptr<MySqlAccounts> local_xmr_accounts = make_shared<MySqlAccounts>();
+    shared_ptr<MySqlAccounts> local_xmr_accounts = make_shared<MySqlAccounts>(current_bc_status);
 
     for (const pair<uint64_t, transaction>& mtx: mempool_txs)
     {
@@ -617,7 +619,8 @@ TxSearch::find_txs_in_mempool(
         // Class that is resposnible for idenficitaction of our outputs
         // and inputs in a given tx.
         OutputInputIdentification oi_identification {&address, &viewkey, &tx,
-                                                     tx_hash, coinbase};
+                                                     tx_hash, coinbase,
+                                                     current_bc_status};
 
         // FIRSt step. to search for the incoming xmr, we use address, viewkey and
         // outputs public key.
@@ -645,7 +648,7 @@ TxSearch::find_txs_in_mempool(
                                         // just to indicate to frontend that this
                                         // tx is younger than 10 blocks so that
                                         // it shows unconfirmed message.
-            j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+            j_tx["payment_id"]     = current_bc_status->get_payment_id_as_string(tx);
             j_tx["coinbase"]       = false; // mempool tx are not coinbase, so always false
             j_tx["is_rct"]         = oi_identification.is_rct;
             j_tx["rct_type"]       = oi_identification.rct_type;
@@ -733,7 +736,7 @@ TxSearch::find_txs_in_mempool(
                                                         // just to indicate to frontend that this
                                                         // tx is younger than 10 blocks so that
                                                         // it shows unconfirmed message.
-                    j_tx["payment_id"]     = CurrentBlockchainStatus::get_payment_id_as_string(tx);
+                    j_tx["payment_id"]     = current_bc_status->get_payment_id_as_string(tx);
                     j_tx["coinbase"]       = false;     // mempool tx are not coinbase, so always false
                     j_tx["is_rct"]         = oi_identification.is_rct;
                     j_tx["rct_type"]       = oi_identification.rct_type;

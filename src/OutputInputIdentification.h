@@ -99,11 +99,14 @@ public:
     vector<output_info> identified_outputs;
     vector<input_info>  identified_inputs;
 
+    std::shared_ptr<CurrentBlockchainStatus> current_bc_status;
+
     OutputInputIdentification(const address_parse_info* _a,
                               const secret_key* _v,
                               const transaction* _tx,
                               crypto::hash const& _tx_hash,
-                              bool is_coinbase);
+                              bool is_coinbase,
+                              std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     /**
      * FIRST step. search for the incoming xmr using address, viewkey and

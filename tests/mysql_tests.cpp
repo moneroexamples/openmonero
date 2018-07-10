@@ -93,7 +93,7 @@ TEST(MYSQL_CONNECTION, CantConnect)
 
     try
     {
-        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>();
+        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(nullptr);
     }
     catch(...) {
         EXPECT_TRUE(true);
@@ -122,7 +122,7 @@ TEST(MYSQL_CONNECTION, CanConnect)
 
     try
     {
-        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>();
+        auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(nullptr);
 
         // try to connect again
         // it should not perform the connection again, bust just return true;
@@ -153,7 +153,7 @@ public:
                     new mysqlpp::MultiStatementsOption(true));
 
             // MySqlAccounts will try connecting to the mysql database
-            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(conn);
+            xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(current_bc_status, conn);
         }
         catch (std::exception const &e)
         {
@@ -217,17 +217,20 @@ protected:
 
     virtual void SetUp()
     {
+        current_bc_status = nullptr;
         initDatabase();
     }
 
     static std::string db_data;
     static json db_config;
     static std::shared_ptr<xmreg::MySqlAccounts> xmr_accounts;
+    static std::shared_ptr<xmreg::CurrentBlockchainStatus> current_bc_status;
 };
 
 std::string MYSQL_TEST::db_data;
 json MYSQL_TEST::db_config;
 std::shared_ptr<xmreg::MySqlAccounts> MYSQL_TEST::xmr_accounts;
+std::shared_ptr<xmreg::CurrentBlockchainStatus> MYSQL_TEST::current_bc_status {nullptr};
 
 
 TEST_F(MYSQL_TEST, Connection)
@@ -1159,6 +1162,9 @@ TEST_F(MYSQL_TEST, UpdatePayment)
     EXPECT_TRUE(static_cast<bool>(payments2.at(0).request_fulfilled));
     EXPECT_EQ(payments2.at(0).tx_hash, updated_payment.tx_hash);
 }
+
+
+
 
 //TEST(TEST_CHAIN, GenerateTestChain)
 //{

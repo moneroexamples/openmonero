@@ -214,7 +214,8 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     return false;
 }
 
-MySqlAccounts::MySqlAccounts()
+MySqlAccounts::MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status)
+    : current_bc_status {_current_bc_status}
 {
     // create connection to the mysql
     conn = make_shared<MySqlConnector>();
@@ -222,7 +223,9 @@ MySqlAccounts::MySqlAccounts()
     _init();
 }
 
-MySqlAccounts::MySqlAccounts(shared_ptr<MySqlConnector> _conn)
+MySqlAccounts::MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status,
+                             shared_ptr<MySqlConnector> _conn)
+    : current_bc_status {_current_bc_status}
 {
     conn = _conn;
 
@@ -484,7 +487,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
         if (bool {tx.spendable} == false)
         {
 
-            if (CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
+            if (current_bc_status->is_tx_unlocked(tx.unlock_time, tx.height))
             {
                 // this tx was before marked as unspendable, but now
                 // it is spendable. Meaning, that its older than 10 blocks.
@@ -514,7 +517,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                 uint64_t blockchain_tx_id {0};
 
-                CurrentBlockchainStatus::tx_exist(tx.hash, blockchain_tx_id);
+                current_bc_status->tx_exist(tx.hash, blockchain_tx_id);
 
                 if (blockchain_tx_id != tx.blockchain_tx_id)
                 {

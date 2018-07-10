@@ -14,7 +14,8 @@ set(SOURCE_FILES
 		TxSearch.cpp
 		rpccalls.cpp
 		OutputInputIdentification.cpp
-		version.h.in)
+		version.h.in
+		BlockchainSetup.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to

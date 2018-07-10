@@ -13,8 +13,9 @@ OutputInputIdentification::OutputInputIdentification(
     const secret_key* _v,
     const transaction* _tx,
     crypto::hash const& _tx_hash,
-    bool is_coinbase)
-    : total_received {0}, mixin_no {0}
+    bool is_coinbase,
+    std::shared_ptr<CurrentBlockchainStatus> _current_bc_status)
+    : total_received {0}, mixin_no {0}, current_bc_status {_current_bc_status}
 {
     address_info = _a;
     viewkey = _v;
@@ -165,10 +166,9 @@ OutputInputIdentification::identify_inputs(
         // get public keys of outputs used in the mixins that match to the offests
         std::vector<cryptonote::output_data_t> mixin_outputs;
 
-
-        if (!CurrentBlockchainStatus::get_output_keys(in_key.amount,
-                                                      absolute_offsets,
-                                                      mixin_outputs))
+        if (!current_bc_status->get_output_keys(in_key.amount,
+                                                absolute_offsets,
+                                                mixin_outputs))
         {
             cerr << "Mixins key images not found" << endl;
             continue;

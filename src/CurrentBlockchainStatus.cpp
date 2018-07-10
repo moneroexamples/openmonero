@@ -18,56 +18,38 @@
 namespace xmreg
 {
 
+CurrentBlockchainStatus::CurrentBlockchainStatus(BlockchainSetup _bc_setup)
+    : bc_setup {_bc_setup}
+{
 
-
-// initialize static variables
-atomic<uint64_t>        CurrentBlockchainStatus::current_height{0};
-string                  CurrentBlockchainStatus::blockchain_path{"/home/mwo/.blockchain/lmdb"};
-string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
-network_type            CurrentBlockchainStatus::net_type {network_type::MAINNET};
-bool                    CurrentBlockchainStatus::do_not_relay{false};
-bool                    CurrentBlockchainStatus::is_running{false};
-std::thread             CurrentBlockchainStatus::m_thread;
-uint64_t                CurrentBlockchainStatus::refresh_block_status_every_seconds{10};
-uint64_t                CurrentBlockchainStatus::blocks_search_lookahead {100};
-uint64_t                CurrentBlockchainStatus::max_number_of_blocks_to_import{8000};
-uint64_t                CurrentBlockchainStatus::search_thread_life_in_seconds {600}; // 10 minutes
-vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
-string                  CurrentBlockchainStatus::import_payment_address_str;
-string                  CurrentBlockchainStatus::import_payment_viewkey_str;
-uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
-address_parse_info      CurrentBlockchainStatus::import_payment_address;
-secret_key              CurrentBlockchainStatus::import_payment_viewkey;
-map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
-cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
-unique_ptr<xmreg::MicroCore>        CurrentBlockchainStatus::mcore;
+}
 
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
-    network_type net_type = CurrentBlockchainStatus::net_type;
+    network_type net_type = bc_setup.net_type;
 
-    TxSearch::set_search_thread_life(search_thread_life_in_seconds);
+    TxSearch::set_search_thread_life(bc_setup.search_thread_life_in_seconds);
 
-    if (!import_payment_address_str.empty() && !import_payment_viewkey_str.empty())
+    if (!bc_setup.import_payment_address_str.empty() && !bc_setup.import_payment_viewkey_str.empty())
     {
         if (!xmreg::parse_str_address(
-                import_payment_address_str,
-                import_payment_address,
-                CurrentBlockchainStatus::net_type))
+                bc_setup.import_payment_address_str,
+                bc_setup.import_payment_address,
+                net_type))
         {
             cerr << "Cant parse address_str: "
-                 << import_payment_address_str
+                 << bc_setup.import_payment_address_str
                  << endl;
             return;
         }
 
         if (!xmreg::parse_str_secret_key(
-                import_payment_viewkey_str,
-                import_payment_viewkey))
+                bc_setup.import_payment_viewkey_str,
+                bc_setup.import_payment_viewkey))
         {
             cerr << "Cant parse the viewkey_str: "
-                 << import_payment_viewkey_str
+                 << bc_setup.import_payment_viewkey_str
                  << endl;
             return;
         }
@@ -75,7 +57,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
     if (!is_running)
     {
-        m_thread = std::thread{[]()
+        m_thread = std::thread{[this]()
            {
                while (true)
                {
@@ -87,7 +69,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                    clean_search_thread_map();
                    std::this_thread::sleep_for(
                            std::chrono::seconds(
-                                   refresh_block_status_every_seconds));
+                                   bc_setup.refresh_block_status_every_seconds));
                }
            }};
 
@@ -104,7 +86,7 @@ CurrentBlockchainStatus::get_current_blockchain_height()
 
     try
     {
-        return xmreg::MyLMDB::get_blockchain_height(blockchain_path) - 1;
+        return xmreg::MyLMDB::get_blockchain_height(bc_setup.blockchain_path) - 1;
     }
     catch(std::exception& e)
     {
@@ -131,7 +113,7 @@ CurrentBlockchainStatus::init_monero_blockchain()
     mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
 
     // initialize the core using the blockchain path
-    if (!mcore->init(blockchain_path, net_type))
+    if (!mcore->init(bc_setup.blockchain_path, bc_setup.net_type))
         return false;
 
     // get the high level Blockchain object to interact
@@ -177,7 +159,7 @@ CurrentBlockchainStatus::is_tx_spendtime_unlocked(
         // XXX: this needs to be fast, so we'd need to get the starting heights
         // from the daemon to be correct once voting kicks in
 
-        uint64_t v2height = net_type == TESTNET ? 624634 : net_type == STAGENET ? (uint64_t)-1/*TODO*/ : 1009827;
+        uint64_t v2height = bc_setup.net_type == TESTNET ? 624634 : bc_setup.net_type == STAGENET ? (uint64_t)-1/*TODO*/ : 1009827;
 
         uint64_t leeway = block_height < v2height
                           ? CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1
@@ -358,8 +340,9 @@ string
 CurrentBlockchainStatus::get_account_integrated_address_as_str(
         crypto::hash8 const& payment_id8)
 {
-    return cryptonote::get_account_integrated_address_as_str(net_type,
-                    import_payment_address.address, payment_id8);
+    return cryptonote::get_account_integrated_address_as_str(
+            bc_setup.net_type,
+            bc_setup.import_payment_address.address, payment_id8);
 }
 
 string
@@ -405,7 +388,7 @@ CurrentBlockchainStatus::get_random_outputs(
         const uint64_t& outs_count,
         vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs)
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {bc_setup.deamon_url};
 
     string error_msg;
 
@@ -425,7 +408,7 @@ CurrentBlockchainStatus::get_output(
         const uint64_t global_output_index,
         COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info)
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {bc_setup.deamon_url};
 
     string error_msg;
 
@@ -442,7 +425,7 @@ CurrentBlockchainStatus::get_output(
 bool
 CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated)
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {bc_setup.deamon_url};
 
     string error_msg;
 
@@ -461,7 +444,7 @@ CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated
 bool
 CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg, bool do_not_relay)
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {bc_setup.deamon_url};
 
     if (!rpc.commit_tx(tx_blob, error_msg, do_not_relay))
     {
@@ -475,7 +458,7 @@ CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg, boo
 bool
 CurrentBlockchainStatus::read_mempool()
 {
-    rpccalls rpc {deamon_url};
+    rpccalls rpc {bc_setup.deamon_url};
 
     string error_msg;
 
@@ -615,11 +598,11 @@ CurrentBlockchainStatus::search_if_payment_made(
         // to create, so called, derived key.
         key_derivation derivation;
 
-        if (!generate_key_derivation(tx_pub_key, import_payment_viewkey, derivation))
+        if (!generate_key_derivation(tx_pub_key, bc_setup.import_payment_viewkey, derivation))
         {
             cerr << "Cant get derived key for: "  << "\n"
                  << "pub_tx_key: " << tx_pub_key << " and "
-                 << "prv_view_key" << import_payment_viewkey << endl;
+                 << "prv_view_key" << bc_setup.import_payment_viewkey << endl;
 
             return false;
         }
@@ -630,7 +613,7 @@ CurrentBlockchainStatus::search_if_payment_made(
         if (decrypted_payment_id8 != null_hash8)
         {
             if (!mcore->get_device()->decrypt_payment_id(
-                    decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
+                    decrypted_payment_id8, tx_pub_key, bc_setup.import_payment_viewkey))
             {
                 cerr << "Cant decrypt  decrypted_payment_id8: "
                      << pod_to_hex(decrypted_payment_id8) << "\n";
@@ -677,7 +660,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
             derive_public_key(derivation,
                               output_idx_in_tx,
-                              import_payment_address.address.m_spend_public_key,
+                              bc_setup.import_payment_address.address.m_spend_public_key,
                               generated_tx_pubkey);
 
             // check if generated public key matches the current output's key
@@ -698,7 +681,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
                     r = decode_ringct(tx.rct_signatures,
                                       tx_pub_key,
-                                      import_payment_viewkey,
+                                      bc_setup.import_payment_viewkey,
                                       output_idx_in_tx,
                                       tx.rct_signatures.ecdhInfo[output_idx_in_tx].mask,
                                       rct_amount);
@@ -784,11 +767,11 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
         // make a tx_search object for the given xmr account
         //searching_threads.emplace(acc.address, new TxSearch(acc)); // does not work on older gcc
                                                                      // such as the one in ubuntu 16.04
-        searching_threads[acc.address] = unique_ptr<TxSearch>(new TxSearch(acc));
+        searching_threads[acc.address] = make_unique<TxSearch>(acc, shared_from_this());
     }
     catch (const std::exception& e)
     {
-        cerr << "Faild created a search thread " << endl;
+        cerr << "Faild created a search thread: " << e.what() << endl;
         return false;
     }
 

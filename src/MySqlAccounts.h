@@ -31,6 +31,7 @@ class XmrPayment;
 class XmrAccount;
 class TxSearch;
 class Table;
+class CurrentBlockchainStatus;
 
 
 class MysqlInputs
@@ -113,12 +114,14 @@ class MySqlAccounts
 
     shared_ptr<MysqlPayments> mysql_payment;
 
+    shared_ptr<CurrentBlockchainStatus> current_bc_status;
 
 public:
 
-    MySqlAccounts();
+    MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
-    MySqlAccounts(shared_ptr<MySqlConnector> _conn);
+    MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status,
+                  shared_ptr<MySqlConnector> _conn);
 
     bool
     select(const string& address, XmrAccount& account);

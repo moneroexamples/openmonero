@@ -28,8 +28,10 @@ handel_::operator()(const shared_ptr< Session > session)
 
 
 
-YourMoneroRequests::YourMoneroRequests(shared_ptr<MySqlAccounts> _acc):
-    xmr_accounts {_acc}
+YourMoneroRequests::YourMoneroRequests(
+        shared_ptr<MySqlAccounts> _acc, 
+        shared_ptr<CurrentBlockchainStatus> _current_bc_status):
+    xmr_accounts {_acc}, current_bc_status {_current_bc_status}
 {
 
     // mysql connection will timeout after few hours
@@ -95,7 +97,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // createing the account
         block last_blk;
 
-        if (CurrentBlockchainStatus::get_block(current_blockchain_height, last_blk))
+        if (current_bc_status->get_block(current_blockchain_height, last_blk))
         {
             current_blockchain_timestamp = last_blk.timestamp;
         }
@@ -307,7 +309,7 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
     json j_mempool_tx;
 
-    if (CurrentBlockchainStatus::find_txs_in_mempool(
+    if (current_bc_status->find_txs_in_mempool(
             xmr_address, j_mempool_tx))
     {
         if(!j_mempool_tx.empty())
@@ -412,11 +414,11 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
         // ping the search thread that we still need it.
         // otherwise it will finish after some time.
-        CurrentBlockchainStatus::ping_search_thread(xmr_address);
+        current_bc_status->ping_search_thread(xmr_address);
 
         uint64_t current_searched_blk_no {0};
 
-        if (CurrentBlockchainStatus::get_searched_blk_no(xmr_address, current_searched_blk_no))
+        if (current_bc_status->get_searched_blk_no(xmr_address, current_searched_blk_no))
         {
             // if current_searched_blk_no is higher than what is in mysql, update it
             // in the search thread. This may occure when manually editing scanned_block_height
@@ -425,7 +427,7 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
             if (current_searched_blk_no > acc.scanned_block_height + 10)
             {
-                CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, acc.scanned_block_height);
+                current_bc_status->set_new_searched_blk_no(xmr_address, acc.scanned_block_height);
             }
         }
 
@@ -568,7 +570,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         uint64_t total_outputs_amount {0};
 
         uint64_t current_blockchain_height
-                = CurrentBlockchainStatus::get_current_blockchain_height();
+                = current_bc_status->get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
@@ -586,7 +588,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                 // thus no reason to return them to the frontend
                 // for constructing a tx.
 
-                if (!CurrentBlockchainStatus::is_tx_unlocked(tx.unlock_time, tx.height))
+                if (!current_bc_status->is_tx_unlocked(tx.unlock_time, tx.height))
                 {
                     continue;
                 }
@@ -623,7 +625,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
                             uint64_t amount  = (tx.is_rct ? 0 : out.amount);
 
                             output_data_t od =
-                                    CurrentBlockchainStatus::get_output_key(
+                                    current_bc_status->get_output_key(
                                             amount, global_amount_index);
 
                             string rtc_outpk  = pod_to_hex(od.commitment);
@@ -681,7 +683,7 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
 
         uint64_t fee_estimated {DYNAMIC_FEE_PER_KB_BASE_FEE};
 
-        if (CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(fee_estimated))
+        if (current_bc_status->get_dynamic_per_kb_fee_estimate(fee_estimated))
         {
             j_response["per_kb_fee"] = fee_estimated;
         }
@@ -758,7 +760,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
     vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> found_outputs;
 
-    if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
+    if (current_bc_status->get_random_outputs(amounts, count, found_outputs))
     {
         json& j_amount_outs = j_response["amount_outs"];
 
@@ -775,7 +777,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
                 uint64_t global_amount_index = out.global_amount_index;
 
                 tuple<string, string, string>
-                        rct_field = CurrentBlockchainStatus::construct_output_rct_field(
+                        rct_field = current_bc_status->construct_output_rct_field(
                                     global_amount_index, outs.amount);
 
                 string rct = std::get<0>(rct_field)    // rct_pk
@@ -796,7 +798,7 @@ YourMoneroRequests::get_random_outs(const shared_ptr< Session > session, const B
 
         } // for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount& outs: found_outputs)
 
-    } // if (CurrentBlockchainStatus::get_random_outputs(amounts, count, found_outputs))
+    } // if (current_bc_status->get_random_outputs(amounts, count, found_outputs))
     else
     {
         j_response["status"] = "error";
@@ -851,7 +853,7 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
         return;
     }
 
-    if (CurrentBlockchainStatus::find_key_images_in_mempool(tx_to_be_submitted))
+    if (current_bc_status->find_key_images_in_mempool(tx_to_be_submitted))
     {
         j_response["status"] = "error";
         j_response["error"]  = "Tx uses your outputs that area already in the mempool. "
@@ -860,9 +862,9 @@ YourMoneroRequests::submit_raw_tx(const shared_ptr< Session > session, const Byt
         return;
     }
 
-    if (!CurrentBlockchainStatus::commit_tx(
+    if (!current_bc_status->commit_tx(
             raw_tx_blob, error_msg,
-            CurrentBlockchainStatus::do_not_relay))
+            current_bc_status->get_bc_setup().do_not_relay))
     {
         j_response["status"] = "error";
         j_response["error"]  = error_msg;
@@ -890,17 +892,17 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
     json j_response;
 
     j_response["request_fulfilled"] = false;
-    j_response["import_fee"]        = CurrentBlockchainStatus::import_fee;
+    j_response["import_fee"]        = current_bc_status->get_bc_setup().import_fee;
     j_response["status"] = "error";
     j_response["error"]  = "Some error occured";
 
-    // if CurrentBlockchainStatus:: is zero, we just import the wallet.
+    // if current_bc_status-> is zero, we just import the wallet.
     // we dont care about any databases or anything, as importin all wallet is free.
     // just reset the scanned block height in mysql and finish.
-    if (CurrentBlockchainStatus::import_fee == 0)
+    if (current_bc_status->get_bc_setup().import_fee == 0)
     {
         // change search blk number in the search thread
-        if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+        if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
             cerr << "Updating searched_blk_no failed!" << endl;
             j_response["error"] = "Updating searched_blk_no failed!";
@@ -963,7 +965,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         bool request_fulfilled = bool {xmr_payment.request_fulfilled};
 
         string integrated_address =
-                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                current_bc_status->get_account_integrated_address_as_str(
                         xmr_payment.payment_id);
 
         j_response["payment_id"]        = xmr_payment.payment_id;
@@ -980,7 +982,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         {
             // check if it has just been done now
             // if yes, mark it in mysql
-            if(CurrentBlockchainStatus::search_if_payment_made(
+            if(current_bc_status->search_if_payment_made(
                     xmr_payment.payment_id,
                     xmr_payment.import_fee,
                     tx_hash_with_payment))
@@ -1012,7 +1014,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                             request_fulfilled = true;
 
                             // change search blk number in the search thread
-                            if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address, 0))
+                            if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
                             {
                                 cerr << "Updating searched_blk_no failed!" << endl;
                                 j_response["error"] = "Updating searched_blk_no failed!";
@@ -1036,7 +1038,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
                     j_response["error"] = "Updating payment mysql failed!";
                 }
 
-            } // if(CurrentBlockchainStatus::search_if_payment_made(
+            } // if(current_bc_status->search_if_payment_made(
 
         }  // if (!request_fulfilled)
         else
@@ -1062,7 +1064,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         crypto::hash8 random_payment_id8 = crypto::rand<crypto::hash8>();
 
         string integrated_address =
-                CurrentBlockchainStatus::get_account_integrated_address_as_str(
+                current_bc_status->get_account_integrated_address_as_str(
                         random_payment_id8);
 
         XmrPayment xmr_payment;
@@ -1070,7 +1072,7 @@ YourMoneroRequests::import_wallet_request(const shared_ptr< Session > session, c
         xmr_payment.id                = mysqlpp::null;
         xmr_payment.account_id        = acc.id.data;
         xmr_payment.payment_id        = pod_to_hex(random_payment_id8);
-        xmr_payment.import_fee        = CurrentBlockchainStatus::import_fee; // xmr
+        xmr_payment.import_fee        = current_bc_status->get_bc_setup().import_fee; // xmr
         xmr_payment.request_fulfilled = false;
         xmr_payment.tx_hash           = ""; // no tx_hash yet with the payment
         xmr_payment.payment_address   = integrated_address;
@@ -1151,10 +1153,10 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
 
     // make sure that we dont import more that the maximum alowed no of blocks
     no_blocks_to_import = std::min(no_blocks_to_import,
-                                   CurrentBlockchainStatus::max_number_of_blocks_to_import);
+                                   current_bc_status->get_bc_setup().max_number_of_blocks_to_import);
 
     no_blocks_to_import = std::min(no_blocks_to_import,
-                                   CurrentBlockchainStatus::get_current_blockchain_height());
+                                   current_bc_status->get_current_blockchain_height());
 
     XmrAccount acc;
 
@@ -1175,7 +1177,7 @@ YourMoneroRequests::import_recent_wallet_request(const shared_ptr< Session > ses
             if (xmr_accounts->update(acc, updated_acc))
             {
                 // change search blk number in the search thread
-                if (!CurrentBlockchainStatus::set_new_searched_blk_no(xmr_address,
+                if (!current_bc_status->set_new_searched_blk_no(xmr_address,
                                                                       updated_acc.scanned_block_height))
                 {
                     cerr << "Updating searched_blk_no failed!" << endl;
@@ -1264,12 +1266,12 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
     bool tx_in_mempool {false};
 
-    if (!CurrentBlockchainStatus::get_tx(tx_hash, tx))
+    if (!current_bc_status->get_tx(tx_hash, tx))
     {
         // if tx not found in the blockchain, check if its in mempool
 
         vector<pair<uint64_t, transaction>> mempool_txs =
-                CurrentBlockchainStatus::get_mempool_txs();
+                current_bc_status->get_mempool_txs();
 
         //cout << "serach mempool" << endl;
 
@@ -1362,7 +1364,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
         int64_t no_confirmations {-1};
 
-        if (CurrentBlockchainStatus::get_tx_block_height(tx_hash, tx_height))
+        if (current_bc_status->get_tx_block_height(tx_hash, tx_height))
         {
             // get the current blockchain height. Just to check
             uint64_t bc_height = get_current_blockchain_height();
@@ -1386,10 +1388,10 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
         // it differently than before. Its not great, since we reinvent the wheel
         // but its worth double checking the mysql data, and also allows for new
         // implementation in the frontend.
-        if (CurrentBlockchainStatus::get_xmr_address_viewkey(xmr_address, address_info, viewkey))
+        if (current_bc_status->get_xmr_address_viewkey(xmr_address, address_info, viewkey))
         {
             OutputInputIdentification oi_identification {&address_info, &viewkey, &tx,
-                                                         tx_hash, coinbase};
+                                                         tx_hash, coinbase, current_bc_status};
 
             oi_identification.identify_outputs();
 
@@ -1484,7 +1486,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                     unordered_map<public_key, uint64_t> known_outputs_keys;
 
-                    if (CurrentBlockchainStatus::get_known_outputs_keys(
+                    if (current_bc_status->get_known_outputs_keys(
                             xmr_address, known_outputs_keys))
                     {
                         // we got known_outputs_keys from the search thread.
@@ -1494,7 +1496,7 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
                         // Class that is resposnible for idenficitaction of our outputs
                         // and inputs in a given tx.
                         OutputInputIdentification oi_identification
-                                {&address_info, &viewkey, &tx, tx_hash, coinbase};
+                                {&address_info, &viewkey, &tx, tx_hash, coinbase, current_bc_status};
 
                         // no need mutex here, as this will be exectued only after
                         // the above. there is no threads here.
@@ -1532,14 +1534,14 @@ YourMoneroRequests::get_tx(const shared_ptr< Session > session, const Bytes & bo
 
                         j_response["spent_outputs"] = j_spent_outputs;
 
-                    } //if (CurrentBlockchainStatus::get_known_outputs_keys(
+                    } //if (current_bc_status->get_known_outputs_keys(
                       //    xmr_address, known_outputs_keys))
 
                 } //  else
 
             } //  if (xmr_accounts->select(xmr_address, acc))
 
-        } //  if (CurrentBlockchainStatus::get_xmr_address_viewkey(address_str, address, viewkey)
+        } //  if (current_bc_status->get_xmr_address_viewkey(address_str, address, viewkey)
 
         j_response["tx_height"]         = tx_height;
         j_response["no_confirmations"]  = no_confirmations;
@@ -1570,8 +1572,8 @@ YourMoneroRequests::get_version(const shared_ptr< Session > session, const Bytes
         {"git_branch_name"     , string {GIT_BRANCH_NAME}},
         {"monero_version_full" , string {MONERO_VERSION_FULL}},
         {"api"                 , OPENMONERO_RPC_VERSION},
-        {"testnet"             , CurrentBlockchainStatus::net_type  == network_type::TESTNET},
-        {"network_type"        , CurrentBlockchainStatus::net_type},
+        {"testnet"             , current_bc_status->get_bc_setup().net_type  == network_type::TESTNET},
+        {"network_type"        , current_bc_status->get_bc_setup().net_type},
         {"blockchain_height"   , get_current_blockchain_height()}
     };
 
@@ -1652,7 +1654,7 @@ YourMoneroRequests::body_to_json(const Bytes & body)
 uint64_t
 YourMoneroRequests::get_current_blockchain_height()
 {
-    return CurrentBlockchainStatus::get_current_blockchain_height();
+    return current_bc_status->get_current_blockchain_height();
 }
 
 bool
@@ -1695,7 +1697,7 @@ YourMoneroRequests::login_and_start_search_thread(
             // to do anything except looking for tx and updating mysql
             // with relative tx information
 
-            if (CurrentBlockchainStatus::start_tx_search_thread(acc))
+            if (current_bc_status->start_tx_search_thread(acc))
             {
                 j_response["status"]      = "success";
                 j_response["new_address"] = false;
