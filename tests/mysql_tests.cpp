@@ -1158,18 +1158,6 @@ TEST_F(MYSQL_TEST, UpdatePayment)
     EXPECT_EQ(payments2.at(0).tx_hash, updated_payment.tx_hash);
 }
 
-//
-//class MockCurrentBlockchainStatus : public xmreg::CurrentBlockchainStatus
-//{
-//public:
-//    MockCurrentBlockchainStatus()
-//            : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup()) {}
-//
-//    MOCK_METHOD2(is_tx_unlocked, bool(uint64_t unlock_time, uint64_t block_height));
-//    MOCK_METHOD2(tx_exist, bool(crypto::hash const&, uint64_t& tx_index));
-//};
-//
-
 /*
  * Dont want to use real blockchain data, so we are going to
  * mock xmreg::CurrentBlockchainStatus
@@ -1180,92 +1168,297 @@ public:
     MockCurrentBlockchainStatus1()
             : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup()) {}
 
+    bool tx_unlock_state {true};
+    bool tx_exist_state {true};
+
+    std::map<string, uint64_t> tx_exist_mock_data;
+
+    // all txs in the blockchain are unlocked
     virtual bool
     is_tx_unlocked(uint64_t unlock_time, uint64_t block_height) override
     {
-        return true;
+        return tx_unlock_state;
     }
 
+    // all ts in the blockchain exists
     virtual bool
     tx_exist(const string& tx_hash_str, uint64_t& tx_index) override
     {
+        if (tx_exist_mock_data.empty())
+            return tx_exist_state;
+
+        tx_index = tx_exist_mock_data[tx_hash_str];
+
         return true;
     }
 };
 
-// now mock when tx is locked
-class MockCurrentBlockchainStatus2 : public MockCurrentBlockchainStatus1
-{
-public:
-
-    virtual bool
-    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height) override
-    {
-        return false;
-    }
-};
-
-
-// use MockCurrentBlockchainStatus
-template <typename T>
 class MYSQL_TEST2 : public MYSQL_TEST
 {
 
-    virtual void SetUp() override
-    {
-        current_bc_status = make_shared<T>();
-        connect(current_bc_status);
-        initDatabase();
-    }
-
 };
 
-typedef testing::Types<MockCurrentBlockchainStatus1, MockCurrentBlockchainStatus2> Implementations;
-
-TYPED_TEST_CASE(MYSQL_TEST2, Implementations);
-
-// Execute tests for two cases where CurrentBlockchainStatus::is_tx_unlocked
-// returns true or false
-//
-TYPED_TEST(MYSQL_TEST2, SelectTxsForAccountSpendabilityCheck)
+TEST_F(MYSQL_TEST2, SelectTxsIfAllAreSpendableAndExist)
 {
+    // if all txs selected for the given account are spendable
+    // the select_txs_for_account_spendability_check method
+    // should not change anything
 
-    vector<xmreg::XmrTransaction> txs;
+    // use mock CurrentBlockchainStatus instead of real object
+    // which would access the real blockchain.
+    auto mock_bc_status = make_shared<MockCurrentBlockchainStatus1>();
 
-    // first check if we select for account with any txs
-    EXPECT_FALSE(this->xmr_accounts->select_txs_for_account_spendability_check(55555, txs));
-
-    txs.clear();
-
-    // so now check for account that has some txs
+    xmr_accounts->set_bc_status_provider(mock_bc_status);
 
     ACC_FROM_HEX(owner_addr_5Ajfk);
 
-    // we mark have of txs for this account as non_spendable
+    vector<xmreg::XmrTransaction> txs;
+
+    // we mark all txs for this account as spendable
     // so that we have something to work with in this test
     ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
 
-    for (size_t i = 0; i < txs.size() / 2; ++i)
-        this->xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+    auto no_of_original_txs = txs.size();
+
+    for (size_t i = 0; i < txs.size(); ++i)
+        this->xmr_accounts->mark_tx_spendable(txs[i].id.data);
+
+    // reselect tx after they were marked as spendable
+    txs.clear();
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
 
     EXPECT_TRUE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+    // we check if non of the input txs got filtere out
+    EXPECT_EQ(txs.size(), no_of_original_txs);
+
+    // and we check if all of remained spendable
+    for (auto const& tx: txs)
+        EXPECT_TRUE(bool {tx.spendable});
 }
-//
-//TEST_F(MYSQL_TEST2, SelectTxsForAccountSpendabilityCheck)
-//{
-//    ACC_FROM_HEX(owner_addr_5Ajfk);
-//
-//    vector<xmreg::XmrTransaction> txs;
-//
-//    // we mark have of txs for this account as non_spendable
-//    // so that we have something to work with in this test
-//    ASSERT_TRUE(xmr_accounts->select(acc.id.data, txs));
-//
-//    for (size_t i = 0; i < txs.size() / 2; ++i)
-//        xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
-//
-//    EXPECT_TRUE(xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
-//}
+
+
+
+TEST_F(MYSQL_TEST2, SelectTxsIfAllAreNonspendableButUnlockedAndExist)
+{
+    // if all txs selected for the given account are non-spendable
+    // the select_txs_for_account_spendability_check method
+    // will check their unlock time, and marked them spendable in
+    // they are unlocked.
+    // We are going to mock that all are unlocked
+
+    // use mock CurrentBlockchainStatus instead of real object
+    // which would access the real blockchain.
+    auto mock_bc_status = make_shared<MockCurrentBlockchainStatus1>();
+
+    xmr_accounts->set_bc_status_provider(mock_bc_status);
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrTransaction> txs;
+
+    // we mark all txs for this account as spendable
+    // so that we have something to work with in this test
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    auto no_of_original_txs = txs.size();
+
+    for (size_t i = 0; i < txs.size(); ++i)
+        this->xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+
+    // reselect tx after they were marked as spendable
+    txs.clear();
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    // and we check if all non-spendable before we fetch them into
+    // select_txs_for_account_spendability_check
+    for (auto const& tx: txs)
+        ASSERT_FALSE(bool {tx.spendable});
+
+    EXPECT_TRUE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+    // we check if non of the input txs got filtere out
+    EXPECT_EQ(txs.size(), no_of_original_txs);
+
+
+    // reselect tx after they were marked as spendable
+    txs.clear();
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    // and we check if all of remained spendable
+    for (auto const& tx: txs)
+        ASSERT_TRUE(bool {tx.spendable});
+
+    // and we check if all of remained spendable
+    for (auto const& tx: txs)
+        EXPECT_TRUE(bool {tx.spendable});
+}
+
+
+
+TEST_F(MYSQL_TEST2, SelectTxsIfAllAreNonspendableLockedButExist)
+{
+    // if all txs selected for the given account are non-spendable
+    // the select_txs_for_account_spendability_check method
+    // will check if they are unlocked. In this thest all will be locked
+    // so new unlock_time for them is going to be set for them.
+    // all txs are set to exisit in the blockchain
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrTransaction> txs;
+
+    // we mark all txs for this account as spendable
+    // so that we have something to work with in this test
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    // use mock CurrentBlockchainStatus instead of real object
+    // which would access the real blockchain.
+    auto mock_bc_status = make_shared<MockCurrentBlockchainStatus1>();
+
+    // we mock that all txs are still locked and cant be spent
+    mock_bc_status->tx_unlock_state = false;
+
+    // now we need to populate mock_bc_status->tx_exist_mock_data map
+    // so that tx_exist mock works as if all txs existed
+    // and it returns correct/expected blockchain_tx_id
+    for(auto const& tx: txs)
+        mock_bc_status->tx_exist_mock_data[tx.hash] = tx.blockchain_tx_id;
+
+    // now set the mock_bc_status to be used by xmr_accounts later on
+    xmr_accounts->set_bc_status_provider(mock_bc_status);
+
+    auto no_of_original_txs = txs.size();
+
+    for (size_t i = 0; i < txs.size(); ++i)
+        this->xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+
+    // reselect tx after they were marked as spendable
+    txs.clear();
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    // and we check if all non-spendable before we fetch them into
+    // select_txs_for_account_spendability_check
+    for (auto const& tx: txs)
+    {
+        ASSERT_FALSE(bool {tx.spendable});
+        if (!bool {tx.coinbase})
+            ASSERT_EQ(tx.unlock_time, 0);
+    }
+
+    EXPECT_TRUE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+    // we check if non of the input txs got filtere out
+    EXPECT_EQ(txs.size(), no_of_original_txs);
+
+    // and we check if all of remained non-spendable and
+    // if their unlock time was modified as needed
+    for (auto const& tx: txs)
+    {
+        ASSERT_FALSE(bool {tx.spendable});
+        if (!bool {tx.coinbase})
+            ASSERT_EQ(tx.unlock_time, tx.height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE);
+    }
+}
+
+
+TEST_F(MYSQL_TEST2, SelectTxsIfAllAreNonspendableUnlockedAndDontExist)
+{
+    // if all txs selected for the given account are non-spendable,
+    // locked and dont exist in blockchain
+    // they should be filtered and removed from the mysql
+
+    // use mock CurrentBlockchainStatus instead of real object
+    // which would access the real blockchain.
+    auto mock_bc_status = make_shared<MockCurrentBlockchainStatus1>();
+
+    // all txs are locked and dont exisit in blockchain
+    mock_bc_status->tx_unlock_state = false;
+    mock_bc_status->tx_exist_state = false;
+
+    xmr_accounts->set_bc_status_provider(mock_bc_status);
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrTransaction> txs;
+
+    // we mark all txs for this account as nonspendable
+    // so that we have something to work with in this test
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    auto no_of_original_txs = txs.size();
+
+    for (size_t i = 0; i < txs.size(); ++i)
+        this->xmr_accounts->mark_tx_nonspendable(txs[i].id.data);
+
+    // reselect tx after they were marked as spendable
+    txs.clear();
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    // and we check if all non-spendable before we fetch them into
+    // select_txs_for_account_spendability_check
+    for (auto const& tx: txs)
+        ASSERT_FALSE(bool {tx.spendable});
+
+    EXPECT_TRUE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+    // after the call to select_txs_for_account_spendability_check
+    // all txs should be filted out
+    EXPECT_EQ(txs.size(), 0);
+
+    // all these txs should also be deleted from the mysql
+    txs.clear();
+    ASSERT_FALSE(this->xmr_accounts->select(acc.id.data, txs));
+    EXPECT_EQ(txs.size(), 0);
+}
+
+
+
+TEST_F(MYSQL_TEST2, SelectTxsFailureDueToSpendabilityAndTxDeletion)
+{
+    // if all txs selected for the given account are non-spendable,
+    // locked and dont exist in blockchain
+    // they should be filtered and removed from the mysql
+    // however, the mark_tx_spendable and delete_tx can
+    // fail. We simulate the failure by providing tx.id which does not
+    // exisit in the mysql
+
+    // use mock CurrentBlockchainStatus instead of real object
+    // which would access the real blockchain.
+    auto mock_bc_status = make_shared<MockCurrentBlockchainStatus1>();
+
+    // all txs are unlocked and dont exisit in blockchain
+    mock_bc_status->tx_unlock_state = true;
+    mock_bc_status->tx_exist_state = false;
+
+    xmr_accounts->set_bc_status_provider(mock_bc_status);
+
+    ACC_FROM_HEX(owner_addr_5Ajfk);
+
+    vector<xmreg::XmrTransaction> txs;
+
+    // we mark all txs for this account as nonspendable
+    // so that we have something to work with in this test
+    ASSERT_TRUE(this->xmr_accounts->select(acc.id.data, txs));
+
+    auto no_of_original_txs = txs.size();
+
+    for (size_t i = 0; i < txs.size(); ++i)
+    {
+        txs[i].id = 5555555555 /*some non-existing id*/;
+        txs[i].spendable = false;
+    }
+
+    // the non-exisiting ids should result in failure
+    EXPECT_FALSE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+    // now repeat if all txs are locked and dont exisit in blockchain
+    mock_bc_status->tx_unlock_state = false;
+
+    // also should lead to false
+    EXPECT_FALSE(this->xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs));
+
+}
 
 
 //TEST(TEST_CHAIN, GenerateTestChain)

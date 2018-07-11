@@ -141,6 +141,11 @@ if (!xmreg::get_blockchain_path(blockchain_path, nettype))
 bc_setup.blockchain_path         =  blockchain_path.string();
 bc_setup.deamon_url              = deamon_url;
 
+if (!bc_setup.parse_addr_and_viewkey())
+{
+    return EXIT_FAILURE;
+}
+
 cout << "Using blockchain path: " << blockchain_path.string() << endl;
 
 

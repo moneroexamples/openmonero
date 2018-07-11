@@ -31,30 +31,6 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 
     TxSearch::set_search_thread_life(bc_setup.search_thread_life_in_seconds);
 
-    if (!bc_setup.import_payment_address_str.empty() && !bc_setup.import_payment_viewkey_str.empty())
-    {
-        if (!xmreg::parse_str_address(
-                bc_setup.import_payment_address_str,
-                bc_setup.import_payment_address,
-                net_type))
-        {
-            cerr << "Cant parse address_str: "
-                 << bc_setup.import_payment_address_str
-                 << endl;
-            return;
-        }
-
-        if (!xmreg::parse_str_secret_key(
-                bc_setup.import_payment_viewkey_str,
-                bc_setup.import_payment_viewkey))
-        {
-            cerr << "Cant parse the viewkey_str: "
-                 << bc_setup.import_payment_viewkey_str
-                 << endl;
-            return;
-        }
-    }
-
     if (!is_running)
     {
         m_thread = std::thread{[this]()

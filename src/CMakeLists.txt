@@ -15,7 +15,8 @@ set(SOURCE_FILES
 		rpccalls.cpp
 		OutputInputIdentification.cpp
 		version.h.in
-		BlockchainSetup.cpp)
+		BlockchainSetup.cpp
+		ThreadRAII.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to

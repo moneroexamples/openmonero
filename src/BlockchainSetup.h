@@ -6,6 +6,7 @@
 #define OPENMONERO_BLOCKCHAINSETUP_H
 
 #include "monero_headers.h"
+#include "tools.h"
 
 #include <string>
 
@@ -46,6 +47,9 @@ public:
 
     address_parse_info import_payment_address;
     secret_key         import_payment_viewkey;
+
+    bool
+    parse_addr_and_viewkey();
 };
 
 }

@@ -471,18 +471,16 @@ bool
 MySqlAccounts::select_txs_for_account_spendability_check(
         const uint64_t& account_id, vector<XmrTransaction>& txs)
 {
-    vector<XmrTransaction> txs_tmp;
 
-    if (!select(account_id, txs_tmp))
-        return false;
-
-    for (XmrTransaction& tx: txs_tmp)
+    for (auto it = txs.begin(); it != txs.end(); )
     {
         // first we check if txs stored in db are already spendable
         // it means if they are older than 10 blocks. If  yes,
         // we mark them as spendable, as we assume that blocks
         // older than 10 blocks are permanent, i.e, they wont get
         // orphaned.
+
+        XmrTransaction& tx = *it;
 
         if (bool {tx.spendable} == false)
         {
@@ -491,16 +489,12 @@ MySqlAccounts::select_txs_for_account_spendability_check(
             {
                 // this tx was before marked as unspendable, but now
                 // it is spendable. Meaning, that its older than 10 blocks.
-                // so mark it as spendable, so that its permanet.
+                // so mark it as spendable in mysql, so that its permanet.
 
                 uint64_t no_row_updated = mark_tx_spendable(tx.id.data);
 
                 if (no_row_updated != 1)
                 {
-//                    throw runtime_error("no_row_updated != 1 "
-//                                                "due to "
-//                                                "xmr_accounts->mark_tx_spendable(tx.id)");
-
                     cerr << "no_row_updated != 1 due to  xmr_accounts->mark_tx_spendable(tx.id)\n";
                     return false;
                 }
@@ -528,9 +522,6 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                     if (no_row_updated != 1)
                     {
-//                        throw runtime_error("no_row_updated != 1 "
-//                                                    "due to "
-//                                                    "xmr_accounts->delete_tx(tx.id)");
                         cerr << "no_row_updated != 1 due to  xmr_accounts->delete_tx(tx.id)\n";
                         return false;
                     }
@@ -539,10 +530,10 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                     // we assume its back to mempool, and it will be rescanned
                     // by tx search thread once added again to some block.
 
+                    // so we remove it from txs vector
+                    it = txs.erase(it);
                     continue;
-
                 }
-
 
                 // set unlock_time field so that frontend displies it
                 // as a locked tx, if unlock_time is zero.
@@ -557,9 +548,9 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
         } // if (bool {tx.spendable} == false)
 
-        txs.push_back(tx);
+        ++it;
 
-    } //for (XmrTransaction& tx: txs_tmp)
+    } // for (auto it = txs.begin(); it != txs.end(); )
 
     return true;
 }
@@ -666,6 +657,13 @@ shared_ptr<MySqlConnector>
 MySqlAccounts::get_connection()
 {
     return conn;
+}
+
+
+void
+MySqlAccounts::set_bc_status_provider(shared_ptr<CurrentBlockchainStatus> bc_status_provider)
+{
+    current_bc_status = bc_status_provider;
 }
 
 void

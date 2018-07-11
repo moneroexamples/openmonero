@@ -441,6 +441,12 @@ YourMoneroRequests::get_address_info(const shared_ptr< Session > session, const 
 
         vector<XmrTransaction> txs;
 
+        // get all txs of for the account
+        xmr_accounts->select(acc.id.data, txs);
+
+        // now, filter out or updated transactions from txs vector that no
+        // longer exisit in the recent blocks. Update is done to check for their
+        // spendability status.
         if (xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs))
         {
             json j_spent_outputs = json::array();

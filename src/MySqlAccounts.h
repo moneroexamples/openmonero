@@ -235,6 +235,11 @@ public:
         return 0;
     }
 
+    // this is useful in unit tests, as we can inject mock CurrentBlockchainStatus
+    // after an instance of MySqlAccounts has been created.
+    void
+    set_bc_status_provider(shared_ptr<CurrentBlockchainStatus> bc_status_provider);
+
 private:
     void _init();
 };
