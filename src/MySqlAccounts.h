@@ -190,9 +190,6 @@ public:
     get_total_recieved(const uint64_t& account_id, uint64_t& amount);
 
     void
-    launch_mysql_pinging_thread();
-
-    void
     disconnect();
 
     shared_ptr<MySqlConnector>

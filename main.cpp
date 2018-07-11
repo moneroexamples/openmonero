@@ -1,6 +1,7 @@
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
 #include "src/YourMoneroRequests.h"
+#include "src/ThreadRAII.h"
 
 #include <iostream>
 #include <memory>
@@ -200,6 +201,41 @@ catch(std::exception const& e)
     cerr << e.what() << '\n';
     return EXIT_FAILURE;
 }
+
+// at this point we should be connected to the mysql
+
+// mysql connection will timeout after few hours
+// of iddle time. so we have this tiny helper
+// thread to ping mysql, thus keeping it alive.
+//
+// "A completely different way to tackle this,
+// if your program doesn’t block forever waiting on I/O while idle,
+// is to periodically call Connection::ping(). [12]
+// This sends the smallest possible amount of data to the database server,
+// which will reset its idle timer and cause it to respond, so ping() returns true.
+// If it returns false instead, you know you need to reconnect to the server.
+// Periodic pinging is easiest to do if your program uses asynchronous I/O,
+// threads, or some kind of event loop to ensure that you can call
+// something periodically even while the rest of the program has nothing to do."
+// from: https://tangentsoft.net/mysql++/doc/html/userman/tutorial.html#connopts
+//
+auto conn = mysql_accounts->get_connection();
+xmreg::ThreadRAII mysql_ping_thread(
+        std::thread([&conn]
+        {
+            while (true)
+            {
+                std::this_thread::sleep_for(chrono::seconds(7200)); // 2 hours
+
+                if (!conn->ping())
+                {
+                    cerr << "Pinging mysql failed. stoping mysql pinging thread. \n";
+                    break;
+                }
+
+                cout << "Mysql ping successful. \n" ;
+            }
+        }), xmreg::ThreadRAII::DtorAction::detach);
 
 // create REST JSON API services
 xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
