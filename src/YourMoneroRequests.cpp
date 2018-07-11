@@ -223,11 +223,13 @@ YourMoneroRequests::get_address_txs(const shared_ptr< Session > session, const B
 
         vector<XmrTransaction> txs;
 
+        xmr_accounts->select(acc.id.data, txs);
+
         if (xmr_accounts->select_txs_for_account_spendability_check(acc.id.data, txs))
         {
             json j_txs = json::array();
 
-            for (XmrTransaction tx: txs)
+            for (XmrTransaction const& tx: txs)
             {
                 json j_tx {
                         {"id"             , tx.blockchain_tx_id},
