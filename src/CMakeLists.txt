@@ -16,7 +16,8 @@ set(SOURCE_FILES
 		OutputInputIdentification.cpp
 		version.h.in
 		BlockchainSetup.cpp
-		ThreadRAII.cpp)
+		ThreadRAII.cpp
+		MysqlPing.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to

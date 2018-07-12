@@ -2,6 +2,7 @@
 #include "src/MicroCore.h"
 #include "src/YourMoneroRequests.h"
 #include "src/ThreadRAII.h"
+#include "src/MysqlPing.h"
 
 #include <iostream>
 #include <memory>
@@ -219,23 +220,10 @@ catch(std::exception const& e)
 // something periodically even while the rest of the program has nothing to do."
 // from: https://tangentsoft.net/mysql++/doc/html/userman/tutorial.html#connopts
 //
-auto conn = mysql_accounts->get_connection();
+
 xmreg::ThreadRAII mysql_ping_thread(
-        std::thread([&conn]
-        {
-            while (true)
-            {
-                std::this_thread::sleep_for(chrono::seconds(7200)); // 2 hours
-
-                if (!conn->ping())
-                {
-                    cerr << "Pinging mysql failed. stoping mysql pinging thread. \n";
-                    break;
-                }
-
-                cout << "Mysql ping successful. \n" ;
-            }
-        }), xmreg::ThreadRAII::DtorAction::detach);
+        std::thread(xmreg::MysqlPing {mysql_accounts->get_connection()}),
+        xmreg::ThreadRAII::DtorAction::detach);
 
 // create REST JSON API services
 xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);

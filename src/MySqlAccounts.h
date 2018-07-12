@@ -219,12 +219,14 @@ public:
 
         try
         {
+            conn->check_if_connected();
+
             StoreQueryResult  sr = query.store();
 
             if (!sr.empty())
                 return sr[0][0];
         }
-        catch (std::exception& e)
+        catch (std::exception const& e)
         {
             MYSQL_EXCEPTION_MSG(e);
         }
