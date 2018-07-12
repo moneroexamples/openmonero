@@ -221,8 +221,10 @@ catch(std::exception const& e)
 // from: https://tangentsoft.net/mysql++/doc/html/userman/tutorial.html#connopts
 //
 
+xmreg::MysqlPing mysql_ping {mysql_accounts->get_connection()};
+
 xmreg::ThreadRAII mysql_ping_thread(
-        std::thread(xmreg::MysqlPing {mysql_accounts->get_connection()}),
+        std::thread(std::ref(mysql_ping)),
         xmreg::ThreadRAII::DtorAction::detach);
 
 // create REST JSON API services

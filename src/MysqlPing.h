@@ -28,6 +28,9 @@ public:
     uint64_t get_counter() const {return counter;}
     StopReason get_stop_reason() const {return why_stoped;};
 
+    MysqlPing(MysqlPing&&) = default;
+    MysqlPing& operator=(MysqlPing&&) = default;
+
 private:
     std::weak_ptr<MySqlConnector> conn;
     uint64_t ping_time; // in seconds
