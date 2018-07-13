@@ -67,6 +67,12 @@ public:
     json
     get_config() const {return config_json;}
 
+    static string
+    get_network_name(network_type n_type);
+
+    static json
+    read_config(string config_json_path);
+
 private:
 
     void _init();

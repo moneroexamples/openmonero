@@ -16,19 +16,7 @@ BlockchainSetup::BlockchainSetup(
           config_path {_config_path}
 {
 
-    // check if config-file provided exist
-    if (!boost::filesystem::exists(config_path))
-        throw std::runtime_error("Config file " + config_path + " does not exist");
-    try
-    {
-        // try reading and parsing json config file provided
-        std::ifstream i(config_path);
-        i >> config_json;
-    }
-    catch (const std::exception& e)
-    {
-        throw std::runtime_error(string{"Error reading confing file: "} + e.what());
-    }
+    config_json = read_config(config_path);
 
     _init();
 }
@@ -51,22 +39,29 @@ BlockchainSetup::parse_addr_and_viewkey()
     if (import_payment_address_str.empty() || import_payment_viewkey_str.empty())
         std::runtime_error("config address or viewkey are empty.");
 
-    if (!parse_str_address(
-            import_payment_address_str,
-            import_payment_address,
-            net_type))
-    {
-        cerr << "Cant parse address_str: "
-             << import_payment_address_str
-             << endl;
-        throw std::runtime_error("Cant parse config address: " + import_payment_address_str);
-    }
 
-    if (!xmreg::parse_str_secret_key(
-            import_payment_viewkey_str,
-            import_payment_viewkey))
+    try
     {
-        throw std::runtime_error("Cant parse config viewkey: " + import_payment_viewkey_str);
+        if (!parse_str_address(
+                import_payment_address_str,
+                import_payment_address,
+                net_type))
+        {
+            throw std::runtime_error("Cant parse config address: " + import_payment_address_str);
+        }
+
+
+        if (!xmreg::parse_str_secret_key(
+                import_payment_viewkey_str,
+                import_payment_viewkey))
+        {
+            throw std::runtime_error("Cant parse config viewkey: " + import_payment_viewkey_str);
+        }
+
+    }
+    catch (std::exception const& e)
+    {
+        throw;
     }
 
 }
@@ -110,7 +105,50 @@ BlockchainSetup::get_blockchain_path()
 }
 
 
-void
+
+string
+BlockchainSetup::get_network_name(network_type n_type)
+{
+    switch (n_type)
+    {
+        case network_type::MAINNET:
+            return "mainnet";
+        case network_type::TESTNET:
+            return "testnet";
+        case network_type::STAGENET:
+            return "stagenet";
+        default:
+            throw std::runtime_error("wrong network");
+    }
+}
+
+
+json
+BlockchainSetup::read_config(string config_json_path)
+{
+    // check if config-file provided exist
+    if (!boost::filesystem::exists(config_json_path))
+        throw std::runtime_error("Config file " + config_json_path + " does not exist");
+
+    json _config;
+
+    try
+    {
+        // try reading and parsing json config file provided
+        std::ifstream i(config_json_path);
+        i >> _config;
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(string{"Cant parse json string as json: "} + e.what());
+    }
+
+    return _config;
+}
+
+
+
+    void
 BlockchainSetup::_init()
 {
     refresh_block_status_every_seconds = config_json["refresh_block_status_every_seconds"];

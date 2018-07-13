@@ -3,8 +3,7 @@
 //
 
 #include "../src/MicroCore.h"
-#include "../src/YourMoneroRequests.h"
-#include "../src/MysqlPing.h"
+#include "../src/BlockchainSetup.h"
 
 
 #include "gmock/gmock.h"
@@ -25,44 +24,205 @@ using namespace std::chrono_literals;
 using ::testing::AllOf;
 using ::testing::Ge;
 using ::testing::Le;
+using ::testing::HasSubstr;
+using ::testing::Not;
+using ::testing::internal::FilePath;
 
-
-json
-readin_config()
+class DifferentNetworks :
+        public ::testing::TestWithParam<network_type>
 {
-    // read in confing json file and get test db info
 
-    std::string config_json_path{"../config/config.json"};
+};
 
-    // check if config-file provided exist
-    if (!boost::filesystem::exists(config_json_path))
-    {
-        std::cerr << "Config file " << config_json_path
-                  << " does not exist\n";
+class BlockchainSetupTest : public DifferentNetworks
+{};
 
-        return {};
-    }
+TEST_P(BlockchainSetupTest, ReadInConfigFile)
+{
+    network_type net_type = GetParam();
+    string net_name = xmreg::BlockchainSetup::get_network_name(net_type);
 
-    json config_json;
+    bool do_not_relay {false};
+    string confing_path {"../config/config.json"};
+
+    xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, confing_path};
+
+    json config_json = xmreg::BlockchainSetup::read_config(confing_path);
+
+    EXPECT_EQ(bc_setup.import_payment_address_str,
+              config_json["wallet_import"][net_name]["address"]);
+
+    // we expact that bc_setup will have json config equal to what we read manually
+    EXPECT_EQ(bc_setup.get_config(), config_json);
+
+    xmreg::BlockchainSetup bc_setup2 {net_type, do_not_relay, config_json};
+
+    EXPECT_EQ(bc_setup2.import_payment_address_str,
+              config_json["wallet_import"][net_name]["address"]);
+
+}
+
+
+TEST_P(BlockchainSetupTest, ReadInConfigFileFailure)
+{
+    network_type net_type = GetParam();
+
+    string net_name = xmreg::BlockchainSetup::get_network_name(net_type);
+
+    bool do_not_relay {false};
+
+    string confing_path {"../non_exisiting/config.json"};
 
     try
     {
-        // try reading and parsing json config file provided
-        std::ifstream i(config_json_path);
-        i >> config_json;
-
-        return config_json;
+        // expect throw if confing file does not exist
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, confing_path};
     }
-    catch (const std::exception &e)
+    catch (std::exception const& e)
     {
-        std::cerr << "Error reading confing file "
-                  << config_json_path << ": "
-                  << e.what() << '\n';
-        return {};
+        EXPECT_THAT(e.what(), HasSubstr("does not exist"));
     }
 
-    return {};
+    confing_path = "./tests/res/config_ill_formed.json";
+
+    if (!boost::filesystem::exists(confing_path))
+        confing_path = "./res/config_ill_formed.json";
+
+    FilePath fp {confing_path};
+
+    ASSERT_TRUE(fp.FileOrDirectoryExists());
+
+    try
+    {
+        // expect throw if confing file is illformed and cant be parsed into json
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, confing_path};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_THAT(e.what(), HasSubstr("Cant parse json "));
+    }
 }
+
+TEST_P(BlockchainSetupTest, ParsingConfigFileFailure)
+{
+    network_type net_type = GetParam();
+
+    string net_name = xmreg::BlockchainSetup::get_network_name(net_type);
+
+    bool do_not_relay {false};
+
+    string config_path {"../config/config.json"};
+
+    json config_json = xmreg::BlockchainSetup::read_config(config_path);
+
+    json wrong_data = config_json;
+
+    // make mistake in address
+    wrong_data["wallet_import"][net_name]["address"] = string {"00011231"};
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, wrong_data};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+
+    // provide empty address
+    wrong_data = config_json;
+    wrong_data["wallet_import"][net_name]["address"] = string {};
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, wrong_data};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+
+    // provide wrong viewkey
+    wrong_data = config_json;
+    wrong_data["wallet_import"][net_name]["viewkey"] = string {"00011231"};
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, wrong_data};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+}
+
+TEST(BlockchainSetupTest, WrongNetworkType)
+{
+    network_type net_type = network_type::UNDEFINED;
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup::get_network_name(net_type);
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+
+    bool do_not_relay {false};
+
+    string config_path {"../config/config.json"};
+
+    json config_json = xmreg::BlockchainSetup::read_config(config_path);
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, config_json};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+}
+
+
+TEST_P(BlockchainSetupTest, WrongBlockchainPath)
+{
+    network_type net_type = GetParam();
+
+    string net_name = xmreg::BlockchainSetup::get_network_name(net_type);
+
+    bool do_not_relay {false};
+
+    string config_path {"../config/config.json"};
+
+    json config_json = xmreg::BlockchainSetup::read_config(config_path);
+
+    // make mistake in address
+    config_json["blockchain-path"][net_name]= string {"/wrong/path/to/bloclckahin"};
+
+    try
+    {
+        // expect throw if cant parase address or viewkey
+        xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, config_json};
+    }
+    catch (std::exception const& e)
+    {
+        EXPECT_TRUE(true);
+    }
+}
+
+INSTANTIATE_TEST_CASE_P(
+        DifferentMoneroNetworks, BlockchainSetupTest,
+        ::testing::Values(
+                network_type::MAINNET,
+                network_type::TESTNET,
+                network_type::STAGENET));
 
 
 class MICROCORE_TEST : public ::testing::Test
@@ -73,10 +233,7 @@ public:
     SetUpTestCase()
     {
 
-        db_config = readin_config();
 
-        if (db_config.empty())
-            FAIL() << "Cant readin_config()";
     }
 
 protected:
@@ -85,15 +242,14 @@ protected:
     virtual void
     SetUp()
     {
+        //bc_setup = xmreg::BlockchainSetup("../config/config.json");
 
+        //if (config_json.empty())
+        //    FAIL() << "Cant readin_config()";
     }
 
-    static std::string db_data;
-    static json db_config;
-    std::shared_ptr<xmreg::MySqlAccounts> xmr_accounts;
-    std::shared_ptr<xmreg::CurrentBlockchainStatus> current_bc_status;
+    xmreg::BlockchainSetup bc_setup;
 };
 
-std::string MYSQL_TEST::db_data;
-json MYSQL_TEST::db_config;
 
+}
