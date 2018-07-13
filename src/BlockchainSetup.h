@@ -21,6 +21,16 @@ class BlockchainSetup
 {
 public:
 
+    BlockchainSetup() = default;
+
+    BlockchainSetup(network_type _net_type,
+                    bool _do_not_relay,
+                    string _config_path);
+
+    BlockchainSetup(network_type _net_type,
+                    bool _do_not_relay,
+                    nlohmann::json _config);
+
     string blockchain_path;
 
     string deamon_url;
@@ -48,8 +58,21 @@ public:
     address_parse_info import_payment_address;
     secret_key         import_payment_viewkey;
 
-    bool
+    void
     parse_addr_and_viewkey();
+
+    void
+    get_blockchain_path();
+
+    json
+    get_config() const {return config_json;}
+
+private:
+
+    void _init();
+
+    string config_path;
+    nlohmann::json config_json;
 };
 
 }

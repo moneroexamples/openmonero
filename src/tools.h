@@ -104,6 +104,10 @@ bool
 get_blockchain_path(bf::path& blockchain_path,
                     network_type nettype = network_type::MAINNET);
 
+bool
+get_blockchain_path(string& blockchain_path,
+                    network_type nettype = network_type::MAINNET);
+
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,

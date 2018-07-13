@@ -296,7 +296,19 @@ get_blockchain_path(bf::path& blockchain_path,
     return true;
 }
 
+bool
+get_blockchain_path(string& blockchain_path,
+                    cryptonote::network_type nettype)
+{
+    bf::path p {blockchain_path};
 
+    if (!get_blockchain_path(p, nettype))
+        return false;
+
+    blockchain_path = p.string();
+
+    return true;
+}
 
 
 array<uint64_t, 4>

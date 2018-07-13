@@ -46,110 +46,24 @@ if (testnet && stagenet)
     return EXIT_FAILURE;
 }
 
-// check if config-file provided exist
-if (!boost::filesystem::exists(*config_file_opt))
-{
-    cerr << "Config file " << *config_file_opt
-         << " does not exist" << endl;
-    return EXIT_FAILURE;
-}
-
-nlohmann::json config_json;
-
-try
-{
-    // try reading and parsing json config file provided
-    std::ifstream i(*config_file_opt);
-    i >> config_json;
-}
-catch (const std::exception& e)
-{
-    cerr << "Error reading confing file "
-         << *config_file_opt << ": "
-         << e.what() << endl;
-    return EXIT_FAILURE;
-}
-
-//cast port number in string to uint16
-uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
-
-
-
 // get the network type
 cryptonote::network_type nettype = testnet ?
   cryptonote::network_type::TESTNET : stagenet ?
   cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
-
 // create blockchainsetup instance and set its parameters
 // suc as blockchain status monitoring thread parameters
 
-xmreg::BlockchainSetup bc_setup;
+xmreg::BlockchainSetup bc_setup {nettype, do_not_relay, *config_file_opt};
 
-bc_setup.net_type                            = nettype;
-bc_setup.do_not_relay                       = do_not_relay;
-bc_setup.refresh_block_status_every_seconds = config_json["refresh_block_status_every_seconds"];
-bc_setup.blocks_search_lookahead            = config_json["blocks_search_lookahead"];
-bc_setup.max_number_of_blocks_to_import     = config_json["max_number_of_blocks_to_import"];
-bc_setup.search_thread_life_in_seconds      = config_json["search_thread_life_in_seconds"];
-bc_setup.import_fee                         = config_json["wallet_import"]["fee"];
-
-string deamon_url;
-
-// get blockchain path
-// if confing.json paths are emtpy, defeault monero
-// paths are going to be used
-path blockchain_path;
-
-switch (nettype)
-{
-    case cryptonote::network_type::MAINNET:
-        blockchain_path = path(config_json["blockchain-path"]["mainnet"].get<string>());
-        deamon_url = config_json["daemon-url"]["mainnet"];
-        bc_setup.import_payment_address_str
-                = config_json["wallet_import"]["mainnet"]["address"];
-        bc_setup.import_payment_viewkey_str
-                = config_json["wallet_import"]["mainnet"]["viewkey"];
-        break;
-    case cryptonote::network_type::TESTNET:
-        blockchain_path = path(config_json["blockchain-path"]["testnet"].get<string>());
-        deamon_url = config_json["daemon-url"]["testnet"];
-        bc_setup.import_payment_address_str
-                = config_json["wallet_import"]["testnet"]["address"];
-        bc_setup.import_payment_viewkey_str
-                = config_json["wallet_import"]["testnet"]["viewkey"];
-        break;
-    case cryptonote::network_type::STAGENET:
-        blockchain_path = path(config_json["blockchain-path"]["stagenet"].get<string>());
-        deamon_url = config_json["daemon-url"]["stagenet"];
-        bc_setup.import_payment_address_str
-                = config_json["wallet_import"]["stagenet"]["address"];
-        bc_setup.import_payment_viewkey_str
-                = config_json["wallet_import"]["stagenet"]["viewkey"];
-        break;
-    default:
-        cerr << "Invalid netowork type provided: " << static_cast<int>(nettype) << "\n";
-        return EXIT_FAILURE;
-}
+cout << "Using blockchain path: " << bc_setup.blockchain_path << endl;
 
 
-if (!xmreg::get_blockchain_path(blockchain_path, nettype))
-{
-    cerr << "Error getting blockchain path.\n";
-    return EXIT_FAILURE;
-}
+nlohmann::json config_json = bc_setup.get_config();
 
-// set remaining  blockchain status variables that depend on the network type
-bc_setup.blockchain_path         =  blockchain_path.string();
-bc_setup.deamon_url              = deamon_url;
 
-if (!bc_setup.parse_addr_and_viewkey())
-{
-    return EXIT_FAILURE;
-}
-
-cout << "Using blockchain path: " << blockchain_path.string() << endl;
-
+//cast port number in string to uint16
+uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
