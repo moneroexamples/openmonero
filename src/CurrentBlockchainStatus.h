@@ -248,11 +248,10 @@ protected:
     // parameters used to connect/read monero blockchain
     BlockchainSetup bc_setup;
 
-   // since this class monitors current status
+    // since this class monitors current status
     // of the blockchain, its seems logical to
     // make object for accessing the blockchain here
-    unique_ptr<xmreg::MicroCore> mcore;
-    cryptonote::Blockchain *core_storage;
+    MicroCore mcore;
 
     // vector of mempool transactions that all threads
     // can refer to

@@ -86,18 +86,8 @@ CurrentBlockchainStatus::init_monero_blockchain()
     uint32_t log_level = 0;
     mlog_configure(mlog_get_default_log_path(""), true);
 
-    mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
-
     // initialize the core using the blockchain path
-    if (!mcore->init(bc_setup.blockchain_path, bc_setup.net_type))
-        return false;
-
-    // get the high level Blockchain object to interact
-    // with the blockchain lmdb database
-    core_storage = &(mcore->get_core());
-
-    return true;
-}
+    return mcore.init(bc_setup.blockchain_path, bc_setup.net_type);}
 
 
 bool
@@ -153,7 +143,7 @@ CurrentBlockchainStatus::is_tx_spendtime_unlocked(
 bool
 CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
 {
-    return mcore->get_block_from_height(height, blk);
+    return mcore.get_block_from_height(height, blk);
 }
 
 vector<block>
@@ -162,7 +152,7 @@ CurrentBlockchainStatus::get_blocks_range(
 {
     try
     {
-        return core_storage->get_db().get_blocks_range(h1, h2);
+        return mcore.get_blocks_range(h1, h2);
     }
     catch (BLOCK_DNE& e)
     {
@@ -183,7 +173,7 @@ CurrentBlockchainStatus::get_block_txs(
     // the block i.e. coinbase tx.
     blk_txs.push_back(blk.miner_tx);
 
-    if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+    if (!mcore.get_transactions(blk.tx_hashes, blk_txs, missed_txs))
     {
         cerr << "Cant get transactions in block: " << get_block_hash(blk) << endl;
         return false;
@@ -198,7 +188,7 @@ CurrentBlockchainStatus::get_txs(
         vector<transaction>& txs,
         vector<crypto::hash>& missed_txs)
 {
-    if (!core_storage->get_transactions(txs_to_get, txs, missed_txs))
+    if (!mcore.get_transactions(txs_to_get, txs, missed_txs))
     {
         cerr << "CurrentBlockchainStatus::get_txs: cant get transactions!\n";
         return false;
@@ -210,18 +200,13 @@ CurrentBlockchainStatus::get_txs(
 bool
 CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash)
 {
-    return core_storage->have_tx(tx_hash);
+    return mcore.have_tx(tx_hash);
 }
 
 bool
 CurrentBlockchainStatus::tx_exist(const crypto::hash& tx_hash, uint64_t& tx_index)
 {
-    if (!core_storage->get_db().tx_exists(tx_hash, tx_index))
-    {
-        return false;
-    }
-
-    return true;
+    return mcore.tx_exists(tx_hash, tx_index);
 }
 
 
@@ -263,8 +248,7 @@ CurrentBlockchainStatus::get_tx_with_output(
     {
         // get pair pair<crypto::hash, uint64_t> where first is tx hash
         // and second is local index of the output i in that tx
-        tx_out_idx = core_storage->get_db()
-                .get_output_tx_and_index(amount, output_idx);
+        tx_out_idx = mcore.get_output_tx_and_index(amount, output_idx);
     }
     catch (const OUTPUT_DNE &e)
     {
@@ -281,7 +265,7 @@ CurrentBlockchainStatus::get_tx_with_output(
 
     output_idx_in_tx = tx_out_idx.second;
 
-    if (!mcore->get_tx(tx_out_idx.first, tx))
+    if (!mcore.get_tx(tx_out_idx.first, tx))
     {
         cerr << "Cant get tx: " << tx_out_idx.first << endl;
 
@@ -298,9 +282,7 @@ CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
 {
     try
     {
-        core_storage->get_db().get_output_key(amount,
-                                              absolute_offsets,
-                                              outputs);
+        mcore.get_output_key(amount, absolute_offsets, outputs);
     }
     catch (const OUTPUT_DNE& e)
     {
@@ -342,10 +324,9 @@ CurrentBlockchainStatus::get_amount_specific_indices(const crypto::hash& tx_hash
         // this index is lmdb index of a tx, not tx hash
         uint64_t tx_index;
 
-        if (core_storage->get_db().tx_exists(tx_hash, tx_index))
+        if (mcore.tx_exists(tx_hash, tx_index))
         {
-            out_indices = core_storage->get_db()
-                    .get_tx_amount_output_indices(tx_index);
+            out_indices = mcore.get_tx_amount_output_indices(tx_index);
 
             return true;
         }
@@ -434,9 +415,19 @@ CurrentBlockchainStatus::commit_tx(const string& tx_blob, string& error_msg, boo
 bool
 CurrentBlockchainStatus::read_mempool()
 {
-    rpccalls rpc {bc_setup.deamon_url};
+    // get txs in the mempool
+    std::vector<tx_info> mempool_tx_info;
+    vector<spent_key_image_info> key_image_infos;
 
-    string error_msg;
+    if (mcore.get_mempool().get_transactions_and_spent_keys_info(
+                mempool_tx_info, key_image_infos))
+    {
+        cerr << "Getting mempool failed " << endl;
+        return false;
+    }
+
+    // not using this info at present
+    (void) key_image_infos;
 
     std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
@@ -445,22 +436,13 @@ CurrentBlockchainStatus::read_mempool()
     // not very efficient but good enough for now.
     mempool_txs.clear();
 
-    // get txs in the mempool
-    std::vector<tx_info> mempool_tx_info;
-
-    if (!rpc.get_mempool(mempool_tx_info))
-    {
-        cerr << "Getting mempool failed " << endl;
-        return false;
-    }
-
     // if dont have tx_blob member, construct tx
     // from json obtained from the rpc call
 
     for (size_t i = 0; i < mempool_tx_info.size(); ++i)
     {
         // get transaction info of the tx in the mempool
-        tx_info _tx_info = mempool_tx_info.at(i);
+        tx_info const& _tx_info = mempool_tx_info.at(i);
 
         transaction tx;
         crypto::hash tx_hash;
@@ -588,7 +570,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (decrypted_payment_id8 != null_hash8)
         {
-            if (!mcore->get_device()->decrypt_payment_id(
+            if (!mcore.get_device()->decrypt_payment_id(
                     decrypted_payment_id8, tx_pub_key, bc_setup.import_payment_viewkey))
             {
                 cerr << "Cant decrypt  decrypted_payment_id8: "
@@ -723,7 +705,7 @@ CurrentBlockchainStatus::get_payment_id_as_string(const transaction& tx)
 output_data_t
 CurrentBlockchainStatus::get_output_key(uint64_t amount, uint64_t global_amount_index)
 {
-    return core_storage->get_db().get_output_key(amount, global_amount_index);
+    return mcore.get_output_key(amount, global_amount_index);
 }
 
 bool
@@ -943,7 +925,7 @@ CurrentBlockchainStatus::find_key_images_in_mempool(transaction const& tx)
 bool
 CurrentBlockchainStatus::get_tx(crypto::hash const& tx_hash, transaction& tx)
 {
-    return mcore->get_tx(tx_hash, tx);
+    return mcore.get_tx(tx_hash, tx);
 }
 
 
@@ -957,7 +939,7 @@ CurrentBlockchainStatus::get_tx(string const& tx_hash_str, transaction& tx)
        return false;
     }
 
-    return mcore->get_tx(tx_hash, tx);
+    return mcore.get_tx(tx_hash, tx);
 }
 
 bool
@@ -966,7 +948,7 @@ CurrentBlockchainStatus::get_tx_block_height(crypto::hash const& tx_hash, int64_
     if (!tx_exist(tx_hash))
         return false;
 
-    tx_height = core_storage->get_db().get_tx_block_height(tx_hash);
+    tx_height = mcore.get_tx_block_height(tx_hash);
 
     return true;
 }

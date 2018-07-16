@@ -19,11 +19,12 @@ namespace xmreg
  *
  * The same is done in cryptonode::core.
  */
-MicroCore::MicroCore():
-        m_mempool(m_blockchain_storage),
-        m_blockchain_storage(m_mempool)
+MicroCore::MicroCore():      
+        m_mempool(core_storage),
+        core_storage(m_mempool),
+        m_device {&hw::get_device("default")}
 {
-    m_device = &hw::get_device("default");
+
 }
 
 
@@ -44,10 +45,18 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
     nettype = nt;
 
     db_flags |= MDB_RDONLY;
-    db_flags |= MDB_NOLOCK;
 
-    BlockchainDB* db = nullptr;
-    db = new BlockchainLMDB();
+    //m_mempool = make_unique<tx_memory_pool>(*core_storage);
+
+    //core_storage.reset(new Blockchain(*m_mempool));
+
+    std::unique_ptr<BlockchainDB> db(new_db("lmdb"));
+
+    if (db == nullptr)
+    {
+        cerr << "Attempted to use non-existent database type\n";
+        return false;
+    }
 
     try
     {
@@ -67,27 +76,44 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 
     // initialize Blockchain object to manage
     // the database.
-    return m_blockchain_storage.init(db, nettype);
+    if (!core_storage.init(db.release(), nettype))
+    {
+        cerr << "Error opening database: core_storage->init(db, nettype)\n" ;
+        return false;
+    }
+
+    if (!m_mempool.init())
+    {
+        cerr << "Error opening database: m_mempool.init()\n" ;
+        return false;
+    }
+
+    return true;
 }
 
 /**
 * Get m_blockchain_storage.
 * Initialize m_blockchain_storage with the BlockchainLMDB object.
 */
-Blockchain&
-MicroCore::get_core()
+Blockchain const&
+MicroCore::get_core() const
 {
-    return m_blockchain_storage;
+    return core_storage;
 }
 
+tx_memory_pool const&
+MicroCore::get_mempool() const
+{
+    return m_mempool;
+}
 
-bool
+    bool
 MicroCore::get_block_from_height(const uint64_t& height, block& blk)
 {
 
     try
     {
-        blk = m_blockchain_storage.get_db().get_block_from_height(height);
+        blk = core_storage.get_db().get_block_from_height(height);
     }
     catch (const exception& e)
     {
@@ -106,10 +132,10 @@ MicroCore::get_block_from_height(const uint64_t& height, block& blk)
 bool
 MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
 {
-    if (m_blockchain_storage.have_tx(tx_hash))
+    if (core_storage.have_tx(tx_hash))
     {
         // get transaction with given hash
-        tx = m_blockchain_storage.get_db().get_tx(tx_hash);
+        tx = core_storage.get_db().get_tx(tx_hash);
     }
     else
     {
@@ -120,43 +146,6 @@ MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
 
     return true;
 }
-
-
-/**
- * De-initialized Blockchain.
- *
- * since blockchain is opened as MDB_RDONLY
- * need to manually free memory taken on heap
- * by BlockchainLMDB
- */
-MicroCore::~MicroCore()
-{
-    delete &m_blockchain_storage.get_db();
-}
-
-
-bool
-init_blockchain(const string& path,
-                MicroCore& mcore,
-                Blockchain*& core_storage,
-                network_type nt)
-{
-
-    // initialize the core using the blockchain path
-    if (!mcore.init(path, nt))
-    {
-        cerr << "Error accessing blockchain." << endl;
-        return false;
-    }
-
-    // get the high level Blockchain object to interact
-    // with the blockchain lmdb database
-    core_storage = &(mcore.get_core());
-
-    return true;
-}
-
-
 
 hw::device* const
 MicroCore::get_device() const

@@ -43,9 +43,6 @@ public:
     get_current_height();
 
     bool
-    get_mempool(vector<tx_info>& mempool_txs);
-
-    bool
     get_random_outs_for_amounts(
             const vector<uint64_t>& amounts,
             const uint64_t& outs_count,

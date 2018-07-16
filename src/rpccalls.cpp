@@ -68,39 +68,6 @@ rpccalls::get_current_height()
 }
 
 bool
-rpccalls::get_mempool(vector<tx_info>& mempool_txs)
-{
-
-    COMMAND_RPC_GET_TRANSACTION_POOL::request  req;
-    COMMAND_RPC_GET_TRANSACTION_POOL::response res;
-
-    std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
-
-    if (!connect_to_monero_deamon())
-    {
-        cerr << "get_current_height: not connected to deamon" << endl;
-        return false;
-    }
-
-    bool r = epee::net_utils::invoke_http_json(
-            "/get_transaction_pool",
-            req, res, m_http_client, timeout_time_ms);
-
-    if (!r)
-    {
-        cerr << "Error connecting to Monero deamon at "
-             << deamon_url << endl;
-        return false;
-    }
-
-
-    mempool_txs = res.transactions;
-
-    return true;
-}
-
-
-bool
 rpccalls::get_random_outs_for_amounts(
         const vector<uint64_t>& amounts,
         const uint64_t& outs_count,

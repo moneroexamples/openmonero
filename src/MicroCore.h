@@ -29,8 +29,8 @@ class MicroCore {
 
     string blockchain_path;
 
+    Blockchain core_storage;
     tx_memory_pool m_mempool;
-    Blockchain m_blockchain_storage;
 
     hw::device* m_device;
 
@@ -42,8 +42,59 @@ public:
     bool
     init(const string& _blockchain_path, network_type nt);
 
-    Blockchain&
-    get_core();
+    Blockchain const&
+    get_core() const;
+
+    tx_memory_pool const&
+    get_mempool() const;
+
+    template<typename... T>
+    auto get_output_key(T&&... args)
+    {
+        return core_storage.get_db().get_output_key(std::forward<T>(args)...);
+    }
+
+    template <typename... T>
+    auto get_transactions(T&&... args)
+    {
+        return core_storage.get_transactions(std::forward<T>(args)...);
+    }
+
+    template <typename... T>
+    auto get_blocks_range(T&&... args)
+    {
+        return core_storage.get_db().get_blocks_range(std::forward<T>(args)...);
+    }
+
+    template <typename... T>
+    auto have_tx(T&&... args)
+    {
+        return core_storage.have_tx(std::forward<T>(args)...);
+    }
+
+    template<typename... T>
+    auto tx_exists(T&&... args)
+    {
+        return core_storage.get_db().tx_exists(std::forward<T>(args)...);
+    }
+
+    template<typename... T>
+    auto get_output_tx_and_index(T&&... args)
+    {
+        return core_storage.get_db().get_output_tx_and_index(std::forward<T>(args)...);
+    }
+
+    template<typename... T>
+    auto get_tx_block_height(T&&... args)
+    {
+        return core_storage.get_db().get_tx_block_height(std::forward<T>(args)...);
+    }
+
+    template<typename... T>
+    auto get_tx_amount_output_indices(T&&... args)
+    {
+        return core_storage.get_db().get_tx_amount_output_indices(std::forward<T>(args)...);
+    }
 
     bool
     get_block_from_height(const uint64_t& height, block& blk);
@@ -54,19 +105,7 @@ public:
     hw::device* const
     get_device() const;
 
-    virtual ~MicroCore();
-
 };
-
-
-
-
-bool
-init_blockchain(const string& path,
-                MicroCore& mcore,
-                Blockchain*& core_storage,
-                network_type nt);
-
 
 }
 
