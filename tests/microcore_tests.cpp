@@ -37,6 +37,12 @@ class DifferentNetworks :
 class BlockchainSetupTest : public DifferentNetworks
 {};
 
+TEST_P(BlockchainSetupTest, DefaultConstruction)
+{
+    xmreg::BlockchainSetup bc_setup;
+    EXPECT_TRUE(true);
+}
+
 TEST_P(BlockchainSetupTest, ReadInConfigFile)
 {
     network_type net_type = GetParam();
@@ -232,8 +238,8 @@ public:
     static void
     SetUpTestCase()
     {
-
-
+        string config_path {"../config/config.json"};
+        config_json = xmreg::BlockchainSetup::read_config(config_path);
     }
 
 protected:
@@ -242,14 +248,32 @@ protected:
     virtual void
     SetUp()
     {
-        //bc_setup = xmreg::BlockchainSetup("../config/config.json");
+        bc_setup = xmreg::BlockchainSetup{net_type, do_not_relay, config_json};
+    }  
 
-        //if (config_json.empty())
-        //    FAIL() << "Cant readin_config()";
-    }
+     network_type net_type {network_type::STAGENET};
+     bool do_not_relay {false};
+     xmreg::BlockchainSetup bc_setup;
 
-    xmreg::BlockchainSetup bc_setup;
+     static json config_json;
 };
 
+json MICROCORE_TEST::config_json;
+
+TEST_F(MICROCORE_TEST, DefaultConstruction)
+{
+    xmreg::MicroCore mcore;
+    EXPECT_TRUE(true);
+}
+
+TEST_F(MICROCORE_TEST, InitializationSuccess)
+{
+    xmreg::MicroCore mcore;
+
+    EXPECT_TRUE(mcore.init(bc_setup.blockchain_path, net_type));
+
+    EXPECT_TRUE(mcore.get_core().get_db().is_open());
+    EXPECT_TRUE(mcore.get_core().get_db().is_read_only());
+}
 
 }

@@ -99,8 +99,8 @@ MicroCore::get_mempool() const
     return m_mempool;
 }
 
-    bool
-MicroCore::get_block_from_height(const uint64_t& height, block& blk)
+bool
+MicroCore::get_block_from_height(uint64_t height, block& blk) const
 {
 
     try
@@ -118,23 +118,15 @@ MicroCore::get_block_from_height(const uint64_t& height, block& blk)
 
 
 
-/**
- * Get transaction tx from the blockchain using it hash
- */
 bool
-MicroCore::get_tx(const crypto::hash& tx_hash, transaction& tx)
+MicroCore::get_tx(crypto::hash const& tx_hash, transaction& tx) const
 {
     if (core_storage.have_tx(tx_hash))
     {
         // get transaction with given hash
         tx = core_storage.get_db().get_tx(tx_hash);
+        return true;
     }
-    else
-    {
-        cerr << "MicroCore::get_tx tx does not exist in blockchain: " << tx_hash << endl;
-        return false;
-    }
-
 
     return true;
 }

@@ -48,6 +48,9 @@ public:
     tx_memory_pool const&
     get_mempool() const;
 
+    hw::device* const
+    get_device() const;
+
     template<typename... T>
     auto get_output_key(T&&... args)
     {
@@ -55,55 +58,53 @@ public:
     }
 
     template <typename... T>
-    auto get_transactions(T&&... args)
+    auto get_transactions(T&&... args) const
     {
         return core_storage.get_transactions(std::forward<T>(args)...);
     }
 
     template <typename... T>
-    auto get_blocks_range(T&&... args)
+    auto get_blocks_range(T&&... args) const
     {
         return core_storage.get_db().get_blocks_range(std::forward<T>(args)...);
     }
 
     template <typename... T>
-    auto have_tx(T&&... args)
+    auto have_tx(T&&... args) const
     {
         return core_storage.have_tx(std::forward<T>(args)...);
     }
 
     template<typename... T>
-    auto tx_exists(T&&... args)
+    auto tx_exists(T&&... args) const
     {
         return core_storage.get_db().tx_exists(std::forward<T>(args)...);
     }
 
     template<typename... T>
-    auto get_output_tx_and_index(T&&... args)
+    auto get_output_tx_and_index(T&&... args) const
     {
         return core_storage.get_db().get_output_tx_and_index(std::forward<T>(args)...);
     }
 
     template<typename... T>
-    auto get_tx_block_height(T&&... args)
+    auto get_tx_block_height(T&&... args) const
     {
         return core_storage.get_db().get_tx_block_height(std::forward<T>(args)...);
     }
 
     template<typename... T>
-    auto get_tx_amount_output_indices(T&&... args)
+    auto get_tx_amount_output_indices(T&&... args) const
     {
         return core_storage.get_db().get_tx_amount_output_indices(std::forward<T>(args)...);
     }
 
     bool
-    get_block_from_height(const uint64_t& height, block& blk);
+    get_block_from_height(uint64_t height, block& blk) const;
 
     bool
-    get_tx(const crypto::hash& tx_hash, transaction& tx);
+    get_tx(crypto::hash const& tx_hash, transaction& tx) const;
 
-    hw::device* const
-    get_device() const;
 
 };
 

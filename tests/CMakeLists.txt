@@ -22,10 +22,10 @@ add_om_test(mysql)
 add_om_test(microcore)
 
 SETUP_TARGET_FOR_COVERAGE(
-        NAME mysql_coverage                    # New target name
+        NAME mysql_cov                   # New target name
         EXECUTABLE mysql_tests)
 
 
 SETUP_TARGET_FOR_COVERAGE(
-        NAME microcore_coverage                    # New target name
+        NAME microcore_cov                    # New target name
         EXECUTABLE microcore_tests)
