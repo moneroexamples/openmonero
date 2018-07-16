@@ -20,6 +20,7 @@ resource_dir("./res")
 
 add_om_test(mysql)
 add_om_test(microcore)
+add_om_test(bcstatus)
 
 SETUP_TARGET_FOR_COVERAGE(
         NAME mysql_cov                   # New target name
@@ -29,3 +30,7 @@ SETUP_TARGET_FOR_COVERAGE(
 SETUP_TARGET_FOR_COVERAGE(
         NAME microcore_cov                    # New target name
         EXECUTABLE microcore_tests)
+
+SETUP_TARGET_FOR_COVERAGE(
+        NAME bcstatus_cov                    # New target name
+        EXECUTABLE bcstatus_tests)

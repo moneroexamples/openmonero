@@ -26,8 +26,6 @@ MicroCore::MicroCore():
 {
 
 }
-
-
 /**
  * Initialized the MicroCore object.
  *
@@ -42,13 +40,7 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 
     nettype = nt;
 
-    std::unique_ptr<BlockchainDB> db(new_db("lmdb"));
-
-    if (db == nullptr)
-    {
-        cerr << "Attempted to use non-existent database type\n";
-        return false;
-    }
+    std::unique_ptr<BlockchainDB> db = std::make_unique<BlockchainLMDB>();
 
     try
     {

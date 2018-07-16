@@ -39,16 +39,23 @@ class MicroCore {
 public:
     MicroCore();
 
-    bool
+    /**
+     * Initialized the MicroCore object.
+     *
+     * Create BlockchainLMDB on the heap.
+     * Open database files located in blockchain_path.
+     * Initialize m_blockchain_storage with the BlockchainLMDB object.
+     */    
+    virtual bool
     init(const string& _blockchain_path, network_type nt);
 
-    Blockchain const&
+    virtual Blockchain const&
     get_core() const;
 
-    tx_memory_pool const&
+    virtual tx_memory_pool const&
     get_mempool() const;
 
-    hw::device* const
+    virtual hw::device* const
     get_device() const;
 
     template<typename... T>
@@ -99,13 +106,23 @@ public:
         return core_storage.get_db().get_tx_amount_output_indices(std::forward<T>(args)...);
     }
 
-    bool
+    template<typename... T>
+    auto get_mempool_txs(T&&... args) const
+    {
+        return m_mempool.get_transactions_and_spent_keys_info(std::forward<T>(args)...);
+    }
+
+    virtual uint64_t
+    get_current_blockchain_height() const
+    {
+        return core_storage.get_current_blockchain_height();
+    }
+
+    virtual bool
     get_block_from_height(uint64_t height, block& blk) const;
 
-    bool
+    virtual bool
     get_tx(crypto::hash const& tx_hash, transaction& tx) const;
-
-
 };
 
 }

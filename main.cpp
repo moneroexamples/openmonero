@@ -79,7 +79,9 @@ xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 // have only once instance of this class, which we can easly inject
 // and pass around other class which need to access blockchain data
 
-auto current_bc_status = make_shared<xmreg::CurrentBlockchainStatus>(bc_setup);
+auto current_bc_status
+        = make_shared<xmreg::CurrentBlockchainStatus>(
+            bc_setup, std::make_unique<xmreg::MicroCore>());
 
 
 // since CurrentBlockchainStatus class monitors current status

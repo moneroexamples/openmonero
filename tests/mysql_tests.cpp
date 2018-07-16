@@ -1199,7 +1199,10 @@ class MockCurrentBlockchainStatus1 : public xmreg::CurrentBlockchainStatus
 {
 public:
     MockCurrentBlockchainStatus1()
-            : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup()) {}
+            : xmreg::CurrentBlockchainStatus(
+                  xmreg::BlockchainSetup(),
+                  nullptr)
+    {}
 
     bool tx_unlock_state {true};
     bool tx_exist_state {true};

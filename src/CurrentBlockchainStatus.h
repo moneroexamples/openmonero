@@ -51,9 +51,10 @@ public:
 
     atomic<uint64_t> current_height;
 
-    bool is_running;
+    atomic<bool> is_running;
 
-    CurrentBlockchainStatus(BlockchainSetup _bc_setup);
+    CurrentBlockchainStatus(BlockchainSetup _bc_setup,
+                            std::unique_ptr<MicroCore> _mcore);
 
     virtual void
     start_monitor_blockchain_thread();
@@ -251,7 +252,10 @@ protected:
     // since this class monitors current status
     // of the blockchain, its seems logical to
     // make object for accessing the blockchain here
-    MicroCore mcore;
+    // use pointer for this, so that we can easly
+    // inject mock MicroCore class in our tests
+    // as MicroCore is not copabaly nor movable
+    std::unique_ptr<MicroCore> mcore;
 
     // vector of mempool transactions that all threads
     // can refer to

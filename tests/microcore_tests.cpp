@@ -276,4 +276,28 @@ TEST_F(MICROCORE_TEST, InitializationSuccess)
     EXPECT_TRUE(mcore.get_core().get_db().is_read_only());
 }
 
+//template <bool open_success>
+//class MockBlockchainDB : public BlockchainLMDB
+//{
+//   void
+//   open(const std::string& filename, const int mdb_flags=0) override
+//   {
+//       if (open_success == false)
+//            throw std::runtime_error("Cant open database");
+//   }
+
+//   bool is_open() const
+//   {
+//       return false;
+//   }
+//};
+
+//TEST_F(MICROCORE_TEST, InitializationFailure)
+//{
+//    xmreg::MicroCore mcore;
+
+//    EXPECT_FALSE(mcore.init<MockBlockchainDB<false>>(bc_setup.blockchain_path, net_type));
+//    EXPECT_FALSE(mcore.init<MockBlockchainDB<true>>(bc_setup.blockchain_path, net_type));
+//}
+
 }
