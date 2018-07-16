@@ -38,17 +38,9 @@ MicroCore::MicroCore():
 bool
 MicroCore::init(const string& _blockchain_path, network_type nt)
 {
-    int db_flags = 0;
-
     blockchain_path = _blockchain_path;
 
     nettype = nt;
-
-    db_flags |= MDB_RDONLY;
-
-    //m_mempool = make_unique<tx_memory_pool>(*core_storage);
-
-    //core_storage.reset(new Blockchain(*m_mempool));
 
     std::unique_ptr<BlockchainDB> db(new_db("lmdb"));
 
@@ -61,7 +53,7 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
     try
     {
         // try opening lmdb database files
-        db->open(blockchain_path, db_flags);
+        db->open(blockchain_path, DBF_RDONLY);
     }
     catch (const std::exception& e)
     {
