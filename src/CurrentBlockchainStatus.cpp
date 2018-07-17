@@ -6,7 +6,6 @@
 
 
 #include "tools.h"
-#include "mylmdb.h"
 #include "rpccalls.h"
 #include "MySqlAccounts.h"
 #include "TxSearch.h"
@@ -60,7 +59,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
 uint64_t
 CurrentBlockchainStatus::get_current_blockchain_height()
 {
-    return mcore.get_current_blockchain_height() - 1;
+    return mcore->get_current_blockchain_height() - 1;
 }
 
 

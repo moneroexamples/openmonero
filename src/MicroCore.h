@@ -17,6 +17,17 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
+
+class MicroBlockchainLMDB : public BlockchainLMDB
+{
+public:
+
+    using BlockchainLMDB::BlockchainLMDB;
+
+    virtual void sync() override;
+};
+
+
 /**
  * Micro version of cryptonode::core class
  * Micro version of constructor,
@@ -35,6 +46,8 @@ class MicroCore {
     hw::device* m_device;
 
     network_type nettype;
+
+    bool initialization_succeded {false};
 
 public:
     MicroCore();
@@ -64,16 +77,19 @@ public:
         return core_storage.get_db().get_output_key(std::forward<T>(args)...);
     }
 
-    template <typename... T>
-    auto get_transactions(T&&... args) const
+    virtual bool
+    get_transactions(
+            const std::vector<crypto::hash>& txs_ids,
+            std::vector<transaction>& txs,
+            std::vector<crypto::hash>& missed_txs) const
     {
-        return core_storage.get_transactions(std::forward<T>(args)...);
+        return core_storage.get_transactions(txs_ids, txs, missed_txs);
     }
 
-    template <typename... T>
-    auto get_blocks_range(T&&... args) const
+    virtual std::vector<block>
+    get_blocks_range(const uint64_t& h1, const uint64_t& h2) const
     {
-        return core_storage.get_db().get_blocks_range(std::forward<T>(args)...);
+        return core_storage.get_db().get_blocks_range(h1, h2);
     }
 
     template <typename... T>
@@ -123,6 +139,11 @@ public:
 
     virtual bool
     get_tx(crypto::hash const& tx_hash, transaction& tx) const;
+
+    virtual bool
+    init_success() const;
+
+    virtual ~MicroCore();
 };
 
 }

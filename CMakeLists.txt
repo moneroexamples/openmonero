@@ -111,8 +111,8 @@ set(LIBRARIES
         myext
         restbed
         wallet
-        blockchain_db
         cryptonote_core
+        blockchain_db       
         cryptonote_protocol
         cryptonote_basic
         daemonizer
