@@ -28,6 +28,8 @@ using ::testing::HasSubstr;
 using ::testing::Not;
 using ::testing::Return;
 using ::testing::Throw;
+using ::testing::DoAll;
+using ::testing::SetArgReferee;
 using ::testing::_;
 using ::testing::internal::FilePath;
 
@@ -41,6 +43,8 @@ public:
     MOCK_CONST_METHOD3(get_transactions, bool(const std::vector<crypto::hash>& txs_ids,
                                               std::vector<transaction>& txs,
                                               std::vector<crypto::hash>& missed_txs));
+    MOCK_CONST_METHOD1(have_tx, bool(crypto::hash const& tx_hash));
+    MOCK_CONST_METHOD2(tx_exists, bool(crypto::hash const& tx_hash, uint64_t& tx_id));
 };
 
 
@@ -109,7 +113,7 @@ TEST_F(BCSTATUS_TEST, GetBlock)
 
 ACTION(ThrowBlockDNE)
 {
-    throw BLOCK_DNE("ddddd");
+    throw BLOCK_DNE("Mock Throw: Block does not exist!");
 }
 
 TEST_F(BCSTATUS_TEST, GetBlockRange)
@@ -146,6 +150,63 @@ TEST_F(BCSTATUS_TEST, GetBlockTxs)
 
     EXPECT_TRUE(bcs->get_block_txs(dummy_blk, blk_txs, missed_txs));
 
+    EXPECT_CALL(*mcore_ptr, get_transactions(_, _, _))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_block_txs(dummy_blk, blk_txs, missed_txs));
 }
+
+TEST_F(BCSTATUS_TEST, GetTxs)
+{
+    EXPECT_CALL(*mcore_ptr, get_transactions(_, _, _))
+            .WillOnce(Return(true));
+
+    vector<crypto::hash> txs_to_get;
+    vector<transaction> blk_txs;
+    vector<crypto::hash> missed_txs;
+
+    EXPECT_TRUE(bcs->get_txs(txs_to_get, blk_txs, missed_txs));
+
+    EXPECT_CALL(*mcore_ptr, get_transactions(_, _, _))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_txs(txs_to_get, blk_txs, missed_txs));
+}
+
+TEST_F(BCSTATUS_TEST, TxExist)
+{
+    EXPECT_CALL(*mcore_ptr, have_tx(_))
+            .WillOnce(Return(true));
+
+    EXPECT_TRUE(bcs->tx_exist(crypto::hash()));
+
+    uint64_t mock_tx_index_to_return {4444};
+
+    // return true and set tx_index (ret by ref) to mock_tx_index_to_return
+    EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return), Return(true)));
+
+    uint64_t tx_index {0};
+
+    EXPECT_TRUE(bcs->tx_exist(crypto::hash(), tx_index));
+    EXPECT_EQ(tx_index, mock_tx_index_to_return);
+
+    // just some dummy hash
+    string tx_hash_str {"fc4b8d5956b30dc4a353b171b4d974697dfc32730778f138a8e7f16c11907691"};
+
+    tx_index = 0;
+
+    EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return), Return(true)));
+
+    EXPECT_TRUE(bcs->tx_exist(tx_hash_str, tx_index));
+    EXPECT_EQ(tx_index, mock_tx_index_to_return);
+
+    tx_hash_str = "wrong_hash";
+
+    EXPECT_FALSE(bcs->tx_exist(tx_hash_str, tx_index));
+}
+
+
 
 }

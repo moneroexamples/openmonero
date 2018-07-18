@@ -92,16 +92,16 @@ public:
         return core_storage.get_db().get_blocks_range(h1, h2);
     }
 
-    template <typename... T>
-    auto have_tx(T&&... args) const
+    virtual bool
+    have_tx(crypto::hash const& tx_hash) const
     {
-        return core_storage.have_tx(std::forward<T>(args)...);
+        return core_storage.have_tx(tx_hash);
     }
 
-    template<typename... T>
-    auto tx_exists(T&&... args) const
+    virtual bool
+    tx_exists(crypto::hash const& tx_hash, uint64_t& tx_id) const
     {
-        return core_storage.get_db().tx_exists(std::forward<T>(args)...);
+        return core_storage.get_db().tx_exists(tx_hash, tx_id);
     }
 
     template<typename... T>

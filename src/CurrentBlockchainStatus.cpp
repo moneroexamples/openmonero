@@ -214,19 +214,6 @@ CurrentBlockchainStatus::tx_exist(const string& tx_hash_str, uint64_t& tx_index)
 }
 
 bool
-CurrentBlockchainStatus::tx_exist(const string& tx_hash_str)
-{
-    crypto::hash tx_hash;
-
-    if (hex_to_pod(tx_hash_str, tx_hash))
-    {
-        return tx_exist(tx_hash);
-    }
-
-    throw runtime_error("(hex_to_pod(tx_hash_str, tx_hash) failed!");
-}
-
-bool
 CurrentBlockchainStatus::get_tx_with_output(
         uint64_t output_idx, uint64_t amount,
         transaction& tx, uint64_t& output_idx_in_tx)

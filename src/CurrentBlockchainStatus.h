@@ -100,9 +100,6 @@ public:
     tx_exist(const string& tx_hash_str, uint64_t& tx_index);
 
     virtual bool
-    tx_exist(const string& tx_hash_str);
-
-    virtual bool
     get_tx_with_output(uint64_t output_idx, uint64_t amount,
                        transaction& tx, uint64_t& output_idx_in_tx);
 
