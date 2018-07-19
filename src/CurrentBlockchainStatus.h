@@ -9,6 +9,7 @@
 
 #include "MicroCore.h"
 #include "ssqlses.h"
+#include "TxUnlockChecker.h"
 #include "BlockchainSetup.h"
 #include "TxSearch.h"
 
@@ -68,11 +69,28 @@ public:
     virtual bool
     init_monero_blockchain();
 
-    virtual bool
-    is_tx_unlocked(uint64_t unlock_time, uint64_t block_height);
+    // inject TxUnlockChecker object
+    // its simplifies mocking its behavior in our
+    // tests, as we just inject mock version of
+    // TxUnlockChecker class
+//    template <typename T = xmreg::TxUnlockChecker>
+//    virtual bool
+//    is_tx_unlocked(uint64_t unlock_time,
+//                   uint64_t block_height,
+//                   T tx_unlock_checker = T())
+//    {
+//        tx_unlock_checker.init(bc_setup.net_type);
+
+//        return tx_unlock_checker.is_unlocked(current_height,
+//                                             unlock_time,
+//                                             block_height);
+//    }
 
     virtual bool
-    is_tx_spendtime_unlocked(uint64_t unlock_time, uint64_t block_height);
+    is_tx_unlocked(uint64_t unlock_time,
+                   uint64_t block_height,
+                   TxUnlockChecker const& tx_unlock_checker
+                        = TxUnlockChecker());
 
     virtual bool
     get_block(uint64_t height, block &blk);
@@ -109,10 +127,12 @@ public:
                     vector<cryptonote::output_data_t>& outputs);
 
     virtual string
-    get_account_integrated_address_as_str(crypto::hash8 const& payment_id8);
+    get_account_integrated_address_as_str(
+            crypto::hash8 const& payment_id8);
 
     virtual string
-    get_account_integrated_address_as_str(string const& payment_id8_str);
+    get_account_integrated_address_as_str(
+            string const& payment_id8_str);
 
     virtual bool
     get_output(const uint64_t amount,
@@ -126,7 +146,8 @@ public:
     virtual bool
     get_random_outputs(const vector<uint64_t>& amounts,
                        const uint64_t& outs_count,
-                       vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& found_outputs);
+                       vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
+                        ::outs_for_amount>& found_outputs);
 
     virtual bool
     get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);

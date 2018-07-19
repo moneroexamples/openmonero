@@ -9,7 +9,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-
+#include "helpers.h"
 
 namespace
 {
@@ -36,8 +36,9 @@ using ::testing::internal::FilePath;
 
 class MockMicroCore : public xmreg::MicroCore
 {
-public:
+public:    
     MOCK_METHOD2(init, bool(const string& _blockchain_path, network_type nt));
+    MOCK_CONST_METHOD0(get_current_blockchain_height, uint64_t());
     MOCK_CONST_METHOD2(get_block_from_height, bool(uint64_t height, block& blk));
     MOCK_CONST_METHOD2(get_blocks_range, std::vector<block>(const uint64_t& h1, const uint64_t& h2));
     MOCK_CONST_METHOD3(get_transactions, bool(const std::vector<crypto::hash>& txs_ids,
@@ -45,6 +46,9 @@ public:
                                               std::vector<crypto::hash>& missed_txs));
     MOCK_CONST_METHOD1(have_tx, bool(crypto::hash const& tx_hash));
     MOCK_CONST_METHOD2(tx_exists, bool(crypto::hash const& tx_hash, uint64_t& tx_id));
+    MOCK_CONST_METHOD2(get_output_tx_and_index, tx_out_index(uint64_t const& amount, uint64_t const& index));
+    MOCK_CONST_METHOD2(get_tx, bool(crypto::hash const& tx_hash, transaction& tx));
+
 };
 
 
@@ -64,10 +68,12 @@ protected:
     virtual void
     SetUp()
     {        
-        bc_setup = xmreg::BlockchainSetup{net_type, do_not_relay, config_json};
+        bc_setup = xmreg::BlockchainSetup {
+                net_type, do_not_relay, config_json};
         mcore = std::make_unique<MockMicroCore>();
         mcore_ptr = mcore.get();
-        bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(bc_setup, std::move(mcore));
+        bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(
+                    bc_setup, std::move(mcore));
     }  
 
      network_type net_type {network_type::STAGENET};
@@ -184,7 +190,8 @@ TEST_F(BCSTATUS_TEST, TxExist)
 
     // return true and set tx_index (ret by ref) to mock_tx_index_to_return
     EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
-            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return), Return(true)));
+            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return),
+                            Return(true)));
 
     uint64_t tx_index {0};
 
@@ -192,12 +199,14 @@ TEST_F(BCSTATUS_TEST, TxExist)
     EXPECT_EQ(tx_index, mock_tx_index_to_return);
 
     // just some dummy hash
-    string tx_hash_str {"fc4b8d5956b30dc4a353b171b4d974697dfc32730778f138a8e7f16c11907691"};
+    string tx_hash_str
+        {"fc4b8d5956b30dc4a353b171b4d974697dfc32730778f138a8e7f16c11907691"};
 
     tx_index = 0;
 
     EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
-            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return), Return(true)));
+            .WillOnce(DoAll(SetArgReferee<1>(mock_tx_index_to_return),
+                            Return(true)));
 
     EXPECT_TRUE(bcs->tx_exist(tx_hash_str, tx_index));
     EXPECT_EQ(tx_index, mock_tx_index_to_return);
@@ -208,5 +217,178 @@ TEST_F(BCSTATUS_TEST, TxExist)
 }
 
 
+TEST_F(BCSTATUS_TEST, GetTxWithOutput)
+{
+    // some dummy tx hash
+    RAND_TX_HASH();
+
+    const tx_out_index tx_idx_to_return = make_pair(tx_hash, 6);
+
+    EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
+            .WillOnce(Return(tx_idx_to_return));
+
+    EXPECT_CALL(*mcore_ptr, get_tx(_, _))
+            .WillOnce(Return(true));
+
+    const uint64_t mock_output_idx {4};
+    const uint64_t mock_amount {11110};
+
+    transaction tx_returned;
+    uint64_t out_idx_returned;
+
+    EXPECT_TRUE(bcs->get_tx_with_output(mock_output_idx, mock_amount,
+                                        tx_returned, out_idx_returned));
+}
+
+ACTION(ThrowOutputDNE)
+{
+    throw OUTPUT_DNE("Mock Throw: Output does not exist!");
+}
+
+TEST_F(BCSTATUS_TEST, GetTxWithOutputFailure)
+{
+    // some dummy tx hash
+    RAND_TX_HASH();
+
+    const tx_out_index tx_idx_to_return = make_pair(tx_hash, 6);
+
+    EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
+            .WillOnce(Return(tx_idx_to_return));
+
+    EXPECT_CALL(*mcore_ptr, get_tx(_, _))
+            .WillOnce(Return(false));
+
+    const uint64_t mock_output_idx {4};
+    const uint64_t mock_amount {11110};
+
+    transaction tx_returned;
+    uint64_t out_idx_returned;
+
+    EXPECT_FALSE(bcs->get_tx_with_output(mock_output_idx, mock_amount,
+                                        tx_returned, out_idx_returned));
+
+    // or
+
+    EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
+            .WillOnce(ThrowOutputDNE());
+
+    EXPECT_FALSE(bcs->get_tx_with_output(mock_output_idx, mock_amount,
+                                        tx_returned, out_idx_returned));
+}
+
+TEST_F(BCSTATUS_TEST, GetCurrentHeight)
+{
+    uint64_t mock_current_height {1619148};
+
+    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
+            .WillOnce(Return(mock_current_height));
+
+    bcs->update_current_blockchain_height();
+
+    EXPECT_EQ(bcs->get_current_blockchain_height(),
+              mock_current_height - 1);
+}
+
+TEST_F(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
+{
+    // there are two main scenerious here.
+    // Scenerio 1: tx_unlock_time is block height
+    // Scenerio 2: tx_unlock_time is timestamp.
+
+    const uint64_t mock_current_height {100};
+
+    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
+            .WillOnce(Return(mock_current_height));
+
+    bcs->update_current_blockchain_height();
+
+    // SCENARIO 1: tx_unlock_time is block height
+
+    // expected unlock time is in future, thus a tx is still locked
+
+    uint64_t tx_unlock_time {mock_current_height
+                + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE};
+
+    uint64_t not_used_block_height {0}; // not used in the first
+                                        // part of the test case
+
+    EXPECT_FALSE(bcs->is_tx_unlocked(
+                     tx_unlock_time, not_used_block_height));
+
+    // expected unlock time is in the future
+    // (1 blocks from now), thus a tx is locked
+
+    tx_unlock_time = mock_current_height + 1;
+
+    EXPECT_FALSE(bcs->is_tx_unlocked(
+                     tx_unlock_time, not_used_block_height));
+
+    // expected unlock time is in the past
+    // (10 blocks behind), thus a tx is unlocked
+
+    tx_unlock_time = mock_current_height
+            - CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
+
+    EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
+                                              not_used_block_height));
+
+    // expected unlock time is same as as current height
+    // thus a tx is unlocked
+
+    tx_unlock_time = mock_current_height;
+
+    EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
+                                              not_used_block_height));
+}
+
+
+class MockTxUnlockChecker : public xmreg::TxUnlockChecker
+{
+public:
+
+    // mock system call to get current timestamp
+    MOCK_CONST_METHOD0(get_current_time, uint64_t());
+    //MOCK_CONST_METHOD1(get_leeway, uint64_t(uint64_t tx_block_height));
+};
+
+TEST_F(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario2)
+{
+    // there are two main scenerious here.
+    // Scenerio 1: tx_unlock_time is block height
+    // Scenerio 2: tx_unlock_time is timestamp.
+
+    const uint64_t mock_current_height {100};
+
+    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
+            .WillOnce(Return(mock_current_height));
+
+    bcs->update_current_blockchain_height();
+
+    // SCENARIO 2: tx_unlock_time is timestamp.
+
+    MockTxUnlockChecker mock_tx_unlock_checker;
+
+    const uint64_t current_timestamp {1000000000};
+
+    EXPECT_CALL(mock_tx_unlock_checker, get_current_time())
+            .WillRepeatedly(Return(1000000000));
+
+    uint64_t block_height = mock_current_height;
+
+    // tx unlock time is now
+    uint64_t tx_unlock_time {current_timestamp}; // mock timestamp
+
+    EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time, block_height,
+                                    mock_tx_unlock_checker));
+
+    // unlock time is 1 second into the future
+    tx_unlock_time = current_timestamp
+            + mock_tx_unlock_checker.get_leeway(
+                block_height, bcs->get_bc_setup().net_type) + 1;
+
+    EXPECT_FALSE(bcs->is_tx_unlocked(tx_unlock_time, block_height,
+                                     mock_tx_unlock_checker));
+
+}
 
 }

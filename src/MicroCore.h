@@ -104,10 +104,10 @@ public:
         return core_storage.get_db().tx_exists(tx_hash, tx_id);
     }
 
-    template<typename... T>
-    auto get_output_tx_and_index(T&&... args) const
+    virtual tx_out_index
+    get_output_tx_and_index(uint64_t const& amount, uint64_t const& index) const
     {
-        return core_storage.get_db().get_output_tx_and_index(std::forward<T>(args)...);
+        return core_storage.get_db().get_output_tx_and_index(amount, index);
     }
 
     template<typename... T>

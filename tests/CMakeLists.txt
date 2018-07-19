@@ -3,7 +3,7 @@
 macro(add_om_test _TEST_NAME)
 
     add_executable(${_TEST_NAME}_tests
-            ${_TEST_NAME}_tests.cpp
+            ${_TEST_NAME}_tests.cpp   
             #${MONERO_DIR}/tests/core_tests/chaingen.cpp
             #${MONERO_DIR}/tests/core_tests/chaingen001.cpp
             )
