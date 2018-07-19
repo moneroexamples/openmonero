@@ -71,10 +71,21 @@ public:
     virtual hw::device* const
     get_device() const;
 
-    template<typename... T>
-    auto get_output_key(T&&... args)
+    virtual void
+    get_output_key(const uint64_t& amount,
+                   const vector<uint64_t>& absolute_offsets,
+                   vector<cryptonote::output_data_t>& outputs)
     {
-        return core_storage.get_db().get_output_key(std::forward<T>(args)...);
+        core_storage.get_db()
+                .get_output_key(amount, absolute_offsets, outputs);
+    }
+
+    virtual output_data_t
+    get_output_key(uint64_t amount,
+                   uint64_t global_amount_index)
+    {
+        return core_storage.get_db()
+                    .get_output_key(amount, global_amount_index);
     }
 
     virtual bool
@@ -116,10 +127,10 @@ public:
         return core_storage.get_db().get_tx_block_height(std::forward<T>(args)...);
     }
 
-    template<typename... T>
-    auto get_tx_amount_output_indices(T&&... args) const
+    virtual std::vector<uint64_t>
+    get_tx_amount_output_indices(uint64_t const& tx_id) const
     {
-        return core_storage.get_db().get_tx_amount_output_indices(std::forward<T>(args)...);
+        return core_storage.get_db().get_tx_amount_output_indices(tx_id);
     }
 
     template<typename... T>
@@ -135,13 +146,21 @@ public:
     }
 
     virtual bool
+    get_random_outs_for_amounts(
+            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request const& req,
+            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res) const
+    {
+        return core_storage.get_random_outs_for_amounts(req, res);
+    }
+
+    virtual bool
     get_block_from_height(uint64_t height, block& blk) const;
 
     virtual bool
     get_tx(crypto::hash const& tx_hash, transaction& tx) const;
 
     virtual bool
-    init_success() const;
+    init_success() const;    
 
     virtual ~MicroCore();
 };

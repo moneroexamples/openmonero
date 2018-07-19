@@ -234,14 +234,14 @@ CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
     try
     {
         mcore->get_output_key(amount, absolute_offsets, outputs);
+        return true;
     }
     catch (const OUTPUT_DNE& e)
     {
-        cerr << "get_output_keys: " << e.what() << endl;
-        return false;
+        cerr << "get_output_keys: " << e.what() << endl;        
     }
 
-    return true;
+    return false;
 }
 
 
@@ -291,6 +291,27 @@ CurrentBlockchainStatus::get_amount_specific_indices(
     return false;
 }
 
+//bool
+//CurrentBlockchainStatus::get_random_outputs(
+//        const vector<uint64_t>& amounts,
+//        const uint64_t& outs_count,
+//        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
+//            ::outs_for_amount>& found_outputs)
+//{
+//    rpccalls rpc {bc_setup.deamon_url};
+
+//    string error_msg;
+
+//    if (!rpc.get_random_outs_for_amounts(
+//                amounts, outs_count, found_outputs, error_msg))
+//    {
+//        cerr << "rpc.get_random_outs_for_amounts failed" << endl;
+//        return false;
+//    }
+
+//    return true;
+//}
+
 bool
 CurrentBlockchainStatus::get_random_outputs(
         const vector<uint64_t>& amounts,
@@ -298,20 +319,23 @@ CurrentBlockchainStatus::get_random_outputs(
         vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
             ::outs_for_amount>& found_outputs)
 {
-    rpccalls rpc {bc_setup.deamon_url};
 
-    string error_msg;
+    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request req;
+    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
 
-    if (!rpc.get_random_outs_for_amounts(
-                amounts, outs_count, found_outputs, error_msg))
+    req.outs_count = outs_count;
+    req.amounts = amounts;
+
+    if (!mcore->get_random_outs_for_amounts(req, res))
     {
-        cerr << "rpc.get_random_outs_for_amounts failed" << endl;
+        cerr << "mcore->get_random_outs_for_amounts(req, res) failed\n";
         return false;
     }
 
+    found_outputs = res.outs;
+
     return true;
 }
-
 
 bool
 CurrentBlockchainStatus::get_output(

@@ -37,17 +37,48 @@ using ::testing::internal::FilePath;
 class MockMicroCore : public xmreg::MicroCore
 {
 public:    
-    MOCK_METHOD2(init, bool(const string& _blockchain_path, network_type nt));
+    MOCK_METHOD2(init, bool(const string& _blockchain_path,
+                            network_type nt));
+
     MOCK_CONST_METHOD0(get_current_blockchain_height, uint64_t());
-    MOCK_CONST_METHOD2(get_block_from_height, bool(uint64_t height, block& blk));
-    MOCK_CONST_METHOD2(get_blocks_range, std::vector<block>(const uint64_t& h1, const uint64_t& h2));
-    MOCK_CONST_METHOD3(get_transactions, bool(const std::vector<crypto::hash>& txs_ids,
-                                              std::vector<transaction>& txs,
-                                              std::vector<crypto::hash>& missed_txs));
+
+    MOCK_CONST_METHOD2(get_block_from_height,
+                       bool(uint64_t height, block& blk));
+
+    MOCK_CONST_METHOD2(get_blocks_range,
+                       std::vector<block>(const uint64_t& h1,
+                                          const uint64_t& h2));
+
+    MOCK_CONST_METHOD3(get_transactions,
+                       bool(const std::vector<crypto::hash>& txs_ids,
+                            std::vector<transaction>& txs,
+                            std::vector<crypto::hash>& missed_txs));
+
     MOCK_CONST_METHOD1(have_tx, bool(crypto::hash const& tx_hash));
-    MOCK_CONST_METHOD2(tx_exists, bool(crypto::hash const& tx_hash, uint64_t& tx_id));
-    MOCK_CONST_METHOD2(get_output_tx_and_index, tx_out_index(uint64_t const& amount, uint64_t const& index));
-    MOCK_CONST_METHOD2(get_tx, bool(crypto::hash const& tx_hash, transaction& tx));
+
+    MOCK_CONST_METHOD2(tx_exists,
+                       bool(crypto::hash const& tx_hash,
+                            uint64_t& tx_id));
+
+    MOCK_CONST_METHOD2(get_output_tx_and_index,
+                       tx_out_index(uint64_t const& amount,
+                                    uint64_t const& index));
+
+    MOCK_CONST_METHOD2(get_tx,
+                       bool(crypto::hash const& tx_hash,
+                            transaction& tx));
+
+    MOCK_METHOD3(get_output_key,
+                    void(const uint64_t& amount,
+                         const vector<uint64_t>& absolute_offsets,
+                         vector<cryptonote::output_data_t>& outputs));
+
+    MOCK_CONST_METHOD1(get_tx_amount_output_indices,
+                    std::vector<uint64_t>(uint64_t const& tx_id));
+
+    MOCK_CONST_METHOD2(get_random_outs_for_amounts,
+                        bool(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request const& req,
+                             COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res));
 
 };
 
@@ -381,7 +412,7 @@ TEST_F(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario2)
     EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time, block_height,
                                     mock_tx_unlock_checker));
 
-    // unlock time is 1 second into the future
+    // unlock time is 1 second more than needed
     tx_unlock_time = current_timestamp
             + mock_tx_unlock_checker.get_leeway(
                 block_height, bcs->get_bc_setup().net_type) + 1;
@@ -390,5 +421,154 @@ TEST_F(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario2)
                                      mock_tx_unlock_checker));
 
 }
+
+
+TEST_F(BCSTATUS_TEST, GetOutputKeys)
+{
+    // we are going to expect two outputs
+    vector<output_data_t> outputs_to_return;
+
+    outputs_to_return.push_back(
+                output_data_t {
+                crypto::rand<crypto::public_key>(),
+                1000, 2222,
+                crypto::rand<rct::key>()});
+
+    outputs_to_return.push_back(
+                output_data_t {
+                crypto::rand<crypto::public_key>(),
+                3333, 5555,
+                crypto::rand<rct::key>()});
+
+    EXPECT_CALL(*mcore_ptr, get_output_key(_, _, _))
+            .WillOnce(SetArgReferee<2>(outputs_to_return));
+
+    const uint64_t mock_amount {1111};
+    const vector<uint64_t> mock_absolute_offsets;
+    vector<cryptonote::output_data_t> outputs;
+
+    EXPECT_TRUE(bcs->get_output_keys(mock_amount,
+                                     mock_absolute_offsets,
+                                     outputs));
+
+    EXPECT_EQ(outputs.back().pubkey, outputs_to_return.back().pubkey);
+
+    EXPECT_CALL(*mcore_ptr, get_output_key(_, _, _))
+            .WillOnce(ThrowOutputDNE());
+
+    EXPECT_FALSE(bcs->get_output_keys(mock_amount,
+                                      mock_absolute_offsets,
+                                      outputs));
+}
+
+TEST_F(BCSTATUS_TEST, GetAccountIntegratedAddressAsStr)
+{
+    // bcs->get_account_integrated_address_as_str only forwards
+    // call to cryptonote function. so we just check if
+    // forwarding is correct, not wether the cryptonote
+    // function works correctly.
+
+    crypto::hash8 payment_id8 = crypto::rand<crypto::hash8>();
+    string payment_id8_str = pod_to_hex(payment_id8);
+
+    string expected_int_addr
+            = cryptonote::get_account_integrated_address_as_str(
+                bcs->get_bc_setup().net_type,
+                bcs->get_bc_setup().import_payment_address.address,
+                payment_id8);
+
+    string resulting_int_addr
+            = bcs->get_account_integrated_address_as_str(payment_id8);
+
+    EXPECT_EQ(expected_int_addr, resulting_int_addr);
+
+    resulting_int_addr
+                = bcs->get_account_integrated_address_as_str(
+                payment_id8_str);
+
+    EXPECT_EQ(expected_int_addr, resulting_int_addr);
+
+
+    resulting_int_addr
+                = bcs->get_account_integrated_address_as_str(
+                "wrong_payment_id8");
+
+    EXPECT_TRUE(resulting_int_addr.empty());
+}
+
+
+ACTION(ThrowTxDNE)
+{
+    throw TX_DNE("Mock Throw: Tx does not exist!");
+}
+
+TEST_F(BCSTATUS_TEST, GetAmountSpecificIndices)
+{
+    vector<uint64_t> out_indices_to_return {1,2,3};
+
+    EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
+            .WillOnce(Return(true));
+
+    EXPECT_CALL(*mcore_ptr, get_tx_amount_output_indices(_))
+            .WillOnce(Return(out_indices_to_return));
+
+    vector<uint64_t> out_indices;
+
+    RAND_TX_HASH();
+
+    EXPECT_TRUE(bcs->get_amount_specific_indices(tx_hash, out_indices));
+
+    EXPECT_EQ(out_indices, out_indices_to_return);
+
+    EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_amount_specific_indices(tx_hash, out_indices));
+
+    EXPECT_CALL(*mcore_ptr, tx_exists(_, _))
+            .WillOnce(ThrowTxDNE());
+
+    EXPECT_FALSE(bcs->get_amount_specific_indices(tx_hash, out_indices));
+}
+
+TEST_F(BCSTATUS_TEST, GetRandomOutputs)
+{
+    using out_for_amount = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
+                                    ::outs_for_amount;
+
+    std::vector<out_for_amount> outputs_to_return;
+
+    outputs_to_return.push_back(out_for_amount {22, {}});
+    outputs_to_return.push_back(out_for_amount {66, {}});
+
+    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
+
+    res.outs = outputs_to_return;
+
+    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(res), Return(true)));
+
+    const vector<uint64_t> mock_amounts {444, 556, 77}; // any
+    const uint64_t mock_outs_count {3}; // any
+
+    std::vector<out_for_amount> found_outputs;
+
+    EXPECT_TRUE(bcs->get_random_outputs(
+                    mock_amounts, mock_outs_count,
+                    found_outputs));
+
+    EXPECT_EQ(found_outputs.size(), outputs_to_return.size());
+    EXPECT_EQ(found_outputs.back().amount,
+              outputs_to_return.back().amount);
+
+    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_random_outputs(
+                    mock_amounts, mock_outs_count,
+                    found_outputs));
+
+}
+
 
 }

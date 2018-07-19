@@ -73,19 +73,6 @@ public:
     // its simplifies mocking its behavior in our
     // tests, as we just inject mock version of
     // TxUnlockChecker class
-//    template <typename T = xmreg::TxUnlockChecker>
-//    virtual bool
-//    is_tx_unlocked(uint64_t unlock_time,
-//                   uint64_t block_height,
-//                   T tx_unlock_checker = T())
-//    {
-//        tx_unlock_checker.init(bc_setup.net_type);
-
-//        return tx_unlock_checker.is_unlocked(current_height,
-//                                             unlock_time,
-//                                             block_height);
-//    }
-
     virtual bool
     is_tx_unlocked(uint64_t unlock_time,
                    uint64_t block_height,
