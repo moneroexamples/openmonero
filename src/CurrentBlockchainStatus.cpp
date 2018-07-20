@@ -412,12 +412,11 @@ CurrentBlockchainStatus::commit_tx(
         const string& tx_blob,
         string& error_msg,
         bool do_not_relay)
-{
-    RPCCalls rpc {bc_setup.deamon_url};
+{   
 
-    if (!rpc.commit_tx(tx_blob, error_msg, do_not_relay))
+    if (!rpc->commit_tx(tx_blob, error_msg, do_not_relay))
     {
-        cerr << "commit_tx failed" << endl;
+        cerr << "rpc->commit_tx() commit_tx failed\n";
         return false;
     }
 
@@ -476,7 +475,7 @@ CurrentBlockchainStatus::read_mempool()
     return true;
 }
 
-vector<pair<uint64_t, transaction>>
+CurrentBlockchainStatus::mempool_txs_t
 CurrentBlockchainStatus::get_mempool_txs()
 {
     std::lock_guard<std::mutex> lck (getting_mempool_txs);
@@ -490,8 +489,7 @@ CurrentBlockchainStatus::search_if_payment_made(
         string& tx_hash_with_payment)
 {
 
-    vector<pair<uint64_t, transaction>> mempool_transactions
-            = get_mempool_txs();
+    mempool_txs_t mempool_transactions = get_mempool_txs();
 
     uint64_t current_blockchain_height = current_height;
 
@@ -580,7 +578,7 @@ CurrentBlockchainStatus::search_if_payment_made(
             cerr << "Cant get derived key for: "  << "\n"
                  << "pub_tx_key: " << tx_pub_key << " and "
                  << "prv_view_key" << bc_setup.import_payment_viewkey
-                 << endl;
+                 << "\n";
 
             return false;
         }
@@ -863,7 +861,7 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
             ->get_xmr_address_viewkey().second;
 
     return true;
-};
+}
 
 bool
 CurrentBlockchainStatus::find_txs_in_mempool(
@@ -883,7 +881,7 @@ CurrentBlockchainStatus::find_txs_in_mempool(
             ->find_txs_in_mempool(mempool_txs);
 
     return true;
-};
+}
 
 bool
 CurrentBlockchainStatus::find_tx_in_mempool(

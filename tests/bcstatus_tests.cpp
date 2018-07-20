@@ -84,13 +84,21 @@ public:
                         bool(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
                              COMMAND_RPC_GET_OUTPUTS_BIN::response& res));
 
+    MOCK_CONST_METHOD1(get_dynamic_per_kb_fee_estimate,
+                       uint64_t(uint64_t const& grace_blocks));
+
 };
 
 class MockRPCCalls : public xmreg::RPCCalls
 {
 public:
-    MockRPCCalls(string _deamon_url): xmreg::RPCCalls(_deamon_url)
+    MockRPCCalls(string _deamon_url)
+        : xmreg::RPCCalls(_deamon_url)
     {}
+
+    MOCK_METHOD3(commit_tx, bool(const string& tx_blob,
+                                 string& error_msg,
+                                 bool do_not_relay));
 };
 
 class BCSTATUS_TEST : public ::testing::Test
@@ -621,16 +629,28 @@ TEST_F(BCSTATUS_TEST, GetOutput)
                                 output_info));
 }
 
+TEST_F(BCSTATUS_TEST, GetDynamicPerKbFeeEstimate)
+{
+    EXPECT_CALL(*mcore_ptr, get_dynamic_per_kb_fee_estimate(_))
+            .WillOnce(Return(3333));
+
+    EXPECT_EQ(bcs->get_dynamic_per_kb_fee_estimate(), 3333);
+}
+
 TEST_F(BCSTATUS_TEST, CommitTx)
 {
-    xmreg::RPCCalls rpc;
+    EXPECT_CALL(*rpc_ptr, commit_tx(_, _, _))
+            .WillOnce(Return(true));
 
-    xmreg::RPCCalls rpc2;
-    rpc2 = std::move(rpc);
+    string tx_blob {"mock blob"};
+    string error_msg;
 
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(bcs->commit_tx(tx_blob, error_msg, true));
 
+    EXPECT_CALL(*rpc_ptr, commit_tx(_, _, _))
+            .WillOnce(Return(false));
 
+    EXPECT_FALSE(bcs->commit_tx(tx_blob, error_msg, true));
 }
 
 
