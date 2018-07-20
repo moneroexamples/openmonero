@@ -1185,7 +1185,7 @@ public:
     MockCurrentBlockchainStatus1()
             : xmreg::CurrentBlockchainStatus(
                   xmreg::BlockchainSetup(),
-                  nullptr)
+                  nullptr, nullptr)
     {}
 
     bool tx_unlock_state {true};

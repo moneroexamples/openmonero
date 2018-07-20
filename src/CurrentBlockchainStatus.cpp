@@ -5,10 +5,6 @@
 #include "CurrentBlockchainStatus.h"
 
 
-#include "tools.h"
-#include "rpccalls.h"
-#include "MySqlAccounts.h"
-#include "TxSearch.h"
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -19,9 +15,11 @@ namespace xmreg
 
 CurrentBlockchainStatus::CurrentBlockchainStatus(
         BlockchainSetup _bc_setup,
-        std::unique_ptr<MicroCore> _mcore)
+        std::unique_ptr<MicroCore> _mcore,
+        std::unique_ptr<RPCCalls> _rpc)
     : bc_setup {_bc_setup},
-      mcore {std::move(_mcore)}
+      mcore {std::move(_mcore)},
+      rpc {std::move(_rpc)}
 {
 
 }
@@ -337,43 +335,75 @@ CurrentBlockchainStatus::get_random_outputs(
     return true;
 }
 
+//bool
+//CurrentBlockchainStatus::get_output(
+//        const uint64_t amount,
+//        const uint64_t global_output_index,
+//        COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info)
+//{
+//    rpccalls rpc {bc_setup.deamon_url};
+
+//    string error_msg;
+
+//    if (!rpc.get_out(amount, global_output_index, output_info))
+//    {
+//        cerr << "rpc.get_out" << endl;
+//        return false;
+//    }
+
+//    return true;
+//}
+
+
+
 bool
 CurrentBlockchainStatus::get_output(
         const uint64_t amount,
         const uint64_t global_output_index,
         COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info)
 {
-    rpccalls rpc {bc_setup.deamon_url};
+    COMMAND_RPC_GET_OUTPUTS_BIN::request req;
+    COMMAND_RPC_GET_OUTPUTS_BIN::response res;
 
-    string error_msg;
+    req.outputs.push_back(get_outputs_out {amount, global_output_index});
 
-    if (!rpc.get_out(amount, global_output_index, output_info))
+    if (!mcore->get_outs(req, res))
     {
-        cerr << "rpc.get_out" << endl;
+        cerr << "mcore->get_outs(req, res) failed\n";
         return false;
     }
+
+    output_info = res.outs.at(0);
 
     return true;
 }
 
 
-bool
-CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(
-        uint64_t& fee_estimated)
+//bool
+//CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(
+//        uint64_t& fee_estimated)
+//{
+//    rpccalls rpc {bc_setup.deamon_url};
+
+//    string error_msg;
+
+//    if (!rpc.get_dynamic_per_kb_fee_estimate(
+//            FEE_ESTIMATE_GRACE_BLOCKS,
+//            fee_estimated, error_msg))
+//    {
+//        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
+//        return false;
+//    }
+
+//    return true;
+//}
+
+
+uint64_t
+CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate() const
 {
-    rpccalls rpc {bc_setup.deamon_url};
-
-    string error_msg;
-
-    if (!rpc.get_dynamic_per_kb_fee_estimate(
-            FEE_ESTIMATE_GRACE_BLOCKS,
-            fee_estimated, error_msg))
-    {
-        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
-        return false;
-    }
-
-    return true;
+    return mcore->get_dynamic_per_kb_fee_estimate(
+                FEE_ESTIMATE_GRACE_BLOCKS);
 }
 
 
@@ -383,7 +413,7 @@ CurrentBlockchainStatus::commit_tx(
         string& error_msg,
         bool do_not_relay)
 {
-    rpccalls rpc {bc_setup.deamon_url};
+    RPCCalls rpc {bc_setup.deamon_url};
 
     if (!rpc.commit_tx(tx_blob, error_msg, do_not_relay))
     {

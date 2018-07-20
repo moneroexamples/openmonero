@@ -685,12 +685,8 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
         // it is already using dynanamic fees. frontend
         // uses old fixed fees.
 
-        uint64_t fee_estimated {DYNAMIC_FEE_PER_KB_BASE_FEE};
-
-        if (current_bc_status->get_dynamic_per_kb_fee_estimate(fee_estimated))
-        {
-            j_response["per_kb_fee"] = fee_estimated;
-        }
+        j_response["per_kb_fee"] = current_bc_status
+                ->get_dynamic_per_kb_fee_estimate();
 
 
     } // if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))

@@ -154,6 +154,19 @@ public:
     }
 
     virtual bool
+    get_outs(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
+             COMMAND_RPC_GET_OUTPUTS_BIN::response& res) const
+    {
+        return core_storage.get_outs(req, res);
+    }
+
+    virtual uint64_t
+    get_dynamic_per_kb_fee_estimate(uint64_t const& grace_blocks) const
+    {
+        return core_storage.get_dynamic_per_kb_fee_estimate(grace_blocks);
+    }
+
+    virtual bool
     get_block_from_height(uint64_t height, block& blk) const;
 
     virtual bool

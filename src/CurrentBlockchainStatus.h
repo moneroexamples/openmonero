@@ -12,6 +12,9 @@
 #include "TxUnlockChecker.h"
 #include "BlockchainSetup.h"
 #include "TxSearch.h"
+#include "tools.h"
+#include "RPCCalls.h"
+#include "MySqlAccounts.h"
 
 #include <iostream>
 #include <memory>
@@ -27,8 +30,6 @@ using namespace std;
 class XmrAccount;
 class MySqlAccounts;
 
-static mutex searching_threads_map_mtx;
-static mutex getting_mempool_txs;
 
 /*
 * This is a thread class. Probably it should be singleton, as we want
@@ -55,7 +56,8 @@ public:
     atomic<bool> is_running;
 
     CurrentBlockchainStatus(BlockchainSetup _bc_setup,
-                            std::unique_ptr<MicroCore> _mcore);
+                            std::unique_ptr<MicroCore> _mcore,
+                            std::unique_ptr<RPCCalls> _rpc);
 
     virtual void
     start_monitor_blockchain_thread();
@@ -136,8 +138,8 @@ public:
                        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
                         ::outs_for_amount>& found_outputs);
 
-    virtual bool
-    get_dynamic_per_kb_fee_estimate(uint64_t& fee_estimated);
+    virtual uint64_t
+    get_dynamic_per_kb_fee_estimate() const;
 
     virtual bool
     commit_tx(const string& tx_blob, string& error_msg,
@@ -232,8 +234,6 @@ public:
         return bc_setup;
     }
 
-
-
     virtual bool
     get_txs_in_blocks(vector<block> const& blocks,
                       vector<txs_tuple_t>& txs_data);
@@ -262,6 +262,10 @@ protected:
     // as MicroCore is not copabaly nor movable
     std::unique_ptr<MicroCore> mcore;
 
+    // this class is also the only class which can
+    // use talk to monero deamon using RPC.
+    std::unique_ptr<RPCCalls> rpc;
+
     // vector of mempool transactions that all threads
     // can refer to
     //           <recieved_time, transaction>
@@ -275,6 +279,12 @@ protected:
     // thread that will be dispachaed and will keep monitoring blockchain
     // and mempool changes
     std::thread m_thread;
+
+    // to synchronize searching access to searching_threads map
+    mutex searching_threads_map_mtx;
+
+    // to synchronize access to mempool_txs vector
+    mutex getting_mempool_txs;
 };
 
 

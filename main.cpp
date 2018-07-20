@@ -72,6 +72,9 @@ xmreg::MySqlConnector::username = config_json["database"]["user"];
 xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
+// create rpc connector
+
+
 
 // once we have all the parameters for the blockchain and our backend
 // we can create and instance of  CurrentBlockchainStatus class.
@@ -81,7 +84,9 @@ xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 auto current_bc_status
         = make_shared<xmreg::CurrentBlockchainStatus>(
-            bc_setup, std::make_unique<xmreg::MicroCore>());
+            bc_setup,
+            std::make_unique<xmreg::MicroCore>(),
+            std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url));
 
 
 // since CurrentBlockchainStatus class monitors current status

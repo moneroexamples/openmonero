@@ -80,8 +80,18 @@ public:
                         bool(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request const& req,
                              COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res));
 
+    MOCK_CONST_METHOD2(get_outs,
+                        bool(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
+                             COMMAND_RPC_GET_OUTPUTS_BIN::response& res));
+
 };
 
+class MockRPCCalls : public xmreg::RPCCalls
+{
+public:
+    MockRPCCalls(string _deamon_url): xmreg::RPCCalls(_deamon_url)
+    {}
+};
 
 class BCSTATUS_TEST : public ::testing::Test
 {
@@ -101,19 +111,26 @@ protected:
     {        
         bc_setup = xmreg::BlockchainSetup {
                 net_type, do_not_relay, config_json};
+
         mcore = std::make_unique<MockMicroCore>();
         mcore_ptr = mcore.get();
+
+        rpc = std::make_unique<MockRPCCalls>("dummy deamon url");
+        rpc_ptr = rpc.get();
+
         bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(
-                    bc_setup, std::move(mcore));
+                    bc_setup, std::move(mcore), std::move(rpc));
     }  
 
      network_type net_type {network_type::STAGENET};
      bool do_not_relay {false};
      xmreg::BlockchainSetup bc_setup;
      std::unique_ptr<MockMicroCore> mcore;
+     std::unique_ptr<MockRPCCalls> rpc;
      std::unique_ptr<xmreg::CurrentBlockchainStatus> bcs;
 
      MockMicroCore* mcore_ptr;
+     MockRPCCalls* rpc_ptr;
 
      static json config_json;
 };
@@ -122,7 +139,7 @@ json BCSTATUS_TEST::config_json;
 
 TEST_F(BCSTATUS_TEST, DefaultConstruction)
 {
-    xmreg::CurrentBlockchainStatus bcs {bc_setup, nullptr};
+    xmreg::CurrentBlockchainStatus bcs {bc_setup, nullptr, nullptr};
     EXPECT_TRUE(true);
 }
 
@@ -567,6 +584,52 @@ TEST_F(BCSTATUS_TEST, GetRandomOutputs)
     EXPECT_FALSE(bcs->get_random_outputs(
                     mock_amounts, mock_outs_count,
                     found_outputs));
+}
+
+TEST_F(BCSTATUS_TEST, GetOutput)
+{
+    using outkey = COMMAND_RPC_GET_OUTPUTS_BIN::outkey;
+
+    outkey output_key_to_return {
+        crypto::rand<crypto::public_key>(),
+        crypto::rand<rct::key>(),
+        true, 444,
+        crypto::rand<crypto::hash>()};
+
+    COMMAND_RPC_GET_OUTPUTS_BIN::response res;
+
+    res.outs.push_back(output_key_to_return);
+
+    EXPECT_CALL(*mcore_ptr, get_outs(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(res), Return(true)));
+
+    const uint64_t mock_amount {0};
+    const uint64_t mock_global_output_index {0};
+    outkey output_info;
+
+    EXPECT_TRUE(bcs->get_output(mock_amount,
+                                mock_global_output_index,
+                                output_info));
+
+    EXPECT_EQ(output_info.key, output_key_to_return.key);
+
+    EXPECT_CALL(*mcore_ptr, get_outs(_, _))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_output(mock_amount,
+                                mock_global_output_index,
+                                output_info));
+}
+
+TEST_F(BCSTATUS_TEST, CommitTx)
+{
+    xmreg::RPCCalls rpc;
+
+    xmreg::RPCCalls rpc2;
+    rpc2 = std::move(rpc);
+
+    EXPECT_TRUE(true);
+
 
 }
 
