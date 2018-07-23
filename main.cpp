@@ -30,6 +30,7 @@ if (*help_opt)
     return EXIT_SUCCESS;
 }
 
+// setup monero logger
 mlog_configure(mlog_get_default_log_path(""), true);
 mlog_set_log("1");
 
@@ -70,7 +71,7 @@ cryptonote::network_type nettype = testnet ?
   cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
 // create blockchainsetup instance and set its parameters
-// suc as blockchain status monitoring thread parameters
+// such as blockchain status monitoring thread parameters
 
 xmreg::BlockchainSetup bc_setup {nettype, do_not_relay, *config_file_opt};
 
@@ -94,8 +95,8 @@ xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 
 // once we have all the parameters for the blockchain and our backend
-// we can create and instance of  CurrentBlockchainStatus class.
-// we are going to this through a shared pointer. This way we will
+// we can create and instance of CurrentBlockchainStatus class.
+// we are going to do this through a shared pointer. This way we will
 // have only once instance of this class, which we can easly inject
 // and pass around other class which need to access blockchain data
 
@@ -106,21 +107,14 @@ auto current_bc_status
             std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url));
 
 // since CurrentBlockchainStatus class monitors current status
-// of the blockchain (e.g., current height), its seems logical to
-// make static objects for accessing the blockchain in this class.
-// this way monero accessing blockchain variables (i.e. mcore and core_storage)
-// are not passed around like crazy everywhere. Uri( "file:///tmp/dh2048.pem"
-// There are here, and this is the only class that
-// has direct access to blockchain and talks (using rpc calls)
-// with the deamon.
+// of the blockchain (e.g., current height) .This is the only class
+// that has direct access to blockchain and talks (using rpc calls)
+// with the monero deamon.
 if (!current_bc_status->init_monero_blockchain())
 {
     OMERROR << "Error accessing blockchain.";
     return EXIT_FAILURE;
 }
-
-
-//LOG_PRINT_L0("Initializing source blockchain (BlockchainDB)");
 
 // launch the status monitoring thread so that it keeps track of blockchain
 // info, e.g., current height. Information from this thread is used

@@ -133,10 +133,14 @@ public:
         return core_storage.get_db().get_tx_amount_output_indices(tx_id);
     }
 
-    template<typename... T>
-    auto get_mempool_txs(T&&... args) const
+
+    virtual bool
+    get_mempool_txs(
+            std::vector<tx_info>& tx_infos,
+            std::vector<spent_key_image_info>& key_image_infos) const
     {
-        return m_mempool.get_transactions_and_spent_keys_info(std::forward<T>(args)...);
+        return m_mempool.get_transactions_and_spent_keys_info(
+                    tx_infos, key_image_infos);
     }
 
     virtual uint64_t
