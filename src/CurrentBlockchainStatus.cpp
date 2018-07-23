@@ -40,9 +40,8 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                {
                    update_current_blockchain_height();
                    read_mempool();
-                   cout << "Check block height: " << current_height
-                        << " no of mempool txs: " << mempool_txs.size()
-                        << '\n';
+                   OMINFO << "Check block height: " << current_height
+                          << " no of mempool txs: " << mempool_txs.size();
                    clean_search_thread_map();
                    std::this_thread::sleep_for(
                            std::chrono::seconds(
@@ -72,10 +71,6 @@ CurrentBlockchainStatus::update_current_blockchain_height()
 bool
 CurrentBlockchainStatus::init_monero_blockchain()
 {
-    // set  monero log output level
-    uint32_t log_level = 0;
-    mlog_configure(mlog_get_default_log_path(""), true);
-
     // initialize the core using the blockchain path
     return mcore->init(bc_setup.blockchain_path, bc_setup.net_type);}
 

@@ -1,3 +1,4 @@
+#include "src/om_log.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
 #include "src/YourMoneroRequests.h"
@@ -29,6 +30,25 @@ if (*help_opt)
     return EXIT_SUCCESS;
 }
 
+mlog_configure(mlog_get_default_log_path(""), true);
+mlog_set_log("1");
+
+
+// set logger for Open Monero
+
+el::Configurations defaultConf;
+defaultConf.setToDefault();
+defaultConf.setGlobally(el::ConfigurationType::ToFile,
+                        std::string("false"));
+defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput,
+                        std::string("true"));
+
+//el::Logger* omLogger = el::Loggers::getLogger("openmonero");
+
+el::Loggers::reconfigureLogger("openmonero", defaultConf);
+
+OMINFO << "OpenMonero is starting";
+
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
 auto stagenet_opt     = opts.get_option<bool>("stagenet");
@@ -42,7 +62,8 @@ bool do_not_relay     = *do_not_relay_opt;
 
 if (testnet && stagenet)
 {
-    cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+    //cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+    OMERROR << "testnet and stagenet cannot be specified at the same time!";
     return EXIT_FAILURE;
 }
 
@@ -56,8 +77,7 @@ cryptonote::network_type nettype = testnet ?
 
 xmreg::BlockchainSetup bc_setup {nettype, do_not_relay, *config_file_opt};
 
-cout << "Using blockchain path: " << bc_setup.blockchain_path << endl;
-
+OMINFO << "Using blockchain path: " << bc_setup.blockchain_path;
 
 nlohmann::json config_json = bc_setup.get_config();
 
@@ -99,9 +119,12 @@ auto current_bc_status
 // with the deamon.
 if (!current_bc_status->init_monero_blockchain())
 {
-    cerr << "Error accessing blockchain." << endl;
+    OMERROR << "Error accessing blockchain.";
     return EXIT_FAILURE;
 }
+
+
+//LOG_PRINT_L0("Initializing source blockchain (BlockchainDB)");
 
 // launch the status monitoring thread so that it keeps track of blockchain
 // info, e.g., current height. Information from this thread is used
@@ -120,7 +143,7 @@ try
 }
 catch(std::exception const& e)
 {
-    cerr << e.what() << '\n';
+    OMERROR << e.what();
     return EXIT_FAILURE;
 }
 
@@ -200,14 +223,14 @@ if (config_json["ssl"]["enable"])
 
     // can check using: curl -k -v -w'\n' -X POST 'https://127.0.0.1:1984/get_version'
 
-    cout << "Start the service at https://127.0.0.1:" << app_port << endl;
+    OMINFO << "Start the service at https://127.0.0.1:" << app_port;
 }
 else
 {
     settings->set_port(app_port);
     settings->set_default_header( "Connection", "close" );
 
-    cout << "Start the service at http://127.0.0.1:" << app_port  << endl;
+    OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }
 
 

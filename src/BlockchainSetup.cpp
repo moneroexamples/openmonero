@@ -36,7 +36,8 @@ BlockchainSetup::BlockchainSetup(
 void
 BlockchainSetup::parse_addr_and_viewkey()
 {
-    if (import_payment_address_str.empty() || import_payment_viewkey_str.empty())
+    if (import_payment_address_str.empty()
+            || import_payment_viewkey_str.empty())
         std::runtime_error("config address or viewkey are empty.");
 
 
@@ -47,7 +48,8 @@ BlockchainSetup::parse_addr_and_viewkey()
                 import_payment_address,
                 net_type))
         {
-            throw std::runtime_error("Cant parse config address: " + import_payment_address_str);
+            throw std::runtime_error("Cant parse config address: "
+                                     + import_payment_address_str);
         }
 
 
@@ -55,7 +57,8 @@ BlockchainSetup::parse_addr_and_viewkey()
                 import_payment_viewkey_str,
                 import_payment_viewkey))
         {
-            throw std::runtime_error("Cant parse config viewkey: " + import_payment_viewkey_str);
+            throw std::runtime_error("Cant parse config viewkey: "
+                                     + import_payment_viewkey_str);
         }
 
     }
@@ -72,7 +75,8 @@ BlockchainSetup::get_blockchain_path()
     switch (net_type)
     {
         case network_type::MAINNET:
-            blockchain_path = config_json["blockchain-path"]["mainnet"].get<string>();
+            blockchain_path = config_json["blockchain-path"]["mainnet"]
+                    .get<string>();
             deamon_url = config_json["daemon-url"]["mainnet"];
             import_payment_address_str
                     = config_json["wallet_import"]["mainnet"]["address"];
@@ -80,7 +84,8 @@ BlockchainSetup::get_blockchain_path()
                     = config_json["wallet_import"]["mainnet"]["viewkey"];
             break;
         case network_type::TESTNET:
-            blockchain_path = config_json["blockchain-path"]["testnet"].get<string>();
+            blockchain_path = config_json["blockchain-path"]["testnet"]
+                    .get<string>();
             deamon_url = config_json["daemon-url"]["testnet"];
             import_payment_address_str
                     = config_json["wallet_import"]["testnet"]["address"];
@@ -88,7 +93,8 @@ BlockchainSetup::get_blockchain_path()
                     = config_json["wallet_import"]["testnet"]["viewkey"];
             break;
         case network_type::STAGENET:
-            blockchain_path = config_json["blockchain-path"]["stagenet"].get<string>();
+            blockchain_path = config_json["blockchain-path"]["stagenet"]
+                    .get<string>();
             deamon_url = config_json["daemon-url"]["stagenet"];
             import_payment_address_str
                     = config_json["wallet_import"]["stagenet"]["address"];
@@ -128,7 +134,8 @@ BlockchainSetup::read_config(string config_json_path)
 {
     // check if config-file provided exist
     if (!boost::filesystem::exists(config_json_path))
-        throw std::runtime_error("Config file " + config_json_path + " does not exist");
+        throw std::runtime_error("Config file " + config_json_path
+                                 + " does not exist");
 
     json _config;
 
@@ -140,7 +147,8 @@ BlockchainSetup::read_config(string config_json_path)
     }
     catch (const std::exception& e)
     {
-        throw std::runtime_error(string{"Cant parse json string as json: "} + e.what());
+        throw std::runtime_error(string{"Cant parse json string as json: "}
+                                 + e.what());
     }
 
     return _config;
@@ -151,11 +159,16 @@ BlockchainSetup::read_config(string config_json_path)
     void
 BlockchainSetup::_init()
 {
-    refresh_block_status_every_seconds = config_json["refresh_block_status_every_seconds"];
-    blocks_search_lookahead            = config_json["blocks_search_lookahead"];
-    max_number_of_blocks_to_import     = config_json["max_number_of_blocks_to_import"];
-    search_thread_life_in_seconds      = config_json["search_thread_life_in_seconds"];
-    import_fee                         = config_json["wallet_import"]["fee"];
+    refresh_block_status_every_seconds
+            = config_json["refresh_block_status_every_seconds"];
+    blocks_search_lookahead
+            = config_json["blocks_search_lookahead"];
+    max_number_of_blocks_to_import
+            = config_json["max_number_of_blocks_to_import"];
+    search_thread_life_in_seconds
+            = config_json["search_thread_life_in_seconds"];
+    import_fee
+            = config_json["wallet_import"]["fee"];
 
     get_blockchain_path();
 

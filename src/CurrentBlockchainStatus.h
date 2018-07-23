@@ -7,6 +7,7 @@
 
 #define MYSQLPP_SSQLS_NO_STATICS 1
 
+#include "om_log.h"
 #include "MicroCore.h"
 #include "ssqlses.h"
 #include "TxUnlockChecker.h"
