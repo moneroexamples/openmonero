@@ -34,16 +34,14 @@ mlog_configure(mlog_get_default_log_path(""), true);
 mlog_set_log("1");
 
 
-// set logger for Open Monero
+// setup a logger for Open Monero
 
 el::Configurations defaultConf;
-defaultConf.setToDefault();
-defaultConf.setGlobally(el::ConfigurationType::ToFile,
-                        std::string("false"));
-defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput,
-                        std::string("true"));
 
-//el::Logger* omLogger = el::Loggers::getLogger("openmonero");
+defaultConf.setToDefault();
+//defaultConf.setGlobally(el::ConfigurationType::Filename, filename_base);
+defaultConf.setGlobally(el::ConfigurationType::ToFile, "false");
+defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
 
 el::Loggers::reconfigureLogger("openmonero", defaultConf);
 
@@ -61,8 +59,7 @@ bool stagenet         = *stagenet_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
 if (testnet && stagenet)
-{
-    //cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+{   
     OMERROR << "testnet and stagenet cannot be specified at the same time!";
     return EXIT_FAILURE;
 }
@@ -108,7 +105,6 @@ auto current_bc_status
             std::make_unique<xmreg::MicroCore>(),
             std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url));
 
-
 // since CurrentBlockchainStatus class monitors current status
 // of the blockchain (e.g., current height), its seems logical to
 // make static objects for accessing the blockchain in this class.
@@ -132,6 +128,7 @@ if (!current_bc_status->init_monero_blockchain())
 // when they log back or create new account.
 current_bc_status->start_monitor_blockchain_thread();
 
+OMINFO << "Blockchain monitoring thread started";
 
 // try connecting to the mysql
 shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
@@ -140,6 +137,8 @@ try
 {
     // MySqlAccounts will try connecting to the mysql database
     mysql_accounts = make_shared<xmreg::MySqlAccounts>(current_bc_status);
+
+    OMINFO << "Connected to the MySQL";
 }
 catch(std::exception const& e)
 {
@@ -171,6 +170,8 @@ xmreg::ThreadRAII mysql_ping_thread(
         std::thread(std::ref(mysql_ping)),
         xmreg::ThreadRAII::DtorAction::detach);
 
+OMINFO << "MySQL ping thread started";
+
 // create REST JSON API services
 xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
@@ -201,7 +202,9 @@ service.publish(import_recent_wallet_request);
 service.publish(get_tx);
 service.publish(get_version);
 
-auto settings = make_shared<Settings>( );
+OMINFO << "JSON API endpoints published";
+
+auto settings = make_shared<Settings>();
 
 if (config_json["ssl"]["enable"])
 {
@@ -228,7 +231,7 @@ if (config_json["ssl"]["enable"])
 else
 {
     settings->set_port(app_port);
-    settings->set_default_header( "Connection", "close" );
+    settings->set_default_header("Connection", "close");
 
     OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }

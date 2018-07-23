@@ -125,8 +125,8 @@ CurrentBlockchainStatus::get_block_txs(
 
     if (!mcore->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
     {
-        cerr << "Cant get transactions in block: "
-             << get_block_hash(blk) << endl;
+        OMERROR << "Cant get transactions in block: "
+                << get_block_hash(blk);
 
         return false;
     }
@@ -142,8 +142,8 @@ CurrentBlockchainStatus::get_txs(
 {
     if (!mcore->get_transactions(txs_to_get, txs, missed_txs))
     {
-        cerr << "CurrentBlockchainStatus::get_txs: "
-                "cant get transactions!\n";
+        OMERROR << "CurrentBlockchainStatus::get_txs: "
+                   "cant get transactions!";
         return false;
     }
 
@@ -202,7 +202,7 @@ CurrentBlockchainStatus::get_tx_with_output(
                 amount, output_idx
         );
 
-        cerr << out_msg << endl;
+        OMERROR << out_msg;
 
         return false;
     }
@@ -211,7 +211,7 @@ CurrentBlockchainStatus::get_tx_with_output(
 
     if (!mcore->get_tx(tx_out_idx.first, tx))
     {
-        cerr << "Cant get tx: " << tx_out_idx.first << endl;
+        OMERROR << "Cant get tx: " << tx_out_idx.first;
 
         return false;
     }
@@ -231,7 +231,7 @@ CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
     }
     catch (const OUTPUT_DNE& e)
     {
-        cerr << "get_output_keys: " << e.what() << endl;        
+        OMERROR << "get_output_keys: " << e.what();
     }
 
     return false;
@@ -321,7 +321,7 @@ CurrentBlockchainStatus::get_random_outputs(
 
     if (!mcore->get_random_outs_for_amounts(req, res))
     {
-        cerr << "mcore->get_random_outs_for_amounts(req, res) failed\n";
+        OMERROR << "mcore->get_random_outs_for_amounts(req, res) failed";
         return false;
     }
 
@@ -364,7 +364,7 @@ CurrentBlockchainStatus::get_output(
 
     if (!mcore->get_outs(req, res))
     {
-        cerr << "mcore->get_outs(req, res) failed\n";
+        OMERROR << "mcore->get_outs(req, res) failed";
         return false;
     }
 
@@ -411,7 +411,7 @@ CurrentBlockchainStatus::commit_tx(
 
     if (!rpc->commit_tx(tx_blob, error_msg, do_not_relay))
     {
-        cerr << "rpc->commit_tx() commit_tx failed\n";
+        OMERROR << "rpc->commit_tx() commit_tx failed";
         return false;
     }
 
@@ -427,7 +427,7 @@ CurrentBlockchainStatus::read_mempool()
 
     if (!mcore->get_mempool_txs(mempool_tx_info, key_image_infos))
     {
-        cerr << "Getting mempool failed " << endl;
+        OMERROR << "Getting mempool failed ";
         return false;
     }
 
@@ -456,7 +456,7 @@ CurrentBlockchainStatus::read_mempool()
         if (!parse_and_validate_tx_from_blob(
                 _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
         {
-            cerr << "Cant make tx from _tx_info.tx_blob" << endl;
+            OMERROR << "Cant make tx from _tx_info.tx_blob";
             return false;
         }
 
@@ -504,8 +504,8 @@ CurrentBlockchainStatus::search_if_payment_made(
         block blk;
 
         if (!get_block(blk_i, blk)) {
-            cerr << "Cant get block of height: "
-                    + to_string(blk_i) << endl;
+            OMERROR << "Cant get block of height: "
+                    + to_string(blk_i);
             return false;
         }
 
@@ -514,8 +514,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (!get_block_txs(blk, blk_txs, missed_txs))
         {
-            cerr << "Cant get transactions in block: "
-                 << to_string(blk_i) << endl;
+            OMERROR << "Cant get transactions in block: "
+                 << to_string(blk_i);
             return false;
         }
 
@@ -552,8 +552,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (!hex_to_pod(tx_payment_id_str, encrypted_payment_id8))
         {
-            cerr << "failed parsing hex to pod for encrypted_payment_id8"
-                 << '\n';
+            OMERROR << "failed parsing hex to pod for encrypted_payment_id8";
         }
 
         // decrypt the encrypted_payment_id8
@@ -570,10 +569,9 @@ CurrentBlockchainStatus::search_if_payment_made(
                                      bc_setup.import_payment_viewkey,
                                      derivation))
         {
-            cerr << "Cant get derived key for: "  << "\n"
-                 << "pub_tx_key: " << tx_pub_key << " and "
-                 << "prv_view_key" << bc_setup.import_payment_viewkey
-                 << "\n";
+            OMERROR << "Cant get derived key for: "  << "\n"
+                    << "pub_tx_key: " << tx_pub_key << " and "
+                    << "prv_view_key" << bc_setup.import_payment_viewkey;
 
             return false;
         }
@@ -587,8 +585,8 @@ CurrentBlockchainStatus::search_if_payment_made(
                     decrypted_payment_id8, tx_pub_key,
                         bc_setup.import_payment_viewkey))
             {
-                cerr << "Cant decrypt  decrypted_payment_id8: "
-                     << pod_to_hex(decrypted_payment_id8) << "\n";
+                OMERROR << "Cant decrypt  decrypted_payment_id8: "
+                     << pod_to_hex(decrypted_payment_id8);
             }
         }
 
@@ -664,7 +662,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
                     if (!r)
                     {
-                        cerr << "Cant decode ringCT!" << endl;
+                        OMERROR << "Cant decode ringCT!";
                         throw TxSearchException("Cant decode ringCT!");
                     }
 
@@ -681,9 +679,9 @@ CurrentBlockchainStatus::search_if_payment_made(
             }
         }
 
-        cout << " - payment id check in tx: "
-             << tx_hash_str
-             << " found: " << total_received << endl;
+        OMINFO << " - payment id check in tx: "
+               << tx_hash_str
+               << " found: " << total_received;
 
         if (total_received >= desired_amount)
         {
@@ -751,7 +749,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     }
     catch (const std::exception& e)
     {
-        cerr << "Faild created a search thread: " << e.what() << endl;
+        OMERROR << "Faild created a search thread: " << e.what();
         return false;
     }
 
@@ -762,7 +760,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
 
     t1.detach();
 
-    cout << "Search thread created\n";
+    OMINFO << "Search thread created for address " << acc.address;
 
     return true;
 }
@@ -777,7 +775,7 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        cout << "thread for " << address << " does not exist\n";
+        OMERROR << "thread for " << address << " does not exist";
         return false;
     }
 
@@ -795,7 +793,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        cout << "thread for " << address << " does not exist\n";
+        OMERROR << "thread for " << address << " does not exist";
         return false;
     }
 
@@ -815,7 +813,7 @@ CurrentBlockchainStatus::get_known_outputs_keys(
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        cout << "thread for " << address << " does not exist\n";
+        OMERROR << "thread for " << address << " does not exist";
         return false;
     }
 
@@ -846,7 +844,7 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
     if (!search_thread_exist(address_str))
     {
         // thread does not exist
-        cout << "thread for " << address_str << " does not exist\n";
+        OMERROR << "thread for " << address_str << " does not exist";
         return false;
     }
 
@@ -868,7 +866,7 @@ CurrentBlockchainStatus::find_txs_in_mempool(
     if (searching_threads.count(address_str) == 0)
     {
         // thread does not exist
-        cout << "thread for " << address_str << " does not exist\n";
+        OMERROR << "thread for " << address_str << " does not exist";
         return false;
     }
 
@@ -1000,7 +998,7 @@ CurrentBlockchainStatus::set_new_searched_blk_no(
     if (searching_threads.count(address) == 0)
     {
         // thread does not exist
-        cout << " thread does not exist" << endl;
+        OMERROR << " thread does not exist";
         return false;
     }
 
@@ -1020,8 +1018,8 @@ CurrentBlockchainStatus::clean_search_thread_map()
         if (search_thread_exist(st.first)
                 && st.second->still_searching() == false)
         {
-            cout << st.first << " still searching: "
-                 << st.second->still_searching() << endl;
+            OMERROR << st.first << " still searching: "
+                 << st.second->still_searching();
             searching_threads.erase(st.first);
         }
     }
@@ -1044,20 +1042,15 @@ CurrentBlockchainStatus::construct_output_rct_field(
             global_amount_index, out_amount,
             random_output_tx, output_idx_in_tx))
     {
-        cerr << "cant get random output transaction" << endl;
+        OMERROR << "cant get random output transaction";
         return make_tuple(string {}, string {}, string {});
     }
-
-    //cout << pod_to_hex(out.out_key) << endl;
-    //cout << pod_to_hex(get_transaction_hash(random_output_tx)) << endl;
-    //cout << output_idx_in_tx << endl;
 
     // placeholder variable for ringct outputs info
     // that we need to save in database
     string rtc_outpk;
     string rtc_mask(64, '0');
     string rtc_amount(64, '0');
-
 
     if (random_output_tx.version > 1 && !is_coinbase(random_output_tx))
     {
@@ -1138,7 +1131,7 @@ CurrentBlockchainStatus::get_txs_in_blocks(
     if (!CurrentBlockchainStatus::get_txs(txs_to_get, txs, missed_txs)
             || !missed_txs.empty())
     {
-        cerr << "Cant get transactions in blocks from : " << h1 << '\n';
+        OMERROR << "Cant get transactions in blocks from : " << h1;
         return false;
     }
 

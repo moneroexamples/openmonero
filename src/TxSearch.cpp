@@ -27,13 +27,13 @@ TxSearch::TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _c
 
     if (!xmreg::parse_str_address(acc->address, address, net_type))
     {
-        cerr << "Cant parse string address: " << acc->address << endl;
+        OMERROR << "Cant parse string address: " << acc->address;
         throw TxSearchException("Cant parse string address: " + acc->address);
     }
 
     if (!xmreg::parse_str_secret_key(acc->viewkey, viewkey))
     {
-        cerr << "Cant parse the private key: " << acc->viewkey << endl;
+        OMERROR << "Cant parse the private key: " << acc->viewkey;
         throw TxSearchException("Cant parse private key: " + acc->viewkey);
     }
 
@@ -92,7 +92,8 @@ TxSearch::search()
                 // stop the thread
                 if (loop_timestamp - last_ping_timestamp > thread_search_life)
                 {
-                    cout << "Search thread stopped for address "<< acc->address <<'\n';
+                    OMINFO << "Search thread stopped for address "
+                           << acc->address;
                     stop();
                 }
 
