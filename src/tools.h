@@ -275,6 +275,11 @@ hex_to_tx(string const& tx_hex, transaction& tx,
 string
 tx_to_hex(transaction const& tx);
 
+
+string
+hex_to_tx_blob(string const& tx_hex);
+
+
 }
 
 #endif //XMREG01_TOOLS_H

@@ -1,6 +1,8 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include <string>
+
 #define RAND_TX_HASH()                                      \
     crypto::hash tx_hash = crypto::rand<crypto::hash>();    \
     string tx_hash_str = pod_to_hex(tx_hash);               \
@@ -21,6 +23,7 @@
 #define TX_AND_ACC_FROM_HEX(hex_tx, hex_address)                                \
          TX_FROM_HEX(hex_tx);                                                   \
          ACC_FROM_HEX(hex_address);
+
 
 
 #endif // HELPERS_H
