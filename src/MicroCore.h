@@ -177,6 +177,17 @@ public:
     get_tx(crypto::hash const& tx_hash, transaction& tx) const;
 
     virtual bool
+    decrypt_payment_id(crypto::hash8 &payment_id,
+                       public_key const& public_key,
+                       secret_key const& secret_key)
+    {
+        return m_device->decrypt_payment_id(payment_id,
+                                            public_key,
+                                            secret_key);
+    }
+
+
+    virtual bool
     init_success() const;    
 
     virtual ~MicroCore();

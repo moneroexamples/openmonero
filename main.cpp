@@ -34,14 +34,21 @@ if (*help_opt)
 mlog_configure(mlog_get_default_log_path(""), true);
 mlog_set_log("1");
 
+string log_file  = *(opts.get_option<string>("log-file"));
 
 // setup a logger for Open Monero
 
 el::Configurations defaultConf;
 
 defaultConf.setToDefault();
-//defaultConf.setGlobally(el::ConfigurationType::Filename, filename_base);
-defaultConf.setGlobally(el::ConfigurationType::ToFile, "false");
+
+if (!log_file.empty())
+{
+    // setup openmonero log file
+    defaultConf.setGlobally(el::ConfigurationType::Filename, log_file);
+    defaultConf.setGlobally(el::ConfigurationType::ToFile, "true");
+}
+
 defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
 
 el::Loggers::reconfigureLogger("openmonero", defaultConf);
@@ -89,9 +96,6 @@ xmreg::MySqlConnector::port     = config_json["database"]["port"];
 xmreg::MySqlConnector::username = config_json["database"]["user"];
 xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
-
-// create rpc connector
-
 
 
 // once we have all the parameters for the blockchain and our backend

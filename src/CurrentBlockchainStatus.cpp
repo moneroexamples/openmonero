@@ -27,8 +27,6 @@ CurrentBlockchainStatus::CurrentBlockchainStatus(
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
-    network_type net_type = bc_setup.net_type;
-
     TxSearch::set_search_thread_life(
                 bc_setup.search_thread_life_in_seconds);
 
@@ -40,8 +38,8 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
                {
                    update_current_blockchain_height();
                    read_mempool();
-                   OMINFO << "Check block height: " << current_height
-                          << " no of mempool txs: " << mempool_txs.size();
+                   OMINFO << "Current blockchain height: " << current_height
+                          << ", no of mempool txs: " << mempool_txs.size();
                    clean_search_thread_map();
                    std::this_thread::sleep_for(
                            std::chrono::seconds(
@@ -284,27 +282,6 @@ CurrentBlockchainStatus::get_amount_specific_indices(
     return false;
 }
 
-//bool
-//CurrentBlockchainStatus::get_random_outputs(
-//        const vector<uint64_t>& amounts,
-//        const uint64_t& outs_count,
-//        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
-//            ::outs_for_amount>& found_outputs)
-//{
-//    rpccalls rpc {bc_setup.deamon_url};
-
-//    string error_msg;
-
-//    if (!rpc.get_random_outs_for_amounts(
-//                amounts, outs_count, found_outputs, error_msg))
-//    {
-//        cerr << "rpc.get_random_outs_for_amounts failed" << endl;
-//        return false;
-//    }
-
-//    return true;
-//}
-
 bool
 CurrentBlockchainStatus::get_random_outputs(
         const vector<uint64_t>& amounts,
@@ -330,27 +307,6 @@ CurrentBlockchainStatus::get_random_outputs(
     return true;
 }
 
-//bool
-//CurrentBlockchainStatus::get_output(
-//        const uint64_t amount,
-//        const uint64_t global_output_index,
-//        COMMAND_RPC_GET_OUTPUTS_BIN::outkey& output_info)
-//{
-//    rpccalls rpc {bc_setup.deamon_url};
-
-//    string error_msg;
-
-//    if (!rpc.get_out(amount, global_output_index, output_info))
-//    {
-//        cerr << "rpc.get_out" << endl;
-//        return false;
-//    }
-
-//    return true;
-//}
-
-
-
 bool
 CurrentBlockchainStatus::get_output(
         const uint64_t amount,
@@ -372,27 +328,6 @@ CurrentBlockchainStatus::get_output(
 
     return true;
 }
-
-
-//bool
-//CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate(
-//        uint64_t& fee_estimated)
-//{
-//    rpccalls rpc {bc_setup.deamon_url};
-
-//    string error_msg;
-
-//    if (!rpc.get_dynamic_per_kb_fee_estimate(
-//            FEE_ESTIMATE_GRACE_BLOCKS,
-//            fee_estimated, error_msg))
-//    {
-//        cerr << "rpc.get_dynamic_per_kb_fee_estimate failed" << endl;
-//        return false;
-//    }
-
-//    return true;
-//}
-
 
 uint64_t
 CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate() const
@@ -504,8 +439,7 @@ CurrentBlockchainStatus::search_if_payment_made(
         block blk;
 
         if (!get_block(blk_i, blk)) {
-            OMERROR << "Cant get block of height: "
-                    + to_string(blk_i);
+            OMERROR << "Cant get block of height: " << blk_i;
             return false;
         }
 
@@ -514,8 +448,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (!get_block_txs(blk, blk_txs, missed_txs))
         {
-            OMERROR << "Cant get transactions in block: "
-                 << to_string(blk_i);
+            OMERROR << "Cant get transactions from block: " << blk_i;
             return false;
         }
 
@@ -552,7 +485,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (!hex_to_pod(tx_payment_id_str, encrypted_payment_id8))
         {
-            OMERROR << "failed parsing hex to pod for encrypted_payment_id8";
+            OMERROR << "Failed parsing hex to pod for encrypted_payment_id8";
+            continue;
         }
 
         // decrypt the encrypted_payment_id8
@@ -581,12 +515,13 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (decrypted_payment_id8 != null_hash8)
         {
-            if (!mcore->get_device()->decrypt_payment_id(
+            if (!mcore->decrypt_payment_id(
                     decrypted_payment_id8, tx_pub_key,
                         bc_setup.import_payment_viewkey))
             {
-                OMERROR << "Cant decrypt  decrypted_payment_id8: "
-                     << pod_to_hex(decrypted_payment_id8);
+                OMERROR << "Cant decrypt decrypted_payment_id8: "
+                        << pod_to_hex(decrypted_payment_id8);
+                continue;
             }
         }
 
@@ -663,7 +598,7 @@ CurrentBlockchainStatus::search_if_payment_made(
                     if (!r)
                     {
                         OMERROR << "Cant decode ringCT!";
-                        throw TxSearchException("Cant decode ringCT!");
+                        return false;
                     }
 
                     amount = rct_amount;
@@ -672,14 +607,11 @@ CurrentBlockchainStatus::search_if_payment_made(
             } // if (mine_output && tx.version == 2)
 
 
-
             if (mine_output)
-            {
-                total_received += amount;
-            }
+                total_received += amount;            
         }
 
-        OMINFO << " - payment id check in tx: "
+        OMINFO << " Payment id check in tx: "
                << tx_hash_str
                << " found: " << total_received;
 
@@ -687,6 +619,7 @@ CurrentBlockchainStatus::search_if_payment_made(
         {
             // the payment has been made.
             tx_hash_with_payment = tx_hash_str;
+            OMINFO << "Import payment done";
             return true;
         }
     }
