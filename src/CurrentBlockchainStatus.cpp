@@ -677,23 +677,21 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
         //searching_threads.emplace(acc.address, new TxSearch(acc));
         // does not work on older gcc
         // such as the one in ubuntu 16.04
-        searching_threads[acc.address]
-                = make_unique<TxSearch>(acc, shared_from_this());
+
+        // create SearchTx object. It does not start searching yet
+
+        ThreadRAII2<TxSearch> t(std::make_unique<TxSearch>(acc, shared_from_this()),
+                               ThreadRAII::DtorAction::join);
+
+        searching_threads.insert({acc.address, std::move(t)});
+
+        OMINFO << "Search thread created for address " << acc.address;
     }
     catch (const std::exception& e)
     {
         OMERROR << "Faild created a search thread: " << e.what();
         return false;
     }
-
-    // start the thread for the created object
-    std::thread t1 {
-        &TxSearch::search,
-        searching_threads[acc.address].get()};
-
-    t1.detach();
-
-    OMINFO << "Search thread created for address " << acc.address;
 
     return true;
 }
@@ -712,7 +710,7 @@ CurrentBlockchainStatus::ping_search_thread(const string& address)
         return false;
     }
 
-    searching_threads[address].get()->ping();
+    searching_threads.find(address)->second.get_functor().ping();
 
     return true;
 }
@@ -730,8 +728,8 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
         return false;
     }
 
-    searched_blk_no = searching_threads[address].get()
-            ->get_searched_blk_no();
+    searched_blk_no = searching_threads.find(address)
+            ->second.get_functor().get_searched_blk_no();
 
     return true;
 }
@@ -752,7 +750,8 @@ CurrentBlockchainStatus::get_known_outputs_keys(
 
 
     known_outputs_keys
-            = searching_threads[address].get()->get_known_outputs_keys();
+            = searching_threads.find(address)
+                ->second.get_functor().get_known_outputs_keys();
 
     return true;
 }
@@ -781,10 +780,10 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
         return false;
     }
 
-    address = searching_threads[address_str].get()
-            ->get_xmr_address_viewkey().first;
-    viewkey = searching_threads[address_str].get()
-            ->get_xmr_address_viewkey().second;
+    address = searching_threads.find(address_str)
+            ->second.get_functor().get_xmr_address_viewkey().first;
+    viewkey = searching_threads.find(address_str)
+            ->second.get_functor().get_xmr_address_viewkey().second;
 
     return true;
 }
@@ -803,8 +802,8 @@ CurrentBlockchainStatus::find_txs_in_mempool(
         return false;
     }
 
-    transactions = searching_threads[address_str].get()
-            ->find_txs_in_mempool(mempool_txs);
+    transactions = searching_threads.find(address_str)
+            ->second.get_functor().find_txs_in_mempool(mempool_txs);
 
     return true;
 }
@@ -935,7 +934,8 @@ CurrentBlockchainStatus::set_new_searched_blk_no(
         return false;
     }
 
-    searching_threads[address].get()->set_searched_blk_no(new_value);
+    searching_threads.find(address)
+            ->second.get_functor().set_searched_blk_no(new_value);
 
     return true;
 }
@@ -946,13 +946,13 @@ CurrentBlockchainStatus::clean_search_thread_map()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    for (const auto& st: searching_threads)
+    for (auto& st: searching_threads)
     {
         if (search_thread_exist(st.first)
-                && st.second->still_searching() == false)
+                && st.second.get_functor().still_searching() == false)
         {
             OMERROR << st.first << " still searching: "
-                 << st.second->still_searching();
+                 << st.second.get_functor().still_searching();
             searching_threads.erase(st.first);
         }
     }

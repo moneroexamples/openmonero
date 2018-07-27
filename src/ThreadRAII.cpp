@@ -8,7 +8,7 @@ namespace xmreg
 {
 
 ThreadRAII::ThreadRAII(std::thread&& _t, DtorAction _action)
-: t {std::move(_t)}, action {_action}
+    : t {std::move(_t)}, action {_action}
 {}
 
 ThreadRAII::~ThreadRAII()

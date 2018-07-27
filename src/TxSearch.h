@@ -80,33 +80,31 @@ public:
 
     TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
-    void
-    search();
+    virtual void
+    operator()();
 
-    void
+    virtual void
     stop();
 
-    ~TxSearch();
-
-    void
+    virtual void
     set_searched_blk_no(uint64_t new_value);
 
-    uint64_t
+    virtual uint64_t
     get_searched_blk_no() const;
 
-    inline uint64_t
+    virtual uint64_t
     get_current_timestamp() const;
 
-    void
+    virtual void
     ping();
 
-    bool
-    still_searching();
+    virtual bool
+    still_searching() const;
 
-    void
+    virtual void
     populate_known_outputs();
 
-    known_outputs_t
+    virtual known_outputs_t
     get_known_outputs_keys();
 
 
@@ -134,17 +132,19 @@ public:
      *
      * @return json
      */
-    json
+    virtual json
     find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
 
-    pair<address_parse_info, secret_key>
+    virtual pair<address_parse_info, secret_key>
     get_xmr_address_viewkey() const;
 
     static void
     set_search_thread_life(uint64_t life_seconds);
 
-    bool
+    virtual bool
     delete_existing_tx_if_exists(string const& tx_hash);
+
+    virtual ~TxSearch();
 
 };
 

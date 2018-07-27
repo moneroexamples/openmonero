@@ -2,8 +2,8 @@
 // Created by mwo on 11/07/18.
 //
 
-#ifndef OPENMONERO_PINGTHREAD_H
-#define OPENMONERO_PINGTHREAD_H
+#ifndef OPENMONERO_THREADRAII_H
+#define OPENMONERO_THREADRAII_H
 
 #include <thread>
 
@@ -21,15 +21,35 @@ public:
     ThreadRAII(ThreadRAII&&) = default;
     ThreadRAII& operator=(ThreadRAII&&) = default;
 
-    std::thread& get() {return t;}
+    virtual std::thread& get() {return t;}
 
-    ~ThreadRAII();
+    virtual ~ThreadRAII();
 
-private:
+protected:
     std::thread t;
     DtorAction action;
 };
 
+template <typename T>
+class ThreadRAII2 : public ThreadRAII
+{
+public:
+
+    ThreadRAII2(std::unique_ptr<T> _functor,
+                DtorAction _action)
+        :ThreadRAII(std::thread(std::ref(*_functor)), _action),
+         f {std::move(_functor)}
+    {}
+
+    T& get_functor() {return *f;}
+
+//    ThreadRAII2(ThreadRAII2&&) = default;
+//    ThreadRAII2& operator=(ThreadRAII2&&) = default;
+
+protected:
+    std::unique_ptr<T> f;
+};
+
 }
 
-#endif //OPENMONERO_PINGTHREAD_H
+#endif //OPENMONERO_THREADRAII_H

@@ -49,7 +49,7 @@ TxSearch::TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _c
 }
 
 void
-TxSearch::search()
+TxSearch::operator()()
 {
 
     uint64_t current_timestamp = get_current_timestamp();
@@ -558,7 +558,7 @@ TxSearch::ping()
 }
 
 bool
-TxSearch::still_searching()
+TxSearch::still_searching() const
 {
     return continue_search;
 }

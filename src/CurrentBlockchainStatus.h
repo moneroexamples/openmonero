@@ -1,7 +1,3 @@
-//
-// Created by mwo on 14/12/16.
-//
-
 #ifndef RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
 #define RESTBED_XMR_CURRENTBLOCKCHAINSTATUS_H
 
@@ -14,6 +10,7 @@
 #include "BlockchainSetup.h"
 #include "TxSearch.h"
 #include "tools.h"
+#include "ThreadRAII.h"
 #include "RPCCalls.h"
 #include "MySqlAccounts.h"
 
@@ -275,7 +272,7 @@ protected:
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
     // make it static to guarantee only one such map exist.
-    map<string, unique_ptr<TxSearch>> searching_threads;
+    map<string, ThreadRAII2<TxSearch>> searching_threads;
 
     // thread that will be dispachaed and will keep monitoring blockchain
     // and mempool changes
