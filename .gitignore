@@ -6,6 +6,7 @@
 .idea/
 cmake-build-debug/
 ext/restbed/dependency/catch/
+ext/restbed/distribution/
 build
 .cproject
 .project
