@@ -166,7 +166,8 @@ public:
     // definitions of these function are at the end of this file
     // due to forward declaraions of TxSearch
     virtual bool
-    start_tx_search_thread(XmrAccount acc);
+    start_tx_search_thread(XmrAccount acc,
+                           std::unique_ptr<TxSearch> tx_search);
 
     virtual bool
     ping_search_thread(const string& address);

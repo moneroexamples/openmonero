@@ -573,8 +573,8 @@ YourMoneroRequests::get_unspent_outs(const shared_ptr< Session > session, const 
     {
         uint64_t total_outputs_amount {0};
 
-        uint64_t current_blockchain_height
-                = current_bc_status->get_current_blockchain_height();
+//        uint64_t current_blockchain_height
+//                = current_bc_status->get_current_blockchain_height();
 
         vector<XmrTransaction> txs;
 
@@ -1697,7 +1697,10 @@ YourMoneroRequests::login_and_start_search_thread(
             // to do anything except looking for tx and updating mysql
             // with relative tx information
 
-            if (current_bc_status->start_tx_search_thread(acc))
+            auto tx_search = std::make_unique<TxSearch>(acc, current_bc_status);
+
+            if (current_bc_status->start_tx_search_thread(
+                        acc, std::move(tx_search)))
             {
                 j_response["status"]      = "success";
                 j_response["new_address"] = false;

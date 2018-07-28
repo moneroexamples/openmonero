@@ -115,6 +115,14 @@ public:
                                  bool do_not_relay));
 };
 
+class MockTxSearch : public xmreg::TxSearch
+{
+public:
+    MOCK_METHOD0(operator_fcall, void());
+    virtual void operator()() override {operator_fcall();}
+};
+
+
 class BCSTATUS_TEST : public ::testing::TestWithParam<network_type>
 {
 public:
@@ -869,7 +877,31 @@ TEST_P(BCSTATUS_TEST, GetOutputKey)
                                                444 /* any */);
 
     EXPECT_EQ(result.pubkey, output_to_return.pubkey);
+}
 
+ACTION(MockSearchWhile)
+{
+    cout << "\nMocking while search in txsearch class\n" << endl;
+}
+
+TEST_P(BCSTATUS_TEST, StartTxSearchThread)
+{
+    xmreg::XmrAccount acc; // empty, mock account
+
+    auto tx_search = std::make_unique<MockTxSearch>();
+
+    EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
+            .WillOnce(MockSearchWhile());
+
+    EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+
+    // trying launching the same thread for aleary running account
+    // should also return true as this is fine
+    EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+
+    // wait a bit, just to give time to tx_search mock thread to finish
+    // its mocking action
+    std::this_thread::sleep_for(1s);
 }
 
 INSTANTIATE_TEST_CASE_P(

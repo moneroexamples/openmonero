@@ -6,6 +6,7 @@
 #define OPENMONERO_THREADRAII_H
 
 #include <thread>
+#include <iostream>
 
 namespace xmreg
 {
@@ -36,7 +37,7 @@ class ThreadRAII2 : public ThreadRAII
 public:
 
     ThreadRAII2(std::unique_ptr<T> _functor,
-                DtorAction _action)
+                DtorAction _action = DtorAction::join)
         :ThreadRAII(std::thread(std::ref(*_functor)), _action),
          f {std::move(_functor)}
     {}

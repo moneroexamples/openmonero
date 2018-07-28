@@ -8,15 +8,6 @@
 namespace xmreg
 {
 
-
-void
-MicroBlockchainLMDB::sync()
-{
-    //cout << "MicroBlockchainLMDB::sync()\n\n";
-    // we open in readonly, so dont sync anything
-}
-
-
 /**
  * The constructor is interesting, as
  * m_mempool and m_blockchain_storage depend
@@ -50,15 +41,12 @@ MicroCore::init(const string& _blockchain_path, network_type nt)
 
     nettype = nt;
 
-    //std::unique_ptr<BlockchainDB> db = std::make_unique<BlockchainLMDB>();
-    std::unique_ptr<BlockchainDB> db = std::make_unique<MicroBlockchainLMDB>();
+    std::unique_ptr<BlockchainDB> db = std::make_unique<BlockchainLMDB>();
 
     try
     {
         // try opening lmdb database files
         db->open(blockchain_path,  DBF_RDONLY);
-        //db->open(blockchain_path,  DBF_RDONLY | MDB_NOSYNC);
-        //db->open(blockchain_path,  MDB_RDONLY | MDB_NOSYNC);
     }
     catch (const std::exception& e)
     {

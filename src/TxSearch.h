@@ -78,6 +78,9 @@ class TxSearch
 
 public:
 
+    // make default constructor. useful in testing
+    TxSearch() = default;
+
     TxSearch(XmrAccount& _acc, std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     virtual void

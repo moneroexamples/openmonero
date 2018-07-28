@@ -17,17 +17,6 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
-
-class MicroBlockchainLMDB : public BlockchainLMDB
-{
-public:
-
-    using BlockchainLMDB::BlockchainLMDB;
-
-    virtual void sync() override;
-};
-
-
 /**
  * Micro version of cryptonode::core class
  * Micro version of constructor,
@@ -40,8 +29,8 @@ class MicroCore {
 
     string blockchain_path;
 
-    Blockchain core_storage;
     tx_memory_pool m_mempool;
+    Blockchain core_storage;
 
     hw::device* m_device;
 

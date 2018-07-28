@@ -660,7 +660,8 @@ CurrentBlockchainStatus::get_output_key(
 }
 
 bool
-CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
+CurrentBlockchainStatus::start_tx_search_thread(
+        XmrAccount acc, std::unique_ptr<TxSearch> tx_search)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
@@ -673,19 +674,12 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
 
     try
     {
-        // make a tx_search object for the given xmr account
-        //searching_threads.emplace(acc.address, new TxSearch(acc));
-        // does not work on older gcc
-        // such as the one in ubuntu 16.04
+        // launch SearchTx thread for the given xmr account
 
-        // create SearchTx object. It does not start searching yet
+        searching_threads.insert(
+            {acc.address, ThreadRAII2<TxSearch>(std::move(tx_search))});
 
-        ThreadRAII2<TxSearch> t(std::make_unique<TxSearch>(acc, shared_from_this()),
-                               ThreadRAII::DtorAction::join);
-
-        searching_threads.insert({acc.address, std::move(t)});
-
-        OMINFO << "Search thread created for address " << acc.address;
+        OMINFO << "Search thread created for address: " << acc.address;
     }
     catch (const std::exception& e)
     {
