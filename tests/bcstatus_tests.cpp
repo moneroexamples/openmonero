@@ -895,7 +895,7 @@ TEST_P(BCSTATUS_TEST, StartTxSearchThread)
 
     EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 
-    // trying launching the same thread for aleary running account
+    // trying launching the same thread for already running account
     // should also return true as this is fine
     EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 

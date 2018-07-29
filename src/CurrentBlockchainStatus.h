@@ -37,7 +37,8 @@ class MySqlAccounts;
 *
 * This way its much easier to mock it for unit testing.
 */
-class CurrentBlockchainStatus : public std::enable_shared_from_this<CurrentBlockchainStatus>
+class CurrentBlockchainStatus
+        : public std::enable_shared_from_this<CurrentBlockchainStatus>
 {
 public:
     // vector of mempool transactions that all threads
@@ -47,7 +48,8 @@ public:
 
 
     //                            tx_hash      , tx,          height , timestamp, is_coinbase
-    using txs_tuple_t = std::tuple<crypto::hash, transaction, uint64_t, uint64_t, bool>;
+    using txs_tuple_t
+        = std::tuple<crypto::hash, transaction, uint64_t, uint64_t, bool>;
 
     atomic<uint64_t> current_height;
 
@@ -249,6 +251,9 @@ public:
     CurrentBlockchainStatus& operator= (CurrentBlockchainStatus&&) = default;
 
 protected:
+
+    virtual TxSearch&
+    get_search_thread(string const& acc_address);
 
     // parameters used to connect/read monero blockchain
     BlockchainSetup bc_setup;
