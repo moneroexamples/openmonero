@@ -91,18 +91,6 @@ parse_str_address(const string& address_str,
 }
 
 
-
-/**
- * Return string representation of monero address
- */
-string
-print_address(const address_parse_info& address_info, network_type net_type)
-{
-    return "<" + get_account_address_as_str(
-            net_type, address_info.is_subaddress, address_info.address)
-           + ">";
-}
-
 string
 print_sig (const signature& sig)
 {

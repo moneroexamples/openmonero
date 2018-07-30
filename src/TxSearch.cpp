@@ -760,7 +760,7 @@ TxSearch::find_txs_in_mempool(
 }
 
 
-pair<address_parse_info, secret_key>
+TxSearch::addr_view_t
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);

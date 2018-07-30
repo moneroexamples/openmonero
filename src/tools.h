@@ -70,10 +70,6 @@ inline bool
 is_separator(char c);
 
 string
-print_address(const address_parse_info& address,
-              bool testnet = false);
-
-string
 print_sig (const signature& sig);
 
 string

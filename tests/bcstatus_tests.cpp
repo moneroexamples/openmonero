@@ -119,11 +119,19 @@ class MockTxSearch : public xmreg::TxSearch
 {
 public:
     MOCK_METHOD0(operator_fcall, void());
-    virtual void operator()() override {operator_fcall();}
+    void operator()() override {operator_fcall();}
 
     MOCK_METHOD0(ping, void());
 
     MOCK_CONST_METHOD0(still_searching, bool());
+
+    MOCK_CONST_METHOD0(get_searched_blk_no, uint64_t());
+
+    MOCK_METHOD0(get_known_outputs_keys,
+                 xmreg::TxSearch::known_outputs_t());
+
+    MOCK_CONST_METHOD0(get_xmr_address_viewkey,
+                 xmreg::TxSearch::addr_view_t());
 };
 
 
@@ -947,8 +955,92 @@ TEST_P(BCSTATUS_TEST, PingSearchThread)
     // we should be getting false now
 
     EXPECT_FALSE(bcs->ping_search_thread(acc.address));
+}
+
+
+
+TEST_P(BCSTATUS_TEST, GetSearchedBlkOutputsAndAddrViewkey)
+{
+    xmreg::XmrAccount acc; // empty, mock account
+
+    acc.address = "whatever mock address";
+
+    auto tx_search = std::make_unique<MockTxSearch>();
+
+    EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
+            .WillOnce(MockSearchWhile2());
+
+    EXPECT_CALL(*tx_search, get_searched_blk_no())
+            .WillOnce(Return(123));
+
+    xmreg::TxSearch::known_outputs_t outputs_to_return;
+
+    outputs_to_return.insert({crypto::rand<crypto::public_key>(), 33});
+    outputs_to_return.insert({crypto::rand<crypto::public_key>(), 44});
+    outputs_to_return.insert({crypto::rand<crypto::public_key>(), 55});
+
+    EXPECT_CALL(*tx_search, get_known_outputs_keys())
+            .WillOnce(Return(outputs_to_return));
+
+    xmreg::TxSearch::addr_view_t mock_address = std::make_pair(
+                bcs->get_bc_setup().import_payment_address,
+                bcs->get_bc_setup().import_payment_viewkey);
+
+    EXPECT_CALL(*tx_search, get_xmr_address_viewkey())
+            .WillRepeatedly(Return(mock_address));
+
+    EXPECT_CALL(*tx_search, still_searching())
+            .WillRepeatedly(Return(false));
+
+    ASSERT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+
+    uint64_t searched_blk_no {0};
+
+    EXPECT_TRUE(bcs->get_searched_blk_no(acc.address, searched_blk_no));
+
+    xmreg::TxSearch::known_outputs_t outputs_returned;
+
+    EXPECT_TRUE(bcs->get_known_outputs_keys(acc.address, outputs_returned));
+
+    EXPECT_EQ(outputs_returned.size(), outputs_to_return.size());
+
+    address_parse_info address_returned;
+    crypto::secret_key viewkey_returned;
+
+    EXPECT_TRUE(bcs->get_xmr_address_viewkey(acc.address,
+                                             address_returned,
+                                             viewkey_returned));
+
+    //can compare addresses only as string
+    string address_returned_str
+            = get_account_address_as_str(GetParam(), false,
+                                         address_returned.address);
+
+    string mock_address_str
+            = get_account_address_as_str(GetParam(), false,
+                                         mock_address.first.address);
+
+    EXPECT_EQ(address_returned_str, mock_address_str);
+    EXPECT_EQ(viewkey_returned, mock_address.second);
+
+    while(bcs->search_thread_exist(acc.address))
+    {
+        cout << "\nsearch thread still exists\n";
+        std::this_thread::sleep_for(1s);
+        bcs->clean_search_thread_map();
+    }
+
+    // once we removed the search thread as it finshed,
+    // we should be getting false now
+
+    EXPECT_FALSE(bcs->get_searched_blk_no(acc.address, searched_blk_no));
+    EXPECT_FALSE(bcs->get_known_outputs_keys(acc.address, outputs_returned));
+    EXPECT_FALSE(bcs->get_xmr_address_viewkey(acc.address,
+                                             address_returned,
+                                             viewkey_returned));
 
 }
+
 
 INSTANTIATE_TEST_CASE_P(
         DifferentMoneroNetworks, BCSTATUS_TEST,

@@ -26,16 +26,19 @@ class MySqlAccounts;
 
 class TxSearchException: public std::runtime_error
 {
+public:
     using std::runtime_error::runtime_error;
 };
 
-
-
 class TxSearch
 {
-    //                                     out_pk   , amount
-    using known_outputs_t = unordered_map<public_key, uint64_t>;
 
+public:
+    //                                     out_pk   , amount
+    using known_outputs_t = std::unordered_map<public_key, uint64_t>;
+    using addr_view_t = std::pair<address_parse_info, secret_key>;
+
+private:
 
     // how frequently update scanned_block_height in Accounts table
     //static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 5; // seconds
@@ -138,7 +141,7 @@ public:
     virtual json
     find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
 
-    virtual pair<address_parse_info, secret_key>
+    virtual addr_view_t
     get_xmr_address_viewkey() const;
 
     static void
