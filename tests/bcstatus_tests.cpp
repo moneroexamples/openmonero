@@ -120,6 +120,10 @@ class MockTxSearch : public xmreg::TxSearch
 public:
     MOCK_METHOD0(operator_fcall, void());
     virtual void operator()() override {operator_fcall();}
+
+    MOCK_METHOD0(ping, void());
+
+    MOCK_CONST_METHOD0(still_searching, bool());
 };
 
 
@@ -895,13 +899,55 @@ TEST_P(BCSTATUS_TEST, StartTxSearchThread)
 
     EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 
+    auto tx_search2 = std::make_unique<MockTxSearch>();
+
     // trying launching the same thread for already running account
     // should also return true as this is fine
-    EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+    EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search2)));
 
     // wait a bit, just to give time to tx_search mock thread to finish
     // its mocking action
     std::this_thread::sleep_for(1s);
+}
+
+ACTION(MockSearchWhile2)
+{
+    cout << "\nMocking while search in txsearch class2\n" << endl;
+    std::this_thread::sleep_for(1s);
+}
+
+TEST_P(BCSTATUS_TEST, PingSearchThread)
+{
+    xmreg::XmrAccount acc; // empty, mock account
+
+    acc.address = "whatever mock address";
+
+    auto tx_search = std::make_unique<MockTxSearch>();
+
+    EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
+            .WillOnce(MockSearchWhile2());
+
+    EXPECT_CALL(*tx_search, ping()).WillOnce(Return());
+
+    EXPECT_CALL(*tx_search, still_searching())
+            .WillRepeatedly(Return(false));
+
+    ASSERT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+
+    EXPECT_TRUE(bcs->ping_search_thread(acc.address));         
+
+    while(bcs->search_thread_exist(acc.address))
+    {
+        cout << "\nsearch thread still exists\n";
+        std::this_thread::sleep_for(1s);
+        bcs->clean_search_thread_map();
+    }
+
+    // once we removed the search thread as it finshed,
+    // we should be getting false now
+
+    EXPECT_FALSE(bcs->ping_search_thread(acc.address));
+
 }
 
 INSTANTIATE_TEST_CASE_P(
