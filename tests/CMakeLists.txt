@@ -24,14 +24,14 @@ add_om_test(microcore)
 add_om_test(bcstatus)
 
 SETUP_TARGET_FOR_COVERAGE(
-        NAME mysql_cov                   # New target name
+        NAME mysql_cov
         EXECUTABLE mysql_tests)
 
 
 SETUP_TARGET_FOR_COVERAGE(
-        NAME microcore_cov                    # New target name
+        NAME microcore_cov
         EXECUTABLE microcore_tests)
 
 SETUP_TARGET_FOR_COVERAGE(
-        NAME bcstatus_cov                    # New target name
+        NAME bcstatus_cov
         EXECUTABLE bcstatus_tests)

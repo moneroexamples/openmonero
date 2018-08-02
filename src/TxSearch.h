@@ -1,17 +1,10 @@
-//
-// Created by mwo on 8/01/17.
-//
-
-#ifndef RESTBED_XMR_TXSEARCH_H
-#define RESTBED_XMR_TXSEARCH_H
+#pragma once
 
 #include "MySqlAccounts.h"
 #include "OutputInputIdentification.h"
 
-#include <iostream>
 #include <memory>
 #include <mutex>
-#include <thread>
 #include <atomic>
 #include <algorithm>
 #include <unordered_map>
@@ -37,6 +30,7 @@ public:
     //                                     out_pk   , amount
     using known_outputs_t = std::unordered_map<public_key, uint64_t>;
     using addr_view_t = std::pair<address_parse_info, secret_key>;
+    using pool_txs_t = std::vector<pair<uint64_t, transaction>>;
 
 private:
 
@@ -139,7 +133,7 @@ public:
      * @return json
      */
     virtual json
-    find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
+    find_txs_in_mempool(pool_txs_t mempool_txs);
 
     virtual addr_view_t
     get_xmr_address_viewkey() const;
@@ -157,4 +151,3 @@ public:
 
 
 }
-#endif //RESTBED_XMR_TXSEARCH_H

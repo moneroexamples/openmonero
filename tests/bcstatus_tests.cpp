@@ -132,6 +132,9 @@ public:
 
     MOCK_CONST_METHOD0(get_xmr_address_viewkey,
                  xmreg::TxSearch::addr_view_t());
+
+    MOCK_METHOD1(find_txs_in_mempool,
+                 json(xmreg::TxSearch::pool_txs_t mempool_txs));
 };
 
 
@@ -1038,7 +1041,44 @@ TEST_P(BCSTATUS_TEST, GetSearchedBlkOutputsAndAddrViewkey)
     EXPECT_FALSE(bcs->get_xmr_address_viewkey(acc.address,
                                              address_returned,
                                              viewkey_returned));
+}
 
+TEST_P(BCSTATUS_TEST, FindTxsInMempool)
+{
+    xmreg::XmrAccount acc; // empty, mock account
+
+    acc.address = "whatever mock address";
+
+    auto tx_search = std::make_unique<MockTxSearch>();
+
+    json txs_to_return = json::array();
+
+    txs_to_return.push_back(json {"tx_hash1", "some_tx_hash1"});
+    txs_to_return.push_back(json {"tx_hash2", "some_tx_hash2"});
+    txs_to_return.push_back(json {"tx_hash3", "some_tx_hash3"});
+
+    EXPECT_CALL(*tx_search, find_txs_in_mempool(_))
+            .WillRepeatedly(Return(txs_to_return));
+
+    EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
+            .WillRepeatedly(MockSearchWhile2());
+
+    ASSERT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
+
+    json txs;
+
+    EXPECT_TRUE(bcs->find_txs_in_mempool(acc.address, txs));
+
+    while(bcs->search_thread_exist(acc.address))
+    {
+        cout << "\nsearch thread still exists\n";
+        std::this_thread::sleep_for(1s);
+        bcs->clean_search_thread_map();
+    }
+
+    // once we removed the search thread as it finshed,
+    // we should be getting false now
+    EXPECT_FALSE(bcs->find_txs_in_mempool(acc.address, txs));
 }
 
 

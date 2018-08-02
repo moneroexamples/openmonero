@@ -589,8 +589,7 @@ TxSearch::get_known_outputs_keys()
 };
 
 json
-TxSearch::find_txs_in_mempool(
-        vector<pair<uint64_t, transaction>> mempool_txs)
+TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
 {
     json j_transactions = json::array();
 
@@ -605,9 +604,9 @@ TxSearch::find_txs_in_mempool(
     // time in a single connection.
     // so we create local connection here, only to be used in this method.
 
-    shared_ptr<MySqlAccounts> local_xmr_accounts = make_shared<MySqlAccounts>(current_bc_status);
+    auto local_xmr_accounts = make_shared<MySqlAccounts>(current_bc_status);
 
-    for (const pair<uint64_t, transaction>& mtx: mempool_txs)
+    for (auto const& mtx: mempool_txs)
     {
 
         uint64_t recieve_time = mtx.first;
@@ -683,7 +682,8 @@ TxSearch::find_txs_in_mempool(
                 // tx public key and its index in that tx
                 XmrOutput out;
 
-                if (local_xmr_accounts->output_exists(pod_to_hex(in_info.out_pub_key), out))
+                if (local_xmr_accounts->output_exists(
+                            pod_to_hex(in_info.out_pub_key), out))
                 {
                     total_sent += out.amount;
 
