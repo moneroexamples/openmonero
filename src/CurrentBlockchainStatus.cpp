@@ -214,14 +214,14 @@ CurrentBlockchainStatus::get_blocks_range(
 }
 
 bool
-CurrentBlockchainStatus::get_block_txs(const block &blk, list <transaction> &blk_txs)
+CurrentBlockchainStatus::get_block_txs(const block &blk, vector <transaction> &blk_txs)
 {
     // get all transactions in the block found
     // initialize the first list with transaction for solving
     // the block i.e. coinbase tx.
     blk_txs.push_back(blk.miner_tx);
 
-    list <crypto::hash> missed_txs;
+    vector <crypto::hash> missed_txs;
 
     if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs)) {
         cerr << "Cant get transactions in block: " << get_block_hash(blk) << endl;
@@ -545,7 +545,7 @@ CurrentBlockchainStatus::search_if_payment_made(
             return false;
         }
 
-        list <cryptonote::transaction> blk_txs;
+        vector <cryptonote::transaction> blk_txs;
 
         if (!get_block_txs(blk, blk_txs))
         {

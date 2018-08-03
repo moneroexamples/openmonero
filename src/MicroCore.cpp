@@ -248,8 +248,8 @@ MicroCore::get_tx_hash_from_output_pubkey(const public_key& output_pubkey,
     // get all transactions in the block found
     // initialize the first list with transaction for solving
     // the block i.e. coinbase.
-    list<transaction> txs {blk.miner_tx};
-    list<crypto::hash> missed_txs;
+    vector<transaction> txs {blk.miner_tx};
+    vector<crypto::hash> missed_txs;
 
     if (!m_blockchain_storage.get_transactions(blk.tx_hashes, txs, missed_txs))
     {
