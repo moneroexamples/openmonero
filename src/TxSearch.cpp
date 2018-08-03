@@ -123,7 +123,7 @@ TxSearch::search()
             }
 
             // get all txs in the block
-            list <cryptonote::transaction> blk_txs;
+            vector <cryptonote::transaction> blk_txs;
 
             if (!CurrentBlockchainStatus::get_block_txs(blk, blk_txs))
             {
