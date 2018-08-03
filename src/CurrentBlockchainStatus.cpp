@@ -782,7 +782,7 @@ CurrentBlockchainStatus::find_txs_in_mempool(
         const string& address_str,
         json& transactions)
 {
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+    std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
     if (searching_threads.count(address_str) == 0)
     {
@@ -803,7 +803,7 @@ CurrentBlockchainStatus::find_tx_in_mempool(
         transaction& tx)
 {
 
-    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+    std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
     for (auto const& mtx: mempool_txs)
     {
@@ -823,14 +823,7 @@ bool
 CurrentBlockchainStatus::find_key_images_in_mempool(
         std::vector<txin_v> const& vin)
 {
-    mempool_txs_t mempool_tx_cpy;
-
-    {
-        // make local copy of the mempool, so that we dont lock it for
-        // long, as this function can take longer to execute
-        std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
-        mempool_tx_cpy = mempool_txs;
-    }
+    std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
     // perform exhostive search to check if any key image in vin vector
     // is in the mempool. This is used to check if a tx generated
@@ -845,7 +838,7 @@ CurrentBlockchainStatus::find_key_images_in_mempool(
         const txin_to_key& tx_in_to_key
                 = boost::get<cryptonote::txin_to_key>(kin);
 
-        for (auto const& mtx: mempool_tx_cpy)
+        for (auto const& mtx: mempool_txs)
         {
             const transaction &m_tx = mtx.second;
 
