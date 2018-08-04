@@ -132,8 +132,9 @@ public:
      *
      * @return json
      */
-    virtual json
-    find_txs_in_mempool(pool_txs_t mempool_txs);
+    virtual void
+    find_txs_in_mempool(pool_txs_t mempool_txs,
+                        json* j_transactions);
 
     virtual addr_view_t
     get_xmr_address_viewkey() const;

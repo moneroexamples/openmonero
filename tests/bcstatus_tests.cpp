@@ -15,7 +15,7 @@ namespace
 {
 
 
-using json = nlohmann::json;
+//using json = nlohmann::json;
 using namespace std;
 using namespace cryptonote;
 using namespace epee::string_tools;
@@ -30,6 +30,7 @@ using ::testing::Return;
 using ::testing::Throw;
 using ::testing::DoAll;
 using ::testing::SetArgReferee;
+using ::testing::SetArgPointee;
 using ::testing::_;
 using ::testing::internal::FilePath;
 
@@ -119,7 +120,7 @@ class MockTxSearch : public xmreg::TxSearch
 {
 public:
     MOCK_METHOD0(operator_fcall, void());
-    void operator()() override {operator_fcall();}
+    virtual void operator()() {operator_fcall();}
 
     MOCK_METHOD0(ping, void());
 
@@ -133,8 +134,31 @@ public:
     MOCK_CONST_METHOD0(get_xmr_address_viewkey,
                  xmreg::TxSearch::addr_view_t());
 
-    MOCK_METHOD1(find_txs_in_mempool,
-                 json(xmreg::TxSearch::pool_txs_t mempool_txs));
+    // google mock has some issues with nlohmann::json
+    // as input or return parameters in functions it mocks.
+    // it resutls in wornings, so to avoid it we are going
+    // to proxy json as strings.
+    MOCK_METHOD2(mock_find_txs_in_mempool,
+                 void(xmreg::TxSearch::pool_txs_t mempool_txs,
+                      vector<string>& transactions_json_str));
+
+
+    // now we need to manualy overwrite TxSearch::find_txs_in_mempool
+    // to return j_transactions based on transactions_json_str
+    // from the mock_find_txs_in_mempool
+    virtual void
+    find_txs_in_mempool(pool_txs_t mempool_txs,
+                        nlohmann::json* j_transactions)
+    {
+        vector<string> transactions_json_str;
+        mock_find_txs_in_mempool(mempool_txs, transactions_json_str);
+
+        *j_transactions = nlohmann::json::array();
+
+        for (auto& json_str: transactions_json_str)
+            j_transactions->push_back(nlohmann::json::parse(json_str));
+    }
+
 };
 
 
@@ -179,11 +203,11 @@ protected:
      MockMicroCore* mcore_ptr;
      MockRPCCalls* rpc_ptr;
 
-     static json config_json;
+     static nlohmann::json config_json;
 };
 
 
-json BCSTATUS_TEST::config_json;
+nlohmann::json BCSTATUS_TEST::config_json;
 
 TEST_P(BCSTATUS_TEST, DefaultConstruction)
 {
@@ -1050,21 +1074,27 @@ TEST_P(BCSTATUS_TEST, FindTxsInMempool)
 
     auto tx_search = std::make_unique<MockTxSearch>();
 
-    json txs_to_return = json::array();
+    nlohmann::json txs_to_return = nlohmann::json::array();
 
-    txs_to_return.push_back(json {"tx_hash1", "some_tx_hash1"});
-    txs_to_return.push_back(json {"tx_hash2", "some_tx_hash2"});
-    txs_to_return.push_back(json {"tx_hash3", "some_tx_hash3"});
+    txs_to_return.push_back(nlohmann::json {"tx_hash1", "some_tx_hash1"});
+    txs_to_return.push_back(nlohmann::json {"tx_hash2", "some_tx_hash2"});
+    txs_to_return.push_back(nlohmann::json {"tx_hash3", "some_tx_hash3"});
 
-    EXPECT_CALL(*tx_search, find_txs_in_mempool(_))
-            .WillRepeatedly(Return(txs_to_return));
+
+    vector<string> txs_to_return_json_str;
+
+    for (auto& tx_json: txs_to_return)
+        txs_to_return_json_str.push_back(tx_json.dump());
+
+    EXPECT_CALL(*tx_search, mock_find_txs_in_mempool(_,_))
+            .WillRepeatedly(SetArgReferee<1>(txs_to_return_json_str));
 
     EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
             .WillRepeatedly(MockSearchWhile2());
 
     ASSERT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 
-    json txs;
+    nlohmann::json txs;
 
     EXPECT_TRUE(bcs->find_txs_in_mempool(acc.address, txs));
 
@@ -1168,6 +1198,28 @@ TEST_P(BCSTATUS_TEST, FindTxsInMempool2)
     crypto::hash non_existing_tx_hash = crypto::rand<crypto::hash>();
 
     EXPECT_FALSE(bcs->find_tx_in_mempool(non_existing_tx_hash, tx));
+}
+
+TEST_P(BCSTATUS_TEST, FindKeyImagesInMempool)
+{
+    vector<tx_info> mempool_txs_to_return;
+
+    vector<string> txs_blobs = get_mock_txs_as_str(true);
+
+    for (auto const& tx_blob: txs_blobs)
+    {
+        mempool_txs_to_return.emplace_back();
+        mempool_txs_to_return.back().tx_blob = tx_blob;
+    }
+
+    EXPECT_CALL(*mcore_ptr, get_mempool_txs(_, _))
+            .WillRepeatedly(DoAll(
+                          SetArgReferee<0>(mempool_txs_to_return),
+                          Return(true)));
+
+    ASSERT_TRUE(bcs->read_mempool());
+
+
 
 }
 

@@ -791,8 +791,8 @@ CurrentBlockchainStatus::find_txs_in_mempool(
         return false;
     }
 
-    transactions = get_search_thread(address_str)
-            .find_txs_in_mempool(mempool_txs);
+    get_search_thread(address_str)
+            .find_txs_in_mempool(mempool_txs, &transactions);
 
     return true;
 }
@@ -840,7 +840,7 @@ CurrentBlockchainStatus::find_key_images_in_mempool(
 
         for (auto const& mtx: mempool_txs)
         {
-            const transaction &m_tx = mtx.second;
+            transaction const& m_tx = mtx.second;
 
             vector<txin_to_key> input_key_imgs
                     = xmreg::get_key_images(m_tx);

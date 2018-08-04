@@ -588,10 +588,13 @@ TxSearch::get_known_outputs_keys()
     return known_outputs_keys;
 };
 
-json
-TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
-{
-    json j_transactions = json::array();
+void
+TxSearch::find_txs_in_mempool(
+        TxSearch::pool_txs_t mempool_txs,
+        json* j_transactions)
+{   
+
+    *j_transactions = json::array();
 
     uint64_t current_height = current_bc_status->get_current_blockchain_height();
 
@@ -655,7 +658,7 @@ TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
             j_tx["mixin"]          = oi_identification.get_mixin_no();
             j_tx["mempool"]        = true;
 
-            j_transactions.push_back(j_tx);
+            j_transactions->push_back(j_tx);
         }
 
 
@@ -710,7 +713,7 @@ TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
                     // exisiting j_tx. we add spending info
                     // to j_tx created before.
 
-                    json& j_tx = j_transactions.back();
+                    json& j_tx = j_transactions->back();
 
                     j_tx["total_sent"]    = total_sent;
                     j_tx["spent_outputs"] = spend_keys;
@@ -745,7 +748,7 @@ TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
                     j_tx["mempool"]        = true;
                     j_tx["spent_outputs"]  = spend_keys;
 
-                    j_transactions.push_back(j_tx);
+                    j_transactions->push_back(j_tx);
 
                 } // else of if (!oi_identification.identified_outputs.empty())
 
@@ -754,9 +757,6 @@ TxSearch::find_txs_in_mempool(TxSearch::pool_txs_t mempool_txs)
         } // if (!oi_identification.identified_inputs.empty())
 
     } // for (const transaction& tx: txs_to_check)
-
-    return j_transactions;
-
 }
 
 
