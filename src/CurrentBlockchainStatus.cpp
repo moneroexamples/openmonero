@@ -1019,11 +1019,10 @@ CurrentBlockchainStatus::construct_output_rct_field(
     return make_tuple(rtc_outpk, rtc_mask, rtc_amount);
 };
 
-
-
-bool
-CurrentBlockchainStatus::get_txs_in_blocks(
+void
+CurrentBlockchainStatus::init_txs_data_vector(
         vector<block> const& blocks,
+        vector<crypto::hash>& txs_to_get,
         vector<txs_tuple_t>& txs_data)
 {
     // get height of the first block
@@ -1035,44 +1034,47 @@ CurrentBlockchainStatus::get_txs_in_blocks(
         uint64_t blk_height = h1 + blk_i;
 
         // first insert miner_tx
-        txs_data.emplace_back(get_transaction_hash(blk.miner_tx),
-                              transaction{}, blk_height,
-                              blk.timestamp, true);
+
+        txs_data.emplace_back(blk_height, blk.timestamp, true);
+
+        txs_to_get.push_back(get_transaction_hash(blk.miner_tx));
 
         // now insert hashes of regular txs to be fatched later
         // so for now, these txs are null pointers
         for (auto& tx_hash: blk.tx_hashes)
-            txs_data.emplace_back(tx_hash, transaction{},
-                                  blk_height, blk.timestamp, false);
-    }
+        {
+            txs_data.emplace_back(blk_height, blk.timestamp, false);
+            txs_to_get.push_back(tx_hash);
+        }
 
-    // prepare vector<tx_hash> for CurrentBlockchainStatus::get_txs
-    // to fetch the correspoding transactions
-    std::vector<crypto::hash> txs_to_get;
+    } // for(uint64_t blk_i = 0; blk_i < blocks.size(); blk_i++)
+}
 
-    for (auto const& tx_tuple: txs_data)
-        txs_to_get.push_back(std::get<0>(tx_tuple));
+bool
+CurrentBlockchainStatus::get_txs_in_blocks(
+        vector<block> const& blocks,
+        vector<crypto::hash>& txs_hashes,
+        vector<transaction>& txs,
+        vector<txs_tuple_t>& txs_data)
+{
+
+    // initialize vectors of txs hashes, block heights
+    // and whethere or not txs are coninbase
+    init_txs_data_vector(blocks, txs_hashes, txs_data);
 
     // fetch all txs from the blocks that we are
     // analyzing in this iteration
-    vector<cryptonote::transaction> txs;
     vector<crypto::hash> missed_txs;
 
-    if (!CurrentBlockchainStatus::get_txs(txs_to_get, txs, missed_txs)
-            || !missed_txs.empty())
+    if (!CurrentBlockchainStatus::get_txs(txs_hashes, txs, missed_txs)
+            || !missed_txs.empty()
+            || (txs_hashes.size() != txs.size()))
     {
-        OMERROR << "Cant get transactions in blocks from : " << h1;
+        OMERROR << "Cant get transactions in blocks";
         return false;
     }
 
-    size_t tx_idx {0};
-
-    for (auto& tx: txs)
-    {
-        auto& tx_tuple = txs_data[tx_idx++];
-        //assert(std::get<0>(tx_tuple) == get_transaction_hash(tx));
-        std::get<1>(tx_tuple) = std::move(tx);
-    }
+    (void) missed_txs;
 
     return true;
 }

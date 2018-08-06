@@ -46,9 +46,9 @@ public:
     using mempool_txs_t = vector<pair<uint64_t, transaction>>;
 
 
-    //              tx_hash      , tx,        , height , timestamp, is_coinbase
+    //              height , timestamp, is_coinbase
     using txs_tuple_t
-        = std::tuple<crypto::hash, transaction, uint64_t, uint64_t, bool>;
+        = std::tuple<uint64_t, uint64_t, bool>;
 
     atomic<uint64_t> current_height;
 
@@ -234,8 +234,15 @@ public:
         return bc_setup;
     }
 
+    virtual void
+    init_txs_data_vector(vector<block> const& blocks,
+                         vector<crypto::hash>& txs_to_get,
+                         vector<txs_tuple_t>& txs_data);
+
     virtual bool
     get_txs_in_blocks(vector<block> const& blocks,
+                      vector<crypto::hash>& txs_hashes,
+                      vector<transaction>& txs,
                       vector<txs_tuple_t>& txs_data);
 
     virtual TxSearch&
