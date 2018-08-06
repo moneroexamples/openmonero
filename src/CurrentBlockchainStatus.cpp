@@ -962,11 +962,11 @@ CurrentBlockchainStatus::construct_output_rct_field(
         const uint64_t out_amount)
 {
 
-   transaction random_output_tx;
+    transaction random_output_tx;
     uint64_t output_idx_in_tx;
 
     // we got random outputs, but now we need to get rct data of those
-    // outputs, because by default frontend created ringct txs.
+    // outputs, because by default frontend creates ringct txs.
 
     if (!CurrentBlockchainStatus::get_tx_with_output(
             global_amount_index, out_amount,
@@ -996,7 +996,7 @@ CurrentBlockchainStatus::construct_output_rct_field(
         // for non ringct txs, we need to take it rct amount commitment
         // and sent to the frontend. the mask is zero mask for those,
         // as frontend will produce identy mask autmatically
-        //for non-ringct outputs
+        // for non-ringct outputs
 
         output_data_t od = get_output_key(out_amount, global_amount_index);
 
@@ -1040,7 +1040,7 @@ CurrentBlockchainStatus::get_txs_in_blocks(
                               blk.timestamp, true);
 
         // now insert hashes of regular txs to be fatched later
-        // so for now, theys txs are null pointers
+        // so for now, these txs are null pointers
         for (auto& tx_hash: blk.tx_hashes)
             txs_data.emplace_back(tx_hash, transaction{},
                                   blk_height, blk.timestamp, false);

@@ -110,10 +110,10 @@ public:
         return core_storage.get_db().get_output_tx_and_index(amount, index);
     }
 
-    template<typename... T>
-    auto get_tx_block_height(T&&... args) const
+    virtual uint64_t
+    get_tx_block_height(crypto::hash const& tx_hash) const
     {
-        return core_storage.get_db().get_tx_block_height(std::forward<T>(args)...);
+        return core_storage.get_db().get_tx_block_height(tx_hash);
     }
 
     virtual std::vector<uint64_t>

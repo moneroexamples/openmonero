@@ -784,15 +784,15 @@ YourMoneroRequests::get_random_outs(
         return;
     }
 
-    vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>
-            found_outputs;
+    using rpc_outs = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS;
+
+    vector<rpc_outs::outs_for_amount> found_outputs;
 
     if (current_bc_status->get_random_outputs(amounts, count, found_outputs))
     {
         json& j_amount_outs = j_response["amount_outs"];
 
-        for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
-             ::outs_for_amount& outs: found_outputs)
+        for (const auto& outs: found_outputs)
         {
             json j_outs {{"amount", outs.amount},
                          {"outputs", json::array()}};
@@ -800,8 +800,7 @@ YourMoneroRequests::get_random_outs(
 
             json& j_outputs = j_outs["outputs"];
 
-            for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
-                 ::out_entry& out: outs.outs)
+            for (auto  const& out: outs.outs)
             {
                 uint64_t global_amount_index = out.global_amount_index;
 

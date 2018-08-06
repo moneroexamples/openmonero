@@ -57,6 +57,9 @@ public:
 
     MOCK_CONST_METHOD1(have_tx, bool(crypto::hash const& tx_hash));
 
+    MOCK_CONST_METHOD1(get_tx_block_height,
+                       uint64_t(crypto::hash const& tx_hash));
+
     MOCK_CONST_METHOD2(tx_exists,
                        bool(crypto::hash const& tx_hash,
                             uint64_t& tx_id));
@@ -367,6 +370,36 @@ TEST_P(BCSTATUS_TEST, GetTx)
     EXPECT_FALSE(bcs->get_tx("hash of wrong format", returned_tx2));
 }
 
+//MOCK_CONST_METHOD1(get_tx_block_height,
+//                   uint64_t(crypto::hash const& tx_hash));
+
+TEST_P(BCSTATUS_TEST, GetTxBlockHeight)
+{
+    // tx_hash 2ff79595683b546c8959e353b2c345394ea80694073d9237a146448bb65915dd
+    string tx_hex {"02c2d20701ff86d20701f88ceccabdbf06027b0b71991727c05f0ec98bdc0e12fe598acf8eb808790c3692550a464b722ec22101d9d9ddd1f2b7010715195405742af8fa89e12c0d6c3f490c81a08e836e3d516300"};
+
+    TX_FROM_HEX(tx_hex);
+
+    EXPECT_CALL(*mcore_ptr, have_tx(_))
+            .WillOnce(Return(true));
+
+    EXPECT_CALL(*mcore_ptr, get_tx_block_height(_))
+            .WillRepeatedly(Return(123));
+
+    int64_t height_returned;
+
+    EXPECT_TRUE(bcs->get_tx_block_height(tx_hash, height_returned));
+
+    EXPECT_EQ(height_returned, 123);
+
+    // tx does not exist
+
+    EXPECT_CALL(*mcore_ptr, have_tx(_))
+            .WillOnce(Return(false));
+
+    EXPECT_FALSE(bcs->get_tx_block_height(tx_hash, height_returned));
+}
+
 TEST_P(BCSTATUS_TEST, GetTxWithOutput)
 {
     // some dummy tx hash
@@ -400,7 +433,8 @@ TEST_P(BCSTATUS_TEST, GetTxWithOutputFailure)
     // some dummy tx hash
     RAND_TX_HASH();
 
-    const tx_out_index tx_idx_to_return = make_pair(tx_hash, 6);
+    const tx_out_index tx_idx_to_return = make_pair(tx_hash,
+                                                    6 /* output idx */);
 
     EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
             .WillOnce(Return(tx_idx_to_return));
@@ -981,6 +1015,14 @@ ACTION(MockSearchWhile2)
     std::this_thread::sleep_for(1s);
 }
 
+TEST_P(BCSTATUS_TEST, GetSearchthreadThrows)
+{
+    // CurrentBlockchainStatus::get_search_thread will throw
+    // exception if it is called for an address that does not exisit.
+    EXPECT_THROW(bcs->get_search_thread("whatever adddress"),
+                 std::runtime_error);
+}
+
 TEST_P(BCSTATUS_TEST, PingSearchThread)
 {
     xmreg::XmrAccount acc; // empty, mock account
@@ -999,7 +1041,9 @@ TEST_P(BCSTATUS_TEST, PingSearchThread)
 
     ASSERT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 
-    EXPECT_TRUE(bcs->ping_search_thread(acc.address));         
+    EXPECT_TRUE(bcs->ping_search_thread(acc.address));
+
+    EXPECT_TRUE(bcs->set_new_searched_blk_no(acc.address, 22222));
 
     while(bcs->search_thread_exist(acc.address))
     {
@@ -1012,6 +1056,8 @@ TEST_P(BCSTATUS_TEST, PingSearchThread)
     // we should be getting false now
 
     EXPECT_FALSE(bcs->ping_search_thread(acc.address));
+
+    EXPECT_FALSE(bcs->set_new_searched_blk_no(acc.address, 22222));
 }
 
 
@@ -1299,6 +1345,103 @@ TEST_P(BCSTATUS_TEST, FindKeyImagesInMempool)
 
 
     EXPECT_FALSE(bcs->find_key_images_in_mempool(key_images_to_find2));
+}
+
+TEST_P(BCSTATUS_TEST, ConstructOutputRctField_RingCTTx)
+{
+    // testnet tx_hash a4080f0a37837f24ff4512cc0e21c5203e7445b9689303e7add5702c11725e9d
+    string ringct_tx_hex {"020002020007da9012f79602f0e30399a20314d7010cd033d24cf85e0913d79de224bc963260ce2a9525abd20c820321d521f87c54f502000781c609bfd508d71a9efc07d07741df0429e0aa26efaeca36c9f157bf8e80619c32e25a78a4e724815d892c857a2f8766020002f1a558f69093ce2bcf02719bb5a372a9e2b92651b0c861674f4f0f1ca3ac2ba80002cc84eabfa99691044bbb314c08f7f3eed2b7d1c64fc4733c7f7b25f6b0f212812c02090180006f9a80dc79e701eb19d03b9110895caa08788cade55a1ab50f11be91a5ebdbf02b36b27211485404d081f896033702be8d4330b04466a69ca94779dc0c9066e8be85b3513ab6648128c64a80080a85345cd384aaba7c8ba92b8d23a21a4ed27e38134cb3cd3c4fa5701728f80260f567f28a61f9074f1a14ed83532dcd67fde76484d2969a048160799aad8503b37aa103cb3f122b9a03e99ebf890f23e4e0284db56b3965f1b4183edc284f0ceba21af74ed66fa14ddd72e3e07b78abbad53590565747764e64c04e2ba723b0c39894754f95b5ba6c01b7af7f152298f47549cd69e0cde657d29399f48087b1434d93184e0b8d2549772302cce035c9f625ff7de363715a6bcca13ceb829f1285d807785c9729a1e6ee89fc89737bb2bd7a8d66bebb09a10a9090a55ea375608da1c73c77c64ae6dc0a7688a25d6dd8dc998edf60fb51a421c78bab7b698cabc086521d7e78ee5a41ac93955ef4436216daa5af1df1ed7a48ac6f52d723d3c81b13bdce40bf973dfdaae2e29312c8c990ce058659f18d71b75437ccff40480595e13219920f6c0afe7f8290dd1d9bd875f5043155042a8f96a77878422fe10906a039cc5a206002d980aaaf82ed6e650cc3fe27529ea412fdea7bb87a1422c047741b98719756b8b91700a40095cca780cb8b0a6ad77236c8d2ae1e900f1037a6c9098193507cc552e77947c6d8b00407cd4a91d551e2751a2c248c51c77bee75f7195314c1b06813803f3625746b1b971f0a03eacc3b50600c7759ee39c5228e5c76da2200179f6db8ecec631937412b992935a33548af4947088c31607d22836ff5723a0a6d7a40fd7adf11d354e85cd3d22d1b77e3427c3afe648a7c02286706e24453d75278e499bbb4dff1aa6b10e0e1b6b45804ad909707eb663a4ab9300a72705c494bd0cc8bf1b3e0adb4ba9fa432b05abe766115ee8e186a445d3c7048514b012cc74b1eb261f3344a7691437ea2912be0bdff79aae16cdf3b9192850a9f74bf0134e9568acb39aface8e4b571342cc3f86f875735f54d0ce7d263620badb99209f03486de1a6b2c6636870b187c75e64ba51455e9fe45f2ca9d3e44efad80126f9ca4bc02c0a3bc8de68aeb41616089c8ad2e8b88b650a47438c46f055396a378d407b7a4fa0b667d66454f2c7f3e313f72233878e591642f22817b0a36ff4c1d04f03629852509a7a0a9c3f68a423a4ee407b12444b60d2b7db4f902b566258973dbff3f718ca0ac12e7a32d2c88e638c14227009bac9c1cca43c304e48dc6baf650c46a7abf45db4f960a787ce3bea193a39833d0dcba7feb7c3bc322666e4b4c451803252cc4787e53b1754e795e75afa4d74143e59c3820f4c66d31ed635833fc868b200ae59e9e718393cbb8e7a9c5bf144cae1a6b54f812cf99fa8963d977a9633128ba5718f8fca2aa8064d3357c23a70d32ce59e1f3a0c251511ed9780dc1e99ce409773030121edfe31d9819e3346bf02eaa536bc900ca00f8d4c40283564ec5acc82d1a8abc69411ea39d1a4d89ddee2ebc99979147380206565d10f81cc26110a77072d8097e6f6472195465677345e4f9bc9174b7f93088fcde21fe43f3972284e9ef17b3f821397dded316c8716a114e9f90b739b95605969c7e69d8027bae858c1411367b200b3a0be7dcfcbea6e3937388b6e5861d78749ab502610f6a05e90fa525a01272d5345a6a8b659b7b8d95995d4ba4160a5aec0060c92cacf82e796cd798c57fff75094435c90b7ec6fdaaaca33ed2f838f42da96966e0e33477b91c7c34d388c2eda1b18d1c99457281fff70406a05dc18306aecaf77b78cf7fc7a39e7bf7eef38547fb7f0055a768f870e60e0ece6483b7ee85808f132d0c5d013ab929eff21065d8679a751d882a332e27a6752a26c5279c846591f8022f39017e9fff4f29d7dbbffdf4abb1ae93e957903a8d08272113da43fca3d707b56b546e71a1cec088adbcbe136d5402245c2545ef5ed0c9abd8efc46fd323f3da50c4530b59408d7ff08891b8fd3f2ce2cd6938f06c884cf61d974acfec94b6d9e80fcd493d5251750b9101aadc749157a19d2b8fb21e33dd0c2161839898d71bcd9f7906a680c55ae03c9c8ff771f7943d3c8c22f9b14480410353b2ffe7b3ee174ee476fd757360475af4fd419b79b91f00f15c5e59a415e80e32508152be103e2eb487fd0e3bdb9474f2efdf9aeafc2075fe796a510009e2033633390514f141cb82861aa8122280da1ccb0872beb671fa63f860f18194fe08e34d40154fd13e25f09d4fcdf0dde7452803de730f315a87f8fd6369dc20560542a9a8a5816923d730880bc242e0f55a82e44050035b5ff4c5f8fd5b027ad00d249fa3006150d035ca82e59ae7ea97f77afc6dc3ec197444b70a8603875ea9056b7d94f7861ab3ca1106ce3d39af4e20b62d03d2ef0e14d24a020320412ed40748f348a97739cba7c29a24bc2e93f293549f2ff6a7ad2d9ac19360814f659507e64d7e8affcf8e085c543292be5e226138a9938b7824bd7e6e75499c8634580130e846097b212d860354b65aad7a5f1cce9a241eb541739e8e43336a0274f509e1155657e032ab0a1f4fd4d2a068838ab82588ce90ec12b9943d35661e3cac04a42c1c73e395004a38b532fe77a85809246a0ee90088f1f09c6c0904621843026b2e706d2828b474d0d1162251ed644ded5cbf57c52271cdb46c85653620a8019bff6bd799b38deca17ccc17a6cdbe20e3c5559341aa56ffeddce762095c4f07f211ee4af5fe893b77e5a3bbb43720065a3991dfa463a937efd77d38066ca70afa4ccfb358f347a4b6c1ca30d04072a9ff0c1747c88492a533a99e0cd48a7600ed50caa0dfa184e83fb086508353a187dcb09185982ed176b50040df6673c5035878a96a6701a799f022fef2a540030809c5d636755b5f6df32851fb6e12380156b3bec68573241062dff90d73fdc799fe64838343834f4f7c2cda3d3b67770ec6fade3173f4afdb7f09503fa5a7ac5d6101fbadc98d42e9d24600fd8e238d0eabb212b10a8d567c982fd00d2a87264b363794a22de78d6999158422419b860976bd4e62e2d58a0a155d0da1bf5207f0ef5e4734b8d311b589a0d4005098300097a466d853207b218d05c68d795ecd90127363ef103c2601df22a575ec713e08e7f25a913da8f229865900a58ce872c856b5bd2c8d224b0e9dbad742b93dd20a321280b6fb0924da6cfea1d822d6eed6a34a5f471699acc1215d53b7b41a05064c719793f5c41c9db80b766f68ed8ab6398bf06c741f63ce77ea9d4bd3f5760004e09838a2d6d17184c430bdcbd574b24adf15a59ca836697d6a82cc40181b00e383ec21b8e1c2d5905798e43e9b1fdbf361f0cf32256d9f2e90101e84d7e004003c60a159c2c7d4e64cfea5312ba5766e9b622de053ea3433998395eab8750b95d26d02556389be7b830827308c2fe0a3cfd6308fc1391770241c863a3ecd0f8cb70912637d451fa0cac13aa0d4e5fd5cf4b64f6e43d05ad9b2ad6c833d220acbd162e9e07217c62ceadf6aa895141817d440df5a58cd60718742b2ae907c059150ac40c56a1a620190dc5096cb57d731d0451f8c4eea3dd30e13000dbf867af44b20350b4ac8ee6cad64bb954b29deb18e6e616debb34e2a2a92814378270a"};
+
+    TX_FROM_HEX(ringct_tx_hex);
+
+    const tx_out_index tx_idx_to_return = make_pair(tx_hash,
+                                                    1 /* output idx */);
+
+    EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
+            .WillRepeatedly(Return(tx_idx_to_return));
+
+    uint64_t mock_global_amount_index {33333}; // any index
+    uint64_t mock_out_amount {0}; // any amount
+
+    // first we check if get_tx returns false when it
+    // cant locate the txs that we need
+    EXPECT_CALL(*mcore_ptr, get_tx(_, _)).WillOnce(Return(false));
+
+    auto rct_fields = bcs->construct_output_rct_field(
+                                mock_global_amount_index,
+                                mock_out_amount);
+
+    EXPECT_TRUE(std::get<0>(rct_fields).empty());
+    EXPECT_TRUE(std::get<1>(rct_fields).empty());
+    EXPECT_TRUE(std::get<2>(rct_fields).empty());
+
+    // now get_tx will return true and the tx that we want
+    EXPECT_CALL(*mcore_ptr, get_tx(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(tx), Return(true)));
+
+    rct_fields = bcs->construct_output_rct_field(
+                              mock_global_amount_index,
+                              mock_out_amount);
+
+    string expected_rtc_outpk {"c39894754f95b5ba6c01b7af7f152298f47549cd69e0cde657d29399f48087b1"};
+    string expected_rtc_mask {"60f567f28a61f9074f1a14ed83532dcd67fde76484d2969a048160799aad8503"};
+    string expected_rtc_amount {"b37aa103cb3f122b9a03e99ebf890f23e4e0284db56b3965f1b4183edc284f0c"};
+
+    EXPECT_EQ(std::get<0>(rct_fields), expected_rtc_outpk);
+    EXPECT_EQ(std::get<1>(rct_fields), expected_rtc_mask);
+    EXPECT_EQ(std::get<2>(rct_fields), expected_rtc_amount);
+}
+
+TEST_P(BCSTATUS_TEST, ConstructOutputRctField_LegacyTx)
+{
+    // mainnet tx_hash a898e407e3427200f8356e1d33d08023aa1440e01b2c2ce2fa9dfd5b7fc89c88
+    string ringct_tx_hex {"0100020280a0d9e61d018f90012489c0dd35d368c61d8bf7b692054cf2ecdf1d5e4c985b140a5afdf66525a97f0280c0dfda8ee90601a80cb030275216f7958e0c3a17cf42d8b1e8b17f1a5703b63bef978dea03f87cd62d048088aca3cf0202a65b1dd8cfe0e41e15af75dd0c1d18c26371e51ec9f293af5b909a0a5fa59be180d0b8e1981a02186734d4374cd227a0f7a65daeeae275828cf3c72fb5d93e1184322dfff394b580a0b6cef7850202958ecb9dee140f74ea0605f265d231261dec5e58c8a89975719690c50cb4cfaf808095e789c60402b9b075493ef432e589ca2a7dc63ecbee7b9e05bcd416596ed0498c7802f71c9e44022100462e3cdfa219d8724fb531eb7e741a65f6802546aed7ff7064236e038421b32801d33c3170a4d9417f13e2e3a83c5241d3383de20b3913a6d295d6e8cc5322df862b571136213f79ea1b834b361fec3d8eb4d297fc007f24e27a00d76c4716b6080db448368abdcaf65267d099de23c796f868ebe8eb6c91829258222abee147026144104a8e3233d953f68d265f8d15f8b15deddf5e1eedfc4302139f30160e08552888d925706c48f0f1f205e4dacf4ab314cca13819359e109094bc3c8d7707"};
+
+    // this tx is not realy used in this case for checking expectaions.
+    // we only have it so that we can get to the else section
+    // in the if statment in construct_output_rct_field
+
+    TX_FROM_HEX(ringct_tx_hex);
+
+    const tx_out_index tx_idx_to_return = make_pair(tx_hash,
+                                                    1 /* output idx */);
+
+    EXPECT_CALL(*mcore_ptr, get_output_tx_and_index(_, _))
+            .WillRepeatedly(Return(tx_idx_to_return));
+
+    uint64_t mock_global_amount_index {33333}; // any index
+    uint64_t mock_out_amount {0}; // any amount
+
+    // now get_tx will return true and the tx that we want
+    EXPECT_CALL(*mcore_ptr, get_tx(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(tx), Return(true)));
+
+
+    // for legact txs we only need their outputs and commitment
+    // thus only rtc_outpk will be set in tuple produced
+    // by construct_output_rct_field
+    // since we mock eveyrhting, the commitment returned can
+    // be random.
+
+    output_data_t output_to_return {
+                crypto::rand<crypto::public_key>(),
+                1000, 2222,
+                crypto::rand<rct::key>() /* commitment */};
+
+    EXPECT_CALL(*mcore_ptr, get_output_key(_, _))
+            .WillOnce(Return(output_to_return));
+
+    auto rct_fields = bcs->construct_output_rct_field(
+                              mock_global_amount_index,
+                              mock_out_amount);
+
+    string expected_rtc_outpk = pod_to_hex(output_to_return.commitment);
+    string expected_rtc_mask(64, '0'); // expected to be zero
+    string expected_rtc_amount(64, '0'); // expected to be zero
+
+    EXPECT_EQ(std::get<0>(rct_fields), expected_rtc_outpk);
+    EXPECT_EQ(std::get<1>(rct_fields), expected_rtc_mask);
+    EXPECT_EQ(std::get<2>(rct_fields), expected_rtc_amount);
 }
 
 

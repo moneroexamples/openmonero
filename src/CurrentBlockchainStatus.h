@@ -46,7 +46,7 @@ public:
     using mempool_txs_t = vector<pair<uint64_t, transaction>>;
 
 
-    //                            tx_hash      , tx,          height , timestamp, is_coinbase
+    //              tx_hash      , tx,        , height , timestamp, is_coinbase
     using txs_tuple_t
         = std::tuple<crypto::hash, transaction, uint64_t, uint64_t, bool>;
 
@@ -238,6 +238,9 @@ public:
     get_txs_in_blocks(vector<block> const& blocks,
                       vector<txs_tuple_t>& txs_data);
 
+    virtual TxSearch&
+    get_search_thread(string const& acc_address);
+
     // default destructor is fine
     virtual ~CurrentBlockchainStatus() = default;
 
@@ -250,9 +253,6 @@ public:
     CurrentBlockchainStatus& operator= (CurrentBlockchainStatus&&) = default;
 
 protected:
-
-    virtual TxSearch&
-    get_search_thread(string const& acc_address);
 
     // parameters used to connect/read monero blockchain
     BlockchainSetup bc_setup;
