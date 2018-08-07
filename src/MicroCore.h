@@ -122,7 +122,6 @@ public:
         return core_storage.get_db().get_tx_amount_output_indices(tx_id);
     }
 
-
     virtual bool
     get_mempool_txs(
             std::vector<tx_info>& tx_infos,
@@ -158,6 +157,9 @@ public:
     {
         return core_storage.get_dynamic_per_kb_fee_estimate(grace_blocks);
     }
+
+    bool
+    get_block_complete_entry(block const& b, block_complete_entry& bce);
 
     virtual bool
     get_block_from_height(uint64_t height, block& blk) const;

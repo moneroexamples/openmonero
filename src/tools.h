@@ -275,6 +275,19 @@ tx_to_hex(transaction const& tx);
 string
 hex_to_tx_blob(string const& tx_hex);
 
+bool
+hex_to_complete_block(string const& cblk_str,
+                      block_complete_entry& cblk);
+
+bool
+hex_to_complete_block(vector<string> const& cblks_str,
+                      vector<block_complete_entry> & cblks);
+
+bool
+blocks_and_txs_from_complete_blocks(
+        vector<block_complete_entry> const& cblks,
+        vector<block>& blocks,
+        vector<transaction>& txs);
 
 }
 

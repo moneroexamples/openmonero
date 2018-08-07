@@ -1362,5 +1362,80 @@ hex_to_tx_blob(string const& tx_hex)
     return tx_blob;
 }
 
+bool
+hex_to_complete_block(string const& cblk_str,
+                      block_complete_entry& cblk)
+{
+    cryptonote::blobdata cblk_blob;
+
+    if (!epee::string_tools::parse_hexstr_to_binbuff(
+                cblk_str, cblk_blob))
+        return false;
+
+    if (!epee::serialization::load_t_from_binary(cblk, cblk_blob))
+        return false;
+
+    return true;
+}
+
+bool
+hex_to_complete_block(vector<string> const& cblks_str,
+                      vector<block_complete_entry>& cblks)
+{
+    for (auto const& cblk_str: cblks_str)
+    {
+
+        block_complete_entry cblk;
+
+        if (!hex_to_complete_block(cblk_str, cblk))
+            return false;
+
+        cblks.push_back(cblk);
+    }
+
+    return true;
+}
+
+bool
+blocks_and_txs_from_complete_blocks(
+        vector<block_complete_entry> const& cblks,
+        vector<block>& blocks,
+        vector<transaction>& transactions)
+{
+
+
+    for (auto const& cblk: cblks)
+    {
+        block blk;
+
+        if (!parse_and_validate_block_from_blob(cblk.block, blk))
+            return false;
+
+        blocks.push_back(blk);
+
+        // first is miner_tx
+        transactions.push_back(blk.miner_tx);
+
+        vector<transaction> txs;
+
+        for (auto const& tx_blob: cblk.txs)
+        {
+            transaction tx;
+
+            if (!parse_and_validate_tx_from_blob(tx_blob, tx))
+                return false;
+
+            txs.push_back(tx);
+        }
+
+        // now normal txs
+        transactions.insert(transactions.end(),
+                            txs.begin(), txs.end());
+    }
+
+    return true;
+}
+
+
 }
 

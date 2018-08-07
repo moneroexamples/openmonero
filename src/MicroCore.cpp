@@ -112,6 +112,25 @@ MicroCore::get_block_from_height(uint64_t height, block& blk) const
 }
 
 
+bool
+MicroCore::get_block_complete_entry(block const& b, block_complete_entry& bce)
+{
+    bce.block = cryptonote::block_to_blob(b);
+
+    for (const auto &tx_hash: b.tx_hashes)
+    {
+      transaction tx;
+
+      if (!get_tx(tx_hash, tx))
+        return false;
+
+      cryptonote::blobdata txblob =  tx_to_blob(tx);
+
+      bce.txs.push_back(txblob);
+    }
+
+    return true;
+}
 
 bool
 MicroCore::get_tx(crypto::hash const& tx_hash, transaction& tx) const

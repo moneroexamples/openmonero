@@ -22,7 +22,7 @@ main(int ac, const char* av[])
 // get command line options
 xmreg::CmdLineOptions opts {ac, av};
 
-auto help_opt         = opts.get_option<bool>("help");
+auto help_opt = opts.get_option<bool>("help");
 
 // if help was chosen, display help text and finish
 if (*help_opt)
