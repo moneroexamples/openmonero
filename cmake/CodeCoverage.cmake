@@ -136,13 +136,13 @@ function(SETUP_TARGET_FOR_COVERAGE)
     set(multiValueArgs EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if(NOT LCOV_PATH)
-        message(FATAL_ERROR "lcov not found! Aborting...")
-    endif() # NOT LCOV_PATH
+   # if(NOT LCOV_PATH)
+   #     message(FATAL_ERROR "lcov not found! Aborting...")
+   # endif() # NOT LCOV_PATH
 
-    if(NOT GENHTML_PATH)
-        message(FATAL_ERROR "genhtml not found! Aborting...")
-    endif() # NOT GENHTML_PATH
+   # if(NOT GENHTML_PATH)
+   #     message(FATAL_ERROR "genhtml not found! Aborting...")
+   # endif() # NOT GENHTML_PATH
 
     # Setup target
     add_custom_target(${Coverage_NAME}
