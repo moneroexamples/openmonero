@@ -17,10 +17,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `openmonero`
+-- Database: `flakeapps`
 --
-CREATE DATABASE IF NOT EXISTS `openmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `openmonero`;
+CREATE DATABASE IF NOT EXISTS `flakeapps` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `flakeapps`;
 
 -- --------------------------------------------------------
 
@@ -31,11 +31,11 @@ USE `openmonero`;
 DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
-  `address` varchar(95) NOT NULL,
+  `address` varchar(200) NOT NULL,
   `viewkey_hash` char(64) NOT NULL,
-  `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
+  `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT ''0'',
   `scanned_block_timestamp` timestamp NOT NULL DEFAULT 0,
-  `start_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
+  `start_height` int(10) UNSIGNED NOT NULL DEFAULT ''0'',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -52,8 +52,8 @@ CREATE TABLE `Inputs` (
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `tx_id` bigint(20) UNSIGNED NOT NULL,
   `output_id` bigint(20) UNSIGNED NOT NULL,
-  `key_image` varchar(64) NOT NULL DEFAULT '',
-  `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT '00000000000000000000',
+  `key_image` varchar(64) NOT NULL DEFAULT '''',
+  `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT ''00000000000000000000'',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -69,14 +69,14 @@ CREATE TABLE `Outputs` (
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `tx_id` bigint(20) UNSIGNED NOT NULL,
   `out_pub_key` varchar(64) NOT NULL,
-  `rct_outpk` varchar(64) NOT NULL DEFAULT '',
-  `rct_mask` varchar(64) NOT NULL DEFAULT '',
-  `rct_amount` varchar(64) NOT NULL DEFAULT '',
-  `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
-  `amount` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `rct_outpk` varchar(64) NOT NULL DEFAULT '''',
+  `rct_mask` varchar(64) NOT NULL DEFAULT '''',
+  `rct_amount` varchar(64) NOT NULL DEFAULT '''',
+  `tx_pub_key` varchar(64) NOT NULL DEFAULT '''',
+  `amount` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
   `global_index` bigint(20) UNSIGNED NOT NULL,
-  `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `out_index` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
+  `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -89,11 +89,11 @@ CREATE TABLE `Outputs` (
 DROP TABLE IF EXISTS `Payments`;
 CREATE TABLE `Payments` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `address` varchar(95) NOT NULL,
+  `address` varchar(200) NOT NULL,
   `payment_id` varchar(64) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL DEFAULT '',
-  `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
-  `payment_address` varchar(95) NOT NULL,
+  `tx_hash` varchar(64) NOT NULL DEFAULT '''',
+  `request_fulfilled` tinyint(1) NOT NULL DEFAULT ''0'',
+  `payment_address` varchar(200) NOT NULL,
   `import_fee` bigint(20) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -109,20 +109,20 @@ DROP TABLE IF EXISTS `Transactions`;
 CREATE TABLE `Transactions` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `hash` varchar(64) NOT NULL,
-  `prefix_hash` varchar(64) NOT NULL DEFAULT '',
-  `tx_pub_key` varchar(64) NOT NULL DEFAULT '',
+  `prefix_hash` varchar(64) NOT NULL DEFAULT '''',
+  `tx_pub_key` varchar(64) NOT NULL DEFAULT '''',
   `account_id` bigint(20) UNSIGNED NOT NULL,
   `blockchain_tx_id` bigint(20) UNSIGNED NOT NULL,
   `total_received` bigint(20) UNSIGNED NOT NULL,
   `total_sent` bigint(20) UNSIGNED NOT NULL,
-  `unlock_time` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `height` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `spendable` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Has 10 blocks pasted since it was indexed?',
-  `coinbase` tinyint(1) NOT NULL DEFAULT '0',
-  `is_rct` tinyint(1) NOT NULL DEFAULT '1',
-  `rct_type` int(4) NOT NULL DEFAULT '-1',
-  `payment_id` varchar(64) NOT NULL DEFAULT '',
-  `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
+  `unlock_time` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
+  `height` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
+  `spendable` tinyint(1) NOT NULL DEFAULT ''0'' COMMENT ''Has 10 blocks pasted since it was indexed?'',
+  `coinbase` tinyint(1) NOT NULL DEFAULT ''0'',
+  `is_rct` tinyint(1) NOT NULL DEFAULT ''1'',
+  `rct_type` int(4) NOT NULL DEFAULT ''-1'',
+  `payment_id` varchar(64) NOT NULL DEFAULT '''',
+  `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT ''0'',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

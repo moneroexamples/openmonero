@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
 set(PROJECT_NAME
-        openmonero)
+        flake-rest)
 
 project(${PROJECT_NAME})
 
@@ -13,7 +13,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL "4")
 endif()
 
 if (NOT MONERO_DIR)
-    set(MONERO_DIR ~/monero)
+    set(MONERO_DIR ~/Projects/flake-core)
 endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
