@@ -24,7 +24,7 @@ namespace xmreg
 atomic<uint64_t>        CurrentBlockchainStatus::current_height{0};
 string                  CurrentBlockchainStatus::blockchain_path{"/home/mwo/.blockchain/lmdb"};
 string                  CurrentBlockchainStatus::deamon_url{"http:://127.0.0.1:18081"};
-bool                    CurrentBlockchainStatus::testnet{false};
+network_type            CurrentBlockchainStatus::net_type {network_type::MAINNET};
 bool                    CurrentBlockchainStatus::do_not_relay{false};
 bool                    CurrentBlockchainStatus::is_running{false};
 std::thread             CurrentBlockchainStatus::m_thread;
@@ -35,7 +35,7 @@ vector<pair<uint64_t, transaction>> CurrentBlockchainStatus::mempool_txs;
 string                  CurrentBlockchainStatus::import_payment_address_str;
 string                  CurrentBlockchainStatus::import_payment_viewkey_str;
 uint64_t                CurrentBlockchainStatus::import_fee {10000000000}; // 0.01 xmr
-account_public_address  CurrentBlockchainStatus::import_payment_address;
+address_parse_info      CurrentBlockchainStatus::import_payment_address;
 secret_key              CurrentBlockchainStatus::import_payment_viewkey;
 map<string, unique_ptr<TxSearch>> CurrentBlockchainStatus::searching_threads;
 cryptonote::Blockchain* CurrentBlockchainStatus::core_storage;
@@ -44,7 +44,7 @@ unique_ptr<xmreg::MicroCore>        CurrentBlockchainStatus::mcore;
 void
 CurrentBlockchainStatus::start_monitor_blockchain_thread()
 {
-    bool testnet = CurrentBlockchainStatus::testnet;
+    network_type net_type = CurrentBlockchainStatus::net_type;
 
     TxSearch::set_search_thread_life(search_thread_life_in_seconds);
 
@@ -53,7 +53,7 @@ CurrentBlockchainStatus::start_monitor_blockchain_thread()
         if (!xmreg::parse_str_address(
                 import_payment_address_str,
                 import_payment_address,
-                testnet))
+                CurrentBlockchainStatus::net_type))
         {
             cerr << "Cant parse address_str: "
                  << import_payment_address_str
@@ -130,11 +130,8 @@ CurrentBlockchainStatus::init_monero_blockchain()
     mcore = unique_ptr<xmreg::MicroCore>(new xmreg::MicroCore{});
 
     // initialize the core using the blockchain path
-    if (!mcore->init(blockchain_path))
-    {
-        cerr << "Error accessing blockchain." << endl;
+    if (!mcore->init(blockchain_path, net_type))
         return false;
-    }
 
     // get the high level Blockchain object to interact
     // with the blockchain lmdb database
@@ -179,7 +176,7 @@ CurrentBlockchainStatus::is_tx_spendtime_unlocked(
         // XXX: this needs to be fast, so we'd need to get the starting heights
         // from the daemon to be correct once voting kicks in
 
-        uint64_t v2height = testnet ? 624634 : 1009827;
+        uint64_t v2height = net_type == TESTNET ? 624634 : net_type == STAGENET ? (uint64_t)-1/*TODO*/ : 1009827;
 
         uint64_t leeway = block_height < v2height
                           ? CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1
@@ -198,6 +195,22 @@ bool
 CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
 {
     return mcore->get_block_from_height(height, blk);
+}
+
+vector<block>
+CurrentBlockchainStatus::get_blocks_range(
+        uint64_t const& h1, uint64_t const& h2)
+{
+    try
+    {
+        return core_storage->get_db().get_blocks_range(h1, h2);
+    }
+    catch (BLOCK_DNE& e)
+    {
+        cerr << e.what() << endl;
+    }
+
+    return {};
 }
 
 bool
@@ -247,7 +260,7 @@ CurrentBlockchainStatus::tx_exist(const string& tx_hash_str, uint64_t& tx_index)
         return tx_exist(tx_hash, tx_index);
     }
 
-    false;
+    return false;
 }
 
 bool
@@ -328,8 +341,8 @@ string
 CurrentBlockchainStatus::get_account_integrated_address_as_str(
         crypto::hash8 const& payment_id8)
 {
-    return cryptonote::get_account_integrated_address_as_str(testnet,
-                    import_payment_address, payment_id8);
+    return cryptonote::get_account_integrated_address_as_str(net_type,
+                    import_payment_address.address, payment_id8);
 }
 
 string
@@ -473,30 +486,21 @@ CurrentBlockchainStatus::read_mempool()
         // get transaction info of the tx in the mempool
         tx_info _tx_info = mempool_tx_info.at(i);
 
-        crypto::hash mem_tx_hash = null_hash;
+        transaction tx;
+        crypto::hash tx_hash;
+        crypto::hash tx_prefix_hash;
 
-        if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        if (!parse_and_validate_tx_from_blob(
+                _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
         {
-            transaction tx;
+            cerr << "Cant make tx from _tx_info.tx_blob" << endl;
+            return false;
+        }
 
-            if (!xmreg::make_tx_from_json(_tx_info.tx_json, tx))
-            {
-                cerr << "Cant make tx from _tx_info.tx_json" << endl;
-                return false;
-            }
+        (void) tx_hash;
+        (void) tx_prefix_hash;
 
-            if (_tx_info.id_hash != pod_to_hex(get_transaction_hash(tx)))
-            {
-                cerr << "Hash of reconstructed tx from json does not match "
-                        "what we should get!"
-                     << endl;
-
-                return false;
-            }
-
-            mempool_txs.emplace_back(_tx_info.receive_time, tx);
-
-        } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
+        mempool_txs.emplace_back(_tx_info.receive_time, tx);
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
 
@@ -607,7 +611,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (decrypted_payment_id8 != null_hash8)
         {
-            if (!decrypt_payment_id(decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
+            if (!mcore->get_device()->decrypt_payment_id(
+                    decrypted_payment_id8, tx_pub_key, import_payment_viewkey))
             {
                 cerr << "Cant decrypt  decrypted_payment_id8: "
                      << pod_to_hex(decrypted_payment_id8) << "\n";
@@ -654,7 +659,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
             derive_public_key(derivation,
                               output_idx_in_tx,
-                              import_payment_address.m_spend_public_key,
+                              import_payment_address.address.m_spend_public_key,
                               generated_tx_pubkey);
 
             // check if generated public key matches the current output's key
@@ -752,7 +757,7 @@ CurrentBlockchainStatus::start_tx_search_thread(XmrAccount acc)
     if (search_thread_exist(acc.address))
     {
         // thread for this address exist, dont make new one
-        cout << "Thread exisist, dont make new one" << endl;
+        cout << "Thread exists, dont make new one" << endl;
         return true; // this is still OK, so return true.
     }
 
@@ -816,7 +821,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
 bool
 CurrentBlockchainStatus::get_known_outputs_keys(
         string const& address,
-        vector<pair<string, uint64_t>>& known_outputs_keys)
+        vector<pair<public_key, uint64_t>>& known_outputs_keys)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
@@ -846,7 +851,7 @@ CurrentBlockchainStatus::search_thread_exist(const string& address)
 bool
 CurrentBlockchainStatus::get_xmr_address_viewkey(
         const string& address_str,
-        account_public_address& address,
+        address_parse_info& address,
         secret_key& viewkey)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
@@ -890,7 +895,71 @@ CurrentBlockchainStatus::find_tx_in_mempool(
         transaction& tx)
 {
 
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto const& mtx: mempool_txs)
+    {
+        const transaction &m_tx = mtx.second;
+
+        if (get_transaction_hash(m_tx) == tx_hash)
+        {
+            tx = m_tx;
+            return true;
+        }
+    }
+
+    return false;
 }
+
+bool
+CurrentBlockchainStatus::find_key_images_in_mempool(std::vector<txin_v> const& vin)
+{
+    mempool_txs_t mempool_tx_cpy;
+
+    {
+        // make local copy of the mempool, so that we dont lock it for
+        // long, as this function can take longer to execute
+        std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+        mempool_tx_cpy = mempool_txs;
+    }
+
+    // perform exhostive search to check if any key image in vin vector
+    // is in the mempool. This is used to check if a tx generated by the frontend
+    // is using any key images that area already in the mempool.
+    for (auto const& kin: vin)
+    {
+        if(kin.type() != typeid(txin_to_key))
+            continue;
+
+        // get tx input key
+        const txin_to_key& tx_in_to_key
+                = boost::get<cryptonote::txin_to_key>(kin);
+
+        for (auto const& mtx: mempool_tx_cpy)
+        {
+            const transaction &m_tx = mtx.second;
+
+            vector<txin_to_key> input_key_imgs = xmreg::get_key_images(m_tx);
+
+            for (auto const& mki: input_key_imgs)
+            {
+                // if a matching key image found in the mempool
+                if (mki.k_image == tx_in_to_key.k_image)
+                    return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+bool
+CurrentBlockchainStatus::find_key_images_in_mempool(transaction const& tx)
+{
+    return find_key_images_in_mempool(tx.vin);
+}
+
 
 bool
 CurrentBlockchainStatus::get_tx(crypto::hash const& tx_hash, transaction& tx)

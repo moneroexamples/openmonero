@@ -74,15 +74,16 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage, const string& hash_str, t
  * Parse monero address in a string form into
  * cryptonote::account_public_address object
  */
+
 bool
 parse_str_address(const string& address_str,
-                  account_public_address& address,
-                  bool testnet)
+                  address_parse_info& address_info,
+                  network_type net_type)
 {
 
-    if (!get_account_address_from_str(address, testnet, address_str))
+    if (!get_account_address_from_str(address_info, net_type, address_str))
     {
-        cerr << "Error getting address: " << address_str << endl;
+        cerr << "Error getting address: " << address_str << '\n';
         return false;
     }
 
@@ -90,13 +91,16 @@ parse_str_address(const string& address_str,
 }
 
 
+
 /**
  * Return string representation of monero address
  */
 string
-print_address(const account_public_address& address, bool testnet)
+print_address(const address_parse_info& address_info, network_type net_type)
 {
-    return "<" + get_account_address_as_str(testnet, address) + ">";
+    return "<" + get_account_address_as_str(
+            net_type, address_info.is_subaddress, address_info.address)
+           + ">";
 }
 
 string
@@ -183,9 +187,11 @@ timestamp_to_str_local(time_t timestamp, const char* format)
 
 
 ostream&
-operator<< (ostream& os, const account_public_address& addr)
+operator<< (ostream& os, const address_parse_info& addr_info)
 {
-    os << get_account_address_as_str(false, addr);
+    os << get_account_address_as_str(network_type::MAINNET,
+                                     addr_info.is_subaddress,
+                                     addr_info.address);
     return os;
 }
 
@@ -242,20 +248,23 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 
 string
-get_default_lmdb_folder(bool testnet)
+get_default_lmdb_folder(network_type nettype)
 {
     // default path to monero folder
     // on linux this is /home/<username>/.bitmonero
     string default_monero_dir = tools::get_default_data_dir();
 
-    if (testnet)
+    if (nettype == cryptonote::network_type::TESTNET)
         default_monero_dir += "/testnet";
+    if (nettype == cryptonote::network_type::STAGENET)
+        default_monero_dir += "/stagenet";
 
 
     // the default folder of the lmdb blockchain database
     // is therefore as follows
     return default_monero_dir + string("/lmdb");
 }
+
 
 
 /*
@@ -265,11 +274,10 @@ get_default_lmdb_folder(bool testnet)
  */
 bool
 get_blockchain_path(bf::path& blockchain_path,
-                    bool testnet)
+                    cryptonote::network_type nettype)
 {
     // the default folder of the lmdb blockchain database
-    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(testnet);
-
+    string default_lmdb_dir   = xmreg::get_default_lmdb_folder(nettype);
 
     blockchain_path = !blockchain_path.empty()
                       ? blockchain_path
@@ -278,8 +286,7 @@ get_blockchain_path(bf::path& blockchain_path,
     if (!bf::is_directory(blockchain_path))
     {
         cerr << "Given path \"" << blockchain_path   << "\" "
-             << "is not a folder or does not exist" << " "
-             << endl;
+             << "is not a folder or does not exist \n";
 
         return false;
     }
@@ -395,7 +402,7 @@ summary_of_in_out_rct(const json& _json)
 
 
 
-    uint64_t
+uint64_t
 sum_money_in_outputs(const transaction& tx)
 {
     uint64_t sum_xmr {0};
@@ -795,16 +802,6 @@ timestamps_time_scale(const vector<uint64_t>& timestamps,
     return make_pair(empty_time, scale);
 }
 
-// useful reference to get epoch time in correct timezon
-// http://www.boost.org/doc/libs/1_41_0/doc/html/date_time/examples.html#date_time.examples.seconds_since_epoch
-time_t
-ptime_to_time_t(const pt::ptime& in_ptime)
-{
-    static pt::ptime epoch(gt::date(1970, 1, 1));
-    pt::time_duration::sec_type no_seconds = (in_ptime - epoch).total_seconds();
-    return time_t(no_seconds);
-}
-
 bool
 decode_ringct(const rct::rctSig& rv,
               const crypto::public_key &pub,
@@ -832,16 +829,20 @@ decode_ringct(const rct::rctSig& rv,
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
+            case rct::RCTTypeSimpleBulletproof:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
-                                              mask);
+                                              mask,
+                                              hw::get_device("default"));
                 break;
             case rct::RCTTypeFull:
+            case rct::RCTTypeFullBulletproof:
                 amount = rct::decodeRct(rv,
                                         rct::sk2rct(scalar1),
                                         i,
-                                        mask);
+                                        mask,
+                                        hw::get_device("default"));
                 break;
             default:
                 cerr << "Unsupported rct type: " << rv.type << endl;
@@ -922,57 +923,6 @@ parse_crow_post_data(const string& req_body)
         }
     }
     return body;
-}
-
-
-// from wallet2::decrypt
-string
-decrypt(const std::string &ciphertext,
-        const crypto::secret_key &skey,
-        bool authenticated)
-{
-
-    const size_t prefix_size = sizeof(chacha8_iv)
-                               + (authenticated ? sizeof(crypto::signature) : 0);
-    if (ciphertext.size() < prefix_size)
-    {
-        cerr <<  "Unexpected ciphertext size" << endl;
-        return {};
-    }
-
-    crypto::chacha8_key key;
-    crypto::generate_chacha8_key(&skey, sizeof(skey), key);
-
-    const crypto::chacha8_iv &iv = *(const crypto::chacha8_iv*)&ciphertext[0];
-
-    std::string plaintext;
-
-    plaintext.resize(ciphertext.size() - prefix_size);
-
-    if (authenticated)
-    {
-        crypto::hash hash;
-        crypto::cn_fast_hash(ciphertext.data(), ciphertext.size() - sizeof(signature), hash);
-        crypto::public_key pkey;
-        crypto::secret_key_to_public_key(skey, pkey);
-
-        const crypto::signature &signature =
-                *(const crypto::signature*)&ciphertext[ciphertext.size()
-                                                       - sizeof(crypto::signature)];
-
-        if (!crypto::check_signature(hash, pkey, signature))
-        {
-            cerr << "Failed to authenticate criphertext" << endl;
-            return {};
-        }
-
-    }
-
-    crypto::chacha8(ciphertext.data() + sizeof(iv),
-                    ciphertext.size() - prefix_size,
-                    key, iv, &plaintext[0]);
-
-    return plaintext;
 }
 
 // based on

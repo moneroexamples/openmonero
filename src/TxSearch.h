@@ -30,6 +30,9 @@ class TxSearchException: public std::runtime_error
 
 class TxSearch
 {
+    //                                      out_pk, amount
+    using known_outputs_t = vector<pair<public_key, uint64_t>>;
+
     // how frequently update scanned_block_height in Accounts table
     static constexpr uint64_t UPDATE_SCANNED_HEIGHT_INTERVAL = 5; // seconds
 
@@ -54,8 +57,8 @@ class TxSearch
     // our public keys in key images. Saves a lot of
     // mysql queries to Outputs table.
     //
-    //          out_pk, amount
-    vector<pair<string, uint64_t>> known_outputs_keys;
+
+    known_outputs_t known_outputs_keys;
 
     // this manages all mysql queries
     // its better to when each thread has its own mysql connection object.
@@ -64,7 +67,7 @@ class TxSearch
     shared_ptr<MySqlAccounts> xmr_accounts;
 
     // address and viewkey for this search thread.
-    account_public_address address;
+    address_parse_info address;
     secret_key viewkey;
 
 public:
@@ -94,7 +97,7 @@ public:
     void
     populate_known_outputs();
 
-    vector<pair<string, uint64_t>>
+    known_outputs_t
     get_known_outputs_keys();
 
 
@@ -125,7 +128,7 @@ public:
     json
     find_txs_in_mempool(vector<pair<uint64_t, transaction>> mempool_txs);
 
-    pair<account_public_address, secret_key>
+    pair<address_parse_info, secret_key>
     get_xmr_address_viewkey() const;
 
     static void

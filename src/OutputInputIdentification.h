@@ -52,12 +52,12 @@ public:
     // outputs that we can need in later parts.
     struct output_info
     {
-        string    pub_key;
-        uint64_t  amount;
-        uint64_t  idx_in_tx;
-        string    rtc_outpk;
-        string    rtc_mask;
-        string    rtc_amount;
+        public_key pub_key;
+        uint64_t   amount;
+        uint64_t   idx_in_tx;
+        string     rtc_outpk;
+        string     rtc_mask;
+        string     rtc_amount;
     };
 
     // define a structure to keep information about found
@@ -66,7 +66,7 @@ public:
     {
         string key_img;
         uint64_t amount;
-        string out_pub_key;
+        public_key out_pub_key;
     };
 
     crypto::hash tx_hash;
@@ -82,7 +82,7 @@ public:
     bool is_rct;
     uint8_t rct_type;
 
-    uint64_t mixin_no;
+    uint64_t mixin_no {};
 
     // for each output, in a tx, check if it belongs
     // to the given account of specific address and viewkey
@@ -97,7 +97,7 @@ public:
     vector<output_info> identified_outputs;
     vector<input_info>  identified_inputs;
 
-    OutputInputIdentification(const account_public_address* _a,
+    OutputInputIdentification(const address_parse_info* _a,
                               const secret_key* _v,
                               const transaction* _tx);
 
@@ -126,12 +126,24 @@ public:
      *
      */
     void identify_inputs(
-            const vector<pair<string, uint64_t>>& known_outputs_keys);
+            const vector<pair<public_key, uint64_t>>& known_outputs_keys);
+
+    string const&
+    get_tx_hash_str();
+
+    string const&
+    get_tx_prefix_hash_str();
+
+    string const&
+    get_tx_pub_key_str();
+
+    uint64_t
+    get_mixin_no();
 
 private:
 
     // address and viewkey for this search thread.
-    const account_public_address* address;
+    const address_parse_info* address_info;
     const secret_key* viewkey;
 
     // transaction that is beeing search

@@ -32,11 +32,15 @@ class MicroCore {
     tx_memory_pool m_mempool;
     Blockchain m_blockchain_storage;
 
+    hw::device* m_device;
+
+    network_type nettype;
+
 public:
     MicroCore();
 
     bool
-    init(const string& _blockchain_path);
+    init(const string& _blockchain_path, network_type nt);
 
     Blockchain&
     get_core();
@@ -78,7 +82,8 @@ public:
                                 const uint64_t& no_of_outputs,
                                 vector<pair<uint64_t, public_key>>& found_outputs);
 
-
+    hw::device* const
+    get_device() const;
 
     virtual ~MicroCore();
 
@@ -93,8 +98,8 @@ public:
 bool
 init_blockchain(const string& path,
                 MicroCore& mcore,
-                Blockchain*& core_storage);
-
+                Blockchain*& core_storage,
+                network_type nt);
 
 
 }

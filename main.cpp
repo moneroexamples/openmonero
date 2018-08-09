@@ -29,13 +29,20 @@ if (*help_opt)
 
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
+auto stagenet_opt     = opts.get_option<bool>("stagenet");
 auto port_opt         = opts.get_option<string>("port");
 auto config_file_opt  = opts.get_option<string>("config-file");
 
 
 bool testnet          = *testnet_opt;
+bool stagenet         = *stagenet_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
+if (testnet && stagenet)
+{
+    cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+    return EXIT_FAILURE;
+}
 
 // check if config-file provided exist
 if (!boost::filesystem::exists(*config_file_opt))
@@ -61,47 +68,19 @@ catch (const std::exception& e)
     return EXIT_FAILURE;
 }
 
-
 //cast port number in string to uint16
 uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
-// get blockchain path
-// if confing.json paths are emtpy, defeault monero
-// paths are going to be used
-path blockchain_path = testnet
-                       ? path(config_json["blockchain-path"]["testnet"].get<string>())
-                       : path(config_json["blockchain-path"]["mainnet"].get<string>());
-
-
-if (!xmreg::get_blockchain_path(blockchain_path, testnet))
-{
-    cerr << "Error getting blockchain path." << endl;
-    return EXIT_FAILURE;
-}
-
-cout << "Blockchain path: " << blockchain_path.string() << endl;
-
-
-
-string deamon_url = testnet
-                    ? config_json["daemon-url"]["testnet"]
-                    : config_json["daemon-url"]["mainnet"];
-
-// set mysql/mariadb connection details
-xmreg::MySqlConnector::url      = config_json["database"]["url"];
-xmreg::MySqlConnector::username = config_json["database"]["user"];
-xmreg::MySqlConnector::password = config_json["database"]["password"];
-xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
+// get the network type
+cryptonote::network_type nettype = testnet ?
+  cryptonote::network_type::TESTNET : stagenet ?
+  cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
 // set blockchain status monitoring thread parameters
-xmreg::CurrentBlockchainStatus::blockchain_path
-        =  blockchain_path.string();
-xmreg::CurrentBlockchainStatus::testnet
-        = testnet;
+xmreg::CurrentBlockchainStatus::net_type
+        = nettype;
 xmreg::CurrentBlockchainStatus::do_not_relay
         = do_not_relay;
-xmreg::CurrentBlockchainStatus::deamon_url
-        = deamon_url;
 xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
         = config_json["refresh_block_status_every_seconds"];
 xmreg::CurrentBlockchainStatus::max_number_of_blocks_to_import
@@ -111,19 +90,81 @@ xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds
 xmreg::CurrentBlockchainStatus::import_fee
         = config_json["wallet_import"]["fee"];
 
-if (testnet)
+
+string deamon_url;
+
+// get blockchain path
+// if confing.json paths are emtpy, defeault monero
+// paths are going to be used
+path blockchain_path;
+
+switch (nettype)
 {
-    xmreg::CurrentBlockchainStatus::import_payment_address_str
-            = config_json["wallet_import"]["testnet"]["address"];
-    xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
-            = config_json["wallet_import"]["testnet"]["viewkey"];
+    case cryptonote::network_type::MAINNET:
+        blockchain_path = path(config_json["blockchain-path"]["mainnet"].get<string>());
+        deamon_url = config_json["daemon-url"]["mainnet"];
+        xmreg::CurrentBlockchainStatus::import_payment_address_str
+                = config_json["wallet_import"]["mainnet"]["address"];
+        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+                = config_json["wallet_import"]["mainnet"]["viewkey"];
+        break;
+    case cryptonote::network_type::TESTNET:
+        blockchain_path = path(config_json["blockchain-path"]["testnet"].get<string>());
+        deamon_url = config_json["daemon-url"]["testnet"];
+        xmreg::CurrentBlockchainStatus::import_payment_address_str
+                = config_json["wallet_import"]["testnet"]["address"];
+        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+                = config_json["wallet_import"]["testnet"]["viewkey"];
+        break;
+    case cryptonote::network_type::STAGENET:
+        blockchain_path = path(config_json["blockchain-path"]["stagenet"].get<string>());
+        deamon_url = config_json["daemon-url"]["stagenet"];
+        xmreg::CurrentBlockchainStatus::import_payment_address_str
+                = config_json["wallet_import"]["stagenet"]["address"];
+        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
+                = config_json["wallet_import"]["stagenet"]["viewkey"];
+        break;
+    default:
+        cerr << "Invalid netowork type provided: " << static_cast<int>(nettype) << "\n";
+        return EXIT_FAILURE;
 }
-else
+
+
+if (!xmreg::get_blockchain_path(blockchain_path, nettype))
 {
-    xmreg::CurrentBlockchainStatus::import_payment_address_str
-            = config_json["wallet_import"]["mainnet"]["address"];
-    xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
-            = config_json["wallet_import"]["mainnet"]["viewkey"];
+    cerr << "Error getting blockchain path.\n";
+    return EXIT_FAILURE;
+}
+
+// set remaining  blockchain status variables that depend on the network type
+xmreg::CurrentBlockchainStatus::blockchain_path
+        =  blockchain_path.string();
+xmreg::CurrentBlockchainStatus::deamon_url
+        = deamon_url;
+
+cout << "Blockchain path: " << blockchain_path.string() << endl;
+
+
+// set mysql/mariadb connection details
+xmreg::MySqlConnector::url      = config_json["database"]["url"];
+xmreg::MySqlConnector::port     = config_json["database"]["port"];
+xmreg::MySqlConnector::username = config_json["database"]["user"];
+xmreg::MySqlConnector::password = config_json["database"]["password"];
+xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
+
+
+// try connecting to the mysql
+shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
+
+try
+{
+    // MySqlAccounts will try connecting to the mysql database
+    mysql_accounts = make_shared<xmreg::MySqlAccounts>();
+}
+catch(std::exception const& e)
+{
+    cerr << e.what() << '\n';
+    return EXIT_FAILURE;
 }
 
 
@@ -148,10 +189,9 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
 
 
-// create REST JSON API services
 
-xmreg::YourMoneroRequests open_monero(
-        shared_ptr<xmreg::MySqlAccounts>(new xmreg::MySqlAccounts{}));
+// create REST JSON API services
+xmreg::YourMoneroRequests open_monero(mysql_accounts);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);

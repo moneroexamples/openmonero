@@ -33,13 +33,19 @@ static mutex getting_mempool_txs;
 */
 struct CurrentBlockchainStatus
 {
+
+    // vector of mempool transactions that all threads
+    // can refer to
+    //           <recieved_time, transaction>
+    using mempool_txs_t = vector<pair<uint64_t, transaction>>;
+
     static string blockchain_path;
 
     static atomic<uint64_t> current_height;
 
     static string deamon_url;
 
-    static bool testnet;
+    static network_type net_type;
 
     static bool do_not_relay;
 
@@ -59,13 +65,13 @@ struct CurrentBlockchainStatus
     static uint64_t spendable_age;
     static uint64_t spendable_age_coinbase;
 
-    static account_public_address import_payment_address;
-    static secret_key             import_payment_viewkey;
+    static address_parse_info import_payment_address;
+    static secret_key         import_payment_viewkey;
 
     // vector of mempool transactions that all threads
     // can refer to
     //           <recieved_time, transaction>
-    static vector<pair<uint64_t, transaction>> mempool_txs;
+    static mempool_txs_t mempool_txs;
 
     // map that will keep track of search threads. In the
     // map, key is address to which a running thread belongs to.
@@ -98,6 +104,9 @@ struct CurrentBlockchainStatus
 
     static bool
     get_block(uint64_t height, block &blk);
+
+    static vector<block>
+    get_blocks_range(uint64_t const& h1, uint64_t const& h2);
 
     static bool
     get_block_txs(const block &blk, list <transaction> &blk_txs);
@@ -182,7 +191,7 @@ struct CurrentBlockchainStatus
 
     static bool
     get_xmr_address_viewkey(const string& address_str,
-                            account_public_address& address,
+                            address_parse_info& address,
                             secret_key& viewkey);
     static bool
     find_txs_in_mempool(const string& address_str,
@@ -191,6 +200,12 @@ struct CurrentBlockchainStatus
     static bool
     find_tx_in_mempool(crypto::hash const& tx_hash,
                        transaction& tx);
+
+    static bool
+    find_key_images_in_mempool(std::vector<txin_v> const& vin);
+
+    static bool
+    find_key_images_in_mempool(transaction const& tx);
 
     static bool
     get_tx(crypto::hash const& tx_hash, transaction& tx);
@@ -211,7 +226,7 @@ struct CurrentBlockchainStatus
 
     static bool
     get_known_outputs_keys(string const& address,
-                           vector<pair<string, uint64_t>>& known_outputs_keys);
+                           vector<pair<public_key, uint64_t>>& known_outputs_keys);
 
     static void
     clean_search_thread_map();

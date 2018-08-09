@@ -14,7 +14,8 @@ namespace xmreg
 {
 
 
-MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn): conn {_conn}
+MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn)
+        : conn {_conn}
 {}
 
 bool
@@ -28,26 +29,21 @@ MysqlInputs::select(const uint64_t& address_id, vector<XmrInput>& ins)
     {
         query.storein(ins, address_id);
 
-        if (!ins.empty())
-        {
-            return true;
-        }
+        return !ins.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
 }
-
-
 
 
 bool
@@ -61,20 +57,17 @@ MysqlInputs::select_for_tx(const uint64_t& address_id, vector<XmrInput>& ins)
     {
         query.storein(ins, address_id);
 
-        if (!ins.empty())
-        {
-            return true;
-        }
+        return !ins.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -92,20 +85,17 @@ MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
     {
         query.storein(ins, output_id);
 
-        if (!ins.empty())
-        {
-            return true;
-        }
+        return !ins.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -116,20 +106,8 @@ uint64_t
 MysqlInputs::insert(const XmrInput& in_data)
 {
 
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrInput::INSERT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
-
     Query query = conn->query(XmrInput::INSERT_STMT);
     query.parse();
-
-    // cout << query << endl;
 
     try
     {
@@ -147,8 +125,13 @@ MysqlInputs::insert(const XmrInput& in_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return 0;
@@ -169,20 +152,17 @@ MysqlOutpus::select(const uint64_t& address_id, vector<XmrOutput>& outs)
     {
         query.storein(outs, address_id);
 
-        if (!outs.empty())
-        {
-            return true;
-        }
+        return !outs.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -210,12 +190,12 @@ MysqlOutpus::select(const uint64_t& out_id, XmrOutput& out)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -233,20 +213,17 @@ MysqlOutpus::select_for_tx(const uint64_t& tx_id, vector<XmrOutput>& outs)
     {
         query.storein(outs, tx_id);
 
-        if (!outs.empty())
-        {
-            return true;
-        }
+        return !outs.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -268,9 +245,7 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
         query.storein(outs, output_public_key_str);
 
         if (outs.empty())
-        {
             return false;
-        }
 
         out = outs.at(0);
 
@@ -278,12 +253,12 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return true;
@@ -321,8 +296,13 @@ MysqlOutpus::insert(const XmrOutput& out_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return 0;
@@ -336,17 +316,6 @@ MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_c
 bool
 MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& txs)
 {
-//
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(
-//                    XmrTransaction::SELECT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
     Query query = conn->query(XmrTransaction::SELECT_STMT);
     query.parse();
 
@@ -354,20 +323,17 @@ MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& tx
     {
         query.storein(txs, address_id);
 
-        if (!txs.empty())
-        {
-            return true;
-        }
+        return !txs.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -377,17 +343,6 @@ MysqlTransactions::select(const uint64_t& address_id, vector<XmrTransaction>& tx
 uint64_t
 MysqlTransactions::insert(const XmrTransaction& tx_data)
 {
-
-//        static shared_ptr<Query> query;
-//
-//        if (!query)
-//        {
-//            Query q = MySqlConnector::getInstance().query(XmrTransaction::INSERT_STMT);
-//            q.parse();
-//            query = shared_ptr<Query>(new Query(q));
-//        }
-
-
     Query query = conn->query(XmrTransaction::INSERT_STMT);
     query.parse();
 
@@ -419,8 +374,13 @@ MysqlTransactions::insert(const XmrTransaction& tx_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return 0;
@@ -441,9 +401,16 @@ MysqlTransactions::mark_spendable(const uint64_t& tx_id_no)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        // throw  e;
+        //return 0;
     }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
 }
 
 
@@ -462,9 +429,15 @@ MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
     }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
+    }
+
+    return 0;
 }
 
 
@@ -477,15 +450,12 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
 
     try
     {
-
         vector<XmrTransaction> outs;
 
         query.storein(outs, account_id, tx_hash_str);
 
         if (outs.empty())
-        {
             return false;
-        }
 
         tx = outs.at(0);
 
@@ -493,12 +463,12 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return true;
@@ -516,9 +486,7 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
         StoreQueryResult sqr = query.store(account_id);
 
         if (!sqr)
-        {
             return 0;
-        }
 
         Row row = sqr.at(0);
 
@@ -527,9 +495,10 @@ MysqlTransactions::get_total_recieved(const uint64_t& account_id)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
     }
+
+    return 0;
 }
 
 MysqlPayments::MysqlPayments(shared_ptr<MySqlConnector> _conn): conn {_conn}
@@ -546,20 +515,17 @@ MysqlPayments::select(const string& address, vector<XmrPayment>& payments)
     {
         query.storein(payments, address);
 
-        if (!payments.empty())
-        {
-            return true;
-        }
+        return !payments.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -576,20 +542,17 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     {
         query.storein(payments, payment_id);
 
-        if (!payments.empty())
-        {
-            return true;
-        }
+        return !payments.empty();
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -621,8 +584,13 @@ MysqlPayments::insert(const XmrPayment& payment_data)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return 0;
@@ -641,14 +609,18 @@ MysqlPayments::update(XmrPayment& payment_orginal, XmrPayment& payment_new)
 
         SimpleResult sr = query.execute();
 
-        if (sr.rows() == 1)
-            return true;
+        return sr.rows() == 1;
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return false;
+        //throw  e;
+        //return false;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return false;
@@ -690,12 +662,12 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
     catch (std::exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
     }
 
     return false;
@@ -731,7 +703,12 @@ MySqlAccounts::select(const int64_t& acc_id, XmrAccount& account)
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
+        //throw  e;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return false;
@@ -770,8 +747,13 @@ MySqlAccounts::insert(const string& address,
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return 0;
+        //throw  e;
+        //return 0;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return 0;
@@ -829,9 +811,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
     vector<XmrTransaction> txs_tmp;
 
     if (!select_txs(account_id, txs_tmp))
-    {
         return false;
-    }
 
     for (XmrTransaction& tx: txs_tmp)
     {
@@ -855,9 +835,12 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                 if (no_row_updated != 1)
                 {
-                    throw runtime_error("no_row_updated != 1 "
-                                                "due to "
-                                                "xmr_accounts->mark_tx_spendable(tx.id)");
+//                    throw runtime_error("no_row_updated != 1 "
+//                                                "due to "
+//                                                "xmr_accounts->mark_tx_spendable(tx.id)");
+
+                    cerr << "no_row_updated != 1 due to  xmr_accounts->mark_tx_spendable(tx.id)\n";
+                    return false;
                 }
 
                 tx.spendable = true;
@@ -883,9 +866,11 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                     if (no_row_updated != 1)
                     {
-                        throw runtime_error("no_row_updated != 1 "
-                                                    "due to "
-                                                    "xmr_accounts->delete_tx(tx.id)");
+//                        throw runtime_error("no_row_updated != 1 "
+//                                                    "due to "
+//                                                    "xmr_accounts->delete_tx(tx.id)");
+                        cerr << "no_row_updated != 1 due to  xmr_accounts->delete_tx(tx.id)\n";
+                        return false;
                     }
 
                     // because txs does not exist in blockchain anymore,
@@ -904,9 +889,7 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                 // be spent anyway.
 
                 if (tx.unlock_time == 0)
-                {
                     tx.unlock_time = tx.height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
-                }
 
             } // else
 
@@ -951,7 +934,6 @@ MySqlAccounts::select_inputs_for_tx(const uint64_t& tx_id, vector<XmrInput>& ins
 {
     return mysql_in->select_for_tx(tx_id, ins);
 }
-
 
 
 bool
@@ -1011,20 +993,17 @@ MySqlAccounts::select_payment_by_address(const string& address, XmrPayment& paym
     bool r = mysql_payment->select(address, payments);
 
     if (!r)
-    {
         return false;
-    }
 
     if (payments.empty())
-    {
         return false;
-    }
 
     // always get last payment details.
     payment = payments.back();
 
     return r;
 }
+
 
 bool
 MySqlAccounts::update_payment(XmrPayment& payment_orginal, XmrPayment& payment_new)
@@ -1051,14 +1030,18 @@ MySqlAccounts::update(XmrAccount& acc_orginal, XmrAccount& acc_new)
 
         SimpleResult sr = query.execute();
 
-        if (sr.rows() == 1)
-            return true;
+        return sr.rows() == 1;
     }
     catch (mysqlpp::Exception& e)
     {
         MYSQL_EXCEPTION_MSG(e);
-        throw  e;
-        return false;
+        //throw  e;
+        //return false;
+    }
+    catch (std::exception& e)
+    {
+        MYSQL_EXCEPTION_MSG(e);
+        //throw  e;
     }
 
     return false;
@@ -1094,11 +1077,11 @@ MySqlAccounts::launch_mysql_pinging_thread()
 
              if (!conn_ptr->ping())
              {
-                 cerr << "Pinging mysql failed. stoping mysql pinging thread." << endl;
+                 cerr << "Pinging mysql failed. stoping mysql pinging thread. \n";
                  break;
              }
 
-             cout << "Mysql ping successful. " << endl;
+             cout << "Mysql ping successful. \n" ;
          }
      });
 

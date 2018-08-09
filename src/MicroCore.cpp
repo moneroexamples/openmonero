@@ -5,16 +5,6 @@
 #include "MicroCore.h"
 
 
-
-namespace
-{
-// NOTE: These values should match blockchain.cpp
-// TODO: Refactor
-const uint64_t mainnet_hard_fork_version_1_till = 1009826;
-const uint64_t testnet_hard_fork_version_1_till = 624633;
-}
-
-
 namespace xmreg
 {
 /**
@@ -32,7 +22,9 @@ namespace xmreg
 MicroCore::MicroCore():
         m_mempool(m_blockchain_storage),
         m_blockchain_storage(m_mempool)
-{}
+{
+    m_device = &hw::get_device("default");
+}
 
 
 /**
@@ -43,30 +35,19 @@ MicroCore::MicroCore():
  * Initialize m_blockchain_storage with the BlockchainLMDB object.
  */
 bool
-MicroCore::init(const string& _blockchain_path)
+MicroCore::init(const string& _blockchain_path, network_type nt)
 {
     int db_flags = 0;
 
     blockchain_path = _blockchain_path;
 
-    //db_flags |= MDB_RDONLY;
+    nettype = nt;
+
+    db_flags |= MDB_RDONLY;
     db_flags |= MDB_NOLOCK;
-    //db_flags |= MDB_SYNC;
-
-    // uint64_t DEFAULT_FLAGS = MDB_NOMETASYNC | MDB_NORDAHEAD;
-
-    //db_flags = DEFAULT_FLAGS;
-
-    HardFork* m_hardfork = nullptr;
 
     BlockchainDB* db = nullptr;
     db = new BlockchainLMDB();
-
-    bool use_testnet {false};
-
-    uint64_t hard_fork_version_1_till = use_testnet ? testnet_hard_fork_version_1_till : mainnet_hard_fork_version_1_till;
-
-    m_hardfork = new HardFork(*db, 1, hard_fork_version_1_till);
 
     try
     {
@@ -82,13 +63,11 @@ MicroCore::init(const string& _blockchain_path)
     // check if the blockchain database
     // is successful opened
     if(!db->is_open())
-    {
         return false;
-    }
 
     // initialize Blockchain object to manage
     // the database.
-    return m_blockchain_storage.init(db, m_hardfork, false);
+    return m_blockchain_storage.init(db, nettype);
 }
 
 /**
@@ -347,11 +326,12 @@ MicroCore::~MicroCore()
 bool
 init_blockchain(const string& path,
                 MicroCore& mcore,
-                Blockchain*& core_storage)
+                Blockchain*& core_storage,
+                network_type nt)
 {
 
     // initialize the core using the blockchain path
-    if (!mcore.init(path))
+    if (!mcore.init(path, nt))
     {
         cerr << "Error accessing blockchain." << endl;
         return false;
@@ -410,6 +390,12 @@ MicroCore::get_random_outs_for_amounts(const uint64_t& amount,
     return false;
 }
 
+
+hw::device* const
+MicroCore::get_device() const
+{
+    return m_device;
+}
 
 
 }

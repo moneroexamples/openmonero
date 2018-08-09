@@ -5,4 +5,5 @@
 .idea/
 cmake-build-debug/
 ext/restbed/dependency/catch/
+build
 

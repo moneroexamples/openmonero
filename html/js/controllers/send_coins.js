@@ -45,7 +45,14 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
     var view_only = AccountService.isViewOnly();
 
-    var explorerUrl =  config.testnet ? config.testnetExplorerUrl : config.mainnetExplorerUrl;
+    var explorerUrl = "";
+
+    if (config.nettype == 0)
+        explorerUrl = config.mainnetExplorerUrl;
+    else if (config.nettype == 1)
+        explorerUrl = config.testnetExplorerUrl;
+    else
+        explorerUrl = config.stagenetExplorerUrl;
 
     // few multiplayers based on uint64_t wallet2::get_fee_multiplier
     var fee_multiplayers = [1, 4, 20, 166];
@@ -92,7 +99,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
     $scope.transferConfirmDialog = undefined;
 
     function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key,
-                             payment_id, mixin, priority, txBlobKBytes) {
+                             payment_id, mixin, priority, txBlobKBytes, raw_tx,
+                             no_inputs, no_outputs) {
 
         var deferred = $q.defer();
 
@@ -111,6 +119,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
             tx_prv_key: tx_prv_key,
             payment_id: payment_id,
             mixin: mixin + 1,
+            raw_tx: raw_tx,
+            no_inputs: no_inputs,
+            no_outputs: no_outputs,
             txBlobKBytes: Math.round(txBlobKBytes*1e3) / 1e3,
             priority: priority_names[priority - 1],
             confirm: function() {
@@ -283,6 +294,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
         var totalAmountWithoutFee;
         var unspentOuts;
         var pid_encrypt = false; //don't encrypt payment ID unless we find an integrated one
+
         $q.all(targetPromises).then(function(destinations) {
             totalAmountWithoutFee = new JSBigInt(0);
             for (var i = 0; i < destinations.length; i++) {
@@ -401,6 +413,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
             var raw_tx = tx_h.raw;
             var tx_hash = tx_h.hash;
             var tx_prvkey = tx_h.prvkey;
+            var no_inputs = tx_h.no_inputs;
+            var no_outputs = tx_h.no_outputs;
             // work out per-kb fee for transaction
             var txBlobBytes = raw_tx.length / 2;
             var txBlobKBytes = txBlobBytes / 1024.0;
@@ -430,7 +444,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
 
             confirmTransfer(realDsts[0].address, realDsts[0].amount,
                             tx_hash, neededFee, tx_prvkey, payment_id,
-                            mixin, priority, txBlobKBytes).then(function() {
+                            mixin, priority, txBlobKBytes, raw_tx,
+                            no_inputs, no_outputs).then(function() {
 
                 //alert('Confirmed ');
 
@@ -613,9 +628,18 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
                     ApiCalls.get_random_outs(request.amounts, request.count)
                         .then(function(response) {
                             var data = response.data;
+
+                            if (data.status === "error")
+                            {
+                                $scope.status = "";
+                                $scope.submitting = false;
+                                $scope.error = "Failed to create transaction: " + data.error;
+                                return;
+                            }
+
                             createTx(data.amount_outs);
                         }, function(data) {
-                                deferred.reject('Failed to get unspent outs');
+                            deferred.reject('Failed to get unspent outs');
                         });
                 } else if (mixin < 0 || isNaN(mixin)) {
                     deferred.reject("Invalid mixin");
@@ -662,6 +686,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
                         raw_tx_and_hash.raw = cnUtil.serialize_tx(signed);
                         raw_tx_and_hash.hash = cnUtil.cn_fast_hash(raw_tx);
                         raw_tx_and_hash.prvkey = signed.prvkey;
+                        raw_tx_and_hash.no_outputs = signed.vout.length;
+                        raw_tx_and_hash.no_inputs = signed.vin.length;
                     } else {
                         raw_tx_and_hash = cnUtil.serialize_rct_tx_with_hash(signed);
                     }

@@ -1,8 +1,9 @@
 var config = {
     apiUrl: "http://127.0.0.1:1984/",
-    mainnetExplorerUrl: "https://moneroexplorer.com/",
-    testnetExplorerUrl: "http://139.162.32.245:8082/",
-    testnet: true,
+    mainnetExplorerUrl: "https://xmrchain.com/",
+    testnetExplorerUrl: "https://testnet.xmrchain.com/",
+    stagenetExplorerUrl: "http://162.210.173.150:8083/",
+    nettype: 0, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
     coinUnitPlaces: 12,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
     txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
@@ -12,12 +13,17 @@ var config = {
     coinUriPrefix: 'monero:',
     addressPrefix: 18,
     integratedAddressPrefix: 19,
+    subAddressPrefix: 42,
     addressPrefixTestnet: 53,
     integratedAddressPrefixTestnet: 54,
-    feePerKB: new JSBigInt('2000000000'),//20^10 - for testnet its not used, as fee is dynamic.
+    subAddressPrefixTestnet: 63,
+    addressPrefixStagenet: 24,
+    integratedAddressPrefixStagenet: 25,
+    subAddressPrefixStagenet: 36,
+    feePerKB: new JSBigInt('2000000000'),//20^10 - not used anymore, as fee is dynamic.
     dustThreshold: new JSBigInt('1000000000'),//10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
     txChargeRatio: 0.5,
-    defaultMixin: 4, // minimum mixin for hardfork v5
+    defaultMixin: 6, // minimum mixin for hardfork v7 is 6 (ring size 7)
     txChargeAddress: '',
     idleTimeout: 30,
     idleWarningDuration: 20,
