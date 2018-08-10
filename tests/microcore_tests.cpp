@@ -58,7 +58,8 @@ TEST_P(BlockchainSetupTest, ReadInConfigFile)
     EXPECT_EQ(bc_setup.import_payment_address_str,
               config_json["wallet_import"][net_name]["address"]);
 
-    // we expact that bc_setup will have json config equal to what we read manually
+    // we expact that bc_setup will have json config
+    // equal to what we read manually
     EXPECT_EQ(bc_setup.get_config(), config_json);
 
     xmreg::BlockchainSetup bc_setup2 {net_type, do_not_relay, config_json};
@@ -100,7 +101,8 @@ TEST_P(BlockchainSetupTest, ReadInConfigFileFailure)
 
     try
     {
-        // expect throw if confing file is illformed and cant be parsed into json
+        // expect throw if confing file is illformed and cant be parsed
+        // into json
         xmreg::BlockchainSetup bc_setup {net_type, do_not_relay, confing_path};
     }
     catch (std::exception const& e)
@@ -210,7 +212,8 @@ TEST_P(BlockchainSetupTest, WrongBlockchainPath)
     json config_json = xmreg::BlockchainSetup::read_config(config_path);
 
     // make mistake in address
-    config_json["blockchain-path"][net_name]= string {"/wrong/path/to/bloclckahin"};
+    config_json["blockchain-path"][net_name]
+            = string {"/wrong/path/to/bloclckahin"};
 
     try
     {
@@ -292,12 +295,6 @@ TEST_F(MICROCORE_TEST, InitializationSuccess)
 //   }
 //};
 
-//TEST_F(MICROCORE_TEST, InitializationFailure)
-//{
-//    xmreg::MicroCore mcore;
 
-//    EXPECT_FALSE(mcore.init<MockBlockchainDB<false>>(bc_setup.blockchain_path, net_type));
-//    EXPECT_FALSE(mcore.init<MockBlockchainDB<true>>(bc_setup.blockchain_path, net_type));
-//}
 
 }

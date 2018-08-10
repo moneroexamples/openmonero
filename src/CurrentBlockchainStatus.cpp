@@ -30,12 +30,17 @@ CurrentBlockchainStatus::monitor_blockchain()
     TxSearch::set_search_thread_life(
                 bc_setup.search_thread_life_in_seconds);
 
+    stop_blockchain_monitor_loop = false;
+
     if (!is_running)
     {
        is_running = true;
 
-       while (is_running)
+       while (true)
        {                   
+           if (stop_blockchain_monitor_loop)
+               break;
+
            update_current_blockchain_height();
            read_mempool();
            OMINFO << "Current blockchain height: " << current_height
@@ -45,6 +50,8 @@ CurrentBlockchainStatus::monitor_blockchain()
                    std::chrono::seconds(
                     bc_setup.refresh_block_status_every_seconds));
        }
+
+       is_running = false;
     }
 }
 
