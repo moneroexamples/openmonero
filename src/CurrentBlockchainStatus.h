@@ -59,7 +59,7 @@ public:
                             std::unique_ptr<RPCCalls> _rpc);
 
     virtual void
-    start_monitor_blockchain_thread();
+    monitor_blockchain();
 
     virtual uint64_t
     get_current_blockchain_height();
@@ -232,6 +232,12 @@ public:
     get_bc_setup() const
     {
         return bc_setup;
+    }
+
+    inline virtual void
+    set_bc_setup(BlockchainSetup const& bs)
+    {
+        bc_setup = bs;
     }
 
     virtual void

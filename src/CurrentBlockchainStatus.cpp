@@ -25,33 +25,28 @@ CurrentBlockchainStatus::CurrentBlockchainStatus(
 }
 
 void
-CurrentBlockchainStatus::start_monitor_blockchain_thread()
+CurrentBlockchainStatus::monitor_blockchain()
 {
     TxSearch::set_search_thread_life(
                 bc_setup.search_thread_life_in_seconds);
 
     if (!is_running)
     {
-        m_thread = std::thread{[this]()
-           {
-               while (true)
-               {
-                   update_current_blockchain_height();
-                   read_mempool();
-                   OMINFO << "Current blockchain height: " << current_height
-                          << ", no of mempool txs: " << mempool_txs.size();
-                   clean_search_thread_map();
-                   std::this_thread::sleep_for(
-                           std::chrono::seconds(
-                            bc_setup
-                             .refresh_block_status_every_seconds));
-               }
-           }};
+       is_running = true;
 
-        is_running = true;
+       while (is_running)
+       {                   
+           update_current_blockchain_height();
+           read_mempool();
+           OMINFO << "Current blockchain height: " << current_height
+                  << ", no of mempool txs: " << mempool_txs.size();
+           clean_search_thread_map();
+           std::this_thread::sleep_for(
+                   std::chrono::seconds(
+                    bc_setup.refresh_block_status_every_seconds));
+       }
     }
 }
-
 
 uint64_t
 CurrentBlockchainStatus::get_current_blockchain_height()

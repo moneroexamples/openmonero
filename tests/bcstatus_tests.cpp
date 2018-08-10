@@ -1557,7 +1557,43 @@ TEST_P(BCSTATUS_TEST, GetTxsInBlocks)
                                         txs, txs_data));
 }
 
+TEST_P(BCSTATUS_TEST, MonitorBlockchain)
+{
+    uint64_t mock_current_height {1619148};
 
+    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
+            .WillRepeatedly(Return(mock_current_height));
+
+    vector<tx_info> mempool_txs_to_return;
+
+    mempool_txs_to_return.push_back(tx_info{});
+    mempool_txs_to_return.push_back(tx_info{});
+    mempool_txs_to_return.push_back(tx_info{});
+
+    EXPECT_CALL(*mcore_ptr, get_mempool_txs(_, _))
+            .WillRepeatedly(DoAll(
+                          SetArgReferee<0>(mempool_txs_to_return),
+                          Return(true)));
+
+    // set refresh rate to 1 second as we dont wont to wait long
+    xmreg::BlockchainSetup bs = bcs->get_bc_setup();
+    bs.refresh_block_status_every_seconds = 1;
+    bcs->set_bc_setup(bs);
+
+    auto thread_function = std::bind(
+                &xmreg::CurrentBlockchainStatus::monitor_blockchain,
+                bcs.get());
+
+    xmreg::ThreadRAII blockchain_monitoring_thread(
+                std::thread(thread_function),
+                xmreg::ThreadRAII::DtorAction::join);
+
+    // wait few seconds so that several loops are done
+    std::this_thread::sleep_for(4s);
+
+    bcs->is_running = false;
+
+}
 
 
 INSTANTIATE_TEST_CASE_P(

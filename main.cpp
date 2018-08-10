@@ -124,7 +124,12 @@ if (!current_bc_status->init_monero_blockchain())
 // info, e.g., current height. Information from this thread is used
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
-current_bc_status->start_monitor_blockchain_thread();
+
+xmreg::ThreadRAII blockchain_monitoring_thread(
+            std::thread([current_bc_status]
+                        {current_bc_status->monitor_blockchain();}),
+            xmreg::ThreadRAII::DtorAction::join);
+
 
 OMINFO << "Blockchain monitoring thread started";
 
@@ -166,7 +171,7 @@ xmreg::MysqlPing mysql_ping {mysql_accounts->get_connection()};
 
 xmreg::ThreadRAII mysql_ping_thread(
         std::thread(std::ref(mysql_ping)),
-        xmreg::ThreadRAII::DtorAction::detach);
+        xmreg::ThreadRAII::DtorAction::join);
 
 OMINFO << "MySQL ping thread started";
 

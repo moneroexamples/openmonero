@@ -41,6 +41,8 @@
 # 2017-06-02, Lars Bilke
 # - Merged with modified version from github.com/ufz/ogs
 #
+# 2018-08-02, moneroexamples
+# - Modified to use gcovr rather than lcov
 #
 # USAGE:
 #
