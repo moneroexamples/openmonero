@@ -1,14 +1,14 @@
 {
   "daemon-url" :
   {
-    "_comment" : "RPC urls to monero deamon",
-    "mainnet"  : "http://127.0.0.1:18081",
-    "testnet"  : "http://127.0.0.1:28081",
-    "stagenet" : "http://127.0.0.1:38081"
+    "_comment" : "RPC urls to flake deamon",
+    "mainnet"  : "http://127.0.0.1:12561",
+    "testnet"  : "http://127.0.0.1:12561",
+    "stagenet" : "http://127.0.0.1:12561"
   },
   "blockchain-path" :
   {
-    "_comment" : "if paths are empty, default Monero paths will be used",
+    "_comment" : "if paths are empty, default Flake paths will be used",
     "mainnet"  : "",
     "testnet"  : "",
     "stagenet" : ""
@@ -18,33 +18,43 @@
     "_comment" : "how should the backend connect to the mysql database",
     "url"      : "127.0.0.1",
     "port"     : 3306,
-    "dbname"   : "openmonero",
+    "dbname"   : "flakeapps",
+    "user"     : "root",
+    "password" : ""
+  },
+  "database_test":
+  {
+    "_comment" : "how should the backend connect to the test mysql database",
+    "url"      : "127.0.0.1",
+    "port"     : 3306,
+    "dbname"   : "openmonero_test",
     "user"     : "root",
     "password" : "root"
   },
   "wallet_import" :
   {
-    "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xmr is 0.1 x 1e12 = 100000000000",
+    "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xsf is 0.1 x 1e12 = 100000000000",
     "fee"     : 0,
     "testnet" :
     {
-      "address" : "9tzmPMTViHYM3z6NAgQni1Qm1Emzxy5hQFibPgWD3LVTAz91yok5Eni1pH6zKhBHzpTU15GZooPHSGHXFvFuXEdmEG2sWAZ",
-      "viewkey" : "ae6184287ca791609844f140b8502ccfa2223c04c8699cf31fcd0af1f1d0be08"
+      "address" : "SFvqS4mHVutZdd8NqTNz53LRg8s5Uh9o5ZC6PvXsR1ij1Ft8eEjWqnV2CzC7fggMwf2MBv5B7zHDNTNFiJyohz1L1nxZMMMot",
+      "viewkey" : "b348108be5160736d0fc98d0767a080f41c5c2de0a159da2790d381627f75c4a"
     },
     "mainnet" :
     {
       "_comment": "these are official monero project donation address and viewkey. change it to yours",
-      "address" : "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A",
-      "viewkey" : "f359631075708155cc3d92a32b75a7d02a5dcf27756707b47a2b31b21c389501"
+      "address" : "SFvqS4mHVutZdd8NqTNz53LRg8s5Uh9o5ZC6PvXsR1ij1Ft8eEjWqnV2CzC7fggMwf2MBv5B7zHDNTNFiJyohz1L1nxZMMMot",
+      "viewkey" : "b348108be5160736d0fc98d0767a080f41c5c2de0a159da2790d381627f75c4a"
     },
     "stagenet" :
     {
-      "address" : "53mqDDKtVkib8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQE2FBkTS",
-      "viewkey" : "53c5850e895122574c53a4f952c726be3fe22bcd2b08f4bfed8946d887cc950b"
+      "address" : "SFvqS4mHVutZdd8NqTNz53LRg8s5Uh9o5ZC6PvXsR1ij1Ft8eEjWqnV2CzC7fggMwf2MBv5B7zHDNTNFiJyohz1L1nxZMMMot",
+      "viewkey" : "b348108be5160736d0fc98d0767a080f41c5c2de0a159da2790d381627f75c4a"
     }
   },
   "refresh_block_status_every_seconds" : 10,
-  "search_thread_life_in_seconds"      : 300,
+  "blocks_search_lookahead"            : 200,
+  "search_thread_life_in_seconds"      : 120,
   "max_number_of_blocks_to_import"     : 132000,
   "ssl" :
   {

@@ -2,7 +2,7 @@
 // ip/impl/address_v4.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -186,6 +186,21 @@ address_v4 make_address_v4(
 {
   return make_address_v4(str.c_str(), ec);
 }
+
+#if defined(ASIO_HAS_STD_STRING_VIEW)
+
+address_v4 make_address_v4(string_view str)
+{
+  return make_address_v4(static_cast<std::string>(str));
+}
+
+address_v4 make_address_v4(string_view str,
+    asio::error_code& ec)
+{
+  return make_address_v4(static_cast<std::string>(str), ec);
+}
+
+#endif // defined(ASIO_HAS_STD_STRING_VIEW)
 
 } // namespace ip
 } // namespace asio

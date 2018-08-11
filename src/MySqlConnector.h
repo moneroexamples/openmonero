@@ -49,13 +49,20 @@ public:
 
     MySqlConnector();
 
+    MySqlConnector(Option* _option);
+
+    // dont want any copies of connection object.
+    // pass it around through shared or unique pointer
+    MySqlConnector (const MySqlConnector&) = delete;
+    MySqlConnector& operator= (const MySqlConnector&) = delete;
+
     Query
     query(const char* qstr = 0);
 
     Query
     query(const std::string& qstr);
 
-    bool
+    virtual bool
     connect();
 
     bool
@@ -64,7 +71,20 @@ public:
     Connection&
     get_connection();
 
+    // this throws exception if not connected
+    inline void
+    check_if_connected()
+    {
+        if (!conn.connected())
+            throw std::runtime_error("No connection to the mysqldb");
+    }
+
     virtual ~MySqlConnector();
+
+protected:
+
+    void _init();
+
 };
 
 

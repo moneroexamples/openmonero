@@ -2,7 +2,7 @@
 // basic_deadline_timer.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -197,6 +197,40 @@ public:
         this->get_implementation(), expiry_time, ec);
     asio::detail::throw_error(ec, "expires_from_now");
   }
+
+#if defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+  /// Move-construct a basic_deadline_timer from another.
+  /**
+   * This constructor moves a timer from one object to another.
+   *
+   * @param other The other basic_deadline_timer object from which the move will
+   * occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_deadline_timer(io_context&) constructor.
+   */
+  basic_deadline_timer(basic_deadline_timer&& other)
+    : basic_io_object<ASIO_SVC_T>(std::move(other))
+  {
+  }
+
+  /// Move-assign a basic_deadline_timer from another.
+  /**
+   * This assignment operator moves a timer from one object to another. Cancels
+   * any outstanding asynchronous operations associated with the target object.
+   *
+   * @param other The other basic_deadline_timer object from which the move will
+   * occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_deadline_timer(io_context&) constructor.
+   */
+  basic_deadline_timer& operator=(basic_deadline_timer&& other)
+  {
+    basic_io_object<ASIO_SVC_T>::operator=(std::move(other));
+    return *this;
+  }
+#endif // defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
 
   /// Destroys the timer.
   /**

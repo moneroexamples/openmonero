@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
 //System Includes
@@ -8,9 +8,9 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#if defined(WIN32)
+#if defined(_WIN32)
     #include <ciso646>
-    #include <Winsock2.h>
+    #include <winsock2.h>
     #pragma comment( lib, "Ws2_32.lib" )
 #else
     #include <netdb.h>
