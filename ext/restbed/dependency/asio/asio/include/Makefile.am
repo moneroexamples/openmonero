@@ -47,6 +47,9 @@ nobase_include_HEADERS = \
 	asio/detail/chrono.hpp \
 	asio/detail/chrono_time_traits.hpp \
 	asio/detail/completion_handler.hpp \
+	asio/detail/concurrency_hint.hpp \
+	asio/detail/conditionally_enabled_event.hpp \
+	asio/detail/conditionally_enabled_mutex.hpp \
 	asio/detail/config.hpp \
 	asio/detail/consuming_buffers.hpp \
 	asio/detail/cstddef.hpp \
@@ -87,6 +90,7 @@ nobase_include_HEADERS = \
 	asio/detail/impl/handler_tracking.ipp \
 	asio/detail/impl/kqueue_reactor.hpp \
 	asio/detail/impl/kqueue_reactor.ipp \
+	asio/detail/impl/null_event.ipp \
 	asio/detail/impl/pipe_select_interrupter.ipp \
 	asio/detail/impl/posix_event.ipp \
 	asio/detail/impl/posix_mutex.ipp \
@@ -183,6 +187,7 @@ nobase_include_HEADERS = \
 	asio/detail/regex_fwd.hpp \
 	asio/detail/resolve_endpoint_op.hpp \
 	asio/detail/resolve_op.hpp \
+	asio/detail/resolve_query_op.hpp \
 	asio/detail/resolver_service_base.hpp \
 	asio/detail/resolver_service.hpp \
 	asio/detail/scheduler.hpp \
@@ -206,12 +211,14 @@ nobase_include_HEADERS = \
 	asio/detail/solaris_fenced_block.hpp \
 	asio/detail/static_mutex.hpp \
 	asio/detail/std_event.hpp \
+	asio/detail/std_fenced_block.hpp \
 	asio/detail/std_global.hpp \
 	asio/detail/std_mutex.hpp \
 	asio/detail/std_static_mutex.hpp \
 	asio/detail/std_thread.hpp \
 	asio/detail/strand_executor_service.hpp \
 	asio/detail/strand_service.hpp \
+	asio/detail/string_view.hpp \
 	asio/detail/thread_context.hpp \
 	asio/detail/thread_group.hpp \
 	asio/detail/thread.hpp \
@@ -315,8 +322,8 @@ nobase_include_HEADERS = \
 	asio/impl/spawn.hpp \
 	asio/impl/src.cpp \
 	asio/impl/src.hpp \
+	asio/impl/system_context.ipp \
 	asio/impl/system_executor.hpp \
-	asio/impl/system_executor.ipp \
 	asio/impl/thread_pool.hpp \
 	asio/impl/thread_pool.ipp \
 	asio/impl/use_future.hpp \
@@ -430,6 +437,7 @@ nobase_include_HEADERS = \
 	asio/strand.hpp \
 	asio/streambuf.hpp \
 	asio/stream_socket_service.hpp \
+	asio/system_context.hpp \
 	asio/system_error.hpp \
 	asio/system_executor.hpp \
 	asio/system_timer.hpp \

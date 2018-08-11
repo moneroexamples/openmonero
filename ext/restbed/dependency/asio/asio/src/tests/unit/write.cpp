@@ -2,7 +2,7 @@
 // write.cpp
 // ~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -209,7 +209,8 @@ void test_2_arg_vector_buffers_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   size_t bytes_transferred = asio::write(s, buffers);
@@ -305,7 +306,8 @@ void test_3_arg_nothrow_vector_buffers_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   asio::error_code error;
@@ -711,7 +713,8 @@ void test_3_arg_vector_buffers_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   size_t bytes_transferred = asio::write(s, buffers,
@@ -1368,7 +1371,8 @@ void test_4_arg_vector_buffers_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   asio::error_code error;
@@ -1848,7 +1852,8 @@ void test_3_arg_vector_buffers_async_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   bool called = false;
@@ -3222,7 +3227,8 @@ void test_4_arg_vector_buffers_async_write()
   test_stream s(ioc);
   std::vector<asio::const_buffer> buffers;
   buffers.push_back(asio::buffer(write_data, 32));
-  buffers.push_back(asio::buffer(write_data) + 32);
+  buffers.push_back(asio::buffer(write_data, 39) + 32);
+  buffers.push_back(asio::buffer(write_data) + 39);
 
   s.reset();
   bool called = false;

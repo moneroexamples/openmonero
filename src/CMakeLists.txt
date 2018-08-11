@@ -12,9 +12,13 @@ set(SOURCE_FILES
 		ssqlses.cpp
 		YourMoneroRequests.cpp
 		TxSearch.cpp
-		rpccalls.cpp
+                RPCCalls.cpp
 		OutputInputIdentification.cpp
-		version.h.in)
+		version.h.in
+		BlockchainSetup.cpp
+		ThreadRAII.cpp
+                MysqlPing.cpp
+                TxUnlockChecker.cpp)
 
 # make static library called libmyxrm
 # that we are going to link to

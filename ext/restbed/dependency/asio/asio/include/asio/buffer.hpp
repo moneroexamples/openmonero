@@ -2,7 +2,7 @@
 // buffer.hpp
 // ~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -24,6 +24,7 @@
 #include <vector>
 #include "asio/detail/array_fwd.hpp"
 #include "asio/detail/is_buffer_sequence.hpp"
+#include "asio/detail/string_view.hpp"
 #include "asio/detail/throw_exception.hpp"
 #include "asio/detail/type_traits.hpp"
 
@@ -369,14 +370,13 @@ struct is_const_buffer_sequence
 {
 };
 
-/// Trait to determine whether a type satisfies the DynamicBufferSequence
-/// requirements.
+/// Trait to determine whether a type satisfies the DynamicBuffer requirements.
 template <typename T>
-struct is_dynamic_buffer_sequence
+struct is_dynamic_buffer
 #if defined(GENERATING_DOCUMENTATION)
   : integral_constant<bool, automatically_determined>
 #else // defined(GENERATING_DOCUMENTATION)
-  : asio::detail::is_dynamic_buffer_sequence<T>
+  : asio::detail::is_dynamic_buffer<T>
 #endif // defined(GENERATING_DOCUMENTATION)
 {
 };
@@ -1475,9 +1475,57 @@ inline ASIO_CONST_BUFFER buffer(
       );
 }
 
+#if defined(ASIO_HAS_STD_STRING_VIEW) \
+  || defined(GENERATING_DOCUMENTATION)
+
+/// Create a new modifiable buffer that represents the given string_view.
+/**
+ * @returns <tt>mutable_buffer(data.size() ? &data[0] : 0,
+ * data.size() * sizeof(Elem))</tt>.
+ */
+template <typename Elem, typename Traits>
+inline ASIO_CONST_BUFFER buffer(
+    basic_string_view<Elem, Traits> data) ASIO_NOEXCEPT
+{
+  return ASIO_CONST_BUFFER(data.size() ? &data[0] : 0,
+      data.size() * sizeof(Elem)
+#if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
+      , detail::buffer_debug_check<
+          typename basic_string_view<Elem, Traits>::iterator
+        >(data.begin())
+#endif // ASIO_ENABLE_BUFFER_DEBUGGING
+      );
+}
+
+/// Create a new non-modifiable buffer that represents the given string.
+/**
+ * @returns A mutable_buffer value equivalent to:
+ * @code mutable_buffer(
+ *     data.size() ? &data[0] : 0,
+ *     min(data.size() * sizeof(Elem), max_size_in_bytes)); @endcode
+ */
+template <typename Elem, typename Traits>
+inline ASIO_CONST_BUFFER buffer(
+    basic_string_view<Elem, Traits> data,
+    std::size_t max_size_in_bytes) ASIO_NOEXCEPT
+{
+  return ASIO_CONST_BUFFER(data.size() ? &data[0] : 0,
+      data.size() * sizeof(Elem) < max_size_in_bytes
+      ? data.size() * sizeof(Elem) : max_size_in_bytes
+#if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
+      , detail::buffer_debug_check<
+          typename basic_string_view<Elem, Traits>::iterator
+        >(data.begin())
+#endif // ASIO_ENABLE_BUFFER_DEBUGGING
+      );
+}
+
+#endif // defined(ASIO_HAS_STD_STRING_VIEW)
+       //  || defined(GENERATING_DOCUMENTATION)
+
 /*@}*/
 
-/// Adapt a basic_string to the DynamicBufferSequence requirements.
+/// Adapt a basic_string to the DynamicBuffer requirements.
 /**
  * Requires that <tt>sizeof(Elem) == 1</tt>.
  */
@@ -1628,7 +1676,7 @@ private:
   const std::size_t max_size_;
 };
 
-/// Adapt a vector to the DynamicBufferSequence requirements.
+/// Adapt a vector to the DynamicBuffer requirements.
 /**
  * Requires that <tt>sizeof(Elem) == 1</tt>.
  */
