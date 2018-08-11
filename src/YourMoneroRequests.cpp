@@ -247,7 +247,7 @@ YourMoneroRequests::get_address_txs(
                         {"unlock_time"    , tx.unlock_time},                  
                         {"total_sent"     , 0}, // to be field when checking for spent_outputs below
                         {"total_received" , tx.total_received},
-                        {"timestamp"      , static_cast<uint64_t>(tx.timestamp)},
+                        {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
                         {"mempool"        , false} // tx in database are never from mempool
                 };
 
