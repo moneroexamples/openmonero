@@ -2,8 +2,14 @@
 .sass-cache
 *.*~
 *.user
+*.user.*
 .idea/
+*.gcov
 cmake-build-debug/
 ext/restbed/dependency/catch/
+ext/restbed/distribution/
 build
+.cproject
+.project
+.settings/
 

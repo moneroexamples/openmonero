@@ -91,18 +91,6 @@ parse_str_address(const string& address_str,
 }
 
 
-
-/**
- * Return string representation of monero address
- */
-string
-print_address(const address_parse_info& address_info, network_type net_type)
-{
-    return "<" + get_account_address_as_str(
-            net_type, address_info.is_subaddress, address_info.address)
-           + ">";
-}
-
 string
 print_sig (const signature& sig)
 {
@@ -296,7 +284,19 @@ get_blockchain_path(bf::path& blockchain_path,
     return true;
 }
 
+bool
+get_blockchain_path(string& blockchain_path,
+                    cryptonote::network_type nettype)
+{
+    bf::path p {blockchain_path};
 
+    if (!get_blockchain_path(p, nettype))
+        return false;
+
+    blockchain_path = p.string();
+
+    return true;
+}
 
 
 array<uint64_t, 4>
@@ -1333,6 +1333,107 @@ make_hash(const string& in_str)
     crypto::hash vk_hash;
     crypto::cn_fast_hash(in_str.c_str(), in_str.length(), vk_hash);
     return pod_to_hex(vk_hash);
+}
+
+
+bool
+hex_to_tx(string const& tx_hex, transaction& tx, crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash)
+{
+    std::string tx_blob;
+
+    epee::string_tools::parse_hexstr_to_binbuff(tx_hex, tx_blob);
+
+    return parse_and_validate_tx_from_blob(tx_blob, tx, tx_hash, tx_prefix_hash);
+}
+
+string
+tx_to_hex(transaction const& tx)
+{
+    return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+
+string
+hex_to_tx_blob(string const& tx_hex)
+{
+    std::string tx_blob;
+
+    epee::string_tools::parse_hexstr_to_binbuff(tx_hex, tx_blob);
+
+    return tx_blob;
+}
+
+bool
+hex_to_complete_block(string const& cblk_str,
+                      block_complete_entry& cblk)
+{
+    cryptonote::blobdata cblk_blob;
+
+    if (!epee::string_tools::parse_hexstr_to_binbuff(
+                cblk_str, cblk_blob))
+        return false;
+
+    if (!epee::serialization::load_t_from_binary(cblk, cblk_blob))
+        return false;
+
+    return true;
+}
+
+bool
+hex_to_complete_block(vector<string> const& cblks_str,
+                      vector<block_complete_entry>& cblks)
+{
+    for (auto const& cblk_str: cblks_str)
+    {
+
+        block_complete_entry cblk;
+
+        if (!hex_to_complete_block(cblk_str, cblk))
+            return false;
+
+        cblks.push_back(cblk);
+    }
+
+    return true;
+}
+
+bool
+blocks_and_txs_from_complete_blocks(
+        vector<block_complete_entry> const& cblks,
+        vector<block>& blocks,
+        vector<transaction>& transactions)
+{
+
+
+    for (auto const& cblk: cblks)
+    {
+        block blk;
+
+        if (!parse_and_validate_block_from_blob(cblk.block, blk))
+            return false;
+
+        blocks.push_back(blk);
+
+        // first is miner_tx
+        transactions.push_back(blk.miner_tx);
+
+        vector<transaction> txs;
+
+        for (auto const& tx_blob: cblk.txs)
+        {
+            transaction tx;
+
+            if (!parse_and_validate_tx_from_blob(tx_blob, tx))
+                return false;
+
+            txs.push_back(tx);
+        }
+
+        // now normal txs
+        transactions.insert(transactions.end(),
+                            txs.begin(), txs.end());
+    }
+
+    return true;
 }
 
 

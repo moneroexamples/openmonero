@@ -2,7 +2,7 @@
 // impl/use_future.hpp
 // ~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -36,29 +36,37 @@ template <typename T, typename F, typename... Args>
 inline void promise_invoke_and_set(std::promise<T>& p,
     F& f, ASIO_MOVE_ARG(Args)... args)
 {
+#if !defined(ASIO_NO_EXCEPTIONS)
   try
+#endif // !defined(ASIO_NO_EXCEPTIONS)
   {
     p.set_value(f(ASIO_MOVE_CAST(Args)(args)...));
   }
+#if !defined(ASIO_NO_EXCEPTIONS)
   catch (...)
   {
     p.set_exception(std::current_exception());
   }
+#endif // !defined(ASIO_NO_EXCEPTIONS)
 }
 
 template <typename F, typename... Args>
 inline void promise_invoke_and_set(std::promise<void>& p,
     F& f, ASIO_MOVE_ARG(Args)... args)
 {
+#if !defined(ASIO_NO_EXCEPTIONS)
   try
+#endif // !defined(ASIO_NO_EXCEPTIONS)
   {
     f(ASIO_MOVE_CAST(Args)(args)...);
     p.set_value();
   }
+#if !defined(ASIO_NO_EXCEPTIONS)
   catch (...)
   {
     p.set_exception(std::current_exception());
   }
+#endif // !defined(ASIO_NO_EXCEPTIONS)
 }
 
 #else // defined(ASIO_HAS_VARIADIC_TEMPLATES)
@@ -66,29 +74,60 @@ inline void promise_invoke_and_set(std::promise<void>& p,
 template <typename T, typename F>
 inline void promise_invoke_and_set(std::promise<T>& p, F& f)
 {
+#if !defined(ASIO_NO_EXCEPTIONS)
   try
+#endif // !defined(ASIO_NO_EXCEPTIONS)
   {
     p.set_value(f());
   }
+#if !defined(ASIO_NO_EXCEPTIONS)
   catch (...)
   {
     p.set_exception(std::current_exception());
   }
+#endif // !defined(ASIO_NO_EXCEPTIONS)
 }
 
 template <typename F, typename Args>
 inline void promise_invoke_and_set(std::promise<void>& p, F& f)
 {
+#if !defined(ASIO_NO_EXCEPTIONS)
   try
+#endif // !defined(ASIO_NO_EXCEPTIONS)
   {
     f();
     p.set_value();
+#if !defined(ASIO_NO_EXCEPTIONS)
   }
   catch (...)
   {
     p.set_exception(std::current_exception());
   }
+#endif // !defined(ASIO_NO_EXCEPTIONS)
 }
+
+#if defined(ASIO_NO_EXCEPTIONS)
+
+#define ASIO_PRIVATE_PROMISE_INVOKE_DEF(n) \
+  template <typename T, typename F, ASIO_VARIADIC_TPARAMS(n)> \
+  inline void promise_invoke_and_set(std::promise<T>& p, \
+      F& f, ASIO_VARIADIC_MOVE_PARAMS(n)) \
+  { \
+    p.set_value(f(ASIO_VARIADIC_MOVE_ARGS(n))); \
+  } \
+  \
+  template <typename F, ASIO_VARIADIC_TPARAMS(n)> \
+  inline void promise_invoke_and_set(std::promise<void>& p, \
+      F& f, ASIO_VARIADIC_MOVE_PARAMS(n)) \
+  { \
+    f(ASIO_VARIADIC_MOVE_ARGS(n)); \
+    p.set_value(); \
+  } \
+  /**/
+  ASIO_VARIADIC_GENERATE(ASIO_PRIVATE_PROMISE_INVOKE_DEF)
+#undef ASIO_PRIVATE_PROMISE_INVOKE_DEF
+
+#else // defined(ASIO_NO_EXCEPTIONS)
 
 #define ASIO_PRIVATE_PROMISE_INVOKE_DEF(n) \
   template <typename T, typename F, ASIO_VARIADIC_TPARAMS(n)> \
@@ -123,6 +162,8 @@ inline void promise_invoke_and_set(std::promise<void>& p, F& f)
   ASIO_VARIADIC_GENERATE(ASIO_PRIVATE_PROMISE_INVOKE_DEF)
 #undef ASIO_PRIVATE_PROMISE_INVOKE_DEF
 
+#endif // defined(ASIO_NO_EXCEPTIONS)
+
 #endif // defined(ASIO_HAS_VARIADIC_TEMPLATES)
 
 // A function object adapter to invoke a nullary function object and capture
@@ -133,20 +174,24 @@ class promise_invoker
 public:
   promise_invoker(const shared_ptr<std::promise<T> >& p,
       ASIO_MOVE_ARG(F) f)
-    : p_(p), f_(f)
+    : p_(p), f_(ASIO_MOVE_CAST(F)(f))
   {
   }
 
   void operator()()
   {
+#if !defined(ASIO_NO_EXCEPTIONS)
     try
+#endif // !defined(ASIO_NO_EXCEPTIONS)
     {
       f_();
     }
+#if !defined(ASIO_NO_EXCEPTIONS)
     catch (...)
     {
       p_->set_exception(std::current_exception());
     }
+#endif // !defined(ASIO_NO_EXCEPTIONS)
   }
 
 private:
@@ -232,10 +277,8 @@ protected:
   template <typename Allocator>
   void create_promise(const Allocator& a)
   {
-    p_ = std::allocate_shared<std::promise<T>>(
-        typename Allocator::template rebind<char>::other(a),
-        std::allocator_arg,
-        typename Allocator::template rebind<char>::other(a));
+    ASIO_REBIND_ALLOC(Allocator, char) b(a);
+    p_ = std::allocate_shared<std::promise<T>>(b, std::allocator_arg, b);
   }
 
   shared_ptr<std::promise<T> > p_;

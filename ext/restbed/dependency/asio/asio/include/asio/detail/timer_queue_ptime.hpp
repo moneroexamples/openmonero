@@ -2,7 +2,7 @@
 // detail/timer_queue_ptime.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -76,6 +76,10 @@ public:
   ASIO_DECL std::size_t cancel_timer(
       per_timer_data& timer, op_queue<operation>& ops,
       std::size_t max_cancelled = (std::numeric_limits<std::size_t>::max)());
+
+  // Move operations from one timer to another, empty timer.
+  ASIO_DECL void move_timer(per_timer_data& target,
+      per_timer_data& source);
 
 private:
   timer_queue<forwarding_posix_time_traits> impl_;

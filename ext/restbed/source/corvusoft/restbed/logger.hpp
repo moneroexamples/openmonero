@@ -1,11 +1,11 @@
 /*
- * Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+ * Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
  */
 
 #ifndef _RESTBED_LOGGER_H
 #define _RESTBED_LOGGER_H 1
 
-#if defined(WIN32)
+#if defined(_WIN32)
     #undef ERROR
 #endif
 

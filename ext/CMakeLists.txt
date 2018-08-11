@@ -16,6 +16,3 @@ add_library(myext
         STATIC
         ${SOURCE_FILES})
 
-
-
-

@@ -2,7 +2,7 @@
 // detail/reactive_socket_service_base.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -93,6 +93,10 @@ public:
   ASIO_DECL asio::error_code close(
       base_implementation_type& impl, asio::error_code& ec);
 
+  // Release ownership of the socket.
+  ASIO_DECL socket_type release(
+      base_implementation_type& impl, asio::error_code& ec);
+
   // Get the native socket representation.
   native_handle_type native_handle(base_implementation_type& impl)
   {
@@ -171,13 +175,13 @@ public:
     switch (w)
     {
     case socket_base::wait_read:
-      socket_ops::poll_read(impl.socket_, impl.state_, ec);
+      socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
       break;
     case socket_base::wait_write:
-      socket_ops::poll_write(impl.socket_, impl.state_, ec);
+      socket_ops::poll_write(impl.socket_, impl.state_, -1, ec);
       break;
     case socket_base::wait_error:
-      socket_ops::poll_error(impl.socket_, impl.state_, ec);
+      socket_ops::poll_error(impl.socket_, impl.state_, -1, ec);
       break;
     default:
       ec = asio::error::invalid_argument;
@@ -246,7 +250,7 @@ public:
       socket_base::message_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_write(impl.socket_, impl.state_, ec);
+    socket_ops::poll_write(impl.socket_, impl.state_, -1, ec);
 
     return 0;
   }
@@ -265,7 +269,7 @@ public:
     typedef reactive_socket_send_op<ConstBufferSequence, Handler> op;
     typename op::ptr p = { asio::detail::addressof(handler),
       op::ptr::allocate(handler), 0 };
-    p.p = new (p.v) op(impl.socket_, buffers, flags, handler);
+    p.p = new (p.v) op(impl.socket_, impl.state_, buffers, flags, handler);
 
     ASIO_HANDLER_CREATION((reactor_.context(), *p.p, "socket",
           &impl, impl.socket_, "async_send"));
@@ -316,7 +320,7 @@ public:
       socket_base::message_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_read(impl.socket_, impl.state_, ec);
+    socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
 
     return 0;
   }
@@ -396,7 +400,7 @@ public:
       socket_base::message_flags& out_flags, asio::error_code& ec)
   {
     // Wait for socket to become ready.
-    socket_ops::poll_read(impl.socket_, impl.state_, ec);
+    socket_ops::poll_read(impl.socket_, impl.state_, -1, ec);
 
     // Clear out_flags, since we cannot give it any other sensible value when
     // performing a null_buffers operation.

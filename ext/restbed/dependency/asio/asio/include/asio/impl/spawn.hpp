@@ -2,7 +2,7 @@
 // impl/spawn.hpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -166,7 +166,9 @@ namespace detail {
 
     return_type get()
     {
-      handler_.coro_.reset(); // Must not hold shared_ptr to coro while suspended.
+      // Must not hold shared_ptr to coro while suspended.
+      handler_.coro_.reset();
+
       if (--ready_ != 0)
         ca_();
       if (!out_ec_ && ec_) throw asio::system_error(ec_);
@@ -201,7 +203,9 @@ namespace detail {
 
     void get()
     {
-      handler_.coro_.reset(); // Must not hold shared_ptr to coro while suspended.
+      // Must not hold shared_ptr to coro while suspended.
+      handler_.coro_.reset();
+
       if (--ready_ != 0)
         ca_();
       if (!out_ec_ && ec_) throw asio::system_error(ec_);

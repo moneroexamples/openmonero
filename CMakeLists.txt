@@ -5,8 +5,7 @@ set(PROJECT_NAME
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
@@ -15,6 +14,8 @@ endif()
 if (NOT MONERO_DIR)
     set(MONERO_DIR ~/Projects/flake-core)
 endif()
+
+option(BUILD_TEST "Build tests for the project" ON)
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
@@ -34,6 +35,21 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
         CACHE PATH "Add Monero directory for library searching")
 
 include(MyUtils)
+
+#get_filename_component(ABSOLUTE_PATH ${RELATIVE_PATH} ABSOLUTE)
+
+include(CodeCoverage)
+APPEND_COVERAGE_COMPILER_FLAGS()
+set(COVERAGE_EXCLUDES
+        '${CMAKE_SOURCE_DIR}/ext/*'
+        'asio/*'
+        '${MONERO_SOURCE_DIR}/*'
+        '${CMAKE_SOURCE_DIR}/tests/*')
+
+#set(COVERAGE_EXCLUDES
+#                '${CMAKE_SOURCE_DIR}/ext/*'
+#                'asio/*'
+#                '${MONERO_SOURCE_DIR}/*')
 
 find_package(Monero)
 
@@ -61,6 +77,7 @@ link_directories(
 create_git_version()
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_BINARY_DIR}/config)
+
 
 # find boost
 find_package(Boost COMPONENTS
@@ -94,8 +111,8 @@ set(LIBRARIES
         myext
         restbed
         wallet
-        blockchain_db
         cryptonote_core
+        blockchain_db       
         cryptonote_protocol
         cryptonote_basic
         daemonizer
@@ -119,7 +136,6 @@ set(LIBRARIES
         pthread
         unbound
         curl
-        dl
         cncrypto
         ssl
         crypto)
@@ -147,3 +163,20 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
+
+#set(COVERAGE_EXCLUDES 'ext/*' '${MONERO_DIR}/*')
+
+include_directories(
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include)
+
+#include_directories(${MONERO_DIR}/tests/core_tests)
+
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
+
+
+
+enable_testing()
+add_subdirectory(ext/googletest)
+add_subdirectory(tests)

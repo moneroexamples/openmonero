@@ -2,7 +2,7 @@
 // detail/win_iocp_null_buffers_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -50,9 +50,9 @@ public:
     handler_work<Handler>::start(handler_);
   }
 
-  static bool do_perform(reactor_op*)
+  static status do_perform(reactor_op*)
   {
-    return true;
+    return done;
   }
 
   static void do_complete(void* owner, operation* base,
