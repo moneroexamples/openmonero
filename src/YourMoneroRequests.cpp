@@ -205,9 +205,18 @@ YourMoneroRequests::get_address_txs(
     // a placeholder for exciting or new account data
     xmreg::XmrAccount acc;
 
-    // if not logged, i.e., no search thread exist, then start one.
-    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    // for this to continue, search thread must have already been
+    // created and still exisits.
+    if (current_bc_status->search_thread_exist(xmr_address))
     {
+        // populate acc and check view_key
+        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+        {
+            // some error with loggin in or search thread start
+            session_close(session, j_response.dump());
+            return;
+        }
+
         // before fetching txs, check if provided view key
         // is correct. this is simply to ensure that
         // we cant fetch an account's txs using only address.
@@ -301,9 +310,12 @@ YourMoneroRequests::get_address_txs(
 
         } // if (xmr_accounts->select_txs_for_ac
 
-    } // if (login_and_start_search_thread(xmr
+    } // if (current_bc_status->search_thread_exist(xmr_address))
     else
-    {
+    {        
+        j_response = json {{"status", "error"},
+                           {"reason", "Search thread does not exist."}};
+
         // some error with loggin in or search thread start
         session_close(session, j_response.dump());
         return;
@@ -413,9 +425,17 @@ YourMoneroRequests::get_address_info(
     // a placeholder for exciting or new account data
     xmreg::XmrAccount acc;
 
-    // select this account if its existing one
-    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    // for this to continue, search thread must have already been
+    // created and still exisits.
+    if (current_bc_status->search_thread_exist(xmr_address))
     {
+        // populate acc and check view_key
+        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+        {
+            // some error with loggin in or search thread start
+            session_close(session, j_response.dump());
+            return;
+        }
 
         uint64_t total_received {0};
 
@@ -506,9 +526,12 @@ YourMoneroRequests::get_address_info(
 
         } // if (xmr_accounts->select_txs_for_account_spendability_check(acc.id, txs))
 
-    } //  if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    } // if (current_bc_status->search_thread_exist(xmr_address))
     else
     {
+        j_response = json {{"status", "error"},
+                           {"reason", "Search thread does not exist."}};
+
         // some error with loggin in or search thread start
         session_close(session, j_response.dump());
         return;
@@ -588,8 +611,19 @@ YourMoneroRequests::get_unspent_outs(
     xmreg::XmrAccount acc;
 
     // select this account if its existing one
-    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+
+    // for this to continue, search thread must have already been
+    // created and still exisits.
+    if (current_bc_status->search_thread_exist(xmr_address))
     {
+        // populate acc and check view_key
+        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+        {
+            // some error with loggin in or search thread start
+            session_close(session, j_response.dump());
+            return;
+        }
+
         uint64_t total_outputs_amount {0};
 
 //        uint64_t current_blockchain_height
@@ -711,9 +745,12 @@ YourMoneroRequests::get_unspent_outs(
                 ->get_dynamic_per_kb_fee_estimate();
 
 
-    } // if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    } // if (current_bc_status->search_thread_exist(xmr_address))
     else
     {
+        j_response = json {{"status", "error"},
+                           {"reason", "Search thread does not exist."}};
+
         // some error with loggin in or search thread start
         session_close(session, j_response.dump());
         return;
@@ -1803,8 +1840,23 @@ YourMoneroRequests::login_and_start_search_thread(
 
             if (!current_bc_status->search_thread_exist(acc.address))
             {
-                auto tx_search
-                        = std::make_unique<TxSearch>(acc, current_bc_status);
+                std::unique_ptr<TxSearch> tx_search;
+
+                try
+                {
+                    tx_search
+                            = std::make_unique<TxSearch>(acc,
+                                                         current_bc_status);
+                }
+                catch (std::exception const& e)
+                {
+                    OMERROR << "TxSearch construction faild.";
+                    j_response = json {{"status", "error"},
+                                       {"reason", "Failed to construct "
+                                                  "TxSearch object"}};
+                    return false;
+                }
+
 
                 if (current_bc_status->start_tx_search_thread(
                             acc, std::move(tx_search)))

@@ -41,11 +41,17 @@ CurrentBlockchainStatus::monitor_blockchain()
            if (stop_blockchain_monitor_loop)
                break;
 
-           update_current_blockchain_height();
+           update_current_blockchain_height();           
+
            read_mempool();
+
            OMINFO << "Current blockchain height: " << current_height
                   << ", no of mempool txs: " << mempool_txs.size();
+
            clean_search_thread_map();
+
+           check_search_threads_for_exceptions();
+
            std::this_thread::sleep_for(
                    std::chrono::seconds(
                     bc_setup.refresh_block_status_every_seconds));
@@ -950,11 +956,38 @@ CurrentBlockchainStatus::clean_search_thread_map()
         if (search_thread_exist(st.first)
                 && st.second.get_functor().still_searching() == false)
         {
-            OMERROR << st.first << " still searching: "
-                 << st.second.get_functor().still_searching();
+            OMINFO << "Ereasing a search thread";
             searching_threads.erase(st.first);
         }
     }
+}
+
+bool
+CurrentBlockchainStatus::check_search_threads_for_exceptions()
+{
+    bool found_any_exception {false};
+
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto& st: searching_threads)
+    {
+        if (search_thread_exist(st.first)
+                && st.second.get_functor().still_searching() == false)
+        {
+            try
+            {
+                auto eptr = st.second.get_functor().get_exception_ptr();
+                found_any_exception = true;
+                std::rethrow_exception(eptr);
+            }
+            catch (const std::exception& e)
+            {
+                OMERROR << "Error in search thread: " << e.what();
+            }
+        }
+    }
+
+    return found_any_exception;
 }
 
 

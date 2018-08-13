@@ -83,7 +83,7 @@ parse_str_address(const string& address_str,
 
     if (!get_account_address_from_str(address_info, net_type, address_str))
     {
-        cerr << "Error getting address: " << address_str << '\n';
+        //cerr << "Error getting address: " << address_str << '\n';
         return false;
     }
 

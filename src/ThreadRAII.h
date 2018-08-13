@@ -44,9 +44,6 @@ public:
 
     T& get_functor() {return *f;}
 
-//    ThreadRAII2(ThreadRAII2&&) = default;
-//    ThreadRAII2& operator=(ThreadRAII2&&) = default;
-
 protected:
     std::unique_ptr<T> f;
 };

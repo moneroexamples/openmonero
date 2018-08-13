@@ -17,13 +17,13 @@ ThreadRAII::~ThreadRAII()
     {
         if (action == DtorAction::join)
         {
-            std::cout << "\nThreadRAII::~ThreadRAII() t.join()\n";
+            //std::cout << "\nThreadRAII::~ThreadRAII() t.join()\n";
             t.join();
         }
         else
         {
             t.detach();
-            std::cout << "\nThreadRAII::~ThreadRAII() t.detach()\n";
+            //std::cout << "\nThreadRAII::~ThreadRAII() t.detach()\n";
         }
     }
 }
