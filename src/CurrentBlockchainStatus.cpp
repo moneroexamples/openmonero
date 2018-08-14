@@ -978,7 +978,8 @@ CurrentBlockchainStatus::check_search_threads_for_exceptions()
             {
                 auto eptr = st.second.get_functor().get_exception_ptr();
                 found_any_exception = true;
-                std::rethrow_exception(eptr);
+                if (eptr != nullptr)
+                    std::rethrow_exception(eptr);
             }
             catch (std::exception const& e)
             {
