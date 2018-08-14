@@ -48,9 +48,9 @@ CurrentBlockchainStatus::monitor_blockchain()
            OMINFO << "Current blockchain height: " << current_height
                   << ", no of mempool txs: " << mempool_txs.size();
 
-           clean_search_thread_map();
-
            check_search_threads_for_exceptions();
+
+           clean_search_thread_map();
 
            std::this_thread::sleep_for(
                    std::chrono::seconds(
@@ -980,9 +980,10 @@ CurrentBlockchainStatus::check_search_threads_for_exceptions()
                 found_any_exception = true;
                 std::rethrow_exception(eptr);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
-                OMERROR << "Error in search thread: " << e.what();
+                OMERROR << "Error in search thread: " << e.what()
+                        << ". It will be cleared.";
             }
         }
     }

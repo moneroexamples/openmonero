@@ -289,8 +289,7 @@ TxSearch::operator()()
 
                     if (tx_mysql_id == 0)
                     {                        
-                        throw TxSearchException("tx_mysql_id is zero!");
-                        //todo what should be done when insert_tx fails?
+                        throw TxSearchException("tx_mysql_id is zero!");                        
                     }
 
                     vector<XmrOutput> outputs_found;
@@ -340,7 +339,6 @@ TxSearch::operator()()
                     }
 
                 } // if (!found_mine_outputs.empty())
-
 
                 // SECOND component: Checking for our key images, i.e., inputs.
 
@@ -499,8 +497,7 @@ TxSearch::operator()()
                                 // it already
                                 // exisits in the MySQL. So maybe can now
                                 // check if we have it and get tx_mysql_id this
-                                // way.
-                                //todo what should be done when insert_tx fails?
+                                // way.                               
                             }
 
                         } //   if (tx_mysql_id == 0)

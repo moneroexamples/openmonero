@@ -50,6 +50,9 @@
         <div class="received-div" ng-repeat="tx in transactions | limitTo:10">
           <transaction></transaction>
         </div>
+        <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+            <p>{{error}}</p>
+        </div>
       </div>
   </div>
 </div>

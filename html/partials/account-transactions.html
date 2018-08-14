@@ -39,6 +39,9 @@
       <div class="received-div" ng-repeat="tx in transactions | orderBy:predicate:reverse | startFrom:pageNum*pageSize | limitTo:pageSize">
           <transaction></transaction>
       </div>
+      <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+          <p>{{error}}</p>
+      </div>
       <a class="table-btn left pointer" ng-click="navigatePage(1)">&lt;&lt; Previous 20</a>
       <a class="table-btn right pointer" ng-click="navigatePage(-1)">Next 20 &gt;&gt;</a>
     </div>
