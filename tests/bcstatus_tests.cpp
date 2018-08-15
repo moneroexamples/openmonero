@@ -162,6 +162,8 @@ public:
             j_transactions->push_back(nlohmann::json::parse(json_str));
     }
 
+    MOCK_METHOD0(get_exception_ptr, std::exception_ptr());
+
 };
 
 
@@ -996,6 +998,9 @@ TEST_P(BCSTATUS_TEST, StartTxSearchThread)
     EXPECT_CALL(*tx_search, operator_fcall()) // mock operator()
             .WillOnce(MockSearchWhile());
 
+    EXPECT_CALL(*tx_search, get_exception_ptr())
+            .WillOnce(Return(nullptr));
+
     EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search)));
 
     auto tx_search2 = std::make_unique<MockTxSearch>();
@@ -1004,9 +1009,37 @@ TEST_P(BCSTATUS_TEST, StartTxSearchThread)
     // should also return true as this is fine
     EXPECT_TRUE(bcs->start_tx_search_thread(acc, std::move(tx_search2)));
 
+
+    auto tx_search3 = std::make_unique<MockTxSearch>();
+
+    // here we test what happens if TxSearchThread throws some
+    // has thrown an execption and std::exception_ptr is not null
+
+
+    xmreg::XmrAccount acc2; // empty, mock account
+
+    acc2.address = "mock address";
+
+    auto expt_ptr = std::make_exception_ptr(
+                std::runtime_error("some exception"));
+
+    EXPECT_CALL(*tx_search3, get_exception_ptr())
+            .WillOnce(Return(expt_ptr));
+
+    EXPECT_CALL(*tx_search3, operator_fcall()) // mock operator()
+            .WillOnce(MockSearchWhile());
+
+    EXPECT_TRUE(bcs->start_tx_search_thread(acc2, std::move(tx_search3)));
+
     // wait a bit, just to give time to tx_search mock thread to finish
     // its mocking action
     std::this_thread::sleep_for(1s);
+
+    // cleaning up the search threads should detect that one
+    // thread has some exception
+    bcs->clean_search_thread_map();
+
+    EXPECT_FALSE(bcs->search_thread_exist(acc2.address));
 }
 
 ACTION(MockSearchWhile2)

@@ -219,9 +219,6 @@ public:
     virtual void
     clean_search_thread_map();
 
-    virtual bool
-    check_search_threads_for_exceptions();
-
     /*
      * The frontend requires rct field to work
      * the filed consisitct of rct_pk, mask, and amount.
