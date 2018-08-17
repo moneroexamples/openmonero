@@ -207,15 +207,17 @@ YourMoneroRequests::get_address_txs(
 
     // for this to continue, search thread must have already been
     // created and still exisits.
-    if (current_bc_status->search_thread_exist(xmr_address))
-    {
+//    if (current_bc_status->search_thread_exist(xmr_address))
+//    {
+      if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+      {
         // populate acc and check view_key
-        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
-        {
-            // some error with loggin in or search thread start
-            session_close(session, j_response.dump());
-            return;
-        }
+//        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+//        {
+//            // some error with loggin in or search thread start
+//            session_close(session, j_response.dump());
+//            return;
+//        }
 
         // before fetching txs, check if provided view key
         // is correct. this is simply to ensure that
@@ -427,16 +429,8 @@ YourMoneroRequests::get_address_info(
 
     // for this to continue, search thread must have already been
     // created and still exisits.
-    if (current_bc_status->search_thread_exist(xmr_address))
+    if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
     {
-        // populate acc and check view_key
-        if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
-        {
-            // some error with loggin in or search thread start
-            session_close(session, j_response.dump());
-            return;
-        }
-
         uint64_t total_received {0};
 
         // ping the search thread that we still need it.

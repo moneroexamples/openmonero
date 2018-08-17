@@ -289,6 +289,7 @@ TxSearch::operator()()
 
                     if (tx_mysql_id == 0)
                     {                        
+                        OMERROR << "tx_mysql_id is zero!" << tx_data;
                         throw TxSearchException("tx_mysql_id is zero!");                        
                     }
 
@@ -322,7 +323,7 @@ TxSearch::operator()()
                             std::lock_guard<std::mutex> lck (
                                         getting_known_outputs_keys);
                             known_outputs_keys.insert(
-                            {out_info.pub_key, out_info.amount});
+                                {out_info.pub_key, out_info.amount});
                         }
 
                     } //  for (auto& out_info: oi_identification.identified_outputs)
@@ -333,8 +334,7 @@ TxSearch::operator()()
                             = xmr_accounts->insert(outputs_found);
 
                     if (no_rows_inserted == 0)
-                    {
-                        OMERROR << "out_mysql_id is zero!";
+                    {                        
                         throw TxSearchException("no_rows_inserted is zero!");
                     }
 
@@ -378,9 +378,11 @@ TxSearch::operator()()
                         // above. So there is no risk of deleting same tx twice
                         if (!delete_existing_tx_if_exists(
                                     oi_identification.get_tx_hash_str()))
+                        {
                             throw TxSearchException(
                                     "Cant delete tx "
                                     + oi_identification.tx_hash_str);
+                        }
                     }
 
                     if (blockchain_tx_id == 0)
@@ -491,6 +493,8 @@ TxSearch::operator()()
 
                             if (tx_mysql_id == 0)
                             {
+                                OMERROR << "tx_mysql_id is zero!" << tx_data;
+
                                 //cerr << "tx_mysql_id is zero!" << endl;
                                 throw TxSearchException("tx_mysql_id is zero!");
                                 // it did not insert this tx, because maybe

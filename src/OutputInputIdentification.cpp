@@ -15,7 +15,7 @@ OutputInputIdentification::OutputInputIdentification(
     crypto::hash const& _tx_hash,
     bool is_coinbase,
     std::shared_ptr<CurrentBlockchainStatus> _current_bc_status)
-    : total_received {0}, mixin_no {0}, current_bc_status {_current_bc_status}
+    : current_bc_status {_current_bc_status}
 {
     address_info = _a;
     viewkey = _v;
@@ -36,13 +36,13 @@ OutputInputIdentification::OutputInputIdentification(
 
     if (!generate_key_derivation(tx_pub_key, *viewkey, derivation))
     {
-        cerr << "Cant get derived key for: "  << "\n"
+        OMERROR << "Cant get derived key for: "  << "\n"
              << "pub_tx_key: " << get_tx_pub_key_str() << " and "
-             << "prv_view_key" << viewkey << endl;
+             << "prv_view_key" << viewkey;;
 
-        throw OutputInputIdentificationException("Cant get derived key for a tx");
+        throw OutputInputIdentificationException(
+                    "Cant get derived key for a tx");
     }
-
 }
 
 uint64_t
@@ -58,7 +58,8 @@ void
 OutputInputIdentification::identify_outputs()
 {
     //          <public_key  , amount  , out idx>
-    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs = get_ouputs_tuple(*tx);
+    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs
+            = get_ouputs_tuple(*tx);
 
     for (auto& out: outputs)
     {
@@ -99,17 +100,24 @@ OutputInputIdentification::identify_outputs()
             {
                 bool r;
 
-                // for ringct non-coinbase txs, these values are provided with txs.
+                // for ringct non-coinbase txs, these values are given
+                // with txs.
                 // coinbase ringctx dont have this information. we will provide
                 // them only when needed, in get_unspent_outputs. So go there
-                // to see how we deal with ringct coinbase txs when we spent them
+                // to see how we deal with ringct coinbase txs when we spent
+                // them
                 // go to CurrentBlockchainStatus::construct_output_rct_field
-                // to see how we deal with coinbase ringct that are used as mixins
-                rtc_outpk  = pod_to_hex(tx->rct_signatures.outPk[output_idx_in_tx].mask);
-                rtc_mask   = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask);
-                rtc_amount = pod_to_hex(tx->rct_signatures.ecdhInfo[output_idx_in_tx].amount);
+                // to see how we deal with coinbase ringct that are used
+                // as mixins
+                rtc_outpk  = pod_to_hex(tx->rct_signatures
+                                        .outPk[output_idx_in_tx].mask);
+                rtc_mask   = pod_to_hex(tx->rct_signatures
+                                        .ecdhInfo[output_idx_in_tx].mask);
+                rtc_amount = pod_to_hex(tx->rct_signatures
+                                        .ecdhInfo[output_idx_in_tx].amount);
 
-                rct::key mask =  tx->rct_signatures.ecdhInfo[output_idx_in_tx].mask;
+                rct::key mask =  tx->rct_signatures
+                        .ecdhInfo[output_idx_in_tx].mask;
 
                 r = decode_ringct(tx->rct_signatures,
                                   tx_pub_key,
@@ -120,8 +128,9 @@ OutputInputIdentification::identify_outputs()
 
                 if (!r)
                 {
-                    cerr << "Cant decode ringCT!" << endl;
-                    throw OutputInputIdentificationException("Cant decode ringCT!");
+                    OMERROR << "Cant decode ringCT!";
+                    throw OutputInputIdentificationException(
+                                "Cant decode ringCT!");
                 }
 
                 amount = rct_amount_val;
@@ -163,30 +172,30 @@ OutputInputIdentification::identify_inputs(
                 = cryptonote::relative_output_offsets_to_absolute(
                         in_key.key_offsets);
 
-        // get public keys of outputs used in the mixins that match to the offests
+        // get public keys of outputs used in the mixins that
+        // match to the offests
         std::vector<cryptonote::output_data_t> mixin_outputs;
 
         if (!current_bc_status->get_output_keys(in_key.amount,
                                                 absolute_offsets,
                                                 mixin_outputs))
         {
-            cerr << "Mixins key images not found" << endl;
+            OMERROR << "Mixins key images not found";
             continue;
         }
-
-        // mixin counter
-        size_t count = 0;
 
         // indicates whether we found any matching mixin in the current input
         bool found_a_match {false};
 
         // for each found output public key check if its ours or not
-        for (const uint64_t& abs_offset: absolute_offsets)
+        for (size_t count = 0; count < absolute_offsets.size(); ++count)
         {
             // get basic information about mixn's output
-            cryptonote::output_data_t output_data = mixin_outputs[count];
+            cryptonote::output_data_t const& output_data
+                    = mixin_outputs[count];
 
-            //cout << " - output_public_key_str: " << output_public_key_str << endl;
+            //cout << " - output_public_key_str: "
+            // << output_public_key_str;
 
             // before going to the mysql, check our known outputs cash
             // if the key exists. Its much faster than going to mysql
@@ -208,8 +217,6 @@ OutputInputIdentification::identify_inputs(
 
             }
 
-            ++count;
-
         } // for (const cryptonote::output_data_t& output_data: outputs)
 
         if (found_a_match == false)
@@ -228,7 +235,7 @@ OutputInputIdentification::identify_inputs(
                 break;
         }
 
-    } // for (const txin_to_key& in_key: input_key_imgs)
+    } //  for (count = 0; count < absolute_offsets.size(); ++count)
 
 }
 

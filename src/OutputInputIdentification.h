@@ -2,8 +2,7 @@
 // Created by mwo on 13/02/17.
 //
 
-#ifndef RESTBED_XMR_OUTPUTINPUTIDENTIFICATION_H
-#define RESTBED_XMR_OUTPUTINPUTIDENTIFICATION_H
+#pragma once
 
 #include "CurrentBlockchainStatus.h"
 #include "tools.h"
@@ -40,7 +39,8 @@ class OutputInputIdentificationException: public std::runtime_error
  * because we dont have spendkey. But what we can do is, we can look for
  * candidate key images. And this can be achieved by checking if any mixin
  * in associated with the given key image, is our output. If it is our output,
- * then we assume its our key image (i.e. we spend this output). Off course this is only
+ * then we assume its our key image (i.e. we spend this output). Off course
+ * this is only
  * assumption as our outputs can be used in key images of others for their
  * mixin purposes. Thus, we sent to the frontend the list of key images
  * that we think are yours, and the frontend, because it has spendkey,
@@ -85,7 +85,9 @@ public:
     bool is_rct;
     uint8_t rct_type;
 
-    uint64_t mixin_no {};
+    uint64_t total_received {0};
+
+    uint64_t mixin_no {0};
 
     // for each output, in a tx, check if it belongs
     // to the given account of specific address and viewkey
@@ -94,8 +96,6 @@ public:
     // to create, so called, derived key.
     key_derivation derivation;
 
-
-    uint64_t total_received;
 
     vector<output_info> identified_outputs;
     vector<input_info>  identified_inputs;
@@ -107,7 +107,8 @@ public:
                               const transaction* _tx,
                               crypto::hash const& _tx_hash,
                               bool is_coinbase,
-                              std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
+                              std::shared_ptr<CurrentBlockchainStatus>
+                                _current_bc_status);
 
     /**
      * FIRST step. search for the incoming xmr using address, viewkey and
@@ -135,7 +136,8 @@ public:
      *
      */
     void
-    identify_inputs(unordered_map<public_key, uint64_t> const& known_outputs_keys);
+    identify_inputs(unordered_map<public_key, uint64_t> const&
+                    known_outputs_keys);
 
     string const&
     get_tx_hash_str();
@@ -157,9 +159,6 @@ private:
 
     // transaction that is beeing search
     const transaction* tx;
-
 };
 
 }
-
-#endif //RESTBED_XMR_OUTPUTINPUTIDENTIFICATION_H
