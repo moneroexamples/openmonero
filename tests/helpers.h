@@ -1,5 +1,4 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#pragma once
 
 #include <string>
 
@@ -25,5 +24,3 @@
          ACC_FROM_HEX(hex_address);
 
 
-
-#endif // HELPERS_H

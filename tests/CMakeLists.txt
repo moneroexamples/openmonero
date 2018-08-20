@@ -22,6 +22,7 @@ resource_dir("./res")
 add_om_test(mysql)
 add_om_test(microcore)
 add_om_test(bcstatus)
+add_om_test(txsearch)
 
 SETUP_TARGET_FOR_COVERAGE(
         NAME mysql_cov
@@ -35,3 +36,7 @@ SETUP_TARGET_FOR_COVERAGE(
 SETUP_TARGET_FOR_COVERAGE(
         NAME bcstatus_cov
         EXECUTABLE bcstatus_tests)
+
+SETUP_TARGET_FOR_COVERAGE(
+        NAME txsearch_cov
+        EXECUTABLE txsearch_tests)
