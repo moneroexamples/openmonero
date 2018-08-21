@@ -102,6 +102,9 @@ public:
 
     std::shared_ptr<CurrentBlockchainStatus> current_bc_status;
 
+    // default constructor. Useful for unit tests
+    OutputInputIdentification() = default;
+
     OutputInputIdentification(const address_parse_info* _a,
                               const secret_key* _v,
                               const transaction* _tx,
@@ -114,7 +117,7 @@ public:
      * FIRST step. search for the incoming xmr using address, viewkey and
      * outputs public keys.
      */
-    void
+    virtual void
     identify_outputs();
 
 
@@ -135,21 +138,23 @@ public:
      * known_outputs_keys is pair of <output public key, output amount>
      *
      */
-    void
+    virtual void
     identify_inputs(unordered_map<public_key, uint64_t> const&
                     known_outputs_keys);
 
-    string const&
+    virtual string const&
     get_tx_hash_str();
 
-    string const&
+    virtual string const&
     get_tx_prefix_hash_str();
 
-    string const&
+    virtual string const&
     get_tx_pub_key_str();
 
-    uint64_t
+    virtual uint64_t
     get_mixin_no();
+
+    virtual ~OutputInputIdentification() = default;
 
 private:
 

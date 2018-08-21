@@ -165,5 +165,12 @@ public:
 
 };
 
-
+class MockCurrentBlockchainStatus : public xmreg::CurrentBlockchainStatus
+{
+public:
+    MockCurrentBlockchainStatus()
+        : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup(),
+                                         nullptr, nullptr)
+    {}
+};
 }

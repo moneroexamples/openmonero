@@ -1436,6 +1436,21 @@ blocks_and_txs_from_complete_blocks(
     return true;
 }
 
+bool
+addr_and_viewkey_from_string(string const& addres_str,
+                             string const& viewkey_str,
+                             network_type net_type,
+                             address_parse_info& address,
+                             crypto::secret_key& viewkey)
+{
+    if (!xmreg::parse_str_address(addres_str, address, net_type))
+        return false;
+
+    if (!xmreg::parse_str_secret_key(viewkey_str, viewkey))
+          return false;
+
+    return true;
+}
 
 }
 

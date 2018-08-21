@@ -235,7 +235,7 @@ OutputInputIdentification::identify_inputs(
                 break;
         }
 
-    } //  for (count = 0; count < absolute_offsets.size(); ++count)
+    } //   for (txin_to_key const& in_key: input_key_imgs)
 
 }
 

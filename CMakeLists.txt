@@ -36,8 +36,6 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
 
 include(MyUtils)
 
-#get_filename_component(ABSOLUTE_PATH ${RELATIVE_PATH} ABSOLUTE)
-
 include(CodeCoverage)
 APPEND_COVERAGE_COMPILER_FLAGS()
 set(COVERAGE_EXCLUDES
@@ -45,11 +43,6 @@ set(COVERAGE_EXCLUDES
         'asio/*'
         '${MONERO_SOURCE_DIR}/*'
         '${CMAKE_SOURCE_DIR}/tests/*')
-
-#set(COVERAGE_EXCLUDES
-#                '${CMAKE_SOURCE_DIR}/ext/*'
-#                'asio/*'
-#                '${MONERO_SOURCE_DIR}/*')
 
 find_package(Monero)
 

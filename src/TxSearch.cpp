@@ -169,7 +169,7 @@ TxSearch::operator()()
                 // Class that is responsible for identification of our outputs
                 // and inputs in a given tx.
                 OutputInputIdentification oi_identification {
-                            &address, &viewkey, &tx,tx_hash,
+                            &address, &viewkey, &tx, tx_hash,
                             is_coinbase, current_bc_status};
 
                 // flag indicating whether the txs in the given block are spendable.

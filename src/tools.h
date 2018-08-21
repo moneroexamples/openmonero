@@ -289,6 +289,13 @@ blocks_and_txs_from_complete_blocks(
         vector<block>& blocks,
         vector<transaction>& txs);
 
+bool
+addr_and_viewkey_from_string(string const& addres_str,
+                             string const& viewkey_str,
+                             network_type net_type,
+                             address_parse_info& address_info,
+                             crypto::secret_key& viewkey);
+
 }
 
 #endif //XMREG01_TOOLS_H
