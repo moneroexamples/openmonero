@@ -125,6 +125,7 @@ set(LIBRARIES
         checkpoints
         version
         pcsclite
+        sodium
         ${Boost_LIBRARIES}
         pthread
         unbound
