@@ -32,3 +32,7 @@
     ASSERT_TRUE(xmreg::addr_and_viewkey_from_string(                         \
                     address_str, viewkey_str,                                \
                     net_type, address, viewkey));
+
+
+
+

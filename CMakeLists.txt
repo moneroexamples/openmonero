@@ -150,8 +150,7 @@ if (WIN32)
             wsock32
             ntdll
             ws2_32
-            Iphlpapi
-            )
+            Iphlpapi)
 else()
     set(LIBRARIES ${LIBRARIES} dl)
 endif()

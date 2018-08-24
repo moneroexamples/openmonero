@@ -974,7 +974,7 @@ get_tx_pub_key_from_received_outs(const transaction &tx)
 string
 xmr_amount_to_str(const uint64_t& xmr_amount, string format)
 {
-    return fmt::format("{:0.12f}", XMR_AMOUNT(xmr_amount));
+    return fmt::format(format, XMR_AMOUNT(xmr_amount));
 }
 
 
@@ -1031,19 +1031,6 @@ is_output_ours(const size_t& output_index,
 }
 
 
-bool
-get_real_output_for_key_image(const key_image& ki,
-                              const transaction& tx,
-                              const secret_key& private_view_key,
-                              const public_key& public_spend_key,
-                              uint64_t output_idx,
-                              public_key output_pub_key)
-{
-
-
-
-    return false;
-}
 
 
 bool
@@ -1448,6 +1435,48 @@ addr_and_viewkey_from_string(string const& addres_str,
 
     if (!xmreg::parse_str_secret_key(viewkey_str, viewkey))
           return false;
+
+    return true;
+}
+
+bool
+output_data_from_hex(
+        string const& out_data_hex,
+        vector<cryptonote::output_data_t>& outputs_data_v)
+{
+    vector<string> outputs_data_v_str;
+
+    try
+    {
+        string out_data_blob;
+
+        if (!epee::string_tools::parse_hexstr_to_binbuff(
+                    out_data_hex, out_data_blob))
+            return false;
+
+        std::stringstream iss;
+        iss << out_data_blob;
+        boost::archive::portable_binary_iarchive archive(iss);
+        archive >> outputs_data_v_str;
+
+        for (string const& s: outputs_data_v_str)
+        {
+            cryptonote::output_data_t out_data;
+
+            if (!hex_to_pod(s, out_data))
+            {
+                cerr << "hex_to_pod faild in output_data_from_hex\n";
+                return false;
+            }
+
+            outputs_data_v.push_back(out_data);
+        }
+    }
+    catch (...)
+    {
+        cerr << "deserialization faild in output_data_from_hex\n";
+        return false;
+    }
 
     return true;
 }

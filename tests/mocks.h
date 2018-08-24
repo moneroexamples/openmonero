@@ -172,5 +172,11 @@ public:
         : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup(),
                                          nullptr, nullptr)
     {}
+
+    MOCK_METHOD3(get_output_keys,
+                 bool(const uint64_t& amount,
+                      const vector<uint64_t>& absolute_offsets,
+                      vector<cryptonote::output_data_t>& outputs));
+
 };
 }

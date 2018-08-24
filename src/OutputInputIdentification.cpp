@@ -214,7 +214,6 @@ OutputInputIdentification::identify_inputs(
                         output_data.pubkey});
 
                 found_a_match = true;
-
             }
 
         } // for (const cryptonote::output_data_t& output_data: outputs)

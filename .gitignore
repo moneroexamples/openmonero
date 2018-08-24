@@ -2,6 +2,7 @@
 .sass-cache
 *.*~
 *.user
+*.autosave
 *.user.*
 .idea/
 *.gcov

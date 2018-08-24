@@ -215,13 +215,6 @@ is_output_ours(const size_t& output_index,
                const secret_key& private_view_key,
                const public_key& public_spend_key);
 
-bool
-get_real_output_for_key_image(const key_image& ki,
-                              const transaction& tx,
-                              const secret_key& private_view_key,
-                              const public_key& public_spend_key,
-                              uint64_t output_idx,
-                              public_key output_pub_key);
 
 // based on http://stackoverflow.com/a/9943098/248823
 template<typename Iterator, typename Func>
@@ -295,6 +288,11 @@ addr_and_viewkey_from_string(string const& addres_str,
                              network_type net_type,
                              address_parse_info& address_info,
                              crypto::secret_key& viewkey);
+
+bool
+output_data_from_hex(
+        string const& out_data_hex,
+        vector<cryptonote::output_data_t>& outputs_data_v);
 
 }
 

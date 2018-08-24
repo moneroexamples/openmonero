@@ -224,9 +224,10 @@ CurrentBlockchainStatus::get_tx_with_output(
 }
 
 bool
-CurrentBlockchainStatus::get_output_keys(const uint64_t& amount,
-            const vector<uint64_t>& absolute_offsets,
-            vector<cryptonote::output_data_t>& outputs)
+CurrentBlockchainStatus::get_output_keys(
+        const uint64_t& amount,
+        const vector<uint64_t>& absolute_offsets,
+        vector<cryptonote::output_data_t>& outputs)
 {
     try
     {

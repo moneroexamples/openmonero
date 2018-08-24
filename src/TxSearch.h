@@ -27,7 +27,7 @@ class TxSearch
 {
 
 public:
-    //                                     out_pk   , amount
+    //                                         out_pk   , amount
     using known_outputs_t = std::unordered_map<public_key, uint64_t>;
     using addr_view_t = std::pair<address_parse_info, secret_key>;
     using pool_txs_t = std::vector<pair<uint64_t, transaction>>;
