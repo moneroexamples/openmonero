@@ -1442,9 +1442,13 @@ addr_and_viewkey_from_string(string const& addres_str,
 bool
 output_data_from_hex(
         string const& out_data_hex,
-        vector<cryptonote::output_data_t>& outputs_data_v)
+        std::map<vector<uint64_t>,
+                 vector<cryptonote::output_data_t>>&
+                     outputs_data_map)
 {
-    vector<string> outputs_data_v_str;
+    // key: vector of absolute_offsets,
+    // value: vector of output_info_of_mixins as string
+    std::map<vector<uint64_t>, vector<string>> outputs_data_map_str;
 
     try
     {
@@ -1457,19 +1461,24 @@ output_data_from_hex(
         std::stringstream iss;
         iss << out_data_blob;
         boost::archive::portable_binary_iarchive archive(iss);
-        archive >> outputs_data_v_str;
+        archive >> outputs_data_map_str;
 
-        for (string const& s: outputs_data_v_str)
+        for (auto const& kv: outputs_data_map_str)
         {
-            cryptonote::output_data_t out_data;
+            auto const& absolute_offsets = kv.first;
 
-            if (!hex_to_pod(s, out_data))
+            for (string const& s: kv.second)
             {
-                cerr << "hex_to_pod faild in output_data_from_hex\n";
-                return false;
-            }
+                cryptonote::output_data_t out_data;
 
-            outputs_data_v.push_back(out_data);
+                if (!hex_to_pod(s, out_data))
+                {
+                    cerr << "hex_to_pod faild in output_data_from_hex\n";
+                    return false;
+                }
+
+                outputs_data_map[absolute_offsets].push_back(out_data);
+            }
         }
     }
     catch (...)
@@ -1480,6 +1489,68 @@ output_data_from_hex(
 
     return true;
 }
+
+
+bool
+populate_known_outputs_from_csv(
+        string const& csv_file,
+        std::unordered_map<public_key, uint64_t>& known_outputs,
+        bool skip_first_line)
+{
+
+    std::ifstream input(csv_file);
+
+    string line;
+
+    while(getline(input, line))
+    {
+       if (skip_first_line)
+       {
+           skip_first_line = false;
+           continue;
+       }
+       vector<string> vec;
+
+       boost::algorithm::split(vec, line, boost::is_any_of(","));
+
+       uint64_t amount;
+       string  out_public_key;
+
+       try
+       {
+          amount  = boost::lexical_cast<uint64_t>(vec.at(7));
+          out_public_key = vec.at(8);
+       }
+       catch (std::exception const& e)
+       {
+           cerr << e.what() << endl;
+           return false;
+       }
+
+       public_key out_pk;
+
+       if (!hex_to_pod(out_public_key, out_pk))
+       {
+           cerr << "hex_to_pod failed in output_data_from_hex\n";
+           return false;
+       }
+
+       auto it = known_outputs.find(out_pk);
+
+       if (it != known_outputs.end())
+       {
+           cerr << "csv has duplicate out_public_key\n";
+           return false;
+       }
+
+       known_outputs.insert({out_pk, amount});
+    }
+
+    return true;
+
+}
+
+
 
 }
 

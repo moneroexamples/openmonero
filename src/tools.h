@@ -289,11 +289,21 @@ addr_and_viewkey_from_string(string const& addres_str,
                              address_parse_info& address_info,
                              crypto::secret_key& viewkey);
 
+// this function only useful in google test for mocking
+// ring member output info
 bool
 output_data_from_hex(
         string const& out_data_hex,
-        vector<cryptonote::output_data_t>& outputs_data_v);
+        std::map<vector<uint64_t>,
+                 vector<cryptonote::output_data_t>>& outputs_data_map);
 
+// this function only useful in google test for mocking
+// known outputs and their amounts
+bool
+populate_known_outputs_from_csv(
+        string const& csv_file,
+        std::unordered_map<public_key, uint64_t>& known_outputs,
+        bool skip_first_line = true);
 }
 
 #endif //XMREG01_TOOLS_H

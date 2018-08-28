@@ -213,6 +213,8 @@ OutputInputIdentification::identify_inputs(
                         it->second, // amount
                         output_data.pubkey});
 
+                //cout << "\n\n" << it->second << endl;
+
                 found_a_match = true;
             }
 

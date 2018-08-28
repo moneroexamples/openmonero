@@ -31,6 +31,8 @@ using ::testing::SetArgReferee;
 using ::testing::SetArgPointee;
 using ::testing::_;
 using ::testing::internal::FilePath;
+using ::testing::Invoke;
+
 
 
 
@@ -177,6 +179,50 @@ public:
                  bool(const uint64_t& amount,
                       const vector<uint64_t>& absolute_offsets,
                       vector<cryptonote::output_data_t>& outputs));
+};
+
+
+
+// Mocking CurrentBlockchainStatus::get_output_keys
+// is a bit more complicated than other methods as
+// its vector<cryptonote::output_data_t>& outputs
+// should be dependant on a absolute_offsets vector.
+// This means that we should mock vector of output_data_t for
+// for a given absolute_offsets vector
+
+struct MockGettingOutputs
+{
+    // key: vector of absolute_offsets,
+    // value: vector of output_info_of_mixins
+    using ring_members_mock_map_t
+       = std::map<vector<uint64_t>,
+                  vector<cryptonote::output_data_t>>;
+
+    ring_members_mock_map_t ring_member_data;
+
+    MockGettingOutputs(ring_members_mock_map_t const& mock_data)
+        : ring_member_data {mock_data}
+    {}
+
+    // this is the mock version of CurrentBlockchainStatus::get_output_keys
+    // which is going to return correct outputs
+    // based on absolute_offsets
+    bool
+    get_output_keys(
+            const uint64_t& amount,
+            const vector<uint64_t>& absolute_offsets,
+            vector<cryptonote::output_data_t>& outputs)
+    {
+
+        (void) amount;
+
+        outputs = ring_member_data[absolute_offsets];
+
+        return true;
+    }
 
 };
+
+
+
 }
