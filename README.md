@@ -99,9 +99,6 @@ git clone --recursive https://github.com/monero-project/monero
 
 cd monero/
 
-# checkout last monero version
-git checkout -b last_release v0.12.0.0
-
 make
 ```
 
@@ -114,7 +111,8 @@ work without database, setup frontend, and synced and running monero blockchain.
 
 ```bash
 # need mysql++ libraries
-sudo apt install libmysql++-dev
+sudo apt install libmysql++-dev gcovr
+
 
 # go to home folder if still in ~/monero
 cd ~
