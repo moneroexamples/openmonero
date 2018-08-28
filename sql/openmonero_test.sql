@@ -23,6 +23,8 @@ SET time_zone = "+00:00";
 -- Database: `openmonero_test`
 --
 
+USE openmonero_test;
+
 -- --------------------------------------------------------
 
 --
