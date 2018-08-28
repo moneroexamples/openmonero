@@ -1500,6 +1500,12 @@ populate_known_outputs_from_csv(
 
     std::ifstream input(csv_file);
 
+    if (!input.is_open())
+    {
+        cerr << "Cant open: " << csv_file << '\n';
+        return false;
+    }
+
     string line;
 
     while(getline(input, line))

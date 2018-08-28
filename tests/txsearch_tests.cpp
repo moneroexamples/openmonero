@@ -161,8 +161,11 @@ TEST_F(OUTPUTIDENT_TEST, OutgingPreRingctTransaction)
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
-    xmreg::populate_known_outputs_from_csv(
-                known_outputs_csv_9wq792k, known_outputs);
+    if (!boost::filesystem::exists(known_outputs_csv_9wq792k))
+        known_outputs_csv_9wq792k = "./tests/" + known_outputs_csv_9wq792k;
+
+    ASSERT_TRUE(xmreg::populate_known_outputs_from_csv(
+                known_outputs_csv_9wq792k, known_outputs));
 
     oi.identify_outputs();
     oi.identify_inputs(known_outputs);

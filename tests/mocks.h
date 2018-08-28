@@ -207,7 +207,7 @@ struct MockGettingOutputs
     // this is the mock version of CurrentBlockchainStatus::get_output_keys
     // which is going to return correct outputs
     // based on absolute_offsets
-    bool
+    virtual bool
     get_output_keys(
             const uint64_t& amount,
             const vector<uint64_t>& absolute_offsets,
