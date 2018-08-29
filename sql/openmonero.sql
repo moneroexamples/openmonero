@@ -23,7 +23,8 @@ SET time_zone = "+00:00";
 -- Database: `openmonero`
 --
 
-USE openmonero;
+CREATE DATABASE IF NOT EXISTS `openmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `openmonero`;
 
 -- --------------------------------------------------------
 

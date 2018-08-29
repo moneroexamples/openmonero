@@ -15,7 +15,7 @@ if (NOT MONERO_DIR)
     set(MONERO_DIR ~/monero)
 endif()
 
-option(BUILD_TEST "Build tests for the project" ON)
+option(BUILD_TEST "Build tests for the project" OFF)
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
@@ -158,18 +158,16 @@ endif()
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 
-#set(COVERAGE_EXCLUDES 'ext/*' '${MONERO_DIR}/*')
-
-include_directories(
+if (${BUILD_TEST})
+    include_directories(
         ${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include
         ${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include)
-
-#include_directories(${MONERO_DIR}/tests/core_tests)
+endif()
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
 
-
-
-enable_testing()
-add_subdirectory(ext/googletest)
-add_subdirectory(tests)
+if (${BUILD_TEST})
+    enable_testing()
+    add_subdirectory(ext/googletest)
+    add_subdirectory(tests)
+endif()
