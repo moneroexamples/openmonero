@@ -1446,7 +1446,7 @@ output_data_from_hex(
                  vector<cryptonote::output_data_t>>&
                      outputs_data_map)
 {
-    // key: vector of absolute_offsets,
+    // key: vector of absolute_offsets and associated amount (last value),
     // value: vector of output_info_of_mixins as string
     std::map<vector<uint64_t>, vector<string>> outputs_data_map_str;
 
@@ -1476,6 +1476,11 @@ output_data_from_hex(
                     cerr << "hex_to_pod faild in output_data_from_hex\n";
                     return false;
                 }
+
+                //cout << "\n absolute_offsets (last value is amount): ";
+                //for (auto& v: absolute_offsets)
+                //    cout << v << ", ";
+                //cout << '\n';
 
                 outputs_data_map[absolute_offsets].push_back(out_data);
             }

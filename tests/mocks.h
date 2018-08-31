@@ -192,7 +192,7 @@ public:
 
 struct MockGettingOutputs
 {
-    // key: vector of absolute_offsets,
+    // key: vector of absolute_offsets and associated amount (last value),
     // value: vector of output_info_of_mixins
     using ring_members_mock_map_t
        = std::map<vector<uint64_t>,
@@ -210,11 +210,15 @@ struct MockGettingOutputs
     virtual bool
     get_output_keys(
             const uint64_t& amount,
-            const vector<uint64_t>& absolute_offsets,
+            vector<uint64_t> absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)
     {
 
-        (void) amount;
+        // need to add amount to absolute_offsets
+        // as this is how our ring_member_data map will differentiate
+        // between the same offsets, but for different amounts.
+
+        absolute_offsets.push_back(amount);
 
         outputs = ring_member_data[absolute_offsets];
 
@@ -223,6 +227,13 @@ struct MockGettingOutputs
 
 };
 
+bool
+check_and_adjust_path(string& in_path)
+{
+    if (!boost::filesystem::exists(in_path))
+        in_path = "./tests/" + in_path;
 
+    return boost::filesystem::exists(in_path);
+}
 
 }
