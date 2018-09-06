@@ -299,7 +299,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
     EXPECT_CALL(*cbs_mock, get_output_keys(_,_,_))
                  .WillRepeatedly(Invoke(&get_outputs,
                                          &MockGettingOutputs
-                                            ::get_output_keys));
+                                            ::get_output_keys)); 
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
                                          tx_hash, is_tx_coinbase,
@@ -335,6 +335,32 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
         found_input_amounts += in_info.amount;
 
     EXPECT_EQ(found_input_amounts, 1669459856930000ull);
+
+    // check when there are no found ring members candidates
+    xmreg::TxSearch::known_outputs_t empty_known_outputs;
+
+    EXPECT_CALL(*cbs_mock, get_output_keys(_,_,_))
+                 .WillRepeatedly(Invoke(&get_outputs,
+                                         &MockGettingOutputs
+                                            ::get_output_keys));
+
+    xmreg::OutputInputIdentification oi2 {&address, &viewkey, &tx,
+                                         tx_hash, is_tx_coinbase,
+                                         cbs_mock};
+
+    oi2.identify_inputs(empty_known_outputs);
+
+    EXPECT_EQ(oi2.identified_inputs.size(), 0);
+
+    // throwing exection OutputInputIdentificationException
+    // when cant decode Transaction
+
+    // break the tx so that decode_ringct failes
+    tx.rct_signatures.outPk.clear();
+
+    EXPECT_THROW(oi2.identify_outputs(),
+                 xmreg::OutputInputIdentificationException);
+
 }
 
 
@@ -404,6 +430,19 @@ TEST_F(OUTPUTIDENT_TEST, OutgingRingctTransaction)
         found_input_amounts += in_info.amount;
 
     EXPECT_EQ(found_input_amounts, 103312985270000ull);
+
+    // check when get_output_returns returns false
+
+    EXPECT_CALL(*cbs_mock, get_output_keys(_,_,_))
+                 .WillRepeatedly(Return(false));
+
+    xmreg::OutputInputIdentification oi2 {&address, &viewkey, &tx,
+                                         tx_hash, is_tx_coinbase,
+                                         cbs_mock};
+
+    oi2.identify_inputs(known_outputs);
+
+    EXPECT_EQ(oi2.identified_inputs.size(), 0);
 }
 
 
