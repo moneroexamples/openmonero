@@ -204,7 +204,7 @@ OutputInputIdentification::identify_inputs(
             auto it = known_outputs_keys.find(output_data.pubkey);
 
             if (it != known_outputs_keys.end())
-            {
+            {                                                
                 // this seems to be our mixin.
                 // save it into identified_inputs vector
 
