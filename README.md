@@ -39,6 +39,10 @@ This is Open Monero running on stagnet network. You can use it to play around wi
 Please note that the live version isis running on cheap VPS, which may result in
 performance issues.
 
+## Current development version
+
+All current changes, bug fixes and updates are done in the
+[branch](https://github.com/moneroexamples/openmonero/tree/use_blocks_range).
 
 ## Screenshot
 
