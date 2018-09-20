@@ -293,15 +293,17 @@ bool
 CurrentBlockchainStatus::get_random_outputs(
         const vector<uint64_t>& amounts,
         const uint64_t& outs_count,
-        vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
-            ::outs_for_amount>& found_outputs)
+        vector<COMMAND_RPC_GET_OUTPUTS_BIN
+            ::outs>& found_outputs)
 {
 
-    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request req;
-    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
+    COMMAND_RPC_GET_OUTPUTS_BIN::request req;
+    COMMAND_RPC_GET_OUTPUTS_BIN::response res;
 
     req.outs_count = outs_count;
     req.amounts = amounts;
+
+    //req.outputs.emplace_back();
 
     if (!mcore->get_random_outs_for_amounts(req, res))
     {

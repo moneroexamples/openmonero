@@ -351,16 +351,6 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
     oi2.identify_inputs(empty_known_outputs);
 
     EXPECT_EQ(oi2.identified_inputs.size(), 0);
-
-    // throwing exection OutputInputIdentificationException
-    // when cant decode Transaction
-
-    // break the tx so that decode_ringct failes
-    tx.rct_signatures.outPk.clear();
-
-    EXPECT_THROW(oi2.identify_outputs(),
-                 xmreg::OutputInputIdentificationException);
-
 }
 
 

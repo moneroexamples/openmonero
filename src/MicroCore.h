@@ -139,14 +139,14 @@ public:
 
     virtual bool
     get_random_outs_for_amounts(
-            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request const& req,
-            COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res) const
+            COMMAND_RPC_GET_RANDOM_OUTS::request const& req,
+            COMMAND_RPC_GET_RANDOM_OUTS::response& res) const
     {
         return core_storage.get_random_outs_for_amounts(req, res);
     }
 
     virtual bool
-    get_outs(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
+    get_outs(COMMAND_RPC_GET_OUTPUTS_BIN::request const& req,
              COMMAND_RPC_GET_OUTPUTS_BIN::response& res) const
     {
         return core_storage.get_outs(req, res);
@@ -155,7 +155,7 @@ public:
     virtual uint64_t
     get_dynamic_per_kb_fee_estimate(uint64_t const& grace_blocks) const
     {
-        return core_storage.get_dynamic_per_kb_fee_estimate(grace_blocks);
+        return core_storage.get_dynamic_base_fee_estimate(grace_blocks);
     }
 
     bool

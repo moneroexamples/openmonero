@@ -815,7 +815,7 @@ YourMoneroRequests::get_random_outs(
         return;
     }
 
-    using rpc_outs = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS;
+    using rpc_outs = COMMAND_RPC_GET_OUTPUTS_BIN;
 
     vector<rpc_outs::outs_for_amount> found_outputs;
 

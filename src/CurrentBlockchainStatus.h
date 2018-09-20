@@ -135,7 +135,7 @@ public:
     virtual bool
     get_random_outputs(const vector<uint64_t>& amounts,
                        const uint64_t& outs_count,
-                       vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
+                       vector<COMMAND_RPC_GET_OUTPUTS_BIN
                         ::outs_for_amount>& found_outputs);
 
     virtual uint64_t
