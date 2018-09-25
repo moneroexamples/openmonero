@@ -135,8 +135,8 @@ public:
     virtual bool
     get_random_outputs(const vector<uint64_t>& amounts,
                        const uint64_t& outs_count,
-                       vector<COMMAND_RPC_GET_OUTPUTS_BIN
-                        ::outs_for_amount>& found_outputs);
+                       vector<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry>&
+                        found_outputs);
 
     virtual uint64_t
     get_dynamic_per_kb_fee_estimate() const;

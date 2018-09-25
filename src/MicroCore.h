@@ -139,10 +139,52 @@ public:
 
     virtual bool
     get_random_outs_for_amounts(
-            COMMAND_RPC_GET_RANDOM_OUTS::request const& req,
-            COMMAND_RPC_GET_RANDOM_OUTS::response& res) const
+            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request const& req,
+            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res) const
     {
-        return core_storage.get_random_outs_for_amounts(req, res);
+        // based on bool core_rpc_server::on_get_output_histogram(const ...
+
+
+
+        //   <amoumt,
+        //    tuple<total_instances, unlocked_instances, recent_instances>
+        std::map<uint64_t,
+                std::tuple<uint64_t,  uint64_t, uint64_t>> histogram;
+
+        try
+        {
+            core_storage.get_output_histogram(
+                        req.amounts,
+                        req.unlocked,
+                        req.recent_cutoff,
+                        req.min_count);
+        }
+        catch (std::exception const& e)
+        {
+            res.status = "Failed to get output histogram";
+            return false;
+        }
+
+        res.histogram.clear();
+        res.histogram.reserve(histogram.size());
+
+        for (auto const& i: histogram)
+        {
+          if (std::get<0>(i.second)
+                  >= req.min_count
+                  && (std::get<0>(i.second) <= req.max_count
+                      || req.max_count == 0))
+            res.histogram.push_back(
+                        COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry(
+                            i.first,
+                            std::get<0>(i.second),
+                            std::get<1>(i.second),
+                            std::get<2>(i.second)));
+        }
+
+        res.status = CORE_RPC_STATUS_OK;
+
+        return true;
     }
 
     virtual bool

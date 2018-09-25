@@ -815,9 +815,9 @@ YourMoneroRequests::get_random_outs(
         return;
     }
 
-    using rpc_outs = COMMAND_RPC_GET_OUTPUTS_BIN;
+    using rpc_outs = COMMAND_RPC_GET_OUTPUT_HISTOGRAM;
 
-    vector<rpc_outs::outs_for_amount> found_outputs;
+    vector<rpc_outs::entry> found_outputs;
 
     if (current_bc_status->get_random_outputs(amounts, count, found_outputs))
     {
@@ -831,28 +831,26 @@ YourMoneroRequests::get_random_outs(
 
             json& j_outputs = j_outs["outputs"];
 
-            for (auto  const& out: outs.outs)
-            {
-                uint64_t global_amount_index = out.global_amount_index;
+//            for (auto  const& out: outs.outs)
+//            {
+//                tuple<string, string, string>
+//                        rct_field = current_bc_status
+//                            ->construct_output_rct_field(
+//                                    out.global_amount_index, outs.amount);
 
-                tuple<string, string, string>
-                        rct_field = current_bc_status
-                            ->construct_output_rct_field(
-                                    global_amount_index, outs.amount);
+//                string rct = std::get<0>(rct_field)    // rct_pk
+//                             + std::get<1>(rct_field)  // rct_mask
+//                             + std::get<2>(rct_field); // rct_amount
 
-                string rct = std::get<0>(rct_field)    // rct_pk
-                             + std::get<1>(rct_field)  // rct_mask
-                             + std::get<2>(rct_field); // rct_amount
+//                json out_details {
+//                        {"global_index", out.global_amount_index},
+//                        {"public_key"  , pod_to_hex(out.out_key)},
+//                        {"rct"         , rct}
+//                };
 
-                json out_details {
-                        {"global_index", out.global_amount_index},
-                        {"public_key"  , pod_to_hex(out.out_key)},
-                        {"rct"         , rct}
-                };
+//                j_outputs.push_back(out_details);
 
-                j_outputs.push_back(out_details);
-
-            } // for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AM
+//            } // for (const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AM
 
             j_amount_outs.push_back(j_outs);
 

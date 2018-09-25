@@ -293,17 +293,20 @@ bool
 CurrentBlockchainStatus::get_random_outputs(
         const vector<uint64_t>& amounts,
         const uint64_t& outs_count,
-        vector<COMMAND_RPC_GET_OUTPUTS_BIN
-            ::outs>& found_outputs)
+        vector<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry>& found_outputs)
 {
 
-    COMMAND_RPC_GET_OUTPUTS_BIN::request req;
-    COMMAND_RPC_GET_OUTPUTS_BIN::response res;
+    COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request req;
+    COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response res;
 
-    req.outs_count = outs_count;
     req.amounts = amounts;
+    req.unlocked = true;
+    req.recent_cutoff = 0;
+    req.min_count = outs_count;
+    req.max_count = 0;
 
-    //req.outputs.emplace_back();
+    //req.outs_count = outs_count;
+   // req.amounts = amounts;
 
     if (!mcore->get_random_outs_for_amounts(req, res))
     {
@@ -311,7 +314,28 @@ CurrentBlockchainStatus::get_random_outputs(
         return false;
     }
 
-    found_outputs = res.outs;
+    found_outputs = res.histogram;
+
+    struct gamma_engine
+    {
+      typedef uint64_t result_type;
+      static constexpr result_type min() { return 0; }
+      static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
+      result_type operator()() { return crypto::rand<result_type>(); }
+    } engine;
+
+    static const double shape = 19.28/*16.94*/;
+    //static const double shape = m_testnet ? 17.02 : 17.28;
+    static const double scale = 1/1.61;
+    std::gamma_distribution<double> gamma(shape, scale);
+
+    uint64_t num_outs_found {0};
+
+    while (num_outs_found < outs_count)
+    {
+
+    }
+
 
     return true;
 }

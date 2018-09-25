@@ -15,6 +15,7 @@
 #define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
 
 #define FEE_ESTIMATE_GRACE_BLOCKS 10
+#define RECENT_OUTPUT_ZONE ((time_t)(RECENT_OUTPUT_DAYS * 86400))
 
 #include "version.h"
 
