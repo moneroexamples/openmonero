@@ -536,43 +536,43 @@ TEST_P(BCSTATUS_TEST, GetAmountSpecificIndices)
     EXPECT_FALSE(bcs->get_amount_specific_indices(tx_hash, out_indices));
 }
 
-TEST_P(BCSTATUS_TEST, GetRandomOutputs)
-{
-    using out_for_amount = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
-                                    ::outs_for_amount;
+//TEST_P(BCSTATUS_TEST, GetRandomOutputs)
+//{
+//    using out_for_amount = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS
+//                                    ::outs_for_amount;
 
-    std::vector<out_for_amount> outputs_to_return;
+//    std::vector<out_for_amount> outputs_to_return;
 
-    outputs_to_return.push_back(out_for_amount {22, {}});
-    outputs_to_return.push_back(out_for_amount {66, {}});
+//    outputs_to_return.push_back(out_for_amount {22, {}});
+//    outputs_to_return.push_back(out_for_amount {66, {}});
 
-    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
+//    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response res;
 
-    res.outs = outputs_to_return;
+//    res.outs = outputs_to_return;
 
-    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
-            .WillOnce(DoAll(SetArgReferee<1>(res), Return(true)));
+//    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
+//            .WillOnce(DoAll(SetArgReferee<1>(res), Return(true)));
 
-    const vector<uint64_t> mock_amounts {444, 556, 77}; // any
-    const uint64_t mock_outs_count {3}; // any
+//    const vector<uint64_t> mock_amounts {444, 556, 77}; // any
+//    const uint64_t mock_outs_count {3}; // any
 
-    std::vector<out_for_amount> found_outputs;
+//    std::vector<out_for_amount> found_outputs;
 
-    EXPECT_TRUE(bcs->get_random_outputs(
-                    mock_amounts, mock_outs_count,
-                    found_outputs));
+//    EXPECT_TRUE(bcs->get_random_outputs(
+//                    mock_amounts, mock_outs_count,
+//                    found_outputs));
 
-    EXPECT_EQ(found_outputs.size(), outputs_to_return.size());
-    EXPECT_EQ(found_outputs.back().amount,
-              outputs_to_return.back().amount);
+//    EXPECT_EQ(found_outputs.size(), outputs_to_return.size());
+//    EXPECT_EQ(found_outputs.back().amount,
+//              outputs_to_return.back().amount);
 
-    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
-            .WillOnce(Return(false));
+//    EXPECT_CALL(*mcore_ptr, get_random_outs_for_amounts(_, _))
+//            .WillOnce(Return(false));
 
-    EXPECT_FALSE(bcs->get_random_outputs(
-                    mock_amounts, mock_outs_count,
-                    found_outputs));
-}
+//    EXPECT_FALSE(bcs->get_random_outputs(
+//                    mock_amounts, mock_outs_count,
+//                    found_outputs));
+//}
 
 TEST_P(BCSTATUS_TEST, GetOutput)
 {

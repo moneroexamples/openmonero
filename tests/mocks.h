@@ -86,8 +86,8 @@ public:
                     std::vector<uint64_t>(uint64_t const& tx_id));
 
     MOCK_CONST_METHOD2(get_random_outs_for_amounts,
-                        bool(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request const& req,
-                             COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res));
+                        bool(COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request const& req,
+                             COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res));
 
     MOCK_CONST_METHOD2(get_outs,
                         bool(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
