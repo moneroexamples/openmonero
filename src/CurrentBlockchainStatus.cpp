@@ -5,8 +5,6 @@
 #include "CurrentBlockchainStatus.h"
 
 
-
-
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "openmonero"
 
@@ -291,51 +289,19 @@ CurrentBlockchainStatus::get_amount_specific_indices(
 
 bool
 CurrentBlockchainStatus::get_random_outputs(
-        const vector<uint64_t>& amounts,
-        const uint64_t& outs_count,
-        vector<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry>& found_outputs)
+        vector<uint64_t> const& amounts,
+        uint64_t outs_count,
+        RandomOutputs::outs_for_amount_v& found_outputs)
 {
+    RandomOutputs ro = RandomOutputs(*mcore, amounts, outs_count);
 
-    COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request req;
-    COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response res;
-
-    req.amounts = amounts;
-    req.unlocked = true;
-    req.recent_cutoff = 0;
-    req.min_count = outs_count;
-    req.max_count = 0;
-
-    //req.outs_count = outs_count;
-   // req.amounts = amounts;
-
-    if (!mcore->get_random_outs_for_amounts(req, res))
+    if (!ro.find_random_outputs())
     {
-        OMERROR << "mcore->get_random_outs_for_amounts(req, res) failed";
+        OMERROR << "!ro.find_random_outputs()";
         return false;
     }
 
-    found_outputs = res.histogram;
-
-    struct gamma_engine
-    {
-      typedef uint64_t result_type;
-      static constexpr result_type min() { return 0; }
-      static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
-      result_type operator()() { return crypto::rand<result_type>(); }
-    } engine;
-
-    static const double shape = 19.28/*16.94*/;
-    //static const double shape = m_testnet ? 17.02 : 17.28;
-    static const double scale = 1/1.61;
-    std::gamma_distribution<double> gamma(shape, scale);
-
-    uint64_t num_outs_found {0};
-
-    while (num_outs_found < outs_count)
-    {
-
-    }
-
+    found_outputs = ro.get_found_outputs();
 
     return true;
 }

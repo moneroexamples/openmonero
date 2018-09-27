@@ -39,6 +39,12 @@ class MicroCore {
     bool initialization_succeded {false};
 
 public:
+
+    //   <amoumt,
+    //    tuple<total_instances, unlocked_instances, recent_instances>
+    using histogram_map = std::map<uint64_t,
+                               std::tuple<uint64_t,  uint64_t, uint64_t>>;
+
     MicroCore();
 
     /**
@@ -137,55 +143,22 @@ public:
         return core_storage.get_current_blockchain_height();
     }
 
+
     virtual bool
-    get_random_outs_for_amounts(
+    get_output_histogram(
+            vector<uint64_t> const& amounts,
+            uint64_t min_count,
+            histogram_map& histogram,
+            bool unlocked = true,
+            uint64_t recent_cutoff = 0) const;
+
+
+    // mimicks core_rpc_server::on_get_output_histogram(..)
+    virtual bool
+    get_output_histogram(
             COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request const& req,
-            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res) const
-    {
-        // based on bool core_rpc_server::on_get_output_histogram(const ...
+            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res) const;
 
-
-
-        //   <amoumt,
-        //    tuple<total_instances, unlocked_instances, recent_instances>
-        std::map<uint64_t,
-                std::tuple<uint64_t,  uint64_t, uint64_t>> histogram;
-
-        try
-        {
-            core_storage.get_output_histogram(
-                        req.amounts,
-                        req.unlocked,
-                        req.recent_cutoff,
-                        req.min_count);
-        }
-        catch (std::exception const& e)
-        {
-            res.status = "Failed to get output histogram";
-            return false;
-        }
-
-        res.histogram.clear();
-        res.histogram.reserve(histogram.size());
-
-        for (auto const& i: histogram)
-        {
-          if (std::get<0>(i.second)
-                  >= req.min_count
-                  && (std::get<0>(i.second) <= req.max_count
-                      || req.max_count == 0))
-            res.histogram.push_back(
-                        COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry(
-                            i.first,
-                            std::get<0>(i.second),
-                            std::get<1>(i.second),
-                            std::get<2>(i.second)));
-        }
-
-        res.status = CORE_RPC_STATUS_OK;
-
-        return true;
-    }
 
     virtual bool
     get_outs(COMMAND_RPC_GET_OUTPUTS_BIN::request const& req,
