@@ -287,21 +287,30 @@ CurrentBlockchainStatus::get_amount_specific_indices(
     return false;
 }
 
+unique_ptr<RandomOutputs>
+CurrentBlockchainStatus::create_random_outputs_object(
+        vector<uint64_t> const& amounts,
+        uint64_t outs_count) const
+{
+    return make_unique<RandomOutputs>(*mcore, amounts, outs_count);
+}
+
 bool
 CurrentBlockchainStatus::get_random_outputs(
         vector<uint64_t> const& amounts,
         uint64_t outs_count,
         RandomOutputs::outs_for_amount_v& found_outputs)
-{
-    RandomOutputs ro = RandomOutputs(*mcore, amounts, outs_count);
+{   
+    unique_ptr<RandomOutputs> ro
+            = create_random_outputs_object(amounts, outs_count);
 
-    if (!ro.find_random_outputs())
+    if (!ro->find_random_outputs())
     {
         OMERROR << "!ro.find_random_outputs()";
         return false;
     }
 
-    found_outputs = ro.get_found_outputs();
+    found_outputs = ro->get_found_outputs();
 
     return true;
 }

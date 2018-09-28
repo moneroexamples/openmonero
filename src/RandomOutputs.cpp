@@ -17,8 +17,10 @@ uint64_t
 RandomOutputs::get_random_output_index(uint64_t num_outs) const
 {
     // type = "triangular"; from wallet2.cpp
-    uint64_t r = crypto::rand<uint64_t>() % ((uint64_t)1 << 53);
-    double frac = std::sqrt((double)r / ((uint64_t)1 << 53));
+    static uint64_t const shift_factor {1ull << 53};
+
+    uint64_t r = crypto::rand<uint64_t>() % shift_factor;
+    double frac = std::sqrt(static_cast<double>(r) / shift_factor);
     uint64_t i = static_cast<uint64_t>(frac * num_outs);
 
     i = (i == num_outs ? --i : i);
@@ -65,7 +67,7 @@ RandomOutputs::find_random_outputs()
 
     if (!mcore.get_output_histogram(req, res))
     {
-        //OMERROR << "mcore->get_output_histogram(req, res)";
+        OMERROR << "mcore->get_output_histogram(req, res)";
         return false;
     }
 

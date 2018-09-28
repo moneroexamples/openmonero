@@ -305,6 +305,14 @@ protected:
 
     // to synchronize access to mempool_txs vector
     mutex getting_mempool_txs;
+
+    // have this method will make it easier to moc
+    // RandomOutputs in our tests later
+    virtual unique_ptr<RandomOutputs>
+    create_random_outputs_object(
+            vector<uint64_t> const& amounts,
+            uint64_t outs_count) const;
+
 };
 
 
