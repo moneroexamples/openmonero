@@ -2,8 +2,8 @@ var config = {
     apiUrl: "http://127.0.0.1:1984/",
     mainnetExplorerUrl: "https://xmrchain.com/",
     testnetExplorerUrl: "https://testnet.xmrchain.com/",
-    stagenetExplorerUrl: "http://162.210.173.150:8083/",
-    nettype: 2, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
+    stagenetExplorerUrl: "https://stagenet.xmrchain.net/",
+    nettype: 1, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
     coinUnitPlaces: 12,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
     txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
