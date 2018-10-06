@@ -16,7 +16,7 @@
   "database" :
   {
     "_comment" : "how should the backend connect to the mysql database",
-    "url"      : "127.0.0.1",
+    "url"      : "172.17.0.2",
     "port"     : 3306,
     "dbname"   : "openmonero",
     "user"     : "root",

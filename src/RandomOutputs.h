@@ -8,7 +8,17 @@
 namespace xmreg
 {
 
-
+/**
+ * @brief Returns random ouputs for given amounts
+ *
+ * This is a replacement for a method that used to be
+ * avaliable in the monero itself, but which was dropped.
+ *
+ * The aim is to get a random ouputs of given amount.
+ *
+ * This is needed for frontend when its constructs a tx
+ *
+ */
 class RandomOutputs
 {
 public:
