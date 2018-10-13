@@ -132,7 +132,7 @@ TEST(MYSQL_CONNECTION, CanConnect)
         auto xmr_accounts = std::make_shared<xmreg::MySqlAccounts>(nullptr);
 
         // try to connect again
-        // it should not perform the connection again, bust just return true;
+        // it should not perform the connection again, but just return true;
         EXPECT_TRUE(xmr_accounts->get_connection()->connect());
     }
     catch(std::exception const& e)

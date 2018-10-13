@@ -24,7 +24,7 @@ var config = {
     feePerKB: new JSBigInt('2000000000'),//20^10 - not used anymore, as fee is dynamic.
     dustThreshold: new JSBigInt('1000000000'),//10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
     txChargeRatio: 0.5,
-    defaultMixin: 6, // minimum mixin for hardfork v7 is 6 (ring size 7)
+    defaultMixin: 10, // minimum mixin for hardfork v8 is 10 (ring size 11)
     txChargeAddress: '',
     idleTimeout: 30,
     idleWarningDuration: 20,
