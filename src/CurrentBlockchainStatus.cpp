@@ -93,7 +93,7 @@ CurrentBlockchainStatus::is_tx_unlocked(
 
 
 bool
-CurrentBlockchainStatus::get_block(uint64_t height, block &blk)
+CurrentBlockchainStatus::get_block(uint64_t height, block& blk)
 {
     return mcore->get_block_from_height(height, blk);
 }
@@ -429,7 +429,10 @@ CurrentBlockchainStatus::search_if_payment_made(
 
     mempool_txs_t mempool_transactions = get_mempool_txs();
 
-    uint64_t current_blockchain_height = current_height;
+    uint64_t current_blockchain_height = get_current_blockchain_height();
+
+    cout << "current_blockchain_height: "
+         << current_blockchain_height << '\n';
 
     vector<transaction> txs_to_check;
 
