@@ -265,8 +265,8 @@ string
 tx_to_hex(transaction const& tx);
 
 
-string
-hex_to_tx_blob(string const& tx_hex);
+bool
+hex_to_tx_blob(string const& tx_hex, string& tx_blob);
 
 bool
 hex_to_complete_block(string const& cblk_str,

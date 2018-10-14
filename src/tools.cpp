@@ -1338,14 +1338,10 @@ tx_to_hex(transaction const& tx)
     return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
 }
 
-string
-hex_to_tx_blob(string const& tx_hex)
+bool
+hex_to_tx_blob(string const& tx_hex, string& tx_blob)
 {
-    std::string tx_blob;
-
-    epee::string_tools::parse_hexstr_to_binbuff(tx_hex, tx_blob);
-
-    return tx_blob;
+    return epee::string_tools::parse_hexstr_to_binbuff(tx_hex, tx_blob);
 }
 
 bool
