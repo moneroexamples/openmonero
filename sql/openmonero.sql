@@ -31,7 +31,7 @@ USE `openmonero`;
 DROP TABLE IF EXISTS `Accounts`;
 CREATE TABLE `Accounts` (
   `id` bigint(10) UNSIGNED NOT NULL,
-  `address` varchar(95) NOT NULL,
+  `address` varchar(127) NOT NULL,
   `viewkey_hash` char(64) NOT NULL,
   `scanned_block_height` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `scanned_block_timestamp` timestamp NOT NULL DEFAULT 0,
@@ -89,11 +89,11 @@ CREATE TABLE `Outputs` (
 DROP TABLE IF EXISTS `Payments`;
 CREATE TABLE `Payments` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `address` varchar(95) NOT NULL,
+  `address` varchar(127) NOT NULL,
   `payment_id` varchar(64) NOT NULL,
   `tx_hash` varchar(64) NOT NULL DEFAULT '',
   `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
-  `payment_address` varchar(95) NOT NULL,
+  `payment_address` varchar(127) NOT NULL,
   `import_fee` bigint(20) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
