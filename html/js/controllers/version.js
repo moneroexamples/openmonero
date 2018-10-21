@@ -16,10 +16,10 @@ thinwalletCtrls.controller('VersionCtrl', function ($scope, $http, ApiCalls) {
             var api_major = response.data.api >> 16;
             var api_minor = response.data.api & 0xffff;
 
-            $scope.version = "Open Monero version (api): "
+            $scope.version = "X-Cash backend wallet version (api): "
                 + git_branch_name + "-" + last_git_commit_date + "-" + last_git_commit_hash
                 + " (" + api_major + "." + api_minor + ")"
-                + "  | Monero version: " + monero_version_full
+                + "  | X-Cash version: " + monero_version_full
                 + "  | Blockchain height: " + response.data.blockchain_height
 
         }, function(response) {

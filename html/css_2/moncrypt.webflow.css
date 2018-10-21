@@ -442,6 +442,10 @@ p {
   margin-top: 46px;
   text-align: center;
 }
+.submit-tx-send-div {
+  margin-top: 5px;
+  text-align: center;
+}
 .submit-div.small-top-margin {
   margin-top: 10px;
   text-align: center;
@@ -469,6 +473,11 @@ p {
   padding-right: 0px;
   padding-left: 0px;
 }
+.form-tx-send-wrapper {
+  padding-right: 0px;
+  padding-left: 0px;
+  margin-bottom: 0px;
+}
 .field-label {
   font-family: Proximanova, sans-serif;
   color: #545d69;
@@ -477,6 +486,10 @@ p {
 }
 .field-label.review {
   margin-top: 20px;
+  margin-bottom: 3px;
+}
+.field-label.review-tx-send {
+  margin-top: 10px;
   margin-bottom: 3px;
 }
 .footer-link {

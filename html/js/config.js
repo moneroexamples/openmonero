@@ -3,7 +3,7 @@ var config = {
     mainnetExplorerUrl: "https://explorer.x-cash.org",
     testnetExplorerUrl: "https://explorer.x-cash.org",
     stagenetExplorerUrl: "https://explorer.x-cash.org",
-    nettype: 1, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
+    nettype: 0, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
     coinUnitPlaces: 6,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
     txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
