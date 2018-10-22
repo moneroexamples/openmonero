@@ -28,6 +28,6 @@ var config = {
     idleTimeout: 30,
     idleWarningDuration: 20,
     maxBlockNumber: 500000000,
-    avgBlockTime: 120,
+    avgBlockTime: 60,
     debugMode: false
 };

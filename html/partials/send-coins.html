@@ -35,14 +35,14 @@
         <div class="middle-div send" ng-show="!success_page">
             <div class="w-form send-form">
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
-                      ng-submit="sendCoins(targets, mixins, payment_id)">
+                      ng-submit="sendCoins(targets, 6, payment_id)">
                     <label class="send-label" for="receiver-address">Receiver Address</label>
                     <input class="w-input" id="receiver-address" type="text" placeholder="e.g. a full X-Cash address"
                            name="Receiver-address" data-name="Receiver address" required="required" ng-model="targets[0].address">
                     <div class="w-row">
                         <div class="w-col w-col-6 responsive-column">
                             <label class="send-label" for="amount">Amount</label>
-                            <input class="w-input" id="amount" type="text" placeholder="e.g. 0.5"
+                            <input class="w-input" id="amount" type="text" placeholder="e.g. 500"
                                    name="Amount" data-name="Amount" required="required" ng-model="targets[0].amount">
                         </div>
                         <div class="w-col w-col-6 responsive-column">
@@ -52,11 +52,6 @@
                                    data-name="Receiver Address 2" ng-model="payment_id">
                         </div>
                     </div>
-                    <label class="send-label" for="field4">Privacy Level</label>
-                    <select class="w-input" id="field4" name="Select-a-number" data-name="Select a number"
-                            required="required" ng-model="mixins" disabled="disabled">
-                        <option value="6">Default (ring size 7)</option>
-                    </select>
                     <label class="send-label" for="field5">Priority Level (adjusts miner fee)</label>
                     <select class="w-input" id="field5" name="Select-a-number" data-name="Select a number"
                             required="required" ng-model="priority">
