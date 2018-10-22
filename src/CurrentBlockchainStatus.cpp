@@ -341,8 +341,16 @@ uint64_t
 CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate() const
 {
     return mcore->get_dynamic_per_kb_fee_estimate(
-                FEE_ESTIMATE_GRACE_BLOCKS);
+                FEE_ESTIMATE_GRACE_BLOCKS)*1024;
 }
+
+//uint64_t
+//CurrentBlockchainStatus::get_dynamic_base_fee_estimate() const
+//{
+//    return mcore->get_dynamic_base_fee_estimate(
+//                FEE_ESTIMATE_GRACE_BLOCKS);
+//}
+
 
 
 bool
