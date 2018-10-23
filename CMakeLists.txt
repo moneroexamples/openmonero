@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(PROJECT_NAME/home/mwo/mymonero-app-js/local_modules/mymonero_core_js/monero_utils/monero_sendingFunds_utils.js
+set(PROJECT_NAME
         openmonero)
 
 project(${PROJECT_NAME})
