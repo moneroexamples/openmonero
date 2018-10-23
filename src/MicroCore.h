@@ -168,12 +168,6 @@ public:
     }
 
     virtual uint64_t
-    get_dynamic_per_kb_fee_estimate(uint64_t const& grace_blocks) const
-    {
-        return core_storage.get_dynamic_base_fee_estimate(grace_blocks);
-    }
-
-    virtual uint64_t
     get_dynamic_base_fee_estimate(uint64_t const& grace_blocks) const
     {
         return core_storage.get_dynamic_base_fee_estimate(grace_blocks);

@@ -728,15 +728,15 @@ YourMoneroRequests::get_unspent_outs(
 
         } //  if (xmr_accounts->select_txs(acc.id, txs))
 
-        j_response["amount"] = total_outputs_amount;
+        j_response["amount"] = std::to_string(total_outputs_amount);
 
 
         // need proper per_kb_fee estimate as
         // it is already using dynanamic fees. frontend
         // uses old fixed fees.
 
-        j_response["per_kb_fee"] = current_bc_status
-                ->get_dynamic_per_kb_fee_estimate();
+        j_response["per_kb_fee"] = std::to_string(current_bc_status
+                                            ->get_dynamic_per_kb_fee_estimate());
 
 
     } // if (current_bc_status->search_thread_exist(xmr_address))

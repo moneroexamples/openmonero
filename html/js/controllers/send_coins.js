@@ -60,16 +60,16 @@ class HostedMoneroAPIClient
         parameters.use_dust = true // Client now filters unmixable by dustthreshold amount (unless sweeping) + non-rct 
         parameters.dust_threshold = mymonero_core_js.monero_config.dustThreshold.toString()
         const endpointPath = 'get_unspent_outs'
-        self.$http.post(config.apiUrl + endpointPath, parameters).success(
+        self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
                 console.log(data);
-                __proceedTo_parseAndCallBack(data)
+                __proceedTo_parseAndCallBack(data.data)
             }
-        ).error(          
+        ).catch(          
             function(data)
             {
-                console.log("error", data);
+                console.log("error", data.data);
                 fn(data && data.Error ? data.Error : "Something went wrong with getting your available balance for spending");
             }
         );
@@ -90,6 +90,7 @@ class HostedMoneroAPIClient
                             fn(err)
                             return
                         }
+                        console.log("returnValuesByKey", returnValuesByKey);
                         console.log("returnValuesByKey.per_kb_fee" , returnValuesByKey.per_kb_fee)
                         const per_kb_fee__String = returnValuesByKey.per_kb_fee
                         if (per_kb_fee__String == null || per_kb_fee__String == "" || typeof per_kb_fee__String === 'undefined') {
@@ -144,12 +145,12 @@ class HostedMoneroAPIClient
             count: mixinNumber + 1 // Add one to mixin so we can skip real output key if necessary
         }
         const endpointPath = 'get_random_outs'
-        self.$http.post(config.apiUrl + endpointPath, parameters).success(
+        self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                __proceedTo_parseAndCallBack(data)
+                __proceedTo_parseAndCallBack(data.data)
             }
-        ).error(
+        ).catch(
             function(data)
             {
                 fn(data && data.Error ? data.Error : "Something went wrong while getting decoy outputs");
@@ -191,12 +192,12 @@ class HostedMoneroAPIClient
         };
         parameters.tx = serializedSignedTx
         const endpointPath = 'submit_raw_tx'
-        self.$http.post(config.apiUrl + endpointPath, parameters).success(
+        self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                __proceedTo_parseAndCallBack(data)
+                __proceedTo_parseAndCallBack(data.data)
             }
-        ).error(
+        ).catch(
             function(data)
             {
                 fn(data && data.Error ? data.Error : "Something went wrong with getting your available balance for spending");
@@ -331,7 +332,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             var domain = target.address.replace(/@/g, ".");
             $http.post(config.apiUrl + "get_txt_records", {
                 domain: domain
-            }).success(function(data) {
+            }).then(function(data) {
                 var records = data.records;
                 var oaRecords = [];
                 console.log(domain + ": ", data.records);
@@ -386,7 +387,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     fn("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
                     return;
                 }
-            }).error(function(data) {
+            }).catch(function(data) {
                 fn("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
                 return
             });

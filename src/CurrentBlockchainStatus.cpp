@@ -196,7 +196,7 @@ CurrentBlockchainStatus::get_tx_with_output(
         // and second is local index of the output i in that tx
         tx_out_idx = mcore->get_output_tx_and_index(amount, output_idx);
     }
-    catch (const OUTPUT_DNE &e)
+    catch (const OUTPUT_DNE& e)
     {
 
         string out_msg = fmt::format(
@@ -204,7 +204,7 @@ CurrentBlockchainStatus::get_tx_with_output(
                 amount, output_idx
         );
 
-        OMERROR << out_msg;
+        OMERROR << out_msg << ' ' << e.what();
 
         return false;
     }
@@ -340,17 +340,16 @@ CurrentBlockchainStatus::get_output(
 uint64_t
 CurrentBlockchainStatus::get_dynamic_per_kb_fee_estimate() const
 {
-    return mcore->get_dynamic_per_kb_fee_estimate(
-                FEE_ESTIMATE_GRACE_BLOCKS)*1024;
+    const double byte_to_kbyte_factor = 1024;
+
+    uint64_t fee_per_byte = mcore->get_dynamic_base_fee_estimate(
+                FEE_ESTIMATE_GRACE_BLOCKS);
+
+    uint64_t fee_per_kB = static_cast<uint64_t>(
+                fee_per_byte * byte_to_kbyte_factor);
+
+    return fee_per_kB;
 }
-
-//uint64_t
-//CurrentBlockchainStatus::get_dynamic_base_fee_estimate() const
-//{
-//    return mcore->get_dynamic_base_fee_estimate(
-//                FEE_ESTIMATE_GRACE_BLOCKS);
-//}
-
 
 
 bool

@@ -230,6 +230,11 @@ var cnUtil = (function(initConfig) {
         return mn_random(128);
     };
 
+    // Generate a 64-bit crypto random
+    this.rand_8 = function() {
+        return mn_random(64);
+    };
+
     this.encode_varint = function(i) {
         i = new JSBigInt(i);
         var out = '';
