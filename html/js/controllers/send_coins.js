@@ -63,13 +63,11 @@ class HostedMoneroAPIClient
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                console.log(data);
                 __proceedTo_parseAndCallBack(data.data)
             }
-        ).catch(          
+        ).catch(
             function(data)
             {
-                console.log("error", data.data);
                 fn(data && data.Error ? data.Error : "Something went wrong with getting your available balance for spending");
             }
         );
@@ -90,7 +88,6 @@ class HostedMoneroAPIClient
                             fn(err)
                             return
                         }
-                        console.log("returnValuesByKey", returnValuesByKey);
                         console.log("returnValuesByKey.per_kb_fee" , returnValuesByKey.per_kb_fee)
                         const per_kb_fee__String = returnValuesByKey.per_kb_fee
                         if (per_kb_fee__String == null || per_kb_fee__String == "" || typeof per_kb_fee__String === 'undefined') {
@@ -291,224 +288,238 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         $scope.error = "";
         $scope.submitting = true;
         //
-        if (targets.length > 1) {
-            throw "MyMonero currently only supports one target"
-        }
-        const target = targets[0]
-        if (!target.address && !target.amount) {
-            throw "Target address and amount required.";
-        }
-        function fn(err, mockedTransaction, optl_domain)
-        { // this function handles all termination of sendCoins(), except for canceled_fn()
-            if (err) {
-                console.error("Err:", err)
-                $scope.status = "";
-                $scope.error = "Something unexpected occurred when submitting your transaction: " + (err.Error || err);
-                $scope.submitting = false;
-                return
-            }
-            console.log("Tx succeeded", mockedTransaction)
-            $scope.targets = [{}];
-            $scope.sent_tx = {
-                address: mockedTransaction.target_address,
-                domain: optl_domain,
-                amount: mockedTransaction.total_sent, // it's expecting a JSBigInt back so it can `| money`
-                payment_id: mockedTransaction.payment_id,
-                tx_id: mockedTransaction.hash,
-                tx_fee: mockedTransaction.tx_fee
-            };
-            $scope.success_page = true;
-            $scope.status = "";
-            $scope.submitting = false;
-        }
-        function canceled_fn()
+        mymonero_core_js.monero_utils_promise.then(function(monero_utils)
         {
-            $scope.status = "Canceled";
-            $scope.submitting = false;
-        }
-        var sweeping = targets[0].sendAll === true ? true : false; // default false, i.e. non-existence of UI element to set the flag
-        var amount = sweeping ? 0 : target.amount;
-        if (target.address.indexOf('.') !== -1) {
-            var domain = target.address.replace(/@/g, ".");
-            $http.post(config.apiUrl + "get_txt_records", {
-                domain: domain
-            }).then(function(data) {
-                var records = data.records;
-                var oaRecords = [];
-                console.log(domain + ": ", data.records);
-                if (data.dnssec_used) {
-                    if (data.secured) {
-                        console.log("DNSSEC validation successful");
-                    } else {
-                        fn("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason, null);
-                        return;
-                    }
-                } else {
-                    console.log("DNSSEC Not used");
+            if (targets.length > 1) {
+                throw "MyMonero currently only supports one target"
+            }
+            const target = targets[0]
+            if (!target.address && !target.amount) {
+                throw "Target address and amount required.";
+            }
+            function fn(err, mockedTransaction, optl_domain)
+            { // this function handles all termination of sendCoins(), except for canceled_fn()
+                if (err) {
+                    console.error("Err:", err)
+                    $scope.status = "";
+                    $scope.error = "Something unexpected occurred when submitting your transaction: " + (err.Error || err);
+                    $scope.submitting = false;
+                    return
                 }
-                for (var i = 0; i < records.length; i++) {
-                    var record = records[i];
-                    if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
-                        continue;
-                    }
-                    console.log("Found OpenAlias record: " + record);
-                    oaRecords.push(parseOpenAliasRecord(record));
-                }
-                if (oaRecords.length === 0) {
-                    fn("No OpenAlias records found for: " + domain);
-                    return;
-                }
-                if (oaRecords.length !== 1) {
-                    fn("Multiple addresses found for given domain: " + domain);
-                    return;
-                }
-                console.log("OpenAlias record: ", oaRecords[0]);
-                var oaAddress = oaRecords[0].address;
-                try {
-                    cnUtil.decode_address(oaAddress);
-                    confirmOpenAliasAddress(
-                        domain, 
-                        oaAddress, 
-                        oaRecords[0].name, 
-                        oaRecords[0].description, 
-                        data.dnssec_used && data.secured
-                    ).then(
-                        function()
-                        {
-                            sendTo(oaAddress, amount, domain);
-                        }, 
-                        function(err)
-                        {
-                            fn(err);
+                console.log("Tx succeeded", mockedTransaction)
+                $scope.targets = [{}];
+                $scope.sent_tx = {
+                    address: mockedTransaction.target_address,
+                    domain: optl_domain,
+                    amount: mockedTransaction.total_sent, // it's expecting a JSBigInt back so it can `| money`
+                    payment_id: mockedTransaction.payment_id,
+                    tx_id: mockedTransaction.hash,
+                    tx_fee: mockedTransaction.tx_fee
+                };
+                $scope.success_page = true;
+                $scope.status = "";
+                $scope.submitting = false;
+            }
+            function canceled_fn()
+            {
+                $scope.status = "Canceled";
+                $scope.submitting = false;
+            }
+            var sweeping = targets[0].sendAll === true ? true : false; // default false, i.e. non-existence of UI element to set the flag
+            var amount = sweeping ? 0 : target.amount;
+            if (target.address.indexOf('.') !== -1) {
+                var domain = target.address.replace(/@/g, ".");
+                $http.post(config.apiUrl + "get_txt_records", {
+                    domain: domain
+                }).success(function(data) {
+                    var records = data.records;
+                    var oaRecords = [];
+                    console.log(domain + ": ", data.records);
+                    if (data.dnssec_used) {
+                        if (data.secured) {
+                            console.log("DNSSEC validation successful");
+                        } else {
+                            fn("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason, null);
                             return;
                         }
-                    );
-                } catch (e) {
-                    fn("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
+                    } else {
+                        console.log("DNSSEC Not used");
+                    }
+                    for (var i = 0; i < records.length; i++) {
+                        var record = records[i];
+                        if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
+                            continue;
+                        }
+                        console.log("Found OpenAlias record: " + record);
+                        oaRecords.push(parseOpenAliasRecord(record));
+                    }
+                    if (oaRecords.length === 0) {
+                        fn("No OpenAlias records found for: " + domain);
+                        return;
+                    }
+                    if (oaRecords.length !== 1) {
+                        fn("Multiple addresses found for given domain: " + domain);
+                        return;
+                    }
+                    console.log("OpenAlias record: ", oaRecords[0]);
+                    if (monero_utils.is_subaddress(oaAddress, config.nettype)) {
+                        fn("Sending to subaddresses is not yet supported.");
+                        return;
+                    }
+                    var oaAddress = oaRecords[0].address;
+                    try {
+                        cnUtil.decode_address(oaAddress);
+                        confirmOpenAliasAddress(
+                            domain, 
+                            oaAddress, 
+                            oaRecords[0].name, 
+                            oaRecords[0].description, 
+                            data.dnssec_used && data.secured
+                        ).then(
+                            function()
+                            {
+                                sendTo(oaAddress, amount, domain);
+                            }, 
+                            function(err)
+                            {
+                                fn(err);
+                                return;
+                            }
+                        );
+                    } catch (e) {
+                        fn("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
+                        return;
+                    }
+                }).error(function(data) {
+                    fn("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
+                    return
+                });
+                return
+            }
+            if (monero_utils.is_subaddress(target.address, config.nettype)) {
+                fn("Sending to subaddresses is not yet supported.");
+                return;
+            }
+            // normal address:
+            try {
+                // verify that the address is valid
+                cnUtil.decode_address(target.address);
+                sendTo(target.address, amount, null /*domain*/);
+            } catch (e) {
+                fn("Failed to decode address (#" + i + "): " + e);
+                return;
+            }
+            //
+            function sendTo(target_address, amount, domain/*may be null*/)
+            {
+                if (monero_utils.is_subaddress(target_address, config.nettype)) {
+                    fn("Sending to subaddresses is not yet supported.");
                     return;
                 }
-            }).catch(function(data) {
-                fn("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
-                return
-            });
-            return
-        }
-        // normal address:
-        try {
-            // verify that the address is valid
-            cnUtil.decode_address(target.address);
-            sendTo(target.address, amount, null /*domain*/);
-        } catch (e) {
-            fn("Failed to decode address (#" + i + "): " + e);
-            return;
-        }
-        //
-        function sendTo(target_address, amount, domain/*may be null*/)
-        {
-            //
-            const mixin = 10; // mandatory fixed mixin for v8 Monero fork
-            //
-            // some callback trampoline function declarations…
-            // these are important for resetting self's state,
-            // which is done in ___aTrampolineForFnWasCalled below
-            function __trampolineFor_success(
-                currencyReady_targetDescription_address,
-                sentAmount,
-                final__payment_id,
-                tx_hash,
-                tx_fee,
-                tx_key,
-                mixin
-            ) {
-                ___aTrampolineForFnWasCalled()
+                const mixin = 10; // mandatory fixed mixin for v8 Monero fork
                 //
-                let total_sent__JSBigInt = sentAmount.add(tx_fee)
-                let total_sent__atomicUnitString = total_sent__JSBigInt.toString()
-                let total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
-                let total_sent__float = parseFloat(total_sent__floatString)
-                //
-                const mockedTransaction = 
+                // some callback trampoline function declarations…
+                // these are important for resetting self's state,
+                // which is done in ___aTrampolineForFnWasCalled below
+                function __trampolineFor_success(
+                    currencyReady_targetDescription_address,
+                    sentAmount,
+                    final__payment_id,
+                    tx_hash,
+                    tx_fee,
+                    tx_key,
+                    mixin
+                ) {
+                    ___aTrampolineForFnWasCalled()
+                    //
+                    let total_sent__JSBigInt = sentAmount.add(tx_fee)
+                    let total_sent__atomicUnitString = total_sent__JSBigInt.toString()
+                    let total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
+                    let total_sent__float = parseFloat(total_sent__floatString)
+                    //
+                    const mockedTransaction = 
+                    {
+                        hash: tx_hash,
+                        mixin: "" + mixin,
+                        coinbase: false,
+                        mempool: true, // is that correct?
+                        //
+                        isJustSentTransaction: true, // this is set back to false once the server reports the tx's existence
+                        timestamp: new Date(), // faking
+                        //
+                        unlock_time: 0,
+                        //
+                        // height: null, // mocking the initial value -not- to exist (rather than to erroneously be 0) so that isconfirmed -> false
+                        //
+                        total_sent: new JSBigInt(total_sent__atomicUnitString),
+                        total_received: new JSBigInt("0"),
+                        //
+                        approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
+                        // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
+                        //
+                        payment_id: final__payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
+                        //
+                        // info we can only preserve locally
+                        tx_fee: tx_fee,
+                        tx_key: tx_key,
+                        target_address: target_address, // only we here are saying it's the target
+                    };
+                    fn(null, mockedTransaction, domain)
+                }
+                function __trampolineFor_err_withErr(err)
                 {
-                    hash: tx_hash,
-                    mixin: "" + mixin,
-                    coinbase: false,
-                    mempool: true, // is that correct?
-                    //
-                    isJustSentTransaction: true, // this is set back to false once the server reports the tx's existence
-                    timestamp: new Date(), // faking
-                    //
-                    unlock_time: 0,
-                    //
-                    // height: null, // mocking the initial value -not- to exist (rather than to erroneously be 0) so that isconfirmed -> false
-                    //
-                    total_sent: new JSBigInt(total_sent__atomicUnitString),
-                    total_received: new JSBigInt("0"),
-                    //
-                    approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
-                    // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
-                    //
-                    payment_id: final__payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
-                    //
-                    // info we can only preserve locally
-                    tx_fee: tx_fee,
-                    tx_key: tx_key,
-                    target_address: target_address, // only we here are saying it's the target
-                };
-                fn(null, mockedTransaction, domain)
+                    ___aTrampolineForFnWasCalled()
+                    fn(err)
+                }
+                function __trampolineFor_canceled_fn()
+                {
+                    ___aTrampolineForFnWasCalled()
+                    canceled_fn()
+                }
+                function __trampolineFor_err_withStr(errStr)
+                {
+                    __trampolineFor_err_withErr(new Error(errStr))
+                }
+                function ___aTrampolineForFnWasCalled()
+                { // private - no need to call this yourself unless you're writing a trampoline function
+                }
+                let statusUpdate_messageBase = sweeping ? `Sending wallet balance…` : `Sending ${amount} XMR…`
+                function preSuccess_nonTerminal_statusUpdate_fn(str, code)
+                {
+                    console.log("Step:", str)
+                    $scope.status = str
+                }
+                //
+                preSuccess_nonTerminal_statusUpdate_fn(statusUpdate_messageBase);
+                //
+                const hostedMoneroAPIClient = new HostedMoneroAPIClient({
+                    $http: $http
+                })
+                //
+                const monero_sendingFunds_utils = mymonero_core_js.monero_sendingFunds_utils
+                monero_sendingFunds_utils.SendFunds(
+                    target_address,
+                    config.nettype,
+                    amount,
+                    sweeping,
+                    AccountService.getAddress(),
+                    AccountService.getSecretKeys(),
+                    AccountService.getPublicKeys(),
+                    hostedMoneroAPIClient,
+                    payment_id, // passed in
+                    1, /* priority */
+                    function(code) { // -> preSuccess_nonTerminal_statusUpdate_fn
+                        let suffix = monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[code]
+                        preSuccess_nonTerminal_statusUpdate_fn(
+                            statusUpdate_messageBase + " " + suffix, // TODO: localize concatenation
+                            code
+                        )
+                    },
+                    __trampolineFor_success,
+                    __trampolineFor_err_withErr
+                )
             }
-            function __trampolineFor_err_withErr(err)
-            {
-                ___aTrampolineForFnWasCalled()
-                fn(err)
-            }
-            function __trampolineFor_canceled_fn()
-            {
-                ___aTrampolineForFnWasCalled()
-                canceled_fn()
-            }
-            function __trampolineFor_err_withStr(errStr)
-            {
-                __trampolineFor_err_withErr(new Error(errStr))
-            }
-            function ___aTrampolineForFnWasCalled()
-            { // private - no need to call this yourself unless you're writing a trampoline function
-            }
-            let statusUpdate_messageBase = sweeping ? `Sending wallet balance…` : `Sending ${amount} XMR…`
-            function preSuccess_nonTerminal_statusUpdate_fn(str, code)
-            {
-                console.log("Step:", str)
-                $scope.status = str
-            }
-            //
-            preSuccess_nonTerminal_statusUpdate_fn(statusUpdate_messageBase);
-            //
-            const hostedMoneroAPIClient = new HostedMoneroAPIClient({
-                $http: $http
-            })
-            //
-            const monero_sendingFunds_utils = mymonero_core_js.monero_sendingFunds_utils
-            monero_sendingFunds_utils.SendFunds(
-                target_address,
-                mymonero_core_js.nettype_utils.network_type.STAGENET,
-                amount,
-                sweeping,
-                AccountService.getAddress(),
-                AccountService.getSecretKeys(),
-                AccountService.getPublicKeys(),
-                hostedMoneroAPIClient,
-                payment_id, // passed in
-                1, /* priority */
-                function(code) { // -> preSuccess_nonTerminal_statusUpdate_fn
-                    let suffix = monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[code]
-                    preSuccess_nonTerminal_statusUpdate_fn(
-                        statusUpdate_messageBase + " " + suffix, // TODO: localize concatenation
-                        code
-                    )
-                },
-                __trampolineFor_success,
-                __trampolineFor_err_withErr
-            )
-        }
+        })
     };
 });
 
@@ -533,3 +544,4 @@ function parseOpenAliasRecord(record) {
     parsed.description = parse_param('tx_description');
     return parsed;
 }
+

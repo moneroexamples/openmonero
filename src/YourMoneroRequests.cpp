@@ -1375,6 +1375,7 @@ YourMoneroRequests::get_tx(
     {
         // if tx not found in the blockchain, check if its in mempool
 
+                // recieved_time, tx
         vector<pair<uint64_t, transaction>> mempool_txs =
                 current_bc_status->get_mempool_txs();
 
@@ -1551,7 +1552,7 @@ YourMoneroRequests::get_tx(
                     {
                         j_response["payment_id"] = xmr_tx.payment_id;
                         j_response["timestamp"]
-                                = static_cast<uint64_t>(xmr_tx.timestamp);
+                                = static_cast<uint64_t>(xmr_tx.timestamp*1e3);
 
                         vector<XmrInput> inputs;
 
