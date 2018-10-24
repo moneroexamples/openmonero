@@ -700,9 +700,9 @@ TxSearch::find_txs_in_mempool(
             j_tx["hash"]           = oi_identification.get_tx_hash_str();
             j_tx["tx_pub_key"]     = oi_identification.get_tx_pub_key_str();
             j_tx["timestamp"]      = recieve_time*1e3; // when it got into mempool
-            j_tx["total_received"] = oi_identification.total_received;
-            j_tx["total_sent"]     = 0; // to be set later when looking for key images
-            j_tx["unlock_time"]    = 0; // for mempool we set it to zero
+            j_tx["total_received"] = std::to_string(oi_identification.total_received);
+            j_tx["total_sent"]     = "0"; // to be set later when looking for key images
+            j_tx["unlock_time"]    = "0"; // for mempool we set it to zero
                                         // since we dont have block_height to work with
             j_tx["height"]         = current_height; // put current blockchain height,
                                         // just to indicate to frontend that this
@@ -750,7 +750,7 @@ TxSearch::find_txs_in_mempool(
 
                     spend_keys.push_back({
                           {"key_image" , in_info.key_img},
-                          {"amount"    , out.amount},
+                          {"amount"    , std::to_string(out.amount)},
                           {"tx_pub_key", out.tx_pub_key},
                           {"out_index" , out.out_index},
                           {"mixin"     , out.mixin},
@@ -773,7 +773,7 @@ TxSearch::find_txs_in_mempool(
 
                     json& j_tx = j_transactions->back();
 
-                    j_tx["total_sent"]    = total_sent;
+                    j_tx["total_sent"]    = std::to_string(total_sent);
                     j_tx["spent_outputs"] = spend_keys;
                 }
                 else
@@ -793,8 +793,8 @@ TxSearch::find_txs_in_mempool(
                     j_tx["hash"]           = oi_identification.get_tx_hash_str();
                     j_tx["tx_pub_key"]     = oi_identification.get_tx_pub_key_str();
                     j_tx["timestamp"]      = recieve_time*1e3; // when it got into mempool
-                    j_tx["total_received"] = 0;          // we did not recive any outputs/xmr
-                    j_tx["total_sent"]     = total_sent; // to be set later when looking for key images
+                    j_tx["total_received"] = "0";          // we did not recive any outputs/xmr
+                    j_tx["total_sent"]     = std::to_string(total_sent); // to be set later when looking for key images
                     j_tx["unlock_time"]    = 0;          // for mempool we set it to zero
                                                          // since we dont have block_height to work with
                     j_tx["height"]         = current_height; // put current blockchain height,

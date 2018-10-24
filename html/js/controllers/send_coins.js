@@ -192,6 +192,14 @@ class HostedMoneroAPIClient
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
+                if (data.data.error)
+                {
+                    const errStr = "Invalid mixin - must be >= 0";
+                    const err = new Error(data.data.error);
+                    fn(err);
+                    return;
+                }
+
                 __proceedTo_parseAndCallBack(data.data)
             }
         ).catch(
@@ -302,7 +310,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 if (err) {
                     console.error("Err:", err)
                     $scope.status = "";
-                    $scope.error = "Something unexpected occurred when submitting your transaction: " + (err.Error || err);
+                    $scope.error = "Error: " + (err.Error || err);
                     $scope.submitting = false;
                     return
                 }
