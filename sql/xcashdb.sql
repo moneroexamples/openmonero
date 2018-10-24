@@ -17,10 +17,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `openmonero`
+-- Database: `xcashdb`
 --
-CREATE DATABASE IF NOT EXISTS `openmonero` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `openmonero`;
+CREATE DATABASE IF NOT EXISTS `xcashdb` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `xcashdb`;
 
 -- --------------------------------------------------------
 

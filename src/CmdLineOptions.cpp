@@ -16,7 +16,7 @@ namespace xmreg
         positional_options_description p;
 
         options_description desc(
-                "openmonero, Open Monero backend service");
+                "xcash, X-Cash web wallet backend service");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),

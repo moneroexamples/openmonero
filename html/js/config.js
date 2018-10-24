@@ -1,8 +1,8 @@
 var config = {
     apiUrl: "http://wallet.mineme.stream:1984/",
-    mainnetExplorerUrl: "https://explorer.x-cash.org",
-    testnetExplorerUrl: "https://explorer.x-cash.org",
-    stagenetExplorerUrl: "https://explorer.x-cash.org",
+    mainnetExplorerUrl: "https://explorer.x-cash.org/",
+    testnetExplorerUrl: "https://explorer.x-cash.org/",
+    stagenetExplorerUrl: "https://explorer.x-cash.org/",
     nettype: 0, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
     coinUnitPlaces: 6,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero

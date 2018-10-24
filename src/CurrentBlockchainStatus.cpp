@@ -13,7 +13,7 @@
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "openmonero"
+#define MONERO_DEFAULT_LOG_CATEGORY "xca_web_wallet"
 
 namespace xmreg
 {
