@@ -611,10 +611,10 @@ TEST_P(BCSTATUS_TEST, GetOutput)
 
 TEST_P(BCSTATUS_TEST, GetDynamicPerKbFeeEstimate)
 {
-    EXPECT_CALL(*mcore_ptr, get_dynamic_per_kb_fee_estimate(_))
+    EXPECT_CALL(*mcore_ptr, get_dynamic_base_fee_estimate(_))
             .WillOnce(Return(3333));
 
-    EXPECT_EQ(bcs->get_dynamic_per_kb_fee_estimate(), 3333);
+    EXPECT_EQ(bcs->get_dynamic_per_kb_fee_estimate(), 3333 * 1024);
 }
 
 TEST_P(BCSTATUS_TEST, CommitTx)

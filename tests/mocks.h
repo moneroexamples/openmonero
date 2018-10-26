@@ -93,7 +93,7 @@ public:
                         bool(const COMMAND_RPC_GET_OUTPUTS_BIN::request& req,
                              COMMAND_RPC_GET_OUTPUTS_BIN::response& res));
 
-    MOCK_CONST_METHOD1(get_dynamic_per_kb_fee_estimate,
+    MOCK_CONST_METHOD1(get_dynamic_base_fee_estimate,
                        uint64_t(uint64_t const& grace_blocks));
 
     MOCK_CONST_METHOD2(get_mempool_txs,

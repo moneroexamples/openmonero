@@ -676,7 +676,7 @@ YourMoneroRequests::get_unspent_outs(
 
                         string rct = out.get_rct();
 
-                        // coinbaser rct txs require speciall treatment
+                        // coinbase rct txs require speciall treatment
                         if (tx.coinbase && tx.is_rct)
                         {
                             uint64_t amount  = (tx.is_rct ? 0 : out.amount);
@@ -703,7 +703,7 @@ YourMoneroRequests::get_unspent_outs(
                                 {"tx_prefix_hash"  , tx.prefix_hash},
                                 {"tx_pub_key"      , tx.tx_pub_key},
                                 {"timestamp"       , static_cast<uint64_t>(
-                                            out.timestamp)},
+                                            out.timestamp*1e3)},
                                 {"height"          , tx.height},
                                 {"spend_key_images", json::array()}
                         };
@@ -740,8 +740,8 @@ YourMoneroRequests::get_unspent_outs(
         // it is already using dynanamic fees. frontend
         // uses old fixed fees.
 
-        j_response["per_kb_fee"] = std::to_string(current_bc_status
-                                            ->get_dynamic_per_kb_fee_estimate());
+        j_response["per_kb_fee"] = current_bc_status
+                                            ->get_dynamic_per_kb_fee_estimate();
 
 
     } // if (current_bc_status->search_thread_exist(xmr_address))
