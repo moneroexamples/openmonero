@@ -1441,7 +1441,6 @@ textarea.w-select {
 }
 .w-nav {
   position: relative;
-  background: #BBB;
   z-index: 1000;
 }
 .w-nav:before,
@@ -1594,7 +1593,6 @@ textarea.w-select {
   padding: 8px 30px;
   text-align: left;
   cursor: pointer;
-  background-color: #E8E8E8;
 }
 .w-tab-link.w--current {
   background-color: #BCD3F3;

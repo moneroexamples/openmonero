@@ -1,6 +1,7 @@
 body {
   background-color: white;
   font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    background-image: url(https://x-cash.org/front/images/compare-bg.jpg);
   color: #333;
   font-size: 14px;
   line-height: 20px;
@@ -12,8 +13,8 @@ h1 {
   padding-right: 0px;
   padding-left: 0px;
   float: none;
-  font-family: Proximanova, sans-serif;
-  color: #4f545c;
+  font-family: Poppins, sans-serif;
+  color: white;
   font-size: 38px;
   line-height: 44px;
   font-weight: 600;
@@ -62,7 +63,7 @@ p {
   padding: 15px 150px;
   border-radius: 200px;
   background-color: #4ede98;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 15px;
   font-weight: 500;
@@ -102,16 +103,15 @@ p {
   padding-top: 4px;
   padding-bottom: 4px;
   border-bottom: 1px none #e6ebf2;
-  background-color: #072138;
   box-shadow: none;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
 }
 .nav-link {
   margin-top: 24px;
   margin-right: 0px;
   margin-left: 30px;
   padding: 0px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #b2c8d4;
   font-size: 13px;
   font-weight: 600;
@@ -119,35 +119,36 @@ p {
   text-decoration: none;
 }
 .nav-link:hover {
-  color: #5093eb;
+  color: #8AF1F0;
   text-decoration: none;
 }
 .nav-link.w--current {
   margin-top: 20px;
   padding: 3px 12px 0px;
   border-radius: 2px;
-  background-color: white;
-  color: #5093eb;
+    border-bottom:1px solid #8AF1F0;  
+  background-color: transparent;
+  color: #8AF1F0;
   line-height: 20px;
 }
 .nav-link.w--current:hover {
-  color: #2e3b4d;
+  color: white;
 }
 .nav-link.login {
   margin-top: 19px;
   margin-right: 0px;
-  padding: 6px 24px 4px;
+  padding: 6px 24px 6px;
   border-style: solid;
   border-width: 1px;
   border-radius: 200px;
-  color: #5093eb;
+  color: #8AF1F0;
   font-size: 11px;
   line-height: 12px;
   font-weight: 600;
 }
 .nav-link.login:hover {
-  border-color: #5093eb;
-  background-color: #5093eb;
+  border-color: #8AF1F0;
+  background-color: #8AF1F0;
   background-image: none;
   background-position: 0% 0%;
   background-size: auto;
@@ -173,7 +174,6 @@ p {
   height: 100%;
   padding-top: 180px;
   padding-bottom: 180px;
-  background-image: url('https://x-cash.org/front/images/compare-bg.jpg');
   background-position: 0% 0%, 2% 0%;
   background-size: auto, cover;
 }
@@ -186,7 +186,7 @@ p {
   padding-right: 0px;
   padding-left: 0px;
   float: none;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #e6f3fc;
   text-align: left;
 }
@@ -204,11 +204,11 @@ p {
   color: #a9b2b8;
 }
 .login-link {
-  color: #5093eb;
+  color: #8AF1F0;
   text-decoration: none;
 }
 .login-link.steps {
-  color: #add1ff;
+  color: #8AF1F0;
 }
 .generated-results {
   display: none;
@@ -225,7 +225,7 @@ p {
   padding-bottom: 4px;
   border-top: 1px none #e1e9f0;
   border-bottom: 3px none #b2c6d4;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #596478;
   font-size: 26px;
   font-weight: 600;
@@ -245,8 +245,8 @@ p {
   border-bottom-color: #e1eaf0;
   border-radius: 3px;
   background-color: transparent;
-  font-family: Proximanova, sans-serif;
-  color: #6d7585;
+  font-family: Arial, sans-serif;
+  color: white;
   font-size: 23px;
   line-height: 37px;
   font-weight: 400;
@@ -271,9 +271,11 @@ p {
 .footer-section {
   padding-top: 10px;
   padding-bottom: 0px;
-  border-top: 1px none #d8e1ed;
-  background-color: #072138;
   color: #333;
+position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 .tooltip-div {
   position: relative;
@@ -296,7 +298,7 @@ p {
   margin-left: 0px;
   float: none;
   opacity: 0.85;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #768d9c;
   font-size: 13px;
   text-decoration: none;
@@ -351,7 +353,7 @@ p {
   -ms-transform: rotate(45deg);
   -o-transform: rotate(45deg);
   transform: rotate(45deg);
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #b1b6bd;
   font-size: 35px;
   line-height: 6px;
@@ -361,52 +363,49 @@ p {
 .lower-footer {
   padding-top: 14px;
   padding-bottom: 14px;
-  background-color: #072138;
 }
 .copyright-text {
   padding-top: 0px;
   padding-bottom: 0px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #6b7f8c;
   font-size: 12px;
 }
 .tab-link-1 {
   margin-right: 10px;
-  border: 1px solid #5093eb;
+  border: 1px solid #8AF1F0;
   border-radius: 200px;
-  background-color: white;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-weight: 500;
 }
 .tab-link-1:hover {
-  background-color: #5093eb;
+  background-color: #8AF1F0;
   color: white;
 }
 .tab-link-1.w--current {
   margin-right: 10px;
-  border: 1px solid #5093eb;
+  border: 1px solid #8AF1F0;
   border-radius: 200px;
-  background-color: #5093eb;
-  font-family: Proximanova, sans-serif;
+  background-color: #8AF1F0;
+  font-family: Poppins, sans-serif;
   color: white;
   font-weight: 500;
 }
 .tab-link-2 {
   margin-left: 10px;
-  border: 1px solid #5093eb;
+  border: 1px solid #8AF1F0;
   border-radius: 200px;
-  background-color: white;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-weight: 500;
 }
 .tab-link-2:hover {
-  background-color: #5093eb;
+  background-color: #8AF1F0;
   color: white;
 }
 .tab-link-2.w--current {
-  background-color: #5093eb;
+  background-color: #8AF1F0;
   color: white;
 }
 .tabs-style {
@@ -417,10 +416,11 @@ p {
 .login-btn {
   margin-top: 8px;
   margin-bottom: 20px;
-  padding: 15px 122px;
-  border-radius: 2px;
-  background-color: #5093eb;
-  font-family: Proximanova, sans-serif;
+  padding: 15px 70px;
+  border-radius: 30px;
+  background-color: transparent;
+    border:2px solid #8AF1F0;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 16px;
   line-height: 22px;
@@ -428,7 +428,7 @@ p {
   text-decoration: none;
 }
 .login-btn:hover {
-  background-color: #6aa7f7;
+background-color:#8AF1F0;
 }
 .login-btn.modals {
   display: inline-block;
@@ -437,7 +437,7 @@ p {
   line-height: 20px;
 }
 .login-btn.modals:hover {
-  background-color: #65a5f7;
+  background-color: #8AF1F0;
 }
 .submit-div {
   margin-top: 46px;
@@ -460,7 +460,7 @@ p {
   padding-bottom: 21px;
   border: 1px solid #cadaed;
   border-radius: 2px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   font-size: 14px;
 }
 .form-layout.mnemonic-page {
@@ -480,8 +480,8 @@ p {
   margin-bottom: 0px;
 }
 .field-label {
-  font-family: Proximanova, sans-serif;
-  color: #545d69;
+  font-family: Poppins, sans-serif;
+  color: white;
   font-size: 15px;
   font-weight: 600;
 }
@@ -499,7 +499,7 @@ p {
   padding-top: 0px;
   padding-bottom: 0px;
   float: right;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #6b7f8c;
   font-size: 12px;
   font-weight: 400;
@@ -516,15 +516,15 @@ p {
   margin-bottom: 30px;
   padding-right: 52px;
   padding-left: 52px;
-  font-family: Proximanova, sans-serif;
-  color: #6e7b91;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-size: 21px;
   line-height: 34px;
   font-weight: 600;
   text-align: left;
 }
 .no-account-text.thin {
-  color: #6d7585;
+  color: whitesmoke;
   font-size: 16px;
   font-weight: 400;
 }
@@ -541,21 +541,21 @@ p {
   padding: 40px 10px 10px;
   border: 1px solid #dfe8f0;
   border-radius: 3px;
-  background-color: #fafdff;
+  background-color: #06182E;
   text-align: center;
 }
 .no-account-div.upper-box {
   margin-top: 40px;
   margin-bottom: 40px;
-  background-color: white;
+  background-color: #06182E;
 }
 .close-overlay:hover {
   color: #9098a3;
 }
 .balance-header {
   float: left;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-size: 16px;
   font-weight: 500;
 }
@@ -563,14 +563,13 @@ p {
   display: block;
   margin-top: 5px;
   padding: 15px;
-  border: 1px solid #cad7e6;
+  border: 1px solid #8AF1F0;
   border-radius: 3px;
-  box-shadow: #f5f6f7 0px 1px 0px 0px;
 }
 .balance-text {
   margin-top: 11px;
-  font-family: Proximanova, sans-serif;
-  color: #5c6873;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-weight: 400;
 }
 ._3-boxes-container {
@@ -607,7 +606,7 @@ p {
 }
 .box-text {
   padding: 10px 45px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 20px;
   font-weight: 500;
@@ -617,8 +616,8 @@ p {
 .overview-body-head {
   padding-bottom: 2px;
   border-bottom: 2px none #ccd8e3;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-size: 18px;
   font-weight: 600;
 }
@@ -679,15 +678,15 @@ p {
 }
 .middle-container.overview-page {
   padding-top: 20px;
-  border-color: #dfe8f0;
+  border-color: #8AF1F0;
   border-radius: 3px;
-  background-color: #fafdff;
+  background-color: #072138;
 }
 .middle-text {
   margin-top: 9px;
   margin-bottom: 0px;
-  font-family: Proximanova, sans-serif;
-  color: #6d7d8c;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-size: 14px;
   font-weight: 400;
 }
@@ -697,8 +696,7 @@ p {
 .middle-div {
   margin-bottom: 35px;
   padding-bottom: 35px;
-  border-bottom-style: solid;
-  border-bottom-color: #dae5f2;
+  border-bottom: 1px solid #8AF1F0;
 }
 .middle-div.send {
   padding-bottom: 0px;
@@ -722,15 +720,15 @@ p {
 }
 .head-modal {
   margin-top: 25px;
-  color: #4f545c;
+  color: white;
   text-align: center;
 }
 .send-label {
   display: inline-block;
   margin-bottom: 4px;
   clear: left;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-size: 15px;
   font-weight: 500;
 }
@@ -744,10 +742,11 @@ p {
   margin-bottom: 0px;
   padding: 25px 26px 19px;
   border-radius: 3px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   font-size: 13px;
   line-height: 20px;
   font-weight: 400;
+    background-color:#072138;
 }
 .send-text-box {
   width: 100%;
@@ -770,8 +769,8 @@ p {
   margin-left: 0px;
   padding-right: 52px;
   padding-left: 52px;
-  font-family: Proximanova, sans-serif;
-  color: #5093eb;
+  font-family: Poppins, sans-serif;
+  color: #89F0EF;
   font-size: 19px;
   line-height: 30px;
   font-weight: 600;
@@ -792,8 +791,8 @@ p {
 }
 .transaction-head {
   margin-top: 15px;
-  font-family: Proximanova, sans-serif;
-  color: #68717a;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-size: 15px;
   font-weight: 500;
 }
@@ -802,20 +801,20 @@ p {
   color: #68717a;
 }
 .transaction-address {
-  /*font-family: Proximanova, sans-serif;*/
+  /*font-family: Poppins, sans-serif;*/
   font-family: Andale Mono, monospace;
-  color: #6d7d8c;
+  color: whitesmoke;
   font-size: 10px;
   font-weight: 400;
 }
 .transaction-address.transaction-page {
   padding-right: 20px;
-  color: #5a6a6e;
+  color: whitesmoke;
 }
 .transaction-detail {
-  /*font-family: Proximanova, sans-serif;*/
+  /*font-family: Poppins, sans-serif;*/
   font-family: Andale Mono, monospace;
-  color: #6d7d8c;
+  color: whitesmoke;
   font-size: 10px;
 }
 .transaction-detail.transaction-left {
@@ -847,7 +846,7 @@ p {
   border-right: 1px solid #d3e1ed;
   border-left: 1px solid #d3e1ed;
   background-color: #edf5fc;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   font-weight: 400;
 }
 .received-div.transaction-body.darker.bottom {
@@ -887,20 +886,22 @@ p {
   margin-top: 20px;
   margin-right: auto;
   margin-left: auto;
-  padding: 16px 99px;
-  border-radius: 3px;
-  background-color: #5093eb;
-  font-family: Proximanova, sans-serif;
+  padding: 16px 50px;
+  border-radius: 30px;
+background-color:transparent;
+
+    border:2px solid #70CED0;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 15px;
   font-weight: 500;
 }
 .mnemonic-login:hover {
-  background-color: #6aa7f7;
+  background-color: #70CED0;
 }
 .success-paragraph {
   margin-bottom: 0px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -915,10 +916,11 @@ p {
 .send-btn {
   display: block;
   margin: 50px auto 22px;
-  padding: 20px 230px;
-  border-radius: 3px;
-  background-color: #5093eb;
-  font-family: Proximanova, sans-serif;
+  padding: 20px 100px;
+  border-radius: 30px;
+    border:1px solid #8AF1F0;
+  background-color: transparent;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 20px;
   font-weight: 600;
@@ -929,7 +931,7 @@ p {
   background-color: #748097 !important;
 }
 .send-btn:hover {
-  background-color: #6aa7f7;
+  background-color: #8AF1F0;
 }
 .qr-div {
   margin-top: 60px;
@@ -944,7 +946,7 @@ p {
 .monero-code {
   margin-top: 0px;
   margin-bottom: 0px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #8c959c;
   font-size: 12px;
   line-height: 22px;
@@ -975,18 +977,18 @@ p {
   display: inline-block;
   margin-top: 15px;
   padding: 5px 14px;
-  border: 1px solid #cfdce8;
+  border: 1px solid #8AF1F0;
   border-radius: 2px;
   background-color: transparent;
-  font-family: Proximanova, sans-serif;
-  color: #9bacbd;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-size: 12px;
   font-weight: 500;
   text-decoration: none;
 }
 .table-btn:hover {
-  border-color: #5093eb;
-  background-color: #5093eb;
+  border-color: #8AF1F0;
+  background-color: #8AF1F0;
   color: white;
 }
 .table-btn.right {
@@ -1004,14 +1006,12 @@ p {
 .lower-nav-section {
   padding-top: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px none #5891db;
-  background-color: #5093eb;
-  box-shadow: #f0f0f0 0px 1px 2px 0px;
+  background-color: transparent;
 }
 .lower-nav-link {
   display: inline-block;
   margin-right: 55px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #c8e0fd;
   font-weight: 500;
   text-decoration: none;
@@ -1021,16 +1021,13 @@ p {
 }
 .lower-nav-link:focus {
   display: inline;
-  padding: 5px 14px;
-  border-radius: 3px;
-  background-color: #68a6f5;
+
 }
 .lower-nav-link.w--current {
   display: inline;
   padding: 6px 11px;
-  border-radius: 3px;
-  background-color: #68a6f5;
-  color: white;
+ border-bottom:1px solid #8AF1F0;
+  color: #8AF1F0;
 }
 .lower-nav-link.w--current:focus {
   background-color: transparent;
@@ -1039,13 +1036,13 @@ p {
 .dropdown-toggle {
   margin-top: 19px;
   padding: 3px 40px 3px 15px;
-  border: 1px solid #435863;
+  border: 1px solid #8AF1F0;
   border-radius: 200px;
-  color: #b2c8d4;
+  color: #8AF1F0;
   font-weight: 600;
 }
 .dropdown-toggle:hover {
-  color: #5093eb;
+  color: #67BDC3;
 }
 .middle-footer {
   position: static;
@@ -1059,21 +1056,21 @@ p {
   display: block;
   padding: 14px 30px;
   border-radius: 0px;
-  background-color: white;
-  color: #6e7f8a;
+  background-color: #002039;
+  color: white;
   font-size: 14px;
   font-weight: 500;
 }
 .dropdown-styling:hover {
-  background-color: white;
-  color: #5093eb;
+  background-color: #002039;
+  color: #8AF1F0;
   text-decoration: none;
 }
 .dropdown-styling.top {
   padding-top: 18px;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
-  background-color: white;
+  background-color: #002039;
   font-size: 14px;
 }
 .dropdown-styling.bottom {
@@ -1082,7 +1079,7 @@ p {
   border-bottom-right-radius: 3px;
 }
 .dropdown-styling.bottom:hover {
-  background-color: white;
+  background-color: #002039;
 }
 .dropdown-rounded.w--open {
   display: block;
@@ -1125,8 +1122,8 @@ p {
   background-color: white;
 }
 .review-text {
-  font-family: Proximanova, sans-serif;
-  color: #767d85;
+  font-family: Arial, sans-serif;
+  color: whitesmoke;
 }
 .review-text.address {
   font-size: 12px;
@@ -1145,7 +1142,6 @@ p {
 .coloured {
   padding-top: 55px;
   padding-bottom: 35px;
-  background-color: #5093eb;
 }
 .slider-heading {
   color: white;
@@ -1164,7 +1160,7 @@ p {
   padding-bottom: 90px;
 }
 .home-header {
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-size: 52px;
   line-height: 74px;
@@ -1176,23 +1172,24 @@ p {
   margin-top: 66px;
   padding: 18px 89px;
   border-radius: 200px;
-  background-color: #5093eb;
-  font-family: Proximanova, sans-serif;
-  color: white;
+  border:2px solid #8AF1F0;
+  font-family: Poppins, sans-serif;
+  color: #8AF1F0;
   font-size: 18px;
   font-weight: 500;
   text-align: center;
   text-decoration: none;
 }
 .create-account-btn:hover {
-  background-color: #6aa7f7;
+  background-color: #8AF1F0;
+    color: white;
 }
 .home-container {
   text-align: center;
 }
 .home-subhead {
-  font-family: Proximanova, sans-serif;
-  color: gray;
+  font-family: Poppins, sans-serif;
+  color: #c2cccc;
 }
 .mid-div {
   margin-bottom: 60px;
@@ -1200,7 +1197,7 @@ p {
   padding-bottom: 30px;
   border: 1px solid #dfe8f0;
   border-radius: 3px;
-  background-color: #fafdff;
+  background-color: #06182E;
   text-align: center;
 }
 .create-account-container {
@@ -1209,7 +1206,7 @@ p {
 }
 .section-head-terms {
   margin-top: 45px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #4f545c;
   font-size: 18px;
   font-weight: 600;
@@ -1217,7 +1214,7 @@ p {
 .section-body-terms {
   margin-top: 8px;
   margin-bottom: 20px;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #78838a;
   font-size: 14px;
   line-height: 24px;
@@ -1252,7 +1249,7 @@ p {
   padding-left: 10px;
 }
 .qr-code-text {
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: #8c959c;
   font-size: 11px;
   font-weight: 400;
@@ -1268,15 +1265,15 @@ p {
   display: inline-block;
   margin-left: 18px;
   float: none;
-  font-family: Proximanova, sans-serif;
-  color: #6d7585;
+  font-family: Poppins, sans-serif;
+  color: whitesmoke;
   font-size: 16px;
 }
 .error-backing {
   padding-top: 15px;
   border-radius: 3px;
   background-color: #f55d5d;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-weight: 500;
   text-align: center;
@@ -1285,7 +1282,7 @@ p {
   padding-top: 15px;
   border-radius: 3px;
   background-color: #008331;
-  font-family: Proximanova, sans-serif;
+  font-family: Poppins, sans-serif;
   color: white;
   font-weight: 500;
   text-align: center;
@@ -1294,10 +1291,10 @@ p {
   display: inline-block;
   margin-left: 12px;
   float: none;
-  font-family: Proximanova, sans-serif;
-  color: #6d7585;
+  font-family: Poppins, sans-serif;
+  color: white;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .column-support {
   margin-top: 28px;
@@ -1648,7 +1645,7 @@ p {
   }
   .qr-code-text {
     margin-top: 7px;
-    font-family: Proximanova, sans-serif;
+    font-family: Poppins, sans-serif;
     color: #8c959c;
     font-size: 12px;
   }
@@ -1668,7 +1665,7 @@ p {
   .nav-link.login {
     margin-right: 115px;
     margin-left: 42px;
-    border: 1px solid #5093eb;
+    border: 1px solid #8AF1F0;
   }
   .nav-menu {
     background-color: #37414f;
@@ -1903,38 +1900,38 @@ p {
 }
 
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Regular.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Regular.otf') format('opentype');
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Black.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Black.otf') format('opentype');
   font-weight: 800;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Extrabold.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Extrabold.otf') format('opentype');
   font-weight: 900;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Bold.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Bold.otf') format('opentype');
   font-weight: 600;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Semibold.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Semibold.otf') format('opentype');
   font-weight: 500;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Proximanova';
-  src: url('../fonts/ProximaNova-Light.otf') format('opentype');
+  font-family: 'Poppins';
+  src: url('../fonts/Poppins-Light.otf') format('opentype');
   font-weight: 200;
   font-style: normal;
 }
