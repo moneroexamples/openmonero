@@ -167,12 +167,13 @@ p {
   background-color: transparent;
   font-size: 14px;
 }
+
 .body-section.steps-page {
   width: 100%;
   height: 100%;
   padding-top: 180px;
   padding-bottom: 180px;
-  background-color: #abbbcc;
+  background-image: url('https://x-cash.org/front/images/compare-bg.jpg');
   background-position: 0% 0%, 2% 0%;
   background-size: auto, cover;
 }
@@ -262,7 +263,7 @@ p {
   padding-left: 0px;
 }
 .brand-box {
-  margin-top: 22px;
+  margin-top: 14px;
 }
 .login-div {
   text-align: center;
