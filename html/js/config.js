@@ -1,5 +1,5 @@
 var config = {
-    apiUrl: "http://wallet.mineme.stream:1984/",
+    apiUrl: "https://wallet.x-cash.org:1984/",
     mainnetExplorerUrl: "https://explorer.x-cash.org/",
     testnetExplorerUrl: "https://explorer.x-cash.org/",
     stagenetExplorerUrl: "https://explorer.x-cash.org/",
