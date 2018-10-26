@@ -272,7 +272,6 @@ p {
   padding-top: 10px;
   padding-bottom: 0px;
   color: #333;
-position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
@@ -494,16 +493,16 @@ background-color:#8AF1F0;
   margin-bottom: 3px;
 }
 .footer-link {
-  display: inline-block;
   margin-left: 30px;
   padding-top: 0px;
   padding-bottom: 0px;
-  float: right;
   font-family: Poppins, sans-serif;
   color: #6b7f8c;
   font-size: 12px;
   font-weight: 400;
   text-decoration: none;
+  text-align: center;
+  margin: 0 auto; 
 }
 .footer-link:hover {
   color: #8a9eab;
