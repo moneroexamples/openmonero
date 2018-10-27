@@ -123,8 +123,7 @@ set(LIBRARIES
         device
         epee
         checkpoints
-        version
-        pcsclite
+        version       
         sodium
         ${Boost_LIBRARIES}
         pthread
