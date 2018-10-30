@@ -22,7 +22,7 @@ information on conneting to the test database in
 cd openmonero/build
 
 # indicate that test should be build
-cmake .. -DBUILD_TEST=ON
+cmake -DBUILD_TEST=ON ..
 
 # compile openmonero with tests
 make
