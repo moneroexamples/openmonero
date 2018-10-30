@@ -31,7 +31,7 @@ make
 make test
 
 # the above command will produce summary of test results (shown below).
-# for verbouse output, the following command can use
+# for verbose output, the following command can use used
 # make test ARGS=-V
 
 # individual tests executables can also be run. they are located in
