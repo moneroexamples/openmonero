@@ -42,7 +42,7 @@ performance issues.
 ## Current development version
 
 All current changes, bug fixes and updates are done in the
-[branch](https://github.com/moneroexamples/openmonero/tree/use_blocks_range).
+[branch](https://github.com/moneroexamples/openmonero/tree/mymonero_v9).
 
 ## Screenshot
 
