@@ -82,23 +82,13 @@ class HostedMoneroAPIClient
                     spend_key__public,
                     spend_key__private,
                     monero_utils,
-                    function(err, returnValuesByKey)
+                    function(err, retVals)
                     {
                         if (err) {
                             fn(err)
                             return
                         }
-                        console.log("returnValuesByKey.per_kb_fee" , returnValuesByKey.per_kb_fee)
-                        const per_kb_fee__String = returnValuesByKey.per_kb_fee
-                        if (per_kb_fee__String == null || per_kb_fee__String == "" || typeof per_kb_fee__String === 'undefined') {
-                            throw "Unexpected / missing per_kb_fee"
-                        }
-                        fn(
-                            err, // no error
-                            returnValuesByKey.unspentOutputs,
-                            returnValuesByKey.unusedOuts,
-                            new JSBigInt(per_kb_fee__String)
-                        )
+                        fn(null, retVals.unspentOutputs, retVals.per_byte_fee__string)
                     }
                 )
             }).catch(function(err)
@@ -157,11 +147,8 @@ class HostedMoneroAPIClient
         {
             console.log("debug: info: random outs: data", data)
             const amount_outs = data.amount_outs
-            // yield
-            fn(
-                null, // no error
-                amount_outs
-            )
+            //
+            fn(null, amount_outs)
         }
         const requestHandle = 
         {
@@ -192,14 +179,6 @@ class HostedMoneroAPIClient
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                if (data.data.error)
-                {
-                    const errStr = "Invalid mixin - must be >= 0";
-                    const err = new Error(data.data.error);
-                    fn(err);
-                    return;
-                }
-
                 __proceedTo_parseAndCallBack(data.data)
             }
         ).catch(
@@ -310,7 +289,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 if (err) {
                     console.error("Err:", err)
                     $scope.status = "";
-                    $scope.error = "Error: " + (err.Error || err);
+                    $scope.error = "Something unexpected occurred when submitting your transaction: " + (err.Error || err);
                     $scope.submitting = false;
                     return
                 }
@@ -322,7 +301,8 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     amount: mockedTransaction.total_sent, // it's expecting a JSBigInt back so it can `| money`
                     payment_id: mockedTransaction.payment_id,
                     tx_id: mockedTransaction.hash,
-                    tx_fee: mockedTransaction.tx_fee
+                    tx_fee: mockedTransaction.tx_fee,
+                    tx_key: mockedTransaction.tx_key
                 };
                 $scope.success_page = true;
                 $scope.status = "";
@@ -339,7 +319,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 var domain = target.address.replace(/@/g, ".");
                 $http.post(config.apiUrl + "get_txt_records", {
                     domain: domain
-                }).success(function(data) {
+                }).then(function(data) {
                     var records = data.records;
                     var oaRecords = [];
                     console.log(domain + ": ", data.records);
@@ -370,13 +350,9 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         return;
                     }
                     console.log("OpenAlias record: ", oaRecords[0]);
-                    if (monero_utils.is_subaddress(oaAddress, config.nettype)) {
-                        fn("Sending to subaddresses is not yet supported.");
-                        return;
-                    }
                     var oaAddress = oaRecords[0].address;
                     try {
-                        cnUtil.decode_address(oaAddress);
+                        monero_utils.decode_address(oaAddress, config.nettype);
                         confirmOpenAliasAddress(
                             domain, 
                             oaAddress, 
@@ -398,20 +374,16 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         fn("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
                         return;
                     }
-                }).error(function(data) {
+                }).catch(function(data) {
                     fn("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
                     return
                 });
                 return
             }
-            if (monero_utils.is_subaddress(target.address, config.nettype)) {
-                fn("Sending to subaddresses is not yet supported.");
-                return;
-            }
-            // normal address:
+            // xmr address (incl subaddresses):
             try {
                 // verify that the address is valid
-                cnUtil.decode_address(target.address);
+                monero_utils.decode_address(target.address, config.nettype);
                 sendTo(target.address, amount, null /*domain*/);
             } catch (e) {
                 fn("Failed to decode address (#" + i + "): " + e);
@@ -420,89 +392,15 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             //
             function sendTo(target_address, amount, domain/*may be null*/)
             {
-                if (monero_utils.is_subaddress(target_address, config.nettype)) {
-                    fn("Sending to subaddresses is not yet supported.");
-                    return;
-                }
                 const mixin = 10; // mandatory fixed mixin for v8 Monero fork
-                //
-                // some callback trampoline function declarations…
-                // these are important for resetting self's state,
-                // which is done in ___aTrampolineForFnWasCalled below
-                function __trampolineFor_success(
-                    currencyReady_targetDescription_address,
-                    sentAmount,
-                    final__payment_id,
-                    tx_hash,
-                    tx_fee,
-                    tx_key,
-                    mixin
-                ) {
-                    ___aTrampolineForFnWasCalled()
-                    //
-                    let total_sent__JSBigInt = sentAmount.add(tx_fee)
-                    let total_sent__atomicUnitString = total_sent__JSBigInt.toString()
-                    let total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
-                    let total_sent__float = parseFloat(total_sent__floatString)
-                    //
-                    const mockedTransaction = 
-                    {
-                        hash: tx_hash,
-                        mixin: "" + mixin,
-                        coinbase: false,
-                        mempool: true, // is that correct?
-                        //
-                        isJustSentTransaction: true, // this is set back to false once the server reports the tx's existence
-                        timestamp: new Date(), // faking
-                        //
-                        unlock_time: 0,
-                        //
-                        // height: null, // mocking the initial value -not- to exist (rather than to erroneously be 0) so that isconfirmed -> false
-                        //
-                        total_sent: new JSBigInt(total_sent__atomicUnitString),
-                        total_received: new JSBigInt("0"),
-                        //
-                        approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
-                        // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
-                        //
-                        payment_id: final__payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
-                        //
-                        // info we can only preserve locally
-                        tx_fee: tx_fee,
-                        tx_key: tx_key,
-                        target_address: target_address, // only we here are saying it's the target
-                    };
-                    fn(null, mockedTransaction, domain)
-                }
-                function __trampolineFor_err_withErr(err)
-                {
-                    ___aTrampolineForFnWasCalled()
-                    fn(err)
-                }
-                function __trampolineFor_canceled_fn()
-                {
-                    ___aTrampolineForFnWasCalled()
-                    canceled_fn()
-                }
-                function __trampolineFor_err_withStr(errStr)
-                {
-                    __trampolineFor_err_withErr(new Error(errStr))
-                }
-                function ___aTrampolineForFnWasCalled()
-                { // private - no need to call this yourself unless you're writing a trampoline function
-                }
                 let statusUpdate_messageBase = sweeping ? `Sending wallet balance…` : `Sending ${amount} XMR…`
-                function preSuccess_nonTerminal_statusUpdate_fn(str, code)
+                function _configureWith_statusUpdate(str, code)
                 {
                     console.log("Step:", str)
                     $scope.status = str
                 }
                 //
-                preSuccess_nonTerminal_statusUpdate_fn(statusUpdate_messageBase);
-                //
-                const hostedMoneroAPIClient = new HostedMoneroAPIClient({
-                    $http: $http
-                })
+                _configureWith_statusUpdate(statusUpdate_messageBase);
                 //
                 const monero_sendingFunds_utils = mymonero_core_js.monero_sendingFunds_utils
                 monero_sendingFunds_utils.SendFunds(
@@ -513,18 +411,60 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     AccountService.getAddress(),
                     AccountService.getSecretKeys(),
                     AccountService.getPublicKeys(),
-                    hostedMoneroAPIClient,
+                    new HostedMoneroAPIClient({ $http: $http }),
                     payment_id, // passed in
                     1, /* priority */
-                    function(code) { // -> preSuccess_nonTerminal_statusUpdate_fn
+                    function(code) 
+                    {
                         let suffix = monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[code]
-                        preSuccess_nonTerminal_statusUpdate_fn(
-                            statusUpdate_messageBase + " " + suffix, // TODO: localize concatenation
+                        _configureWith_statusUpdate(
+                            statusUpdate_messageBase + " " + suffix, // TODO: localize this concatenation
                             code
                         )
                     },
-                    __trampolineFor_success,
-                    __trampolineFor_err_withErr
+                    function(
+                        currencyReady_targetDescription_address,
+                        sentAmount, final__payment_id,
+                        tx_hash, tx_fee, tx_key, mixin
+                    ) {
+                        let total_sent__JSBigInt = sentAmount.add(tx_fee)
+                        let total_sent__atomicUnitString = total_sent__JSBigInt.toString()
+                        let total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
+                        let total_sent__float = parseFloat(total_sent__floatString)
+                        //
+                        const mockedTransaction = 
+                        {
+                            hash: tx_hash,
+                            mixin: "" + mixin,
+                            coinbase: false,
+                            mempool: true, // is that correct?
+                            //
+                            isJustSentTransaction: true, // this is set back to false once the server reports the tx's existence
+                            timestamp: new Date(), // faking
+                            //
+                            unlock_time: 0,
+                            //
+                            // height: null, // mocking the initial value -not- to exist (rather than to erroneously be 0) so that isconfirmed -> false
+                            //
+                            total_sent: new JSBigInt(total_sent__atomicUnitString),
+                            total_received: new JSBigInt("0"),
+                            //
+                            approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
+                            // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
+                            //
+                            payment_id: final__payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
+                            //
+                            // info we can only preserve locally
+                            tx_fee: tx_fee,
+                            tx_key: tx_key,
+                            target_address: target_address, // only we here are saying it's the target
+                        };
+                        fn(null, mockedTransaction, domain)
+                    },
+                    function(err)
+                    { // failed-fn 
+                        fn(err)
+                    }
                 )
             }
         })
@@ -552,4 +492,3 @@ function parseOpenAliasRecord(record) {
     parsed.description = parse_param('tx_description');
     return parsed;
 }
-

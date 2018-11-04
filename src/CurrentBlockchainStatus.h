@@ -144,8 +144,8 @@ public:
     virtual uint64_t
     get_dynamic_per_kb_fee_estimate() const;
 
-//    virtual uint64_t
-//    get_dynamic_base_fee_estimate() const;
+    virtual uint64_t
+    get_dynamic_base_fee_estimate() const;
 
     virtual bool
     commit_tx(const string& tx_blob, string& error_msg,
