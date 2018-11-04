@@ -179,6 +179,13 @@ class HostedMoneroAPIClient
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
+                if (data.data.error)
+                {
+                    const errStr = "Invalid mixin - must be >= 0";
+                    const err = new Error(data.data.error);
+                    fn(err);
+                    return;
+                }
                 __proceedTo_parseAndCallBack(data.data)
             }
         ).catch(
