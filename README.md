@@ -154,6 +154,8 @@ docker run --name myadmin -d --link ommariadb:db -p 8080:80 phpmyadmin/phpmyadmi
 
 where `ommariadb` is the name of docker container with mariadb, set in previous step.
 
+With this, phpmyadmin should be avaliable at http://127.0.0.1:8080.
+
 
 #### Nginx (using docker)
 
