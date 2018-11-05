@@ -161,6 +161,15 @@ frontend files are stored. All these can be changed to suit your requirements.
 Go to localhost (http://127.0.0.1) and check if frontend is working.
 
 
+A quick alternative is to run python 3 http server:
+
+```
+cd ~/openmonero/html
+python3 -m http.server
+```
+
+and check http://127.0.0.1:8000.
+
 #### Run OpenMonero
 
 Command line options
