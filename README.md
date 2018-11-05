@@ -144,35 +144,19 @@ Assuming we are still in `build` folder:
 mysql -p -u root < ../sql/openmonero.sql
 ```
 
-#### Lighttpd and frontend
+#### Nginx
 
-```bash
-sudo apt-get install lighttpd
+The fastest way to start up and server the frontend is through
+using [nginx docker image](https://hub.docker.com/_/nginx/)
+(assuming that you have docker setup and running).
+
 ```
-Assuming you are still in `build` folder, copy frontend source files into lighttpd www folder.
-
-```bash
-sudo mkdir /var/www/html/openmonero
-sudo cp -rvf ../html/* /var/www/html/openmonero/
+docker run --name omhtml -p 80:80 -v /home/mwo/openmonero/html:/usr/share/nginx/html:ro -d nginx
 ```
 
-Setup document root in `lighttpd.conf` into openmonero folder
-
-```bash
-sudo vim /etc/lighttpd/lighttpd.conf
-```
-
-and change `server.document-root` into:
-
-```bash
-server.document-root    = "/var/www/html/openmonero"
-```
-
-Restart lighttpd to see the change:
-
-```bash
-sudo systemctl restart lighttpd
-```
+where `omhtml` is docker container name, `80:80` will expose the frontend
+on port 80 of the localhost, and `/home/mwo/openmonero/html` is the location on your host computer where the
+frontend files are stored. All these can be changed to suit your requirements.
 
 Go to localhost (http://127.0.0.1) and check if frontend is working.
 
