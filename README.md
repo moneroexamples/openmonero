@@ -126,29 +126,39 @@ cmake ..
 make
 ```
 
-#### Mysql/Mariadb
+#### MariaDB/MySQL (using docker)
 
-```bash
-sudo apt install mysql-server
-sudo mysql_secure_installation
+The easiest way to setup MariaDB is through [docker](https://hub.docker.com/_/mariadb/) (assuming that you have docker setup and running)
+
+Create mariadb container called `ommariadb` and root password of `root` (change these  how you want).
+
+```
+docker run --name ommariadb -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mariadb
 ```
 
-Download `openmonero.sql` provided and setup the `openmonero` database. `openmonero.sql` script will
-drop current `openmonero` if exist. So don't run it, if you have already some important information
-in the `openmonero` database.
+Create openmonero database called `openmonero`.
 
-Assuming we are still in `build` folder:
-
-```bash
-# apply it to mysql
-mysql -p -u root < ../sql/openmonero.sql
+```
+cd openmonero/sql
+docker exec -i ommariadb mysql -uroot -proot < openmonero.sql
 ```
 
-#### Nginx
+#### PhpMyAdmin (using docker)
+A good way to manage/view the openmonero database is through the
+[PhpMyAdmin in docker](https://hub.docker.com/r/phpmyadmin/phpmyadmin/). Using docker,
+this can be done:
+
+```
+docker run --name myadmin -d --link ommariadb:db -p 8080:80 phpmyadmin/phpmyadmin
+```
+
+where `ommariadb` is the name of docker container with mariadb, set in previous step.
+
+
+#### Nginx (using docker)
 
 The fastest way to start up and server the frontend is through
-using [nginx docker image](https://hub.docker.com/_/nginx/)
-(assuming that you have docker setup and running).
+[nginx docker image](https://hub.docker.com/_/nginx/).
 
 ```
 docker run --name omhtml -p 80:80 -v /home/mwo/openmonero/html:/usr/share/nginx/html:ro -d nginx
@@ -159,16 +169,6 @@ on port 80 of the localhost, and `/home/mwo/openmonero/html` is the location on 
 frontend files are stored. All these can be changed to suit your requirements.
 
 Go to localhost (http://127.0.0.1) and check if frontend is working.
-
-
-A quick alternative is to run python 3 http server:
-
-```
-cd ~/openmonero/html
-python3 -m http.server
-```
-
-and check http://127.0.0.1:8000.
 
 #### Run OpenMonero
 
