@@ -36,17 +36,27 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
 
 include(MyUtils)
 
-include(CodeCoverage)
-APPEND_COVERAGE_COMPILER_FLAGS()
-set(COVERAGE_EXCLUDES
-        '${CMAKE_SOURCE_DIR}/ext/*'
-        'asio/*'
-        '${MONERO_SOURCE_DIR}/*'
-        '${CMAKE_SOURCE_DIR}/tests/*')
+
+if (${BUILD_TEST})
+    include(CodeCoverage)
+    APPEND_COVERAGE_COMPILER_FLAGS()
+    set(COVERAGE_EXCLUDES
+            '${CMAKE_SOURCE_DIR}/ext/*'
+            'asio/*'
+            '${MONERO_SOURCE_DIR}/*'
+            '${CMAKE_SOURCE_DIR}/tests/*')
+endif()
 
 find_package(Monero)
 
-include_directories(/usr/include/mysql)
+find_package(MYSQL)
+
+if (NOT MYSQL_INCLUDE_DIR)
+    message(SEND_ERROR "MySQL libraries not found! Please install mysql++/mysqlpp libraries")
+    return()
+endif()
+
+include_directories(${MYSQL_INCLUDE_DIR})
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
