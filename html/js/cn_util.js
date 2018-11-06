@@ -40,6 +40,7 @@ var cnUtil = (function(initConfig) {
     var ENCRYPTED_PAYMENT_ID_TAIL = 141;
     var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
     var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
+    var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subAddressPrefix;
 
 
     if (config.nettype === 1 /*testnet*/) {
