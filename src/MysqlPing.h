@@ -20,7 +20,7 @@ public:
 
     enum class StopReason {NotYetStopped, PingFailed, PointerExpired};
 
-    MysqlPing(std::shared_ptr<MySqlConnector> _conn, uint64_t _ping_time = 600);
+    MysqlPing(std::shared_ptr<MySqlConnector> _conn, uint64_t _ping_time = 300);
 
     void operator()();
     void stop() {keep_looping = false;}

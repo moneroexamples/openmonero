@@ -47,6 +47,8 @@ public:
 
     uint64_t search_thread_life_in_seconds;
 
+    uint64_t mysql_ping_every_seconds;
+
     string   import_payment_address_str;
     string   import_payment_viewkey_str;
 
