@@ -98,6 +98,12 @@ public:
         return core_storage.get_db().get_blocks_range(h1, h2);
     }
 
+    virtual uint64_t
+    get_tx_unlock_time(crypto::hash const& tx_hash) const
+    {
+        return core_storage.get_db().get_tx_unlock_time(tx_hash);
+    }
+
     virtual bool
     have_tx(crypto::hash const& tx_hash) const
     {

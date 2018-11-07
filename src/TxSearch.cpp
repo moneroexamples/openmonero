@@ -129,7 +129,7 @@ TxSearch::operator()()
                                                       txs_in_blocks,
                                                       txs_data))
             {
-                OMERROR << "Cant get tx in blocks from " << h1 << " to " << h2;;
+                OMERROR << "Cant get tx in blocks from " << h1 << " to " << h2;
                 return;
             }
 
@@ -175,10 +175,16 @@ TxSearch::operator()()
                 // flag indicating whether the txs in the given block are spendable.
                 // this is true when block number is more than 10 blocks from current
                 // blockchain height.
+                // if tx.unlock_time is not given (its value is 0), we set it
+                // here. For coinbase its always given, so no need to check for that
+
+                uint64_t tx_unlock_time = tx.unlock_time;
+
+                if (tx_unlock_time == 0)
+                    tx_unlock_time = blk_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
 
                 bool is_spendable = current_bc_status->is_tx_unlocked(
-                        tx.unlock_time, blk_height);
-
+                        tx_unlock_time, blk_height);
 
                 // this is id of txs in lmdb blockchain table.
                 // it will be used mostly to sort txs in the frontend.
@@ -262,7 +268,7 @@ TxSearch::operator()()
                                                  // for regular tx, the unlock time is
                                                  // default of 10 blocks.
                                                  // for coinbase tx it is 60 blocks
-                    tx_data.unlock_time      = tx.unlock_time;
+                    tx_data.unlock_time      = tx_unlock_time;
 
                     tx_data.height           = blk_height;
                     tx_data.coinbase         = oi_identification.tx_is_coinbase;
@@ -473,7 +479,7 @@ TxSearch::operator()()
                                                           //spending,
                                                           //total_recieved is 0
                             tx_data.total_sent       = total_sent;
-                            tx_data.unlock_time      = tx.unlock_time;
+                            tx_data.unlock_time      = tx_unlock_time;
                             tx_data.height           = blk_height;
                             tx_data.coinbase         = oi_identification
                                     .tx_is_coinbase;

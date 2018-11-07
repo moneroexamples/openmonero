@@ -147,6 +147,9 @@ public:
     virtual uint64_t
     get_dynamic_base_fee_estimate() const;
 
+    virtual uint64_t
+    get_tx_unlock_time(crypto::hash const& tx_hash) const;
+
     virtual bool
     commit_tx(const string& tx_blob, string& error_msg,
               bool do_not_relay = false);

@@ -358,6 +358,12 @@ CurrentBlockchainStatus::get_dynamic_base_fee_estimate() const
                 FEE_ESTIMATE_GRACE_BLOCKS);
 }
 
+uint64_t
+CurrentBlockchainStatus::get_tx_unlock_time(
+        crypto::hash const& tx_hash) const
+{
+    return mcore->get_tx_unlock_time(tx_hash);
+}
 
 bool
 CurrentBlockchainStatus::commit_tx(
