@@ -362,11 +362,20 @@ YourMoneroRequests::get_address_txs(
                 j_response["transactions"].push_back(j_tx);
             }
 
+            // we account for mempool txs when providing final
+            // unlocked and locked balances.
+
             j_response["total_received"]
                     = std::to_string(
                         boost::lexical_cast<uint64_t>(
                             j_response["total_received"].get<string>())
-                                           + total_received_mempool);
+                                           + total_received_mempool - total_sent_mempool);
+
+            j_response["total_received_unlocked"]
+                    = std::to_string(
+                        boost::lexical_cast<uint64_t>(
+                            j_response["total_received_unlocked"].get<string>())
+                                          + total_received_mempool - total_sent_mempool);
         }
 
     }
