@@ -1498,6 +1498,7 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
     xmreg::BlockchainSetup bs = bcs->get_bc_setup();
     bs.refresh_block_status_every_seconds = 1;
     bcs->set_bc_setup(bs);
+    bcs->is_running = false;
 
     auto thread_function = std::bind(
                 &xmreg::CurrentBlockchainStatus::monitor_blockchain,
@@ -1516,7 +1517,8 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
 
     while(bcs->is_running)
     {
-        cout << "Waiting for blockchain_monitoring_thread to stop\n";
+        cout << "Waiting for blockchain_monitoring_thread to stop"
+             << endl;
         std::this_thread::sleep_for(1s);
     }
 
