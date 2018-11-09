@@ -28,16 +28,16 @@
           <div class="w-col w-col-3 responsive-column">
             <div class="transaction-head">Date Received</div>
           </div>
-          <div class="w-col w-col-1 responsive-column">
-            <div class="transaction-head">Ring Size</div>
-          </div>
-          <div class="w-col w-col-6 responsive-column">
+          <div class="w-col w-col-7 responsive-column">
             <div class="transaction-head">Transaction ID/Hash</div>
           </div>
         </div>
       </div>
       <div class="received-div" ng-repeat="tx in transactions | orderBy:predicate:reverse | startFrom:pageNum*pageSize | limitTo:pageSize">
           <transaction></transaction>
+      </div>
+      <div class="w-form-fail error-backing" style="display: block;" ng-show="!!error">
+          <p>{{error}}</p>
       </div>
       <a class="table-btn left pointer" ng-click="navigatePage(1)">&lt;&lt; Previous 20</a>
       <a class="table-btn right pointer" ng-click="navigatePage(-1)">Next 20 &gt;&gt;</a>

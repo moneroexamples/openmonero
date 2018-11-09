@@ -70,10 +70,6 @@ inline bool
 is_separator(char c);
 
 string
-print_address(const address_parse_info& address,
-              bool testnet = false);
-
-string
 print_sig (const signature& sig);
 
 string
@@ -102,6 +98,10 @@ generate_key_image(const crypto::key_derivation& derivation,
 
 bool
 get_blockchain_path(bf::path& blockchain_path,
+                    network_type nettype = network_type::MAINNET);
+
+bool
+get_blockchain_path(string& blockchain_path,
                     network_type nettype = network_type::MAINNET);
 
 array<uint64_t, 4>
@@ -215,13 +215,6 @@ is_output_ours(const size_t& output_index,
                const secret_key& private_view_key,
                const public_key& public_spend_key);
 
-bool
-get_real_output_for_key_image(const key_image& ki,
-                              const transaction& tx,
-                              const secret_key& private_view_key,
-                              const public_key& public_spend_key,
-                              uint64_t output_idx,
-                              public_key output_pub_key);
 
 // based on http://stackoverflow.com/a/9943098/248823
 template<typename Iterator, typename Func>
@@ -264,6 +257,53 @@ get_human_readable_timestamp(uint64_t ts);
 string
 make_hash(const string& in_str);
 
+bool
+hex_to_tx(string const& tx_hex, transaction& tx,
+          crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash);
+
+string
+tx_to_hex(transaction const& tx);
+
+
+bool
+hex_to_tx_blob(string const& tx_hex, string& tx_blob);
+
+bool
+hex_to_complete_block(string const& cblk_str,
+                      block_complete_entry& cblk);
+
+bool
+hex_to_complete_block(vector<string> const& cblks_str,
+                      vector<block_complete_entry> & cblks);
+
+bool
+blocks_and_txs_from_complete_blocks(
+        vector<block_complete_entry> const& cblks,
+        vector<block>& blocks,
+        vector<transaction>& txs);
+
+bool
+addr_and_viewkey_from_string(string const& addres_str,
+                             string const& viewkey_str,
+                             network_type net_type,
+                             address_parse_info& address_info,
+                             crypto::secret_key& viewkey);
+
+// this function only useful in google test for mocking
+// ring member output info
+bool
+output_data_from_hex(
+        string const& out_data_hex,
+        std::map<vector<uint64_t>,
+                 vector<cryptonote::output_data_t>>& outputs_data_map);
+
+// this function only useful in google test for mocking
+// known outputs and their amounts
+bool
+populate_known_outputs_from_csv(
+        string const& csv_file,
+        std::unordered_map<public_key, uint64_t>& known_outputs,
+        bool skip_first_line = true);
 }
 
 #endif //XMREG01_TOOLS_H

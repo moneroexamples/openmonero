@@ -1,4 +1,4 @@
-# Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
 
 if( NOT WIN32 )
     string( ASCII 27 Esc )
@@ -14,11 +14,11 @@ if ( BUILD_SHARED )
     set( BUILD_SHARED_LIBS ON )
 endif ( )
 
-set( INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ext/restbed/source/" )
+set( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/source" )
 set( SOURCE_DIR "${INCLUDE_DIR}/corvusoft/${PROJECT_NAME}" )
 
 if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-    set( CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/distribution" CACHE PATH "Install path prefix" FORCE )
+    set( CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/distribution" CACHE PATH "Install path prefix" FORCE )
 endif ( )
 
 if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL GNU )
@@ -44,10 +44,10 @@ endif ( )
 
 if( NOT WIN32 )
     if ( CMAKE_BUILD_TYPE MATCHES Debug )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g -O0 -Wall -Wextra -Weffc++ -pedantic -Wno-unknown-pragmas" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O0 -Wall -Wextra -Weffc++ -pedantic -Wno-unknown-pragmas" )
     else ( )
         string( REPLACE "-O3" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O2 -Wall -Wextra -Weffc++ -pedantic -Wno-unknown-pragmas" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra -Weffc++ -pedantic -Wno-unknown-pragmas" )
     endif ( )
 endif ( )
 

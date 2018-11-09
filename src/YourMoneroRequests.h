@@ -63,11 +63,12 @@ class YourMoneroRequests
 
     // this manages all mysql queries
    shared_ptr<MySqlAccounts> xmr_accounts;
-
+   shared_ptr<CurrentBlockchainStatus> current_bc_status;
 
 public:
 
-    YourMoneroRequests(shared_ptr<MySqlAccounts> _acc);
+    YourMoneroRequests(shared_ptr<MySqlAccounts> _acc,
+                       shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     /**
      * A login request handler.

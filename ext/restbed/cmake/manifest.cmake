@@ -1,4 +1,4 @@
-# Copyright 2013-2016, Corvusoft Ltd, All Rights Reserved.
+# Copyright 2013-2017, Corvusoft Ltd, All Rights Reserved.
 
 set( MANIFEST
     ${SOURCE_DIR}/uri.cpp
@@ -22,4 +22,3 @@ set( MANIFEST
     ${SOURCE_DIR}/detail/web_socket_impl.cpp
     ${SOURCE_DIR}/detail/web_socket_manager_impl.cpp
 )
-

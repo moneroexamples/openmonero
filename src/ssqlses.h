@@ -30,8 +30,8 @@ public:
     friend std::ostream& operator<< (std::ostream& stream, const Table& data);
 };
 
-sql_create_8(Accounts, 1, 2,
-             sql_bigint_unsigned, id,
+sql_create_8(Accounts, 1, 6,
+             sql_bigint_unsigned_null, id,
              sql_varchar        , address,
              sql_char           , viewkey_hash,
              sql_bigint_unsigned, scanned_block_height,
@@ -43,12 +43,18 @@ sql_create_8(Accounts, 1, 2,
 
 struct XmrAccount : public Accounts, Table
 {
-
     static constexpr const char* SELECT_STMT = R"(
+        SELECT * FROM `Accounts` WHERE `id` = (%0q)
+    )";
+
+
+    static constexpr const char* SELECT_STMT2 = R"(
         SELECT * FROM `Accounts` WHERE `address` = (%0q)
     )";
 
-    static constexpr const char* SELECT_STMT2 = R"(
+    // SELECT_STMT3 same as SELECT_STMT which is fine
+    // easier to work with templates later
+    static constexpr const char* SELECT_STMT3 = R"(
         SELECT * FROM `Accounts` WHERE `id` = (%0q)
     )";
 
@@ -72,24 +78,24 @@ struct XmrAccount : public Accounts, Table
 
 };
 
-sql_create_17(Transactions, 1, 2,
-              sql_bigint_unsigned, id,
-              sql_varchar        , hash,
-              sql_varchar        , prefix_hash,
-              sql_varchar        , tx_pub_key,
-              sql_bigint_unsigned, account_id,
-              sql_bigint_unsigned, blockchain_tx_id,
-              sql_bigint_unsigned, total_received,
-              sql_bigint_unsigned, total_sent,
-              sql_bigint_unsigned, unlock_time,
-              sql_bigint_unsigned, height,
-              sql_bool           , coinbase,
-              sql_bool           , is_rct,
-              sql_int            , rct_type,
-              sql_bool           , spendable,
-              sql_varchar        , payment_id,
-              sql_bigint_unsigned, mixin,
-              sql_timestamp      , timestamp);
+sql_create_17(Transactions, 1, 17,
+              sql_bigint_unsigned_null, id,
+              sql_varchar             , hash,
+              sql_varchar             , prefix_hash,
+              sql_varchar             , tx_pub_key,
+              sql_bigint_unsigned     , account_id,
+              sql_bigint_unsigned     , blockchain_tx_id,
+              sql_bigint_unsigned     , total_received,
+              sql_bigint_unsigned     , total_sent,
+              sql_bigint_unsigned     , unlock_time,
+              sql_bigint_unsigned     , height,
+              sql_bool                , coinbase,
+              sql_bool                , is_rct,
+              sql_int                 , rct_type,
+              sql_bool                , spendable,
+              sql_varchar             , payment_id,
+              sql_bigint_unsigned     , mixin,
+              sql_timestamp           , timestamp);
 
 
 struct XmrTransaction : public Transactions, Table
@@ -100,6 +106,11 @@ struct XmrTransaction : public Transactions, Table
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
+        SELECT * FROM `Transactions` WHERE `id` = (%0q)
+    )";
+
+    // same as SELECT_STMT2 for similicity later on
+    static constexpr const char* SELECT_STMT3 = R"(
         SELECT * FROM `Transactions` WHERE `id` = (%0q)
     )";
 
@@ -131,6 +142,11 @@ struct XmrTransaction : public Transactions, Table
                              WHERE `id` = %0q;
     )";
 
+    static constexpr const char* MARK_AS_NONSPENDABLE_STMT = R"(
+       UPDATE `Transactions` SET `spendable` = 0,  `timestamp` = CURRENT_TIMESTAMP
+                             WHERE `id` = %0q;
+    )";
+
     static constexpr const char* SUM_XMR_RECIEVED = R"(
         SELECT SUM(`total_received`) AS total_received
                FROM `Transactions`
@@ -153,10 +169,10 @@ struct XmrTransaction : public Transactions, Table
 
 };
 
-sql_create_13(Outputs, 1, 3,
-              sql_bigint_unsigned, id,
-              sql_bigint_unsigned, account_id,
-              sql_bigint_unsigned, tx_id,
+sql_create_13(Outputs, 1, 13,
+              sql_bigint_unsigned_null, id,               // this is null so that we can set it to mysqlpp:null when inserting rows
+              sql_bigint_unsigned, account_id,            // this way auto_increment of the id will take place and we can
+              sql_bigint_unsigned, tx_id,                 // use vector of outputs to write at once to mysql
               sql_varchar        , out_pub_key,
               sql_varchar        , rct_outpk,
               sql_varchar        , rct_mask,
@@ -176,7 +192,7 @@ struct XmrOutput : public Outputs, Table
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
-      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q) ORDER BY amount
+      SELECT * FROM `Outputs` WHERE `tx_id` = (%0q)
     )";
 
     static constexpr const char* SELECT_STMT3 = R"(
@@ -218,14 +234,14 @@ struct XmrOutput : public Outputs, Table
 };
 
 
-sql_create_7(Inputs, 1, 4,
-             sql_bigint_unsigned, id,
-             sql_bigint_unsigned, account_id,
-             sql_bigint_unsigned, tx_id,
-             sql_bigint_unsigned, output_id,
-             sql_varchar        , key_image,
-             sql_bigint_unsigned, amount,
-             sql_timestamp      , timestamp);
+sql_create_7(Inputs, 1, 7,
+             sql_bigint_unsigned_null, id,
+             sql_bigint_unsigned     , account_id,
+             sql_bigint_unsigned     , tx_id,
+             sql_bigint_unsigned     , output_id,
+             sql_varchar             , key_image,
+             sql_bigint_unsigned     , amount,
+             sql_timestamp           , timestamp);
 
 
 struct XmrInput : public Inputs, Table
@@ -240,6 +256,10 @@ struct XmrInput : public Inputs, Table
     )";
 
     static constexpr const char* SELECT_STMT3 = R"(
+      SELECT * FROM `Inputs` WHERE `id` = (%0q)
+    )";
+
+    static constexpr const char* SELECT_STMT4 = R"(
      SELECT * FROM `Inputs` WHERE `output_id` = (%0q)
     )";
 
@@ -258,35 +278,38 @@ struct XmrInput : public Inputs, Table
 
 };
 
-sql_create_9(Payments, 1, 2,
-             sql_bigint_unsigned, id,
-             sql_varchar        , address,
-             sql_varchar        , payment_id,
-             sql_varchar        , tx_hash,
-             sql_boolean        , request_fulfilled,
-             sql_varchar        , payment_address,
-             sql_bigint_unsigned, import_fee,
-             sql_timestamp      , created,
-             sql_timestamp      , modified);
+sql_create_9(Payments, 1, 7,
+             sql_bigint_unsigned_null, id,
+             sql_bigint_unsigned     , account_id,
+             sql_varchar             , payment_id,
+             sql_varchar             , tx_hash,
+             sql_boolean             , request_fulfilled,
+             sql_bigint_unsigned     , import_fee,
+             sql_varchar             , payment_address,
+             sql_timestamp           , created,
+             sql_timestamp           , modified);
 
 
 struct XmrPayment : public Payments, Table
 {
 
     static constexpr const char* SELECT_STMT = R"(
-      SELECT * FROM `Payments` WHERE `address` = (%0q)
+      SELECT * FROM `Payments` WHERE `account_id` = (%0q)
     )";
 
     static constexpr const char* SELECT_STMT2 = R"(
        SELECT * FROM `Payments` WHERE `payment_id` = (%0q)
     )";
 
+    static constexpr const char* SELECT_STMT3 = R"(
+      SELECT * FROM `Payments` WHERE `id` = (%0q)
+    )";
 
     static constexpr const char* INSERT_STMT = R"(
-       INSERT IGNORE INTO `Payments` (`address`, `payment_id`, `tx_hash`,
-                                 `request_fulfilled`, `payment_address`, `import_fee`)
-                    VALUES (%0q, %1q, %2q,
-                            %3q, %4q, %5q);
+       INSERT IGNORE INTO `Payments` (`account_id`, `payment_id`, `tx_hash`,
+                                 `request_fulfilled`, `import_fee`,
+                                 `payment_address`)
+                    VALUES (%0q, %1q, %2q, %3q, %4q, %5q);
     )";
 
 

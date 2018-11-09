@@ -5,8 +5,7 @@ set(PROJECT_NAME
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
@@ -15,6 +14,8 @@ endif()
 if (NOT MONERO_DIR)
     set(MONERO_DIR ~/monero)
 endif()
+
+option(BUILD_TEST "Build tests for the project" OFF)
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
@@ -35,9 +36,27 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
 
 include(MyUtils)
 
+
+if (${BUILD_TEST})
+    include(CodeCoverage)
+    APPEND_COVERAGE_COMPILER_FLAGS()
+    set(COVERAGE_EXCLUDES
+            '${CMAKE_SOURCE_DIR}/ext/*'
+            'asio/*'
+            '${MONERO_SOURCE_DIR}/*'
+            '${CMAKE_SOURCE_DIR}/tests/*')
+endif()
+
 find_package(Monero)
 
-include_directories(/usr/include/mysql)
+find_package(MYSQL)
+
+if (NOT MYSQL_INCLUDE_DIR)
+    message(SEND_ERROR "MySQL libraries not found! Please install mysql++/mysqlpp libraries")
+    return()
+endif()
+
+include_directories(${MYSQL_INCLUDE_DIR})
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
@@ -61,6 +80,7 @@ link_directories(
 create_git_version()
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_BINARY_DIR}/config)
+
 
 # find boost
 find_package(Boost COMPONENTS
@@ -94,8 +114,8 @@ set(LIBRARIES
         myext
         restbed
         wallet
-        blockchain_db
         cryptonote_core
+        blockchain_db       
         cryptonote_protocol
         cryptonote_basic
         daemonizer
@@ -113,19 +133,18 @@ set(LIBRARIES
         device
         epee
         checkpoints
-        version
-        pcsclite
+        version       
+        sodium
         ${Boost_LIBRARIES}
         pthread
         unbound
         curl
-        dl
         cncrypto
         ssl
         crypto)
 
 if(APPLE)
-    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework PCSC")
+    set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")
 else()
     set(LIBRARIES ${LIBRARIES} atomic)
 endif()
@@ -140,10 +159,27 @@ if (WIN32)
             wsock32
             ntdll
             ws2_32
-            Iphlpapi
-            )
+            Iphlpapi)
 else()
     set(LIBRARIES ${LIBRARIES} dl)
 endif()
 
+find_package(HIDAPI)
+set(LIBRARIES ${LIBRARIES} ${HIDAPI_LIBRARIES})
+
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
+
+if (${BUILD_TEST})
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include
+        ${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include)
+endif()
+
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/sql ${CMAKE_CURRENT_BINARY_DIR}/sql)
+
+if (${BUILD_TEST})
+    enable_testing()
+    add_subdirectory(ext/googletest)
+    add_subdirectory(tests)
+endif()

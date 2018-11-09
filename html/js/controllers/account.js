@@ -49,6 +49,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
     $scope.transactions = [];
     $scope.blockchain_height = 0;
+    $scope.error = "";
 
 
     // var private_view_key = AccountService.getViewKey();
@@ -122,6 +123,14 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
                     var data = response.data;
 
+                    if (data.status === "error")
+                    {
+                        $scope.error = "An error occured in fetchAddressInfo: "
+                                + data.reason;
+                        $scope.transactions = [];
+                        return;
+                    }
+
                     var promises = [];
 
                     var view_only = AccountService.isViewOnly();
@@ -180,6 +189,14 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                 .then(function(response) {
 
                     var data = response.data;
+
+                    if (data.status === "error")
+                    {
+                        $scope.error = "An error occured in fetchTransactions: "
+                                + data.reason;
+                        $scope.transactions = [];
+                        return;
+                    }
 
                     var scanned_block_timestamp = data.scanned_block_timestamp || 0;
 
@@ -264,7 +281,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                         }
 
                         transactions[i].approx_float_amount = parseFloat(cnUtil.formatMoney(transactions[i].amount));
-                        transactions[i].timestamp = new Date(transactions[i].timestamp * 1000);
+                        transactions[i].timestamp = new Date(transactions[i].timestamp);
                     }
 
                     transactions.sort(function(a, b)

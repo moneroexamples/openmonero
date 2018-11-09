@@ -1,6 +1,9 @@
+#include "src/om_log.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
 #include "src/YourMoneroRequests.h"
+#include "src/ThreadRAII.h"
+#include "src/MysqlPing.h"
 
 #include <iostream>
 #include <memory>
@@ -19,13 +22,38 @@ main(int ac, const char* av[])
 // get command line options
 xmreg::CmdLineOptions opts {ac, av};
 
-auto help_opt         = opts.get_option<bool>("help");
+auto help_opt = opts.get_option<bool>("help");
 
 // if help was chosen, display help text and finish
 if (*help_opt)
 {
     return EXIT_SUCCESS;
 }
+
+// setup monero logger
+mlog_configure(mlog_get_default_log_path(""), true);
+mlog_set_log("1");
+
+string log_file  = *(opts.get_option<string>("log-file"));
+
+// setup a logger for Open Monero
+
+el::Configurations defaultConf;
+
+defaultConf.setToDefault();
+
+if (!log_file.empty())
+{
+    // setup openmonero log file
+    defaultConf.setGlobally(el::ConfigurationType::Filename, log_file);
+    defaultConf.setGlobally(el::ConfigurationType::ToFile, "true");
+}
+
+defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
+
+el::Loggers::reconfigureLogger("openmonero", defaultConf);
+
+OMINFO << "OpenMonero is starting";
 
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
@@ -39,111 +67,28 @@ bool stagenet         = *stagenet_opt;
 bool do_not_relay     = *do_not_relay_opt;
 
 if (testnet && stagenet)
-{
-    cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+{   
+    OMERROR << "testnet and stagenet cannot be specified at the same time!";
     return EXIT_FAILURE;
 }
-
-// check if config-file provided exist
-if (!boost::filesystem::exists(*config_file_opt))
-{
-    cerr << "Config file " << *config_file_opt
-         << " does not exist" << endl;
-    return EXIT_FAILURE;
-}
-
-nlohmann::json config_json;
-
-try
-{
-    // try reading and parsing json config file provided
-    std::ifstream i(*config_file_opt);
-    i >> config_json;
-}
-catch (const std::exception& e)
-{
-    cerr << "Error reading confing file "
-         << *config_file_opt << ": "
-         << e.what() << endl;
-    return EXIT_FAILURE;
-}
-
-//cast port number in string to uint16
-uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // get the network type
 cryptonote::network_type nettype = testnet ?
   cryptonote::network_type::TESTNET : stagenet ?
   cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
-// set blockchain status monitoring thread parameters
-xmreg::CurrentBlockchainStatus::net_type
-        = nettype;
-xmreg::CurrentBlockchainStatus::do_not_relay
-        = do_not_relay;
-xmreg::CurrentBlockchainStatus::refresh_block_status_every_seconds
-        = config_json["refresh_block_status_every_seconds"];
-xmreg::CurrentBlockchainStatus::max_number_of_blocks_to_import
-        = config_json["max_number_of_blocks_to_import"];
-xmreg::CurrentBlockchainStatus::search_thread_life_in_seconds
-        = config_json["search_thread_life_in_seconds"];
-xmreg::CurrentBlockchainStatus::import_fee
-        = config_json["wallet_import"]["fee"];
+// create blockchainsetup instance and set its parameters
+// such as blockchain status monitoring thread parameters
+
+xmreg::BlockchainSetup bc_setup {nettype, do_not_relay, *config_file_opt};
+
+OMINFO << "Using blockchain path: " << bc_setup.blockchain_path;
+
+nlohmann::json config_json = bc_setup.get_config();
 
 
-string deamon_url;
-
-// get blockchain path
-// if confing.json paths are emtpy, defeault monero
-// paths are going to be used
-path blockchain_path;
-
-switch (nettype)
-{
-    case cryptonote::network_type::MAINNET:
-        blockchain_path = path(config_json["blockchain-path"]["mainnet"].get<string>());
-        deamon_url = config_json["daemon-url"]["mainnet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
-                = config_json["wallet_import"]["mainnet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
-                = config_json["wallet_import"]["mainnet"]["viewkey"];
-        break;
-    case cryptonote::network_type::TESTNET:
-        blockchain_path = path(config_json["blockchain-path"]["testnet"].get<string>());
-        deamon_url = config_json["daemon-url"]["testnet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
-                = config_json["wallet_import"]["testnet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
-                = config_json["wallet_import"]["testnet"]["viewkey"];
-        break;
-    case cryptonote::network_type::STAGENET:
-        blockchain_path = path(config_json["blockchain-path"]["stagenet"].get<string>());
-        deamon_url = config_json["daemon-url"]["stagenet"];
-        xmreg::CurrentBlockchainStatus::import_payment_address_str
-                = config_json["wallet_import"]["stagenet"]["address"];
-        xmreg::CurrentBlockchainStatus::import_payment_viewkey_str
-                = config_json["wallet_import"]["stagenet"]["viewkey"];
-        break;
-    default:
-        cerr << "Invalid netowork type provided: " << static_cast<int>(nettype) << "\n";
-        return EXIT_FAILURE;
-}
-
-
-if (!xmreg::get_blockchain_path(blockchain_path, nettype))
-{
-    cerr << "Error getting blockchain path.\n";
-    return EXIT_FAILURE;
-}
-
-// set remaining  blockchain status variables that depend on the network type
-xmreg::CurrentBlockchainStatus::blockchain_path
-        =  blockchain_path.string();
-xmreg::CurrentBlockchainStatus::deamon_url
-        = deamon_url;
-
-cout << "Blockchain path: " << blockchain_path.string() << endl;
-
+//cast port number in string to uint16
+uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
@@ -153,32 +98,25 @@ xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 
-// try connecting to the mysql
-shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
+// once we have all the parameters for the blockchain and our backend
+// we can create and instance of CurrentBlockchainStatus class.
+// we are going to do this through a shared pointer. This way we will
+// have only once instance of this class, which we can easly inject
+// and pass around other class which need to access blockchain data
 
-try
-{
-    // MySqlAccounts will try connecting to the mysql database
-    mysql_accounts = make_shared<xmreg::MySqlAccounts>();
-}
-catch(std::exception const& e)
-{
-    cerr << e.what() << '\n';
-    return EXIT_FAILURE;
-}
-
+auto current_bc_status
+        = make_shared<xmreg::CurrentBlockchainStatus>(
+            bc_setup,
+            std::make_unique<xmreg::MicroCore>(),
+            std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url));
 
 // since CurrentBlockchainStatus class monitors current status
-// of the blockchain (e.g., current height), its seems logical to
-// make static objects for accessing the blockchain in this class.
-// this way monero accessing blockchain variables (i.e. mcore and core_storage)
-// are not passed around like crazy everywhere. Uri( "file:///tmp/dh2048.pem"
-// There are here, and this is the only class that
-// has direct access to blockchain and talks (using rpc calls)
-// with the deamon.
-if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
+// of the blockchain (e.g., current height) .This is the only class
+// that has direct access to blockchain and talks (using rpc calls)
+// with the monero deamon.
+if (!current_bc_status->init_monero_blockchain())
 {
-    cerr << "Error accessing blockchain." << endl;
+    OMERROR << "Error accessing blockchain.";
     return EXIT_FAILURE;
 }
 
@@ -186,12 +124,61 @@ if (!xmreg::CurrentBlockchainStatus::init_monero_blockchain())
 // info, e.g., current height. Information from this thread is used
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
-xmreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+
+xmreg::ThreadRAII blockchain_monitoring_thread(
+            std::thread([current_bc_status]
+                        {current_bc_status->monitor_blockchain();}),
+            xmreg::ThreadRAII::DtorAction::join);
 
 
+OMINFO << "Blockchain monitoring thread started";
+
+// try connecting to the mysql
+shared_ptr<xmreg::MySqlAccounts> mysql_accounts;
+
+try
+{
+    // MySqlAccounts will try connecting to the mysql database
+    mysql_accounts = make_shared<xmreg::MySqlAccounts>(current_bc_status);
+
+    OMINFO << "Connected to the MySQL";
+}
+catch(std::exception const& e)
+{
+    OMERROR << e.what();
+    return EXIT_FAILURE;
+}
+
+// at this point we should be connected to the mysql
+
+// mysql connection will timeout after few hours
+// of iddle time. so we have this tiny helper
+// thread to ping mysql, thus keeping it alive.
+//
+// "A completely different way to tackle this,
+// if your program doesn’t block forever waiting on I/O while idle,
+// is to periodically call Connection::ping(). [12]
+// This sends the smallest possible amount of data to the database server,
+// which will reset its idle timer and cause it to respond, so ping() returns true.
+// If it returns false instead, you know you need to reconnect to the server.
+// Periodic pinging is easiest to do if your program uses asynchronous I/O,
+// threads, or some kind of event loop to ensure that you can call
+// something periodically even while the rest of the program has nothing to do."
+// from: https://tangentsoft.net/mysql++/doc/html/userman/tutorial.html#connopts
+//
+
+xmreg::MysqlPing mysql_ping {
+        mysql_accounts->get_connection(),
+        bc_setup.mysql_ping_every_seconds};
+
+xmreg::ThreadRAII mysql_ping_thread(
+        std::thread(std::ref(mysql_ping)),
+        xmreg::ThreadRAII::DtorAction::join);
+
+OMINFO << "MySQL ping thread started";
 
 // create REST JSON API services
-xmreg::YourMoneroRequests open_monero(mysql_accounts);
+xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);
@@ -220,7 +207,9 @@ service.publish(import_recent_wallet_request);
 service.publish(get_tx);
 service.publish(get_version);
 
-auto settings = make_shared<Settings>( );
+OMINFO << "JSON API endpoints published";
+
+auto settings = make_shared<Settings>();
 
 if (config_json["ssl"]["enable"])
 {
@@ -242,14 +231,14 @@ if (config_json["ssl"]["enable"])
 
     // can check using: curl -k -v -w'\n' -X POST 'https://127.0.0.1:1984/get_version'
 
-    cout << "Start the service at https://127.0.0.1:" << app_port << endl;
+    OMINFO << "Start the service at https://127.0.0.1:" << app_port;
 }
 else
 {
     settings->set_port(app_port);
-    settings->set_default_header( "Connection", "close" );
+    settings->set_default_header("Connection", "close");
 
-    cout << "Start the service at http://127.0.0.1:" << app_port  << endl;
+    OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }
 
 
