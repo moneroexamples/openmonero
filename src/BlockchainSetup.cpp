@@ -15,7 +15,6 @@ BlockchainSetup::BlockchainSetup(
           do_not_relay {_do_not_relay},
           config_path {_config_path}
 {
-
     config_json = read_config(config_path);
 
     _init();
@@ -169,6 +168,8 @@ BlockchainSetup::_init()
             = config_json["search_thread_life_in_seconds"];
     import_fee
             = config_json["wallet_import"]["fee"];
+    mysql_ping_every_seconds
+            = config_json["mysql_ping_every_seconds"];
 
     get_blockchain_path();
 

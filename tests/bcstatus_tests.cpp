@@ -611,10 +611,10 @@ TEST_P(BCSTATUS_TEST, GetOutput)
 
 TEST_P(BCSTATUS_TEST, GetDynamicPerKbFeeEstimate)
 {
-    EXPECT_CALL(*mcore_ptr, get_dynamic_per_kb_fee_estimate(_))
+    EXPECT_CALL(*mcore_ptr, get_dynamic_base_fee_estimate(_))
             .WillOnce(Return(3333));
 
-    EXPECT_EQ(bcs->get_dynamic_per_kb_fee_estimate(), 3333);
+    EXPECT_EQ(bcs->get_dynamic_per_kb_fee_estimate(), 3333 * 1024);
 }
 
 TEST_P(BCSTATUS_TEST, CommitTx)
@@ -1498,6 +1498,7 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
     xmreg::BlockchainSetup bs = bcs->get_bc_setup();
     bs.refresh_block_status_every_seconds = 1;
     bcs->set_bc_setup(bs);
+    bcs->is_running = false;
 
     auto thread_function = std::bind(
                 &xmreg::CurrentBlockchainStatus::monitor_blockchain,
@@ -1516,7 +1517,8 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
 
     while(bcs->is_running)
     {
-        cout << "Waiting for blockchain_monitoring_thread to stop\n";
+        cout << "Waiting for blockchain_monitoring_thread to stop"
+             << endl;
         std::this_thread::sleep_for(1s);
     }
 

@@ -257,7 +257,7 @@ YourMoneroRequests::get_address_txs(
                         {"payment_id"     , tx.payment_id},
                         {"unlock_time"    , tx.unlock_time},                  
                         {"total_sent"     , 0}, // to be field when checking for spent_outputs below
-                        {"total_received" , tx.total_received},
+                        {"total_received" , std::to_string(tx.total_received)},
                         {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
                         {"mempool"        , false} // tx in database are never from mempool
                 };
@@ -280,7 +280,7 @@ YourMoneroRequests::get_address_txs(
                             total_spent += input.amount;
 
                             j_spent_outputs.push_back({
-                              {"amount"     , input.amount},
+                              {"amount"     , std::to_string(input.amount)},
                               {"key_image"  , input.key_image},
                               {"tx_pub_key" , out.tx_pub_key},
                               {"out_index"  , out.out_index},
@@ -288,7 +288,7 @@ YourMoneroRequests::get_address_txs(
                         }
                     }
 
-                    j_tx["total_sent"] = total_spent;
+                    j_tx["total_sent"] = std::to_string(total_spent);
 
                     j_tx["spent_outputs"] = j_spent_outputs;
 
@@ -305,8 +305,8 @@ YourMoneroRequests::get_address_txs(
 
             } // for (XmrTransaction tx: txs)
 
-            j_response["total_received"]          = total_received;
-            j_response["total_received_unlocked"] = total_received_unlocked;
+            j_response["total_received"]          = std::to_string(total_received);
+            j_response["total_received_unlocked"] = std::to_string(total_received_unlocked);
 
             j_response["transactions"] = j_txs;
 
@@ -346,6 +346,7 @@ YourMoneroRequests::get_address_txs(
                 last_tx_id_db = j_response["transactions"].back()["id"];
             }
 
+
             for (json& j_tx: j_mempool_tx)
             {
                 //cout << "mempool j_tx[\"total_received\"]: "
@@ -353,15 +354,28 @@ YourMoneroRequests::get_address_txs(
 
                 j_tx["id"] = ++last_tx_id_db;
 
-                total_received_mempool += j_tx["total_received"].get<uint64_t>();
-                total_sent_mempool     += j_tx["total_sent"].get<uint64_t>();
+                total_received_mempool += boost::lexical_cast<uint64_t>(
+                            j_tx["total_received"].get<string>());
+                total_sent_mempool     += boost::lexical_cast<uint64_t>(
+                            j_tx["total_sent"].get<string>());
 
                 j_response["transactions"].push_back(j_tx);
             }
 
+            // we account for mempool txs when providing final
+            // unlocked and locked balances.
+
             j_response["total_received"]
-                    = j_response["total_received"].get<uint64_t>()
-                                           + total_received_mempool;
+                    = std::to_string(
+                        boost::lexical_cast<uint64_t>(
+                            j_response["total_received"].get<string>())
+                                           + total_received_mempool - total_sent_mempool);
+
+            j_response["total_received_unlocked"]
+                    = std::to_string(
+                        boost::lexical_cast<uint64_t>(
+                            j_response["total_received_unlocked"].get<string>())
+                                          + total_received_mempool - total_sent_mempool);
         }
 
     }
@@ -409,9 +423,9 @@ YourMoneroRequests::get_address_info(
     string viewkey_hash = make_hash(view_key);
 
     j_response = json {
-            {"locked_funds"           , 0},    // locked xmr (e.g., younger than 10 blocks)
-            {"total_received"         , 0},    // calculated in this function
-            {"total_sent"             , 0},    // calculated in this function
+            {"locked_funds"           , "0"},    // locked xmr (e.g., younger than 10 blocks)
+            {"total_received"         , "0"},    // calculated in this function
+            {"total_sent"             , "0"},    // calculated in this function
             {"scanned_height"         , 0},    // not used. it is here to match mymonero
             {"scanned_block_height"   , 0},    // taken from Accounts table
             {"scanned_block_timestamp", 0},    // taken from Accounts table
@@ -454,7 +468,7 @@ YourMoneroRequests::get_address_info(
             }
         }
 
-        j_response["total_received"]          = total_received;
+        j_response["total_received"]          = std::to_string(total_received);
         j_response["start_height"]            = acc.start_height;
         j_response["scanned_block_height"]    = acc.scanned_block_height;
         j_response["scanned_block_timestamp"]
@@ -493,7 +507,7 @@ YourMoneroRequests::get_address_info(
                             for (XmrInput& in: ins)
                             {
                                 j_spent_outputs.push_back({
-                                    {"amount"     , in.amount},
+                                    {"amount"     , std::to_string(in.amount)},
                                     {"key_image"  , in.key_image},
                                     {"tx_pub_key" , out.tx_pub_key},
                                     {"out_index"  , out.out_index},
@@ -513,8 +527,8 @@ YourMoneroRequests::get_address_info(
             } // for (XmrTransaction tx: txs)
 
 
-            j_response["total_received"] = total_received;
-            j_response["total_sent"]     = total_sent;
+            j_response["total_received"] = std::to_string(total_received);
+            j_response["total_sent"]     = std::to_string(total_sent);
 
             j_response["spent_outputs"]  = j_spent_outputs;
 
@@ -595,7 +609,7 @@ YourMoneroRequests::get_unspent_outs(
     string viewkey_hash = make_hash(view_key);
 
     j_response = json  {
-            {"amount" , 0},            // total value of the outputs
+            {"amount" , "0"},          // total value of the outputs
             {"outputs", json::array()} // list of outputs
                                        // exclude those without require
                                        // no of confirmation
@@ -671,7 +685,7 @@ YourMoneroRequests::get_unspent_outs(
 
                         string rct = out.get_rct();
 
-                        // coinbaser rct txs require speciall treatment
+                        // coinbase rct txs require speciall treatment
                         if (tx.coinbase && tx.is_rct)
                         {
                             uint64_t amount  = (tx.is_rct ? 0 : out.amount);
@@ -688,7 +702,7 @@ YourMoneroRequests::get_unspent_outs(
                         }
 
                         json j_out{
-                                {"amount"          , out.amount},
+                                {"amount"          , std::to_string(out.amount)},
                                 {"public_key"      , out.out_pub_key},
                                 {"index"           , out.out_index},
                                 {"global_index"    , out.global_index},
@@ -698,7 +712,7 @@ YourMoneroRequests::get_unspent_outs(
                                 {"tx_prefix_hash"  , tx.prefix_hash},
                                 {"tx_pub_key"      , tx.tx_pub_key},
                                 {"timestamp"       , static_cast<uint64_t>(
-                                            out.timestamp)},
+                                            out.timestamp*1e3)},
                                 {"height"          , tx.height},
                                 {"spend_key_images", json::array()}
                         };
@@ -728,15 +742,15 @@ YourMoneroRequests::get_unspent_outs(
 
         } //  if (xmr_accounts->select_txs(acc.id, txs))
 
-        j_response["amount"] = total_outputs_amount;
+        j_response["amount"] = std::to_string(total_outputs_amount);
 
 
         // need proper per_kb_fee estimate as
         // it is already using dynanamic fees. frontend
         // uses old fixed fees.
 
-        j_response["per_kb_fee"] = current_bc_status
-                ->get_dynamic_per_kb_fee_estimate();
+        j_response["per_byte_fee"] = current_bc_status
+                                            ->get_dynamic_base_fee_estimate();
 
 
     } // if (current_bc_status->search_thread_exist(xmr_address))
@@ -806,6 +820,8 @@ YourMoneroRequests::get_random_outs(
         {
             amounts.push_back(boost::lexical_cast<uint64_t>(
                                   amount.get<string>()));
+
+            //            amounts.push_back(0);
         }
     }
     catch (boost::bad_lexical_cast& e)
@@ -823,7 +839,7 @@ YourMoneroRequests::get_random_outs(
 
         for (const auto& outs: found_outputs)
         {
-            json j_outs {{"amount", outs.amount},
+            json j_outs {{"amount", std::to_string(outs.amount)},
                          {"outputs", json::array()}};
 
 
@@ -903,6 +919,9 @@ YourMoneroRequests::submit_raw_tx(
     {
         j_response["status"] = "error";
         j_response["error"]  = "Tx faild parse_hexstr_to_binbuff";
+
+        OMERROR << j_response["error"];
+
         session_close(session, j_response.dump());
         return;
     }
@@ -913,6 +932,9 @@ YourMoneroRequests::submit_raw_tx(
     {
         j_response["status"] = "error";
         j_response["error"]  = "Tx faild parse_and_validate_tx_from_blob";
+
+        OMERROR << j_response["error"];
+
         session_close(session, j_response.dump());
         return;
     }
@@ -924,6 +946,9 @@ YourMoneroRequests::submit_raw_tx(
                                "in the mempool. "
                                "Please wait till your previous tx(s) "
                                "get mined";
+
+        OMERROR << j_response["error"];
+
         session_close(session, j_response.dump());
         return;
     }
@@ -934,6 +959,9 @@ YourMoneroRequests::submit_raw_tx(
     {
         j_response["status"] = "error";
         j_response["error"]  = error_msg;
+
+        OMERROR << j_response["error"];
+
         session_close(session, j_response.dump());
         return;
     }
@@ -960,8 +988,9 @@ YourMoneroRequests::import_wallet_request(
     json j_response;
 
     j_response["request_fulfilled"] = false;
-    j_response["import_fee"]        = current_bc_status->get_bc_setup()
-                                                .import_fee;
+    j_response["import_fee"]        = std::to_string(
+                                            current_bc_status->get_bc_setup()
+                                                .import_fee);
     j_response["status"] = "error";
     j_response["error"]  = "Some error occured";
 
@@ -987,7 +1016,7 @@ YourMoneroRequests::import_wallet_request(
 
         auto response_headers
                 = make_headers({{ "Content-Length",
-                                         to_string(response_body.size())}});
+                                         std::to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
 
@@ -1004,7 +1033,7 @@ YourMoneroRequests::import_wallet_request(
         string response_body = j_response.dump();
         auto response_headers
                 = make_headers({{ "Content-Length",
-                                     to_string(response_body.size())}});
+                                     std::to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
         return;
@@ -1045,7 +1074,7 @@ YourMoneroRequests::import_wallet_request(
                         xmr_payment.payment_id);
 
         j_response["payment_id"]        = xmr_payment.payment_id;
-        j_response["import_fee"]        = xmr_payment.import_fee;
+        j_response["import_fee"]        = std::to_string(xmr_payment.import_fee);
         j_response["new_request"]       = false;
         j_response["request_fulfilled"] = request_fulfilled;
         j_response["payment_address"]   = integrated_address;
@@ -1109,7 +1138,7 @@ YourMoneroRequests::import_wallet_request(
                     else
                     {
                         cerr << "Updating accounts due to made "
-                                "payment mysql failed! " << endl;
+                                "payment mysql failed! \n";
                         j_response["error"]
                                 = "Updating accounts due to made "
                                   "payment mysql failed!";
@@ -1117,7 +1146,7 @@ YourMoneroRequests::import_wallet_request(
                 }
                 else
                 {
-                    cerr << "Updating payment mysql failed! " << endl;
+                    cerr << "Updating payment mysql failed!\n";
                     j_response["error"] = "Updating payment mysql failed!";
                 }
 
@@ -1167,10 +1196,11 @@ YourMoneroRequests::import_wallet_request(
             // payment entry created
 
             j_response["payment_id"]        = payment_table_id;
-            j_response["import_fee"]        = xmr_payment.import_fee;
+            j_response["import_fee"]        = std::to_string(
+                                                xmr_payment.import_fee);
             j_response["new_request"]       = true;
             j_response["request_fulfilled"]
-                    = bool {xmr_payment.request_fulfilled};
+                                         = bool {xmr_payment.request_fulfilled};
             j_response["payment_address"]   = xmr_payment.payment_address;
             j_response["status"]            = "Payment not yet received";
             j_response["error"]             = "";
@@ -1180,7 +1210,7 @@ YourMoneroRequests::import_wallet_request(
     string response_body = j_response.dump();
 
     auto response_headers = make_headers({{ "Content-Length",
-                                            to_string(response_body.size())}});
+                                            std::to_string(response_body.size())}});
 
     session->close( OK, response_body, response_headers);
 }
@@ -1310,7 +1340,7 @@ YourMoneroRequests::import_recent_wallet_request(
     string response_body = j_response.dump();
 
     auto response_headers = make_headers({{ "Content-Length",
-                                            to_string(response_body.size())}});
+                                            std::to_string(response_body.size())}});
 
     session->close( OK, response_body, response_headers);
 }
@@ -1375,6 +1405,7 @@ YourMoneroRequests::get_tx(
     {
         // if tx not found in the blockchain, check if its in mempool
 
+                // recieved_time, tx
         vector<pair<uint64_t, transaction>> mempool_txs =
                 current_bc_status->get_mempool_txs();
 
@@ -1462,8 +1493,8 @@ YourMoneroRequests::get_tx(
         j_response["size"] = size;
 
         // to be field later on using data from OutputInputIdentification
-        j_response["total_sent"] = 0;
-        j_response["total_received"] = 0;
+        j_response["total_sent"] = "0";
+        j_response["total_received"] = "0";
 
         int64_t tx_height {-1};
 
@@ -1514,7 +1545,7 @@ YourMoneroRequests::get_tx(
                 total_received += out_info.amount;
             }
 
-            j_response["total_received"] = total_received;
+            j_response["total_received"] = std::to_string(total_received);
 
             json j_spent_outputs = json::array();
 
@@ -1551,7 +1582,7 @@ YourMoneroRequests::get_tx(
                     {
                         j_response["payment_id"] = xmr_tx.payment_id;
                         j_response["timestamp"]
-                                = static_cast<uint64_t>(xmr_tx.timestamp);
+                                = static_cast<uint64_t>(xmr_tx.timestamp*1e3);
 
                         vector<XmrInput> inputs;
 
@@ -1573,7 +1604,7 @@ YourMoneroRequests::get_tx(
                                     total_spent += input.amount;
 
                                     j_spent_outputs.push_back({
-                                          {"amount"     , input.amount},
+                                          {"amount"     , std::to_string(input.amount)},
                                           {"key_image"  , input.key_image},
                                           {"tx_pub_key" , out.tx_pub_key},
                                           {"out_index"  , out.out_index},
@@ -1582,7 +1613,7 @@ YourMoneroRequests::get_tx(
 
                             } // for (XmrInput input: inputs)
 
-                            j_response["total_sent"]    = total_spent;
+                            j_response["total_sent"]    = std::to_string(total_spent);
 
                             j_response["spent_outputs"] = j_spent_outputs;
 
@@ -1638,7 +1669,7 @@ YourMoneroRequests::get_tx(
                                 total_spent += out.amount;
 
                                 j_spent_outputs.push_back({
-                                          {"amount"     , in_info.amount},
+                                          {"amount"     , std::to_string(in_info.amount)},
                                           {"key_image"  , in_info.key_img},
                                           {"tx_pub_key" , out.tx_pub_key},
                                           {"out_index"  , out.out_index},
@@ -1647,7 +1678,7 @@ YourMoneroRequests::get_tx(
 
                         } //  for (auto& in_info: oi_identification
 
-                        j_response["total_sent"]    = total_spent;
+                        j_response["total_sent"]    = std::to_string(total_spent);
 
                         j_response["spent_outputs"] = j_spent_outputs;
 
