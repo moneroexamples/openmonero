@@ -35,6 +35,13 @@ This is OpenMonero running on stagnet network. You can use it to play around wit
 Please note that the live version is running on cheap VPS, which may result in
 performance issues.
 
+
+## Current development version
+
+All current changes, bug fixes and updates are done in the
+[branch](https://github.com/moneroexamples/openmonero/tree/devel).
+
+
 ## Screenshot
 
 ![Open Monero](https://raw.githubusercontent.com/moneroexamples/openmonero/master/screenshot/screen1.png)
