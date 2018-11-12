@@ -46,7 +46,7 @@ TxSearch::TxSearch(XmrAccount& _acc,
     // this accont
     searched_blk_no = acc->scanned_block_height;
 
-    last_ping_timestamp = 0;
+    last_ping_timestamp = 0s;
 
     ping();
 }
@@ -55,7 +55,7 @@ void
 TxSearch::operator()()
 {
 
-    uint64_t current_timestamp = get_current_timestamp();
+    seconds current_timestamp = get_current_timestamp();
 
     last_ping_timestamp = current_timestamp;
 
@@ -71,7 +71,7 @@ TxSearch::operator()()
     {
         while(continue_search)
         {
-            uint64_t loop_timestamp {current_timestamp};
+            seconds loop_timestamp {current_timestamp};
 
             uint64_t last_block_height = current_bc_status->current_height;
 
@@ -88,7 +88,7 @@ TxSearch::operator()()
                 std::this_thread::sleep_for(
                         std::chrono::seconds(
                                 current_bc_status->get_bc_setup()
-                                .refresh_block_status_every_seconds)
+                                .refresh_block_status_every)
                 );
 
                 loop_timestamp = get_current_timestamp();
@@ -600,20 +600,21 @@ TxSearch::get_searched_blk_no() const
     return searched_blk_no;
 }
 
-inline uint64_t
+inline seconds
 TxSearch::get_current_timestamp() const
 {
-   return  chrono::duration_cast<chrono::seconds>(
-          chrono::system_clock::now().time_since_epoch()).count();
+   return  chrono::duration_cast<seconds>(
+          chrono::system_clock::now().time_since_epoch());
 }
 
 void
 TxSearch::ping()
 {
-    OMINFO << "New last_ping_timestamp: " << last_ping_timestamp;
+    OMINFO << "New last_ping_timestamp: "
+           << last_ping_timestamp.count();
 
-    last_ping_timestamp = chrono::duration_cast<chrono::seconds>(
-            chrono::system_clock::now().time_since_epoch()).count();
+    last_ping_timestamp = chrono::duration_cast<seconds>(
+            chrono::system_clock::now().time_since_epoch());
 }
 
 bool
@@ -836,7 +837,7 @@ TxSearch::get_xmr_address_viewkey() const
 
 
 void
-TxSearch::set_search_thread_life(uint64_t life_seconds)
+TxSearch::set_search_thread_life(seconds life_seconds)
 {
     thread_search_life = life_seconds;
 }
@@ -866,6 +867,6 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
 
 
 // default value of static veriables
-uint64_t TxSearch::thread_search_life {600};
+seconds TxSearch::thread_search_life {600};
 
 }

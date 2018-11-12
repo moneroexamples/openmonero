@@ -159,7 +159,7 @@ public:
         db_config = readin_config();
 
         if (db_config.empty())
-            FAIL() << "Cant readin_config()";
+            FAIL() << "Cant read in_config()";
 
         xmreg::MySqlConnector::url = db_config["url"];
         xmreg::MySqlConnector::port = db_config["port"];
@@ -1502,7 +1502,7 @@ TEST_F(MYSQL_TEST, MysqlPingThreadStopsOnPingFailure)
     auto conn = xmr_accounts->get_connection();
 
     // create ping functor that will be pinging mysql every 1 second
-    xmreg::MysqlPing mysql_ping {conn, 1};
+    xmreg::MysqlPing mysql_ping {conn, 1s};
 
     {
         // create ping thread and start pinging
@@ -1543,7 +1543,7 @@ TEST_F(MYSQL_TEST, MysqlPingThreadStopsOnPointerExpiry)
     ASSERT_TRUE(new_conn->get_connection().connected());
 
     // create ping functor that will be pinging mysql every 1 second
-    xmreg::MysqlPing mysql_ping {new_conn, 1};
+    xmreg::MysqlPing mysql_ping {new_conn, 1s};
 
     {
         // create ping thread and start pinging

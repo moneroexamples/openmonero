@@ -158,18 +158,18 @@ BlockchainSetup::read_config(string config_json_path)
     void
 BlockchainSetup::_init()
 {
-    refresh_block_status_every_seconds
-            = config_json["refresh_block_status_every_seconds"];
+    refresh_block_status_every
+            = seconds {config_json["refresh_block_status_every_seconds"]};
     blocks_search_lookahead
             = config_json["blocks_search_lookahead"];
     max_number_of_blocks_to_import
             = config_json["max_number_of_blocks_to_import"];
-    search_thread_life_in_seconds
-            = config_json["search_thread_life_in_seconds"];
+    search_thread_life
+            = seconds {config_json["search_thread_life_in_seconds"]};
     import_fee
             = config_json["wallet_import"]["fee"];
-    mysql_ping_every_seconds
-            = config_json["mysql_ping_every_seconds"];
+    mysql_ping_every
+            = seconds {config_json["mysql_ping_every_seconds"]};
 
     get_blockchain_path();
 

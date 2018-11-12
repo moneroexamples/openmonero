@@ -14,13 +14,17 @@
 namespace xmreg
 {
 
+using chrono::seconds;
+using namespace literals::chrono_literals;
+
 class MysqlPing
 {
 public:
 
     enum class StopReason {NotYetStopped, PingFailed, PointerExpired};
 
-    MysqlPing(std::shared_ptr<MySqlConnector> _conn, uint64_t _ping_time = 300);
+    MysqlPing(std::shared_ptr<MySqlConnector> _conn,
+              seconds _ping_time = 300s);
 
     void operator()();
     void stop() {keep_looping = false;}
@@ -33,7 +37,7 @@ public:
 
 private:
     std::weak_ptr<MySqlConnector> conn;
-    uint64_t ping_time; // in seconds
+    seconds ping_time; // in seconds
     atomic<bool> keep_looping {true};
     atomic<uint64_t> counter {0};
     atomic<StopReason> why_stoped {StopReason::NotYetStopped};

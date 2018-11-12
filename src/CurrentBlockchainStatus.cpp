@@ -26,7 +26,7 @@ void
 CurrentBlockchainStatus::monitor_blockchain()
 {
     TxSearch::set_search_thread_life(
-                bc_setup.search_thread_life_in_seconds);
+                bc_setup.search_thread_life);
 
     stop_blockchain_monitor_loop = false;
 
@@ -49,8 +49,7 @@ CurrentBlockchainStatus::monitor_blockchain()
            clean_search_thread_map();
 
            std::this_thread::sleep_for(
-                   std::chrono::seconds(
-                    bc_setup.refresh_block_status_every_seconds));
+                       bc_setup.refresh_block_status_every);
        }
 
        is_running = false;
@@ -440,6 +439,7 @@ CurrentBlockchainStatus::get_mempool_txs()
     return mempool_txs;
 }
 
+//@todo search_if_payment_made is way too long!
 bool
 CurrentBlockchainStatus::search_if_payment_made(
         const string& payment_id_str,
@@ -516,7 +516,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
         if (!hex_to_pod(tx_payment_id_str, encrypted_payment_id8))
         {
-            OMERROR << "Failed parsing hex to pod for encrypted_payment_id8";
+            OMERROR << "Failed parsing hex to pod for "
+                       "encrypted_payment_id8";
             continue;
         }
 
@@ -773,7 +774,8 @@ CurrentBlockchainStatus::get_known_outputs_keys(
     }
 
 
-    known_outputs_keys = get_search_thread(address).get_known_outputs_keys();
+    known_outputs_keys = get_search_thread(address)
+            .get_known_outputs_keys();
 
     return true;
 }
@@ -802,8 +804,10 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
         return false;
     }
 
-    address = get_search_thread(address_str).get_xmr_address_viewkey().first;
-    viewkey = get_search_thread(address_str).get_xmr_address_viewkey().second;
+    address = get_search_thread(address_str)
+            .get_xmr_address_viewkey().first;
+    viewkey = get_search_thread(address_str)
+            .get_xmr_address_viewkey().second;
 
     return true;
 }
@@ -961,7 +965,8 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
 
     if (it == searching_threads.end())
     {
-        OMERROR << "Search thread does not exisit for addr: " << acc_address;
+        OMERROR << "Search thread does not exisit for addr: "
+                << acc_address;
         throw std::runtime_error("Trying to accesses "
                                  "non-existing search thread");
     }

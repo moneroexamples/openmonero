@@ -14,8 +14,6 @@ namespace
 
 
 
-
-
 class BCSTATUS_TEST : public ::testing::TestWithParam<network_type>
 {
 public:
@@ -1496,7 +1494,7 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
 
     // set refresh rate to 1 second as we dont wont to wait long
     xmreg::BlockchainSetup bs = bcs->get_bc_setup();
-    bs.refresh_block_status_every_seconds = 1;
+    bs.refresh_block_status_every = 1s;
     bcs->set_bc_setup(bs);
     bcs->is_running = false;
 

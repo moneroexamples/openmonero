@@ -13,7 +13,7 @@ namespace xmreg
 
 MysqlPing::MysqlPing(
         std::shared_ptr<MySqlConnector> _conn,
-        uint64_t _ping_time)
+        seconds _ping_time)
         : conn {_conn}, ping_time {_ping_time}
 {}
 

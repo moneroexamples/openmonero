@@ -14,6 +14,9 @@ namespace xmreg
 
 using namespace std;
 
+using chrono::seconds;
+using namespace literals::chrono_literals;
+
 class XmrAccount;
 class MySqlAccounts;
 
@@ -40,7 +43,7 @@ private:
     // how long should the search thread be live after no request
     // are coming from the frontend. For example, when a user finishes
     // using the service.
-    static uint64_t thread_search_life; // in seconds
+    static seconds thread_search_life;
 
     bool continue_search {true};
 
@@ -51,7 +54,7 @@ private:
     mutex getting_eptr;
     mutex getting_known_outputs_keys;
 
-    uint64_t last_ping_timestamp;
+    seconds last_ping_timestamp;
 
     atomic<uint64_t> searched_blk_no;
 
@@ -98,7 +101,7 @@ public:
     virtual uint64_t
     get_searched_blk_no() const;
 
-    virtual uint64_t
+    virtual seconds
     get_current_timestamp() const;
 
     virtual void
@@ -160,7 +163,7 @@ public:
     get_xmr_address_viewkey() const;
 
     static void
-    set_search_thread_life(uint64_t life_seconds);
+    set_search_thread_life(seconds life_seconds);
 
     virtual bool
     delete_existing_tx_if_exists(string const& tx_hash);
