@@ -118,7 +118,7 @@ TEST(MYSQL_CONNECTION, CanConnect)
     json db_config = readin_config();
 
     if (db_config.empty())
-        FAIL() << "Cant readin_config()";
+        FAIL() << "Cant read in_config()";
 
     xmreg::MySqlConnector::url = db_config["url"];
     xmreg::MySqlConnector::port = db_config["port"];

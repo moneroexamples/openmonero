@@ -28,7 +28,6 @@ SETUP_TARGET_FOR_COVERAGE(
         NAME mysql_cov
         EXECUTABLE mysql_tests)
 
-
 SETUP_TARGET_FOR_COVERAGE(
         NAME microcore_cov
         EXECUTABLE microcore_tests)
