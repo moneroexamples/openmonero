@@ -3,6 +3,7 @@
 //
 
 #include "CurrentBlockchainStatus.h"
+#include "PaymentSearcher.hpp"
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -451,8 +452,8 @@ CurrentBlockchainStatus::search_if_payment_made(
 
     uint64_t current_blockchain_height = get_current_blockchain_height();
 
-    cout << "current_blockchain_height: "
-         << current_blockchain_height << '\n';
+//    cout << "current_blockchain_height: "
+//         << current_blockchain_height << '\n';
 
     vector<transaction> txs_to_check;
 
@@ -489,171 +490,47 @@ CurrentBlockchainStatus::search_if_payment_made(
                             blk_txs.begin(), blk_txs.end());
     }
 
-    for (transaction& tx: txs_to_check)
+    crypto::hash8 expected_payment_id;
+
+    if (!hex_to_pod(payment_id_str, expected_payment_id))
     {
-        if (is_coinbase(tx))
-        {
-            // not interested in coinbase txs
-            continue;
-        }
+        OMERROR << "Cant convert payment id to pod: " << payment_id_str;
+        return false;
+    }
 
-        string tx_payment_id_str = get_payment_id_as_string(tx);
-
-        // we are interested only in txs with encrypted payments id8
-        // they have length of 16 characters.
-
-        if (tx_payment_id_str.length() != 16)
-        {
-            continue;
-        }
-
-        // we have some tx with encrypted payment_id8
-        // need to decode it using tx public key, and our
-        // private view key, before we can comapre it is
-        // what we are after.
-
-        crypto::hash8 encrypted_payment_id8;
-
-        if (!hex_to_pod(tx_payment_id_str, encrypted_payment_id8))
-        {
-            OMERROR << "Failed parsing hex to pod for "
-                       "encrypted_payment_id8";
-            continue;
-        }
-
-        // decrypt the encrypted_payment_id8
-
-        public_key tx_pub_key
-                = xmreg::get_tx_pub_key_from_received_outs(tx);
+    PaymentSearcher<crypto::hash8> tx_searcher {
+        bc_setup.import_payment_address,
+        bc_setup.import_payment_viewkey,
+        mcore.get()};
 
 
-        // public transaction key is combined with our viewkey
-        // to create, so called, derived key.
-        key_derivation derivation;
+    auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));
 
-        if (!generate_key_derivation(tx_pub_key,
-                                     bc_setup.import_payment_viewkey,
-                                     derivation))
-        {
-            OMERROR << "Cant get derived key for: "  << "\n"
-                    << "pub_tx_key: " << tx_pub_key << " and "
-                    << "prv_view_key" << bc_setup.import_payment_viewkey;
+    try
+    {
+        found_amount_pair
+                = tx_searcher.search(expected_payment_id, txs_to_check);
+    }
+    catch (PaymentSearcherException const& e)
+    {
+        OMERROR << e.what();
+        return false;
+    }
 
-            return false;
-        }
-
-        // decrypt encrypted payment id, as used in integreated addresses
-        crypto::hash8 decrypted_payment_id8 = encrypted_payment_id8;
-
-        if (decrypted_payment_id8 != null_hash8)
-        {
-            if (!mcore->decrypt_payment_id(
-                    decrypted_payment_id8, tx_pub_key,
-                        bc_setup.import_payment_viewkey))
-            {
-                OMERROR << "Cant decrypt decrypted_payment_id8: "
-                        << pod_to_hex(decrypted_payment_id8);
-                continue;
-            }
-        }
-
-        string decrypted_tx_payment_id_str
-                = pod_to_hex(decrypted_payment_id8);
-
-        // check if decrypted payment id matches what we have stored
-        // in mysql.
-        if (payment_id_str != decrypted_tx_payment_id_str)
-        {
-            // check tx having specific payment id only
-            continue;
-        }
-
-        // if everything ok with payment id, we proceed with
-        // checking if the amount transfered is correct.
-
-        // for each output, in a tx, check if it belongs
-        // to the given account of specific address and viewkey
-
-
-        //          <public_key  , amount  , out idx>
-        vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
-
-        outputs = get_ouputs_tuple(tx);
-
-        string tx_hash_str = pod_to_hex(get_transaction_hash(tx));
-
-
-        uint64_t total_received {0};
-
-        for (auto& out: outputs)
-        {
-            txout_to_key txout_k = std::get<0>(out);
-            uint64_t amount = std::get<1>(out);
-            uint64_t output_idx_in_tx = std::get<2>(out);
-
-            // get the tx output public key
-            // that normally would be generated for us,
-            // if someone had sent us some xmr.
-            public_key generated_tx_pubkey;
-
-            derive_public_key(derivation,
-                              output_idx_in_tx,
-                              bc_setup.import_payment_address
-                                .address.m_spend_public_key,
-                              generated_tx_pubkey);
-
-            // check if generated public key matches the current
-            // output's key
-            bool mine_output = (txout_k.key == generated_tx_pubkey);
-
-            // if mine output has RingCT, i.e., tx version is 2
-            // need to decode its amount. otherwise its zero.
-            if (mine_output && tx.version == 2)
-            {
-                // initialize with regular amount
-                uint64_t rct_amount = amount;
-
-                // cointbase txs have amounts in plain sight.
-                // so use amount from ringct, only for non-coinbase txs
-                if (!is_coinbase(tx))
-                {
-                    bool r;
-
-                    r = decode_ringct(tx.rct_signatures,
-                                      tx_pub_key,
-                                      bc_setup.import_payment_viewkey,
-                                      output_idx_in_tx,
-                                      tx.rct_signatures
-                                        .ecdhInfo[output_idx_in_tx].mask,
-                                      rct_amount);
-
-                    if (!r)
-                    {
-                        OMERROR << "Cant decode ringCT!";
-                        return false;
-                    }
-
-                    amount = rct_amount;
-                }
-
-            } // if (mine_output && tx.version == 2)
-
-
-            if (mine_output)
-                total_received += amount;            
-        }
+    if (found_amount_pair.first >= desired_amount)
+    {
+        string tx_hash_str = pod_to_hex(
+                    get_transaction_hash(*found_amount_pair.second));
 
         OMINFO << " Payment id check in tx: "
                << tx_hash_str
-               << " found: " << total_received;
+               << " found: " << found_amount_pair.first;
 
-        if (total_received >= desired_amount)
-        {
-            // the payment has been made.
-            tx_hash_with_payment = tx_hash_str;
-            OMINFO << "Import payment done";
-            return true;
-        }
+        // the payment has been made.
+        tx_hash_with_payment = tx_hash_str;
+        OMINFO << "Import payment done";
+
+        return true;
     }
 
     return false;

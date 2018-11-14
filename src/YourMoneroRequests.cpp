@@ -1531,7 +1531,7 @@ YourMoneroRequests::get_tx(
         {
             OutputInputIdentification oi_identification {
                 &address_info, &viewkey, &tx, tx_hash,
-                        coinbase, current_bc_status};
+                        coinbase};
 
             oi_identification.identify_outputs();
 
@@ -1643,11 +1643,12 @@ YourMoneroRequests::get_tx(
                         // and inputs in a given tx.
                         OutputInputIdentification oi_identification
                                 {&address_info, &viewkey, &tx, tx_hash,
-                                    coinbase, current_bc_status};
+                                    coinbase};
 
                         // no need mutex here, as this will be exectued only
                         // after the above. there is no threads here.
-                        oi_identification.identify_inputs(known_outputs_keys);
+                        oi_identification.identify_inputs(known_outputs_keys,
+                                                          current_bc_status.get());
 
                         json j_spent_outputs = json::array();
 

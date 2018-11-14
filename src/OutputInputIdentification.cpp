@@ -13,9 +13,7 @@ OutputInputIdentification::OutputInputIdentification(
     const secret_key* _v,
     const transaction* _tx,
     crypto::hash const& _tx_hash,
-    bool is_coinbase,
-    std::shared_ptr<CurrentBlockchainStatus> _current_bc_status)
-    : current_bc_status {_current_bc_status}
+    bool is_coinbase)
 {
     address_info = _a;
     viewkey = _v;
@@ -158,7 +156,8 @@ OutputInputIdentification::identify_outputs()
 
 void
 OutputInputIdentification::identify_inputs(
-        unordered_map<public_key, uint64_t> const& known_outputs_keys)
+        unordered_map<public_key, uint64_t> const& known_outputs_keys,
+        CurrentBlockchainStatus* current_bc_status)
 {
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(*tx);
 

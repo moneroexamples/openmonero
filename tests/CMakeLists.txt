@@ -39,3 +39,9 @@ SETUP_TARGET_FOR_COVERAGE(
 SETUP_TARGET_FOR_COVERAGE(
         NAME txsearch_cov
         EXECUTABLE txsearch_tests)
+
+add_custom_target(cov
+    COMMAND ;
+    DEPENDS mysql_cov microcore_cov bcstatus_cov txsearch_cov
+    COMMENT "Runs all coverage tests"
+)

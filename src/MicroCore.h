@@ -189,7 +189,7 @@ public:
     get_tx(crypto::hash const& tx_hash, transaction& tx) const;
 
     virtual bool
-    decrypt_payment_id(crypto::hash8 &payment_id,
+    decrypt_payment_id(crypto::hash8& payment_id,
                        public_key const& public_key,
                        secret_key const& secret_key)
     {

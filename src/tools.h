@@ -158,10 +158,26 @@ get_payment_id(const vector<uint8_t>& extra,
                crypto::hash& payment_id,
                crypto::hash8& payment_id8);
 
-bool
+
+inline bool
 get_payment_id(const transaction& tx,
                crypto::hash& payment_id,
-               crypto::hash8& payment_id8);
+               crypto::hash8& payment_id8)
+{
+    return get_payment_id(tx.extra, payment_id, payment_id8);
+}
+
+inline tuple<crypto::hash, crypto::hash8>
+get_payment_id(transaction const& tx)
+{
+    crypto::hash payment_id;
+    crypto::hash8 payment_id8;
+
+    get_payment_id(tx.extra, payment_id, payment_id8);
+
+    return make_tuple(payment_id, payment_id8);
+}
+
 
 inline double
 get_xmr(uint64_t core_amount)

@@ -69,8 +69,7 @@ TEST_F(OUTPUTIDENT_TEST, NonDefaultConstruction)
     bool is_coinbase {false};
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_coinbase};
 
     EXPECT_TRUE(true);
 }
@@ -87,8 +86,7 @@ TEST_F(OUTPUTIDENT_TEST, IncomingPreRingctTransaction)
     ADDR_VIEWKEY_FROM_STRING(addr_9wq79, viewkey_9wq79, net_type);
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
     oi.identify_outputs();
 
     EXPECT_EQ(oi.identified_outputs.size(), 1);
@@ -157,8 +155,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingPreRingctTransaction)
                                             ::get_output_keys));
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
@@ -168,7 +165,8 @@ TEST_F(OUTPUTIDENT_TEST, OutgingPreRingctTransaction)
                 known_outputs_csv_9wq792k, known_outputs));
 
     oi.identify_outputs();
-    oi.identify_inputs(known_outputs);
+    oi.identify_inputs(known_outputs,
+                       cbs_mock.get());
 
     EXPECT_EQ(oi.identified_inputs.size(), 2);
 
@@ -228,8 +226,7 @@ TEST_F(OUTPUTIDENT_TEST, SweepUnmixableTransaction)
                                             ::get_output_keys));
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
@@ -253,7 +250,8 @@ TEST_F(OUTPUTIDENT_TEST, SweepUnmixableTransaction)
               "ac89c9e71c93e6c292bc22185f3de25fc925f37119a4ec8d9980082072f40889");
 
 
-    oi.identify_inputs(known_outputs);
+    oi.identify_inputs(known_outputs,
+                       cbs_mock.get());
 
     EXPECT_EQ(oi.identified_inputs.size(), 3);
 
@@ -302,8 +300,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
                                             ::get_output_keys)); 
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
@@ -320,7 +317,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
     EXPECT_EQ(oi.total_received, 42433713670000);
     EXPECT_TRUE(oi.is_rct);
 
-    oi.identify_inputs(known_outputs);
+    oi.identify_inputs(known_outputs, cbs_mock.get());
 
     // numer of inputs is basically number
     // of all possible maches of our mixins.
@@ -345,10 +342,10 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
                                             ::get_output_keys));
 
     xmreg::OutputInputIdentification oi2 {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
-    oi2.identify_inputs(empty_known_outputs);
+    oi2.identify_inputs(empty_known_outputs,
+                        cbs_mock.get());
 
     EXPECT_EQ(oi2.identified_inputs.size(), 0);
 }
@@ -387,8 +384,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingRingctTransaction)
                                             ::get_output_keys));
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
@@ -405,7 +401,8 @@ TEST_F(OUTPUTIDENT_TEST, OutgingRingctTransaction)
     EXPECT_EQ(oi.total_received, 3296300490000ull);
     EXPECT_TRUE(oi.is_rct);
 
-    oi.identify_inputs(known_outputs);
+    oi.identify_inputs(known_outputs,
+                       cbs_mock.get());
 
     // numer of inputs is basically number
     // of all possible maches of our mixins.
@@ -427,10 +424,10 @@ TEST_F(OUTPUTIDENT_TEST, OutgingRingctTransaction)
                  .WillRepeatedly(Return(false));
 
     xmreg::OutputInputIdentification oi2 {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
 
-    oi2.identify_inputs(known_outputs);
+    oi2.identify_inputs(known_outputs,
+                        cbs_mock.get());
 
     EXPECT_EQ(oi2.identified_inputs.size(), 0);
 }
@@ -448,8 +445,7 @@ TEST_F(OUTPUTIDENT_TEST, IncomingPreRingctCoinbaseTransaction)
     ADDR_VIEWKEY_FROM_STRING(addr_9wq79, viewkey_9wq79, net_type);
 
     xmreg::OutputInputIdentification oi {&address, &viewkey, &tx,
-                                         tx_hash, is_tx_coinbase,
-                                         cbs_mock};
+                                         tx_hash, is_tx_coinbase};
     oi.identify_outputs();
 
     EXPECT_EQ(oi.identified_outputs.size(), 6);
