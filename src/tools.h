@@ -178,6 +178,12 @@ get_payment_id(transaction const& tx)
     return make_tuple(payment_id, payment_id8);
 }
 
+// Encryption and decryption are the same operation (xor with a key)
+bool
+encrypt_payment_id(crypto::hash8 &payment_id,
+                   const crypto::public_key &public_key,
+                   const crypto::secret_key &secret_key);
+
 
 inline double
 get_xmr(uint64_t core_amount)

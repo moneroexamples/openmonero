@@ -500,8 +500,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
     PaymentSearcher<crypto::hash8> tx_searcher {
         bc_setup.import_payment_address,
-        bc_setup.import_payment_viewkey,
-        mcore.get()};
+        bc_setup.import_payment_viewkey};
 
 
     auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));

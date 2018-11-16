@@ -163,4 +163,87 @@ private:
     const transaction* tx;
 };
 
+
+//class BaseIdentifier {
+
+//public:
+//    BaseIdentifier(address_parse_info const* _a,
+//                   const secret_key* _v,
+//                   const transaction* _tx)
+//        : address_info {_a}, viewkey {_v}, tx {_tx}
+//    {
+//    }
+
+//    virtual void identify() = 0;
+
+//protected:
+
+//    // address and viewkey for this search thread.
+//    address_parse_info const* address_info;
+//    secret_key const* viewkey;
+
+//    // transaction that is beeing search
+//    transaction const* tx;
+
+//};
+
+//class OutputIdentifier : public BaseIdentifier
+//{
+//    using BaseIdentifier::BaseIdentifier;
+
+//    using key_imgs_map = unordered_map<public_key, uint64_t>;
+
+//    // define a structure to keep information about found
+//    // outputs that we can need in later parts.
+//    struct output_info
+//    {
+//        public_key pub_key;
+//        uint64_t   amount;
+//        uint64_t   idx_in_tx;
+//        string     rtc_outpk;
+//        string     rtc_mask;
+//        string     rtc_amount;
+//    };
+
+//public:
+
+//    void
+//    set_known_outputs(key_imgs_map const* _known_outputs)
+//    {
+//        known_outputs_keys = _known_outputs;
+//    }
+
+//    void
+//    identify()
+//    {}
+
+//private:
+//    key_imgs_map const* known_outputs_keys {nullptr};
+//};
+
+//class InpputIdentifier : public BaseIdentifier
+//{
+
+//    using BaseIdentifier::BaseIdentifier;
+
+//    // define a structure to keep information about found
+//    // inputs that we can need in later parts.
+//    struct input_info
+//    {
+//        string key_img;
+//        uint64_t amount;
+//        public_key out_pub_key;
+//    };
+
+
+//public:
+
+//    void
+//    identify()
+//    {}
+//};
+
+
+
 }
+
