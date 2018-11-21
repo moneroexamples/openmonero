@@ -95,7 +95,7 @@ public:
             identifier.template get<Output>()->identify(tx, tx_pub_key);
 
             auto const& outputs_found
-                    = identifier.template get<Output>()->get_outputs();
+                    = identifier.template get<Output>()->get();
 
             if (!outputs_found.empty())
             {   // nothing was found

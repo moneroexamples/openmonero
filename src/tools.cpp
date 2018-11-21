@@ -838,12 +838,23 @@ decode_ringct(const rct::rctSig& rv,
         return false;
     }
 
-    crypto::secret_key scalar1;
+    return decode_ringct(rv, derivation, i, mask, amount);
+}
 
-    crypto::derivation_to_scalar(derivation, i, scalar1);
 
+bool
+decode_ringct(rct::rctSig const& rv,
+              crypto::key_derivation const& derivation,
+              unsigned int i,
+              rct::key& mask,
+              uint64_t& amount)
+{
     try
     {
+        crypto::secret_key scalar1;
+
+        crypto::derivation_to_scalar(derivation, i, scalar1);
+
         switch (rv.type)
         {
             case rct::RCTTypeSimple:
@@ -862,18 +873,19 @@ decode_ringct(const rct::rctSig& rv,
                                         hw::get_device("default"));
                 break;
             default:
-                cerr << "Unsupported rct type: " << rv.type << endl;
+                cerr << "Unsupported rct type: " << rv.type << '\n';
                 return false;
         }
     }
-    catch (const std::exception &e)
+    catch (...)
     {
-        cerr << "Failed to decode input " << i << endl;
+        cerr << "Failed to decode input " << i << '\n';
         return false;
     }
 
     return true;
 }
+
 
 bool
 url_decode(const std::string& in, std::string& out)

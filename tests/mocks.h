@@ -74,9 +74,9 @@ public:
                             transaction& tx));
 
     MOCK_METHOD3(get_output_key,
-                    void(const uint64_t& amount,
-                         const vector<uint64_t>& absolute_offsets,
-                         vector<cryptonote::output_data_t>& outputs));
+                    void(uint64_t amount,
+                         vector<uint64_t> const& absolute_offsets,
+                         vector<output_data_t>& outputs));
 
     MOCK_METHOD2(get_output_key,
                     output_data_t(uint64_t amount,
@@ -223,6 +223,19 @@ struct MockGettingOutputs
         outputs = ring_member_data[absolute_offsets];
 
         return true;
+    }
+
+    /*
+     * MicroCore uses get_output_key, so provide this for convinience
+     * which is just same as  get_output_keys above
+    */
+    virtual void
+    get_output_key(
+            const uint64_t& amount,
+            vector<uint64_t> absolute_offsets,
+            vector<cryptonote::output_data_t>& outputs)
+    {
+        get_output_keys(amount, absolute_offsets, outputs);
     }
 
 };

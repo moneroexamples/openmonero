@@ -215,6 +215,12 @@ decode_ringct(const rct::rctSig & rv,
               uint64_t & amount);
 
 bool
+decode_ringct(rct::rctSig const& rv,
+              crypto::key_derivation const& derivation,
+              unsigned int i,
+              rct::key& mask,
+              uint64_t& amount);
+bool
 url_decode(const std::string& in, std::string& out);
 
 map<std::string, std::string>
