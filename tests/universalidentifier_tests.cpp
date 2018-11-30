@@ -20,6 +20,35 @@ string spendkey_56Vbjcz {"509a9761fde8856fc38e79ca705d85f979143524f178f8e2e0eb53
 string known_outputs_csv_2_56bCoE {"./res/outputs_stagenet_2_56Vbjcz.csv"};
 
 
+inline bool
+operator==(const Output::info& lhs, const JsonTx::output& rhs)
+{
+    return lhs.amount == rhs.amount
+            && lhs.pub_key == rhs.pub_key
+            && lhs.idx_in_tx == rhs.index;
+}
+
+inline bool
+operator!=(const Output::info& lhs, const JsonTx::output& rhs)
+{
+    return !(lhs == rhs);
+}
+
+inline bool
+operator==(const vector<Output::info>& lhs, const vector<JsonTx::output>& rhs)
+{
+    if (lhs.size() != rhs.size())
+        return false;
+
+    for (size_t i = 0; i < lhs.size(); i++)
+    {
+        if (lhs[i] != rhs[i])
+            return false;
+    }
+
+    return true;
+}
+
 TEST(MODULAR_IDENTIFIER, OutputsRingCT)
 {
     auto jtx = construct_jsontx("ddff95211b53c194a16c2b8f37ae44b643b8bd46b4cb402af961ecabeb8417b2");
@@ -31,6 +60,11 @@ TEST(MODULAR_IDENTIFIER, OutputsRingCT)
                               &jtx->sender.viewkey));
 
     identifier.identify();
+
+    ASSERT_EQ(identifier.get<Output>()->get().size(),
+              jtx->sender.outputs.size());
+
+    ASSERT_TRUE(identifier.get<Output>()->get() == jtx->sender.outputs);
 
     ASSERT_EQ(identifier.get<Output>()->get_total(),
               jtx->sender.change);
@@ -48,6 +82,8 @@ TEST(MODULAR_IDENTIFIER, OutputsRingCTCoinbaseTx)
                               &jtx->recipients.at(0).viewkey));
 
     identifier.identify();
+
+    ASSERT_TRUE(identifier.get<Output>()->get() == jtx->recipients.at(0).outputs);
 
     ASSERT_EQ(identifier.get<Output>()->get_total(),
               jtx->recipients.at(0).amount);

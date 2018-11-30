@@ -17,6 +17,13 @@ class JsonTx
 {
 public:
 
+    struct output
+    {
+        uint64_t index {0};
+        public_key pub_key;
+        uint64_t amount {0};
+    };
+
     struct account
     {
         address_parse_info address {};
@@ -24,6 +31,7 @@ public:
         secret_key spendkey {};
         uint64_t amount {0};
         uint64_t change {0};
+        vector<output> outputs;
     };
 
     json jtx;
@@ -45,6 +53,7 @@ public:
 private:
     void init();
     bool read_config();
+    void populate_outputs(json const& joutputs, vector<output>& outs);
 
 };
 

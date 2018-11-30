@@ -138,7 +138,8 @@
             "is_subaddress": false,
             "seed": "gels lair teeming cease nanny utility inexact leisure civilian emerge zippers skew gasp enjoy fugitive nanny candy nuance muppet scrub uneven yard ulcers unquoted yard",
             "spendkey": "6fe76a5e4657695cbcc09fab93b70ac974c76e0f02afde71cb460423d1444b03",
-            "viewkey": "9595c2445cdd4c88d78f0af41ebdf52f68ae2e3597b9e7b99bc3d62e300df806"
+            "viewkey": "9595c2445cdd4c88d78f0af41ebdf52f68ae2e3597b9e7b99bc3d62e300df806",
+             "outputs": [[1, "9fecfbe91a399c46d79d7482cb9b420c7b88591a29fabfb8b6c7af1566299b42", 1000123400000000]]
         }],
     "sender": {
         "_comment": "monerowalletstagenet3",
@@ -147,6 +148,7 @@
         "change": 108874026110000,
         "seed": "vulture cuisine fishing chrome olive tudor wickets rowboat vivid looking sample dewdrop pyramid wield amused skirting mystery pager fifteen boxes object match pedantic pool tudor",
         "spendkey": "df0f5720ae0b69454ca7db35db677272c7c19513cd0dc4147b0e00792a10f406",
-        "viewkey": "b45e6f38b2cd1c667459527decb438cdeadf9c64d93c8bccf40a9bf98943dc09"
+        "viewkey": "b45e6f38b2cd1c667459527decb438cdeadf9c64d93c8bccf40a9bf98943dc09",
+        "outputs": [[0, "f7856c84e02ee66d82310f82a3601ba0785782ca83ce53a0b4abb38c20be2d35", 108874026110000]]
     }
 }

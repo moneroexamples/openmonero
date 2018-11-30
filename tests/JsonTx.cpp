@@ -32,19 +32,23 @@ JsonTx::init()
     sender.amount = jtx["sender"]["amount"];
     sender.change = jtx["sender"]["change"];
 
-    for (auto const& recpient: jtx["recipient"])
+    populate_outputs(jtx["sender"]["outputs"], sender.outputs);
+
+    for (auto const& jrecpient: jtx["recipient"])
     {
         recipients.push_back(account{});
 
         addr_and_viewkey_from_string(
-                 recpient["address"], recpient["viewkey"],                                \
+                 jrecpient["address"], jrecpient["viewkey"],                                \
                  ntype, recipients.back().address,
                  recipients.back().viewkey);
 
-        parse_str_secret_key(recpient["spendkey"],
+        parse_str_secret_key(jrecpient["spendkey"],
                 recipients.back().spendkey);
 
-        recipients.back().amount = recpient["amount"];
+        recipients.back().amount = jrecpient["amount"];
+
+        populate_outputs(jrecpient["outputs"], recipients.back().outputs);
     }
 
     if (!hex_to_tx(jtx["hex"], tx, tx_hash, tx_prefix_hash))
@@ -53,6 +57,7 @@ JsonTx::init()
     }
 
 }
+
 
 bool
 JsonTx::read_config()
@@ -101,5 +106,22 @@ construct_jsontx(string tx_hash)
     return JsonTx {tx_path};
 }
 
+void
+JsonTx::populate_outputs(json const& joutputs, vector<output>& outs)
+{
+    for (auto const& jout: joutputs)
+    {
+        public_key out_pk;
+
+        if (!hex_to_pod(jout[1], out_pk))
+        {
+            throw std::runtime_error("hex_to_pod(jout[1], out_pk)");
+        }
+
+        output out {jout[0], out_pk, jout[2]};
+
+        outs.push_back(out);
+    }
+}
 
 }

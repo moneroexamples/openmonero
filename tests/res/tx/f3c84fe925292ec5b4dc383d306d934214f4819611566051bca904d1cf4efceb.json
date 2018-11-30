@@ -18,7 +18,8 @@
             "is_subaddress": false,
             "seed": "",
             "spendkey": "df0f5720ae0b69454ca7db35db677272c7c19513cd0dc4147b0e00792a10f406",
-            "viewkey": "b45e6f38b2cd1c667459527decb438cdeadf9c64d93c8bccf40a9bf98943dc09"
+            "viewkey": "b45e6f38b2cd1c667459527decb438cdeadf9c64d93c8bccf40a9bf98943dc09",
+            "outputs": [[0, "472b5dcf3d976fa1b8e0d250a7c4e9dc52ae9db7b8fb00934f9dac800da9f89f", 24081949126455]]
         }],
     "sender": {
         "_comment": "",

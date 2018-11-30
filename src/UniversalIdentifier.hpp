@@ -71,8 +71,6 @@ public:
         return identified_outputs;
     }
 
-protected:
-
     struct info
     {
         public_key pub_key;
@@ -83,6 +81,8 @@ protected:
         rct::key   rtc_mask;
         rct::key   rtc_amount;
     };
+
+protected:
 
     uint64_t total_received {0};
     vector<info> identified_outputs;
@@ -117,7 +117,6 @@ public:
         return identified_inputs;
     }
 
-protected:
 
     struct info
     {
@@ -125,6 +124,9 @@ protected:
         uint64_t amount;
         public_key out_pub_key;
     };
+
+
+protected:
 
     secret_key const* viewkey {nullptr};   
     known_outputs_t const* known_outputs {nullptr};
