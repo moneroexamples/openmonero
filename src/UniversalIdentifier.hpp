@@ -95,12 +95,12 @@ protected:
 class Input : public BaseIdentifier
 {
 public:
-
-    using key_imgs_map_t = unordered_map<public_key, uint64_t>;
+                                        //output_pubk   , amount
+    using known_outputs_t = unordered_map<public_key, uint64_t>;
 
     Input(address_parse_info const* _a,
            secret_key const* _viewkey,
-           key_imgs_map_t const* _known_outputs,
+           known_outputs_t const* _known_outputs,
            MicroCore* _mcore)
         : BaseIdentifier(_a, _viewkey),          
           known_outputs {_known_outputs},
@@ -127,7 +127,7 @@ protected:
     };
 
     secret_key const* viewkey {nullptr};   
-    key_imgs_map_t const* known_outputs {nullptr};    
+    known_outputs_t const* known_outputs {nullptr};
     MicroCore* mcore {nullptr};
     vector<info> identified_inputs;
 };

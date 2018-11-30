@@ -194,7 +194,7 @@ void Input::identify(transaction const& tx,
          {
              // get basic information about mixn's output
              output_data_t const& output_data
-                     = mixin_outputs[count];
+                     = mixin_outputs.at(count);
 
              // before going to the mysql, check our known outputs cash
              // if the key exists. Its much faster than going to mysql

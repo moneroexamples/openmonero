@@ -159,7 +159,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingPreRingctTransaction)
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
-    ASSERT_TRUE(check_and_adjust_path(known_outputs_csv_9wq792k));
+    ASSERT_TRUE(xmreg::check_and_adjust_path(known_outputs_csv_9wq792k));
 
     ASSERT_TRUE(xmreg::populate_known_outputs_from_csv(
                 known_outputs_csv_9wq792k, known_outputs));
@@ -230,7 +230,7 @@ TEST_F(OUTPUTIDENT_TEST, SweepUnmixableTransaction)
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
-    ASSERT_TRUE(check_and_adjust_path(known_outputs_csv_56bCoE));
+    ASSERT_TRUE(xmreg::check_and_adjust_path(known_outputs_csv_56bCoE));
 
     ASSERT_TRUE(xmreg::populate_known_outputs_from_csv(
                 known_outputs_csv_56bCoE, known_outputs));
@@ -304,7 +304,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingMixRingctTransaction)
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
-    ASSERT_TRUE(check_and_adjust_path(known_outputs_csv_2_56bCoE));
+    ASSERT_TRUE(xmreg::check_and_adjust_path(known_outputs_csv_2_56bCoE));
 
     ASSERT_TRUE(xmreg::populate_known_outputs_from_csv(
                 known_outputs_csv_2_56bCoE, known_outputs));
@@ -388,7 +388,7 @@ TEST_F(OUTPUTIDENT_TEST, OutgingRingctTransaction)
 
     xmreg::TxSearch::known_outputs_t known_outputs;
 
-    ASSERT_TRUE(check_and_adjust_path(known_outputs_csv_2_56bCoE));
+    ASSERT_TRUE(xmreg::check_and_adjust_path(known_outputs_csv_2_56bCoE));
 
     ASSERT_TRUE(xmreg::populate_known_outputs_from_csv(
                 known_outputs_csv_2_56bCoE, known_outputs));

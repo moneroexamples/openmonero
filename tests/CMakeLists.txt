@@ -3,7 +3,8 @@
 macro(add_om_test _TEST_NAME)
 
     add_executable(${_TEST_NAME}_tests
-            ${_TEST_NAME}_tests.cpp   
+            ${_TEST_NAME}_tests.cpp
+            JsonTx.cpp
             #${MONERO_DIR}/tests/core_tests/chaingen.cpp
             #${MONERO_DIR}/tests/core_tests/chaingen001.cpp
             )
@@ -17,7 +18,7 @@ macro(add_om_test _TEST_NAME)
 
 endmacro()
 
-resource_dir("./res")
+resource_dir("res")
 
 add_om_test(mysql)
 add_om_test(microcore)

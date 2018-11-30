@@ -8,7 +8,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-
+#include "JsonTx.h"
 
 namespace
 {
@@ -209,7 +209,7 @@ struct MockGettingOutputs
     // based on absolute_offsets
     virtual bool
     get_output_keys(
-            const uint64_t& amount,
+            uint64_t amount,
             vector<uint64_t> absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)
     {
@@ -231,7 +231,7 @@ struct MockGettingOutputs
     */
     virtual void
     get_output_key(
-            const uint64_t& amount,
+            uint64_t amount,
             vector<uint64_t> absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)
     {
@@ -239,14 +239,5 @@ struct MockGettingOutputs
     }
 
 };
-
-bool
-check_and_adjust_path(string& in_path)
-{
-    if (!boost::filesystem::exists(in_path))
-        in_path = "./tests/" + in_path;
-
-    return boost::filesystem::exists(in_path);
-}
 
 }
