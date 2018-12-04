@@ -9,7 +9,7 @@
     "nettype": 2,
     "payment_id": "0000000000000000000000000000000000000000000000000000000000000000",
     "payment_id8": "0000000000000000",
-    "payment_id8e": "placeholder for decrypted value",
+    "payment_id8e": "0000000000000000",
     "rct_type": 0,
     "recipient": [{
             "_comment": "monerowalletstagenet3, coinbase tx",

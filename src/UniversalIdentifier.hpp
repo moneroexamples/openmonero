@@ -80,6 +80,8 @@ public:
         rct::key   rtc_outpk;
         rct::key   rtc_mask;
         rct::key   rtc_amount;
+
+        friend std::ostream& operator<<(std::ostream& os, info const& _info);
     };
 
 protected:
@@ -221,7 +223,7 @@ public:
                       p_id, tx_pub_key, *get_viewkey());
     }
 
-    inline auto get_id() const {return payment_id;}
+    inline auto get() const {return payment_id;}
 
 private:
     HashT payment_id {};
@@ -298,4 +300,14 @@ calc_total_xmr(T&& infos)
     return total_xmr;
 }
 
+
+inline std::ostream&
+operator<<(std::ostream& os, xmreg::Output::info const& _info)
+{
+    return os << _info.idx_in_tx << ", "
+              << pod_to_hex(_info.pub_key) << ", "
+              << _info.amount;
 }
+
+}
+

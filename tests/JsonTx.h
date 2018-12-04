@@ -29,17 +29,33 @@ public:
         address_parse_info address {};
         secret_key viewkey {};
         secret_key spendkey {};
+        bool is_subaddress {false};
+        network_type ntype;
         uint64_t amount {0};
         uint64_t change {0};
         vector<output> outputs;
+
+        inline string
+        address_str() const
+        {
+            return get_account_address_as_str(ntype,
+                                              is_subaddress,
+                                              address.address);
+        }
+
+        friend std::ostream&
+        operator<<(std::ostream& os, account const& _account);
     };
 
     json jtx;
 
     transaction tx;
-    crypto::hash tx_hash;                                                    \
-    crypto::hash tx_prefix_hash;
+    crypto::hash tx_hash {0};                                                    \
+    crypto::hash tx_prefix_hash {0};
     crypto::public_key tx_pub_key;
+    crypto::hash payment_id {0};
+    crypto::hash8 payment_id8 {0};
+    crypto::hash8 payment_id8e {0};
 
     string jpath;
     network_type ntype;
@@ -57,13 +73,18 @@ private:
 
 };
 
+inline std::ostream&
+operator<<(std::ostream& os, JsonTx::account const& _account)
+{
+    return os << _account.address_str();
+}
+
 bool
 check_and_adjust_path(string& in_path);
 
 
 boost::optional<JsonTx>
 construct_jsontx(string tx_hash);
-
 
 }
 

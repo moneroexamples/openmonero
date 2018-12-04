@@ -26,7 +26,7 @@ Output::identify(transaction const& tx,
 
     if (!additional_tx_pub_keys.empty())
     {
-        additional_derivations.reserve(additional_tx_pub_keys.size());
+        additional_derivations.resize(additional_tx_pub_keys.size());
 
         for (size_t i = 0; i < additional_tx_pub_keys.size(); ++i)
         {
@@ -62,6 +62,11 @@ Output::identify(transaction const& tx,
                           get_address()->address.m_spend_public_key,
                           generated_tx_pubkey);
 
+//        cout << pod_to_hex(derivation) << ", " << i << ", "
+//             << pod_to_hex(get_address()->address.m_spend_public_key) << ", "
+//             << pod_to_hex(txout_key.key) << " == "
+//             << pod_to_hex(generated_tx_pubkey) << '\n'  << '\n';
+
         // check if generated public key matches the current output's key
         bool mine_output = (txout_key.key == generated_tx_pubkey);
 
@@ -75,6 +80,7 @@ Output::identify(transaction const& tx,
                               get_address()->address.m_spend_public_key,
                               generated_tx_pubkey);
 
+
             mine_output = (txout_key.key == generated_tx_pubkey);
 
             with_additional = true;
@@ -86,10 +92,6 @@ Output::identify(transaction const& tx,
         rct::key rtc_outpk {0};
         rct::key rtc_mask {0};
         rct::key rtc_amount {0};
-
-        // use primary derivation or the one from additional public keys
-        derivation = !with_additional ? derivation
-                                      : additional_derivations[i];
 
         // if mine output has RingCT, i.e., tx version is 2
         // need to decode its amount. otherwise its zero.
@@ -121,10 +123,11 @@ Output::identify(transaction const& tx,
                         .ecdhInfo[i].mask;
 
                 auto r = decode_ringct(tx.rct_signatures,
-                                 derivation,
-                                 i,
-                                 mask,
-                                 rct_amount_val);
+                                       !with_additional ? derivation
+                                             : additional_derivations[i],
+                                       i,
+                                       mask,
+                                       rct_amount_val);
 
                 if (!r)
                 {

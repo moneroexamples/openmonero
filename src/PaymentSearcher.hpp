@@ -75,7 +75,7 @@ public:
                     ->identify(tx, tx_pub_key);
 
             auto pay_id = identifier.template get<IntegratedPaymentID>()
-                    ->get_id();
+                    ->get();
 
             // we have pay_id. it can be crypto::hash8 or crypto:hash
             // so naw we need to perform comparison of the pay_id found

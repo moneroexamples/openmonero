@@ -23,6 +23,10 @@ JsonTx::init()
 {
     ntype = cryptonote::network_type {jtx["nettype"]};
 
+    hex_to_pod(jtx["payment_id"], payment_id);
+    hex_to_pod(jtx["payment_id8"], payment_id8);
+    hex_to_pod(jtx["payment_id8e"], payment_id8e);
+
     addr_and_viewkey_from_string(
              jtx["sender"]["address"], jtx["sender"]["viewkey"],                                \
              ntype, sender.address, sender.viewkey);
@@ -31,6 +35,7 @@ JsonTx::init()
 
     sender.amount = jtx["sender"]["amount"];
     sender.change = jtx["sender"]["change"];
+    sender.ntype = ntype;
 
     populate_outputs(jtx["sender"]["outputs"], sender.outputs);
 
@@ -47,6 +52,9 @@ JsonTx::init()
                 recipients.back().spendkey);
 
         recipients.back().amount = jrecpient["amount"];
+
+        recipients.back().is_subaddress = jrecpient["is_subaddress"];
+        recipients.back().ntype = ntype;
 
         populate_outputs(jrecpient["outputs"], recipients.back().outputs);
     }
