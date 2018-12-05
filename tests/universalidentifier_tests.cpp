@@ -61,12 +61,12 @@ TEST(MODULAR_IDENTIFIER, OutputsRingCT)
 
     identifier.identify();
 
-    ASSERT_EQ(identifier.get<Output>()->get().size(),
+    ASSERT_EQ(identifier.get<0>()->get().size(),
               jtx->sender.outputs.size());
 
-    ASSERT_TRUE(identifier.get<Output>()->get() == jtx->sender.outputs);
+    ASSERT_TRUE(identifier.get<0>()->get() == jtx->sender.outputs);
 
-    ASSERT_EQ(identifier.get<Output>()->get_total(),
+    ASSERT_EQ(identifier.get<0>()->get_total(),
               jtx->sender.change);
 }
 
@@ -83,10 +83,10 @@ TEST(MODULAR_IDENTIFIER, OutputsRingCTCoinbaseTx)
 
     identifier.identify();
 
-    ASSERT_TRUE(identifier.get<Output>()->get()
+    ASSERT_TRUE(identifier.get<0>()->get()
                 == jtx->recipients.at(0).outputs);
 
-    ASSERT_EQ(identifier.get<Output>()->get_total(),
+    ASSERT_EQ(identifier.get<0>()->get_total(),
               jtx->recipients.at(0).amount);
 }
 
@@ -104,7 +104,7 @@ TEST(MODULAR_IDENTIFIER, MultiOutputsRingCT)
 
        identifier.identify();
 
-       EXPECT_TRUE(identifier.get<Output>()->get()
+       EXPECT_TRUE(identifier.get<0>()->get()
                     == jrecipient.outputs);
     }
 }
@@ -121,9 +121,57 @@ TEST(MODULAR_IDENTIFIER, LegacyPaymentID)
 
    identifier.identify();
 
-   EXPECT_TRUE(identifier.get<LegacyPaymentID>()->get()
+   EXPECT_TRUE(identifier.get<0>()->get()
                 == jtx->payment_id);
+}
 
+TEST(MODULAR_IDENTIFIER, IntegratedPaymentID)
+{
+    auto jtx = construct_jsontx("ddff95211b53c194a16c2b8f37ae44b643b8bd46b4cb402af961ecabeb8417b2");
+
+    ASSERT_TRUE(jtx);
+
+    auto identifier = make_identifier(jtx->tx,
+          make_unique<IntegratedPaymentID>(
+                         &jtx->recipients[0].address,
+                         &jtx->recipients[0].viewkey));
+
+   identifier.identify();
+
+   EXPECT_TRUE(identifier.get<0>()->get()
+                == jtx->payment_id8e);
+}
+
+
+TEST(MODULAR_IDENTIFIER, RealInputRingCT)
+{
+    auto jtx = construct_jsontx("d7dcb2daa64b5718dad71778112d48ad62f4d5f54337037c420cb76efdd8a21c");
+
+    ASSERT_TRUE(jtx);
+
+    MockMicroCore mcore;
+
+    EXPECT_CALL(mcore, get_output_tx_and_index(_, _, _))
+            .WillRepeatedly(
+                Invoke(&*jtx, &JsonTx::get_output_tx_and_index));
+
+    EXPECT_CALL(mcore, get_tx(_, _))
+            .WillRepeatedly(
+                Invoke(&*jtx, &JsonTx::get_tx));
+
+    auto identifier = make_identifier(jtx->tx,
+          make_unique<RealInput>(
+                    &jtx->sender.address,
+                    &jtx->sender.viewkey,
+                    &jtx->sender.spendkey,
+                    &mcore));
+
+   identifier.identify();
+
+   for (auto const& input_info: identifier.get<0>()->get())
+       cout << input_info << endl;
+
+   EXPECT_TRUE(identifier.get<0>()->get().size() == 2);
 }
 
 //// private testnet wallet 9wq792k9sxVZiLn66S3Qzv8QfmtcwkdXgM5cWGsXAPxoQeMQ79md51PLPCijvzk1iHbuHi91pws5B7iajTX9KTtJ4bh2tCh

@@ -66,6 +66,23 @@ public:
     explicit JsonTx(json _jtx);
     explicit JsonTx(string _path);
 
+    // generate output which normaly is produced by
+    // monero's get_output_tx_and_index and blockchain,
+    // but here we use data from the tx json data file
+    // need this for mocking blockchain calls in unit tests
+    void
+    get_output_tx_and_index(
+            uint64_t const& amount,
+            vector<uint64_t> const& offsets,
+            vector<tx_out_index>& indices) const;
+
+    // will use data from the json file
+    // to set tx. Used for mocking this operation
+    // that is normaly done using blockchain
+    bool
+    get_tx(crypto::hash const& tx_hash,
+           transaction& tx) const;
+
 private:
     void init();
     bool read_config();

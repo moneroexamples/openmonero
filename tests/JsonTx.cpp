@@ -18,6 +18,61 @@ JsonTx::JsonTx(string _path): jpath {std::move(_path)}
     init();
 }
 
+
+void
+JsonTx::get_output_tx_and_index(
+        uint64_t const& amount,
+        vector<uint64_t> const& offsets,
+        vector<tx_out_index>& indices) const
+{
+    for (auto const& jinput: jtx["inputs"])
+    {
+        if (jinput["amount"] != amount
+                && jinput["absolute_offsets"] != offsets)
+            continue;
+
+        for (auto const& jring_member: jinput["ring_members"])
+        {
+            crypto::hash tx_hash;
+
+            if (!hex_to_pod(jring_member["tx_hash"], tx_hash))
+                throw std::runtime_error(
+                        "hex_to_pod(jring_member[\"tx_hash\"], tx_hash)");
+
+            indices.emplace_back(tx_hash, jring_member["output_index_in_tx"]);
+        }
+    }
+}
+
+bool
+JsonTx::get_tx(crypto::hash const& tx_hash,
+               transaction& tx) const
+{
+    for (auto const& jinput: jtx["inputs"])
+    {
+        for (auto const& jring_member: jinput["ring_members"])
+        {
+            if (jring_member["tx_hash"] != pod_to_hex(tx_hash))
+                continue;
+
+            crypto::hash tx_hash_tmp;                                                    \
+            crypto::hash tx_prefix_hash_tmp;                                             \
+
+            if (!xmreg::hex_to_tx(jring_member["tx_hex"],
+                                   tx, tx_hash_tmp, tx_prefix_hash_tmp))
+                throw std::runtime_error(
+                        "xmreg::hex_to_tx(jring_member[\"tx_hash\"]");
+
+            (void) tx_hash_tmp;
+            (void) tx_prefix_hash_tmp;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void
 JsonTx::init()
 {

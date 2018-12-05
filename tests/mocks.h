@@ -69,6 +69,11 @@ public:
                        tx_out_index(uint64_t const& amount,
                                     uint64_t const& index));
 
+    MOCK_CONST_METHOD3(get_output_tx_and_index,
+                       void(const uint64_t& amount,
+                            const std::vector<uint64_t> &offsets,
+                            std::vector<tx_out_index> &indices));
+
     MOCK_CONST_METHOD2(get_tx,
                        bool(crypto::hash const& tx_hash,
                             transaction& tx));

@@ -337,7 +337,7 @@ void RealInput::identify(transaction const& tx,
             // reason to keep check remaning outputs in the mixin tx
             // instead add its info to identified_inputs and move on
             // to the next key image
-            if (!key_image_info)
+            if (key_image_info)
             {
                 identified_inputs.push_back(*key_image_info);
                 total_xmr += key_image_info->amount;

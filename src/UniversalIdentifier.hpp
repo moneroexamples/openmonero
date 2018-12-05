@@ -125,6 +125,8 @@ public:
         key_image key_img;
         uint64_t amount;
         public_key out_pub_key;
+
+        friend std::ostream& operator<<(std::ostream& os, info const& _info);
     };
 
 
@@ -264,10 +266,19 @@ public:
          (void) b;
     }
 
+     // overload to get value from tuple by type
     template <typename U>
-    U* const get()
+    auto* const get()
     {
         return std::get<unique_ptr<U>>(identifiers).get();
+    }
+
+
+    // overload to get value from tuple by number
+    template <size_t No>
+    auto* const get()
+    {
+        return std::get<No>(identifiers).get();
     }
 
     inline auto get_tx_pub_key() const {return tx_pub_key;}
@@ -306,6 +317,14 @@ operator<<(std::ostream& os, xmreg::Output::info const& _info)
 {
     return os << _info.idx_in_tx << ", "
               << pod_to_hex(_info.pub_key) << ", "
+              << _info.amount;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, xmreg::Input::info const& _info)
+{
+    return os << pod_to_hex(_info.key_img) << ", "
+              << pod_to_hex(_info.out_pub_key) << ", "
               << _info.amount;
 }
 
