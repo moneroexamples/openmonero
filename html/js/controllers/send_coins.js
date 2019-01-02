@@ -36,34 +36,14 @@ class HostedMoneroAPIClient
             throw "self.$http required"
         }
     }
-    //
-    // Getting outputs for sending funds
-    UnspentOuts(
-        address,
-        view_key__private,
-        spend_key__public,
-        spend_key__private,
-        mixinNumber,
-        sweeping,
-        fn
-    ) { // -> RequestHandle
+    UnspentOuts(parameters, fn)
+    { // -> RequestHandle
         const self = this
-        mixinNumber = parseInt(mixinNumber) // jic
-        //
-        var parameters =
-        {
-            address: address,
-            view_key: view_key__private
-        };
-        parameters.amount = '0'
-        parameters.mixin = mixinNumber
-        parameters.use_dust = true // Client now filters unmixable by dustthreshold amount (unless sweeping) + non-rct 
-        parameters.dust_threshold = mymonero_core_js.monero_config.dustThreshold.toString()
         const endpointPath = 'get_unspent_outs'
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                __proceedTo_parseAndCallBack(data.data)
+                fn(null, data.data)
             }
         ).catch(
             function(data)
@@ -71,31 +51,6 @@ class HostedMoneroAPIClient
                 fn(data && data.Error ? data.Error : "Something went wrong with getting your available balance for spending");
             }
         );
-        function __proceedTo_parseAndCallBack(data)
-        {
-            mymonero_core_js.monero_utils_promise.then(function(monero_utils)
-            {
-                mymonero_core_js.api_response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
-                    data,
-                    address,
-                    view_key__private,
-                    spend_key__public,
-                    spend_key__private,
-                    monero_utils,
-                    function(err, retVals)
-                    {
-                        if (err) {
-                            fn(err)
-                            return
-                        }
-                        fn(null, retVals.unspentOutputs, retVals.per_byte_fee__string)
-                    }
-                )
-            }).catch(function(err)
-            {
-                fn(err)
-            })
-        }
         const requestHandle = 
         {
             abort: function()
@@ -105,37 +60,14 @@ class HostedMoneroAPIClient
         }
         return requestHandle
     }
-    //
-    RandomOuts(
-        using_outs,
-        mixinNumber,
-        fn
-    ) { // -> RequestHandle
+    RandomOuts(parameters, fn)
+    { // -> RequestHandle
         const self = this
-        //
-        mixinNumber = parseInt(mixinNumber)
-        if (mixinNumber < 0 || isNaN(mixinNumber)) {
-            const errStr = "Invalid mixin - must be >= 0"
-            const err = new Error(errStr)
-            fn(err)
-            return
-        }
-        //
-        var amounts = [];
-        for (var l = 0; l < using_outs.length; l++) {
-            amounts.push(using_outs[l].rct ? "0" : using_outs[l].amount.toString())
-        }
-        //
-        var parameters =
-        {
-            amounts: amounts,
-            count: mixinNumber + 1 // Add one to mixin so we can skip real output key if necessary
-        }
         const endpointPath = 'get_random_outs'
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                __proceedTo_parseAndCallBack(data.data)
+                fn(null, data.data)
             }
         ).catch(
             function(data)
@@ -143,13 +75,6 @@ class HostedMoneroAPIClient
                 fn(data && data.Error ? data.Error : "Something went wrong while getting decoy outputs");
             }
         );
-        function __proceedTo_parseAndCallBack(data)
-        {
-            console.log("debug: info: random outs: data", data)
-            const amount_outs = data.amount_outs
-            //
-            fn(null, amount_outs)
-        }
         const requestHandle = 
         {
             abort: function()
@@ -159,46 +84,21 @@ class HostedMoneroAPIClient
         }
         return requestHandle
     }
-    //
-    // Runtime - Imperatives - Public - Sending funds
-    SubmitSerializedSignedTransaction(
-        address,
-        view_key__private,
-        serializedSignedTx,
-        fn // (err?) -> RequestHandle
-    ) {
+    SubmitRawTx(parameters, fn)
+    {
         const self = this
-        //
-        var parameters = 
-        {
-            address: address,
-            view_key: view_key__private
-        };
-        parameters.tx = serializedSignedTx
         const endpointPath = 'submit_raw_tx'
         self.$http.post(config.apiUrl + endpointPath, parameters).then(
             function(data)
             {
-                if (data.data.error)
-                {
-                    const errStr = "Invalid mixin - must be >= 0";
-                    const err = new Error(data.data.error);
-                    fn(err);
-                    return;
-                }
-                __proceedTo_parseAndCallBack(data.data)
+                fn(null, data.data)
             }
         ).catch(
             function(data)
             {
-                fn(data && data.Error ? data.Error : "Something went wrong with getting your available balance for spending");
+                fn(data && data.Error ? data.Error : "Something went wrong while submitting your transaction");
             }
         );
-        function __proceedTo_parseAndCallBack(data)
-        {
-            console.log("debug: info: submit_raw_tx: data", data)
-            fn(null)
-        }
         const requestHandle = 
         {
             abort: function()
@@ -282,7 +182,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         $scope.error = "";
         $scope.submitting = true;
         //
-        mymonero_core_js.monero_utils_promise.then(function(monero_utils)
+        mymonero_core_js.monero_utils_promise.then(function(coreBridge_instance)
         {
             if (targets.length > 1) {
                 throw "MyMonero currently only supports one target"
@@ -296,7 +196,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 if (err) {
                     console.error("Err:", err)
                     $scope.status = "";
-                    $scope.error = "Something unexpected occurred when submitting your transaction: " + (err.Error || err);
+                    $scope.error = "Something unexpected occurred when sending funds: " + (err.Error || err);
                     $scope.submitting = false;
                     return
                 }
@@ -327,6 +227,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $http.post(config.apiUrl + "get_txt_records", {
                     domain: domain
                 }).then(function(data) {
+                    var data = data.data;
                     var records = data.records;
                     var oaRecords = [];
                     console.log(domain + ": ", data.records);
@@ -359,7 +260,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     console.log("OpenAlias record: ", oaRecords[0]);
                     var oaAddress = oaRecords[0].address;
                     try {
-                        monero_utils.decode_address(oaAddress, config.nettype);
+                        coreBridge_instance.decode_address(oaAddress, config.nettype);
                         confirmOpenAliasAddress(
                             domain, 
                             oaAddress, 
@@ -390,12 +291,12 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
             // xmr address (incl subaddresses):
             try {
                 // verify that the address is valid
-                monero_utils.decode_address(target.address, config.nettype);
-                sendTo(target.address, amount, null /*domain*/);
+                coreBridge_instance.decode_address(target.address, config.nettype);
             } catch (e) {
-                fn("Failed to decode address (#" + i + "): " + e);
+                fn("Failed to decode address with error: " + e);
                 return;
             }
+            sendTo(target.address, amount, null /*domain*/);
             //
             function sendTo(target_address, amount, domain/*may be null*/)
             {
@@ -409,40 +310,76 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 //
                 _configureWith_statusUpdate(statusUpdate_messageBase);
                 //
-                const monero_sendingFunds_utils = mymonero_core_js.monero_sendingFunds_utils
-                monero_sendingFunds_utils.SendFunds(
-                    target_address,
-                    config.nettype,
-                    amount,
-                    sweeping,
-                    AccountService.getAddress(),
-                    AccountService.getSecretKeys(),
-                    AccountService.getPublicKeys(),
-                    new HostedMoneroAPIClient({ $http: $http }),
-                    payment_id, // passed in
-                    1, /* priority */
-                    function(code) 
+                const sec_keys = AccountService.getSecretKeys()
+                const pub_keys = AccountService.getPublicKeys()
+                const apiClient = new HostedMoneroAPIClient({ $http: $http })
+                var parsed_amount;
+                try {
+                    parsed_amount = mymonero_core_js.monero_amount_format_utils.parseMoney(target.amount);
+                } catch (e) {
+                    fn("Please enter a valid amount");
+                    return
+                }
+                const send_args =
+                {
+                    is_sweeping: sweeping, 
+                    payment_id_string: payment_id, // passed in
+                    sending_amount: sweeping ? 0 : parsed_amount.toString(), // sending amount
+                    from_address_string: AccountService.getAddress(),
+                    sec_viewKey_string: sec_keys.view,
+                    sec_spendKey_string: sec_keys.spend,
+                    pub_spendKey_string: pub_keys.spend,
+                    to_address_string: target_address,
+                    priority: 1,
+                    unlock_time: 0, // unlock_time 
+                    nettype: config.nettype,
+                    //
+                    get_unspent_outs_fn: function(req_params, cb)
                     {
-                        let suffix = monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[code]
+                        apiClient.UnspentOuts(req_params, function(err_msg, res)
+                        {
+                            cb(err_msg, res);
+                        });
+                    },
+                    get_random_outs_fn: function(req_params, cb)
+                    {
+                        apiClient.RandomOuts(req_params, function(err_msg, res)
+                        {
+                            cb(err_msg, res);
+                        });
+                    },
+                    submit_raw_tx_fn: function(req_params, cb)
+                    {
+                        apiClient.SubmitRawTx(req_params, function(err_msg, res)
+                        {
+                            cb(err_msg, res);
+                        });
+                    },
+                    //
+                    status_update_fn: function(params)
+                    {
+                        let suffix = mymonero_core_js.monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[params.code]
                         _configureWith_statusUpdate(
                             statusUpdate_messageBase + " " + suffix, // TODO: localize this concatenation
-                            code
+                            params.code
                         )
                     },
-                    function(
-                        currencyReady_targetDescription_address,
-                        sentAmount, final__payment_id,
-                        tx_hash, tx_fee, tx_key, mixin
-                    ) {
-                        let total_sent__JSBigInt = sentAmount.add(tx_fee)
-                        let total_sent__atomicUnitString = total_sent__JSBigInt.toString()
-                        let total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
-                        let total_sent__float = parseFloat(total_sent__floatString)
+                    error_fn: function(params)
+                    {
+                        fn(params.err_msg)
+                    },
+                    success_fn: function(params)
+                    {
+                        const total_sent__JSBigInt = new JSBigInt(params.total_sent)
+                        const tx_fee = new JSBigInt(params.used_fee)
+                        const total_sent__atomicUnitString = total_sent__JSBigInt.toString()
+                        const total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
+                        const total_sent__float = parseFloat(total_sent__floatString)
                         //
                         const mockedTransaction = 
                         {
-                            hash: tx_hash,
-                            mixin: "" + mixin,
+                            hash: params.tx_hash,
+                            mixin: "" + params.mixin,
                             coinbase: false,
                             mempool: true, // is that correct?
                             //
@@ -459,20 +396,24 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                             approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
                             // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
                             //
-                            payment_id: final__payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
+                            payment_id: params.final_payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
                             //
                             // info we can only preserve locally
                             tx_fee: tx_fee,
-                            tx_key: tx_key,
+                            tx_key: params.tx_key,
+                            tx_pub_key: params.tx_pub_key,
                             target_address: target_address, // only we here are saying it's the target
                         };
                         fn(null, mockedTransaction, domain)
-                    },
-                    function(err)
-                    { // failed-fn 
-                        fn(err)
                     }
-                )
+                }
+                try {
+                    // verify that the address is valid
+                    coreBridge_instance.async__send_funds(send_args);
+                } catch (e) {
+                    fn("Failed to send with exception: " + e);
+                    return;
+                }
             }
         })
     };
