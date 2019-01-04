@@ -918,11 +918,12 @@ YourMoneroRequests::submit_raw_tx(
     if(!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_blob, tx_blob))
     {
         j_response["status"] = "error";
-        j_response["error"]  = "Tx faild parse_hexstr_to_binbuff";
+        j_response["Error"]  = "Tx faild parse_hexstr_to_binbuff";
 
-        OMERROR << j_response["error"];
+        OMERROR << j_response["Error"];
 
-        session_close(session, j_response.dump());
+        session_close(session, j_response.dump(),
+                      INTERNAL_SERVER_ERROR);
         return;
     }
 
@@ -931,25 +932,27 @@ YourMoneroRequests::submit_raw_tx(
     if (!parse_and_validate_tx_from_blob(tx_blob, tx_to_be_submitted))
     {
         j_response["status"] = "error";
-        j_response["error"]  = "Tx faild parse_and_validate_tx_from_blob";
+        j_response["Error"]  = "Tx faild parse_and_validate_tx_from_blob";
 
-        OMERROR << j_response["error"];
+        OMERROR << j_response["Error"];
 
-        session_close(session, j_response.dump());
+        session_close(session, j_response.dump(),
+                      INTERNAL_SERVER_ERROR);
         return;
     }
 
     if (current_bc_status->find_key_images_in_mempool(tx_to_be_submitted))
     {
         j_response["status"] = "error";
-        j_response["error"]  = "Tx uses your outputs that area already "
+        j_response["Error"]  = "Tx uses your outputs that area already "
                                "in the mempool. "
                                "Please wait till your previous tx(s) "
                                "get mined";
 
-        OMERROR << j_response["error"];
+        OMERROR << j_response["Error"];
 
-        session_close(session, j_response.dump());
+        session_close(session, j_response.dump(),
+                      INTERNAL_SERVER_ERROR);
         return;
     }
 
@@ -958,11 +961,12 @@ YourMoneroRequests::submit_raw_tx(
             current_bc_status->get_bc_setup().do_not_relay))
     {
         j_response["status"] = "error";
-        j_response["error"]  = error_msg;
+        j_response["Error"]  = error_msg;
 
-        OMERROR << j_response["error"];
+        OMERROR << j_response["Error"];
 
-        session_close(session, j_response.dump());
+        session_close(session, j_response.dump(),
+                      INTERNAL_SERVER_ERROR);
         return;
     }
 
@@ -1923,11 +1927,13 @@ YourMoneroRequests::login_and_start_search_thread(
 
 void
 YourMoneroRequests::session_close(
-        const shared_ptr< Session > session, string response_body)
+        const shared_ptr< Session > session,
+        string response_body,
+        int return_code)
 {
     auto response_headers = make_headers({{"Content-Length",
                                            to_string(response_body.size())}});
-    session->close(OK, response_body, response_headers);
+    session->close(return_code, response_body, response_headers);
 }
 
 

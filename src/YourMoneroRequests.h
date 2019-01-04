@@ -148,7 +148,9 @@ private:
 
 
     inline void
-    session_close(const shared_ptr< Session > session, string response_body);
+    session_close(const shared_ptr< Session > session,
+                  string response_body,
+                  int return_code = OK);
 
     bool
     parse_request(const Bytes& body,
