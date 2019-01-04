@@ -86,23 +86,10 @@ For other Linux operating systems, the instructions are analogical.
 
 #### Monero download and compilation
 
-Download and compile recent Monero into your home folder:
+To download and compile recent Monero follow instructions
+in the following link:
 
-```bash
-# first install monero dependecines
-sudo apt update
-
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libhidapi-dev libhidapi-libusb0
-
-# go to home folder
-cd ~
-
-git clone --recursive https://github.com/monero-project/monero
-
-cd monero/
-
-USE_SINGLE_BUILDDIR=1 make
-```
+https://github.com/moneroexamples/monero-compilation/blob/master/README.md
 
 #### Compilation of the OpenMonero (don't run it yet)
 
@@ -112,8 +99,8 @@ we can just do it now, to see if it compiles. But don't run it yet. It will not
 work without database, setup frontend, and synced and running monero blockchain.
 
 ```bash
-# need mysql++ library gcovr (for code coverage)
-sudo apt install libmysql++-dev gcovr
+# need mysql++ library
+sudo apt install libmysql++-dev
 
 
 # go to home folder if still in ~/monero
@@ -178,6 +165,56 @@ on port 80 of the localhost, and `/home/mwo/openmonero/html` is the location on 
 frontend files are stored. All these can be changed to suit your requirements.
 
 Go to localhost (http://127.0.0.1) and check if frontend is working.
+
+#### mymonero-core-js (optional)
+
+OpenMonero uses frontend code provided by mymonero.com. Among many files
+used, the two crtical ones are binary webassamply
+[MyMoneroCoreCpp_WASM.wasm](https://mymonero.com/js/lib/mymonero_core_js/monero_utils/MyMoneroCoreCpp_WASM.wasm) and
+the corresponding JavaScript [mymonero-core.js](https://mymonero.com/js/lib/mymonero-core.js) files.
+They are used by [send_coins.js](https://mymonero.com/js/controllers/send_coins.js?) for providing
+transaction generation functionality.
+
+OpenMonero provides these files here: `./html/js/lib`. They were generated using forked of the mymonero-core-js repo:
+https://github.com/moneroexamples/mymonero-core-js/tree/openmonero
+
+However, you can compile them yourself using their orginal repository at
+https://github.com/mymonero/mymonero-core-js.
+
+Below are instructions on how it can be done on Arch Linux.
+
+```
+git clone https://github.com/mymonero/mymonero-core-js.git
+
+cd mymonero-core-js/
+
+./bin/update_submodules
+
+npm install
+
+# download boost
+wget -c "https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz" -O /tmp/boost.tar.gz && mkdir -p ./contrib && tar xzvf /tmp/boost.tar.gz -C ./contrib && mv ./contrib/boost_1_68_0/ ./contrib/boost-sdk
+
+# set EMSCRIPTEN paths (for this, you need to have EMSCRIPTEN setup, e.g. in your home folder)
+# http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html
+source ~/emsdk/emsdk_env.sh
+
+# compile boost
+./bin/build-boost-emscripten.sh
+
+# compile mymonero-core-js
+./bin/build-emcpp.sh
+
+# generate mymonero-core.js
+./bin/package_browser_js
+
+```
+
+The above instructions should produce `mymonero-core.js`
+and `mymonero_core_js/monero_utils/MyMoneroCoreCpp_WASM.wasm`
+(both located in `./build` folder), which can
+be used in place the files bundled with OpenMonero.
+
 
 #### Run OpenMonero
 
