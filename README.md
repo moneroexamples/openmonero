@@ -175,10 +175,10 @@ the corresponding JavaScript [mymonero-core.js](https://mymonero.com/js/lib/mymo
 They are used by [send_coins.js](https://mymonero.com/js/controllers/send_coins.js?) for providing
 transaction generation functionality.
 
-OpenMonero provides these files here: `./html/js/lib`. They were generated using forked of the mymonero-core-js repo:
+OpenMonero provides these files here: `./html/js/lib`. They were generated using forked  `mymonero-core-js` repo:
 https://github.com/moneroexamples/mymonero-core-js/tree/openmonero
 
-However, you can compile them yourself using their orginal repository at
+However, you can compile them yourself using the orginal repository located at
 https://github.com/mymonero/mymonero-core-js.
 
 Below are instructions on how it can be done on Arch Linux.
