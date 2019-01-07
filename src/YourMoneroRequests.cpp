@@ -923,7 +923,7 @@ YourMoneroRequests::submit_raw_tx(
         OMERROR << j_response["Error"];
 
         session_close(session, j_response.dump(),
-                      INTERNAL_SERVER_ERROR);
+                      UNPROCESSABLE_ENTITY);
         return;
     }
 
@@ -937,7 +937,7 @@ YourMoneroRequests::submit_raw_tx(
         OMERROR << j_response["Error"];
 
         session_close(session, j_response.dump(),
-                      INTERNAL_SERVER_ERROR);
+                      UNPROCESSABLE_ENTITY);
         return;
     }
 
@@ -952,7 +952,7 @@ YourMoneroRequests::submit_raw_tx(
         OMERROR << j_response["Error"];
 
         session_close(session, j_response.dump(),
-                      INTERNAL_SERVER_ERROR);
+                      UNPROCESSABLE_ENTITY);
         return;
     }
 
@@ -966,7 +966,7 @@ YourMoneroRequests::submit_raw_tx(
         OMERROR << j_response["Error"];
 
         session_close(session, j_response.dump(),
-                      INTERNAL_SERVER_ERROR);
+                      UNPROCESSABLE_ENTITY);
         return;
     }
 
