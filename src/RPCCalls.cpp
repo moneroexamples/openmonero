@@ -135,7 +135,7 @@ RPCCalls::commit_tx(
 
         if (error_msg.empty())
         {
-            error_msg = "Reason not given by daemon. A guess is 'Failed to check ringct signatures!'.";
+            error_msg = "Reason not given by daemon.";
         }
 
         cerr << "Error sending tx: " << res.reason << endl;
