@@ -85,8 +85,17 @@ TxSearch::operator()()
 
             if (blocks.empty())
             {
-                OMINFO << "Cant get blocks from " << h1
-                       << " to " << h2;
+
+                if (h1 <= h2)
+                {
+                    OMERROR << "Cant get blocks from " << h1
+                            << " to " << h2;
+                    stop();
+                }
+                else
+                {
+                    OMINFO << "Waiting for new block. Last scanned was " << h2;
+                }
 
                 std::this_thread::sleep_for(
                         std::chrono::seconds(
@@ -615,8 +624,8 @@ TxSearch::get_current_timestamp() const
 void
 TxSearch::ping()
 {
-    OMINFO << "New last_ping_timestamp: "
-           << last_ping_timestamp.count();
+    //OMINFO << "New last_ping_timestamp: "
+    //       << last_ping_timestamp.count();
 
     last_ping_timestamp = chrono::duration_cast<seconds>(
             chrono::system_clock::now().time_since_epoch());

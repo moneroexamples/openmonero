@@ -9,6 +9,7 @@
 #include "monero_headers.h"
 
 #include <mutex>
+#include <chrono>
 
 namespace xmreg
 {
@@ -17,13 +18,15 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
+using namespace std::chrono_literals;
 
 class RPCCalls
 {
     string deamon_url;
     uint64_t timeout_time;
 
-    std::chrono::milliseconds timeout_time_ms;
+    //std::chrono::milliseconds timeout_time_ms;
+    chrono::seconds rpc_timeout;
 
     epee::net_utils::http::url_content url;
 
@@ -36,18 +39,18 @@ class RPCCalls
 public:
 
     RPCCalls(string _deamon_url = "http:://127.0.0.1:18081",
-             uint64_t _timeout = 200000);    
+             chrono::seconds _timeout = 3min + 30s);    
 
-    RPCCalls(RPCCalls&& a);
+    //RPCCalls(RPCCalls&& a);
 
-    RPCCalls&
-    operator=(RPCCalls&& a);
+    //RPCCalls&
+    //operator=(RPCCalls&& a);
 
-    virtual bool
-    operator==(RPCCalls const& a);
+    //virtual bool
+    //operator==(RPCCalls const& a);
 
-    virtual bool
-    operator!=(RPCCalls const& a);
+    //virtual bool
+    //operator!=(RPCCalls const& a);
 
     virtual bool
     connect_to_monero_deamon();
