@@ -20,7 +20,8 @@ CurrentBlockchainStatus::CurrentBlockchainStatus(
       mcore {std::move(_mcore)},
       rpc {std::move(_rpc)}
 {
-
+    is_running = false;
+    stop_blockchain_monitor_loop = false;
 }
 
 void
@@ -28,8 +29,6 @@ CurrentBlockchainStatus::monitor_blockchain()
 {
     TxSearch::set_search_thread_life(
                 bc_setup.search_thread_life);
-
-    stop_blockchain_monitor_loop = false;
 
     if (!is_running)
     {
