@@ -2,6 +2,9 @@
 // Created by mwo on 13/04/16.
 //
 
+#include "easylogging++.h"
+#include "om_log.h"
+
 #include "RPCCalls.h"
 
 namespace xmreg
@@ -61,7 +64,7 @@ RPCCalls::commit_tx(
             error_msg = "Reason not given by daemon.";
         }
 
-        cerr << "Error sending tx: " << error_msg << endl;
+        OMERROR << "Error sending tx: " << error_msg;
 
         return false;
     }
@@ -70,7 +73,7 @@ RPCCalls::commit_tx(
     {
         error_msg = "Deamon is BUSY. Cant sent now " + res.reason;
 
-        cerr << "Error sending tx: " << error_msg << endl;
+        OMERROR << "Error sending tx: " << error_msg;
 
         return false;
     }
@@ -79,14 +82,16 @@ RPCCalls::commit_tx(
     {
         error_msg = "Tx rejected: " + res.reason;
 
-        cerr << "Error sending tx: " << error_msg << endl;
+        OMERROR << "Error sending tx: " << error_msg;
 
         return false;
     }
 
     if (do_not_relay)
     {
-        cout << "Tx accepted by deamon but not relayed (useful for testing of constructing txs)" << endl;
+        OMINFO << "Tx accepted by deamon but "
+                  "not relayed (useful for testing "
+                  "of constructing txs)";
     }
 
     return true;
@@ -124,8 +129,8 @@ RPCCalls::get_current_height(uint64_t& current_height)
 
     if (!r)
     {
-        cerr << "Error connecting to Monero deamon at "
-             << deamon_url << endl;
+        OMERROR << "Error connecting to Monero deamon at "
+                << deamon_url;
         return false;
     }
 
