@@ -19,76 +19,6 @@ RPCCalls::RPCCalls(string _deamon_url, chrono::seconds _timeout)
             boost::optional<epee::net_utils::http::login>{});
 }
 
-//RPCCalls::RPCCalls(RPCCalls&& a)
-//{
-    //std::lock_guard<std::mutex> guard(a.m_daemon_rpc_mutex);
-
-    //deamon_url = std::move(a.deamon_url);
-    //timeout_time = a.timeout_time;
-    //timeout_time_ms = a.timeout_time_ms;
-
-    //url = std::move(a.url);
-    //port = std::move(port);
-
-    //// we can't move or copy m_http_client,
-    //// so we just initialize it from zero
-    //m_http_client.set_server(
-            //deamon_url,
-            //boost::optional<epee::net_utils::http::login>{});
-
-    //// after the move, disconned the a object
-    //a.m_http_client.disconnect();
-
-    //cout << "\n RPCCalls(RPCCalls&& a) " << endl;
-//}
-
-//RPCCalls&
-//RPCCalls::operator=(RPCCalls&& a)
-//{
-    //if (*this == a)
-        //return *this;
-
-    //std::unique_lock<std::mutex> lhs_lk(m_daemon_rpc_mutex, std::defer_lock);
-    //std::unique_lock<std::mutex> rhs_lk(a.m_daemon_rpc_mutex, std::defer_lock);
-
-    //std::lock(lhs_lk, rhs_lk);
-
-    //deamon_url = std::move(a.deamon_url);
-    //timeout_time = a.timeout_time;
-    //timeout_time_ms = a.timeout_time_ms;
-
-    //url = std::move(a.url);
-    //port = std::move(port);
-
-    //// we can't move or copy m_http_client,
-    //// so we just initialize it from zero
-    //m_http_client.set_server(
-            //deamon_url,
-            //boost::optional<epee::net_utils::http::login>{});
-
-    //// after the move, disconned the a object
-    //a.m_http_client.disconnect();
-
-    //cout << "\n RPCCalls& operator=(RPCCalls&& a) " << endl;
-
-    //return *this;
-//}
-
-
-//bool
-//RPCCalls::operator==(RPCCalls const& a)
-//{
-    //return deamon_url == a.deamon_url;
-//}
-
-
-//bool
-//RPCCalls::operator!=(RPCCalls const& a)
-//{
-    //return !(*this == a);
-//}
-
-
 bool
 RPCCalls::connect_to_monero_deamon()
 {
@@ -100,8 +30,6 @@ RPCCalls::connect_to_monero_deamon()
     return m_http_client.connect(rpc_timeout);
 }
 
-
-
 bool
 RPCCalls::commit_tx(
         const string& tx_blob,
@@ -112,25 +40,19 @@ RPCCalls::commit_tx(
     COMMAND_RPC_SEND_RAW_TX::response res;
 
     req.tx_as_hex = tx_blob;
+    req.do_not_relay = do_not_relay;  
 
-    req.do_not_relay = do_not_relay;
+    bool r {false};
 
-    std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
-
-    if (!connect_to_monero_deamon())
     {
-        cerr << "commit_tx: not connected to deamon" << endl;
-        
-        error_msg = "Can't connect to Monero daemon";
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
-        return false;
+        r = epee::net_utils::invoke_http_json(
+                "/sendrawtransaction", req, res,
+                m_http_client, rpc_timeout);
     }
 
-    bool r = epee::net_utils::invoke_http_json(
-            "/sendrawtransaction", req, res,
-            m_http_client, rpc_timeout);
-
-    if (!r || res.status == "Failed")
+    if (!r)
     {
         error_msg = res.reason;
 
@@ -139,13 +61,23 @@ RPCCalls::commit_tx(
             error_msg = "Reason not given by daemon.";
         }
 
-        cerr << "Error sending tx: " << res.reason << endl;
+        cerr << "Error sending tx: " << error_msg << endl;
 
         return false;
     }
-    else if (res.status == "BUSY")
+
+    if (res.status == CORE_RPC_STATUS_BUSY)
     {
         error_msg = "Deamon is BUSY. Cant sent now " + res.reason;
+
+        cerr << "Error sending tx: " << error_msg << endl;
+
+        return false;
+    }
+
+    if (res.status != CORE_RPC_STATUS_OK)
+    {
+        error_msg = "Tx rejected: " + res.reason;
 
         cerr << "Error sending tx: " << error_msg << endl;
 
@@ -173,5 +105,33 @@ RPCCalls::commit_tx(
     return commit_tx(tx_blob, error_msg);
 }
 
+
+bool
+RPCCalls::get_current_height(uint64_t& current_height)
+{
+    COMMAND_RPC_GET_HEIGHT::request   req;
+    COMMAND_RPC_GET_HEIGHT::response  res;
+
+    bool r {false};
+
+    {
+        std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
+
+        r = epee::net_utils::invoke_http_json(
+                "/getheight",
+                req, res, m_http_client, rpc_timeout);
+    }
+
+    if (!r)
+    {
+        cerr << "Error connecting to Monero deamon at "
+             << deamon_url << endl;
+        return false;
+    }
+
+    current_height = res.height;
+
+    return true;
+}
 
 }

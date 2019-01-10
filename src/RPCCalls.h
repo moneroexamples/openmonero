@@ -25,7 +25,6 @@ class RPCCalls
     string deamon_url;
     uint64_t timeout_time;
 
-    //std::chrono::milliseconds timeout_time_ms;
     chrono::seconds rpc_timeout;
 
     epee::net_utils::http::url_content url;
@@ -39,18 +38,7 @@ class RPCCalls
 public:
 
     RPCCalls(string _deamon_url = "http:://127.0.0.1:18081",
-             chrono::seconds _timeout = 3min + 30s);    
-
-    //RPCCalls(RPCCalls&& a);
-
-    //RPCCalls&
-    //operator=(RPCCalls&& a);
-
-    //virtual bool
-    //operator==(RPCCalls const& a);
-
-    //virtual bool
-    //operator!=(RPCCalls const& a);
+             chrono::seconds _timeout = 3min + 30s);
 
     virtual bool
     connect_to_monero_deamon();
@@ -64,6 +52,8 @@ public:
     commit_tx(tools::wallet2::pending_tx& ptx,
               string& error_msg);
 
+    virtual bool
+    get_current_height(uint64_t& current_height);
 
     virtual ~RPCCalls() = default;
 };

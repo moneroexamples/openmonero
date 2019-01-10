@@ -66,7 +66,21 @@ CurrentBlockchainStatus::get_current_blockchain_height()
 void
 CurrentBlockchainStatus::update_current_blockchain_height()
 {
-    current_height = mcore->get_current_blockchain_height() - 1;
+    //current_height = mcore->get_current_blockchain_height() - 1;
+
+    uint64_t tmp {0};
+
+    // This rpc call not only gets the blockchain height
+    // but it also serves as a "ping" into the Monero
+    // deamon to keep the connection between the
+    // openmonero backend and the deamon alive
+    if (rpc->get_current_height(tmp))
+    {
+        current_height = tmp - 1;
+        return;
+    }
+
+    OMERROR << "rpc->get_current_height() failed!";
 }
 
 bool
