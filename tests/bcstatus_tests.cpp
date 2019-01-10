@@ -314,8 +314,8 @@ TEST_P(BCSTATUS_TEST, GetCurrentHeight)
 {
     uint64_t mock_current_height {1619148};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 
@@ -331,8 +331,8 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
 
     const uint64_t mock_current_height {100};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 
@@ -364,7 +364,7 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
             - CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
 
     EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
-                                              not_used_block_height));
+                                    not_used_block_height));
 
     // expected unlock time is same as as current height
     // thus a tx is unlocked
@@ -372,7 +372,7 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
     tx_unlock_time = mock_current_height;
 
     EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
-                                              not_used_block_height));
+                                    not_used_block_height));
 }
 
 
@@ -393,8 +393,8 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario2)
 
     const uint64_t mock_current_height {100};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 

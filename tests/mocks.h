@@ -123,6 +123,9 @@ public:
     MOCK_METHOD3(commit_tx, bool(const string& tx_blob,
                                  string& error_msg,
                                  bool do_not_relay));
+
+    MOCK_METHOD1(get_current_height,
+                 bool(uint64_t& current_height));
 };
 
 class MockTxSearch : public xmreg::TxSearch
