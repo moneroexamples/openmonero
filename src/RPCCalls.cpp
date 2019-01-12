@@ -55,34 +55,14 @@ RPCCalls::commit_tx(
                 m_http_client, rpc_timeout);
     }
 
-    if (!r)
-    {
-        error_msg = res.reason;
+    if (!r || !check_if_response_is_ok(res, error_msg))
+    {        
+        if (res.reason.empty())
+            error_msg += "Reason not given by daemon.";
+        else
+            error_msg += res.reason;
 
-        if (error_msg.empty())
-        {
-            error_msg = "Reason not given by daemon.";
-        }
-
-        OMERROR << "Error sending tx: " << error_msg;
-
-        return false;
-    }
-
-    if (res.status == CORE_RPC_STATUS_BUSY)
-    {
-        error_msg = "Deamon is BUSY. Cant sent now " + res.reason;
-
-        OMERROR << "Error sending tx: " << error_msg;
-
-        return false;
-    }
-
-    if (res.status != CORE_RPC_STATUS_OK)
-    {
-        error_msg = "Tx rejected: " + res.reason;
-
-        OMERROR << "Error sending tx: " << error_msg;
+        OMERROR << "Error sending tx. " << error_msg;
 
         return false;
     }
@@ -127,10 +107,12 @@ RPCCalls::get_current_height(uint64_t& current_height)
                 req, res, m_http_client, rpc_timeout);
     }
 
-    if (!r)
+    string error_msg;
+
+    if (!r || !check_if_response_is_ok(res, error_msg))
     {
-        OMERROR << "Error connecting to Monero deamon at "
-                << deamon_url;
+        OMERROR << "Error getting blockchain height. "
+                << error_msg;
         return false;
     }
 
@@ -139,4 +121,38 @@ RPCCalls::get_current_height(uint64_t& current_height)
     return true;
 }
 
+
+template <typename Command>
+bool
+RPCCalls::check_if_response_is_ok(
+        Command const& res,
+        string& error_msg) const
+{
+    if (res.status == CORE_RPC_STATUS_BUSY)
+    {
+        error_msg = "Deamon is BUSY. Cant sent now. ";
+        return false;
+    }
+
+    if (res.status != CORE_RPC_STATUS_OK)
+    {
+        error_msg = "RPC failed. ";
+        return false;
+    }
+
+    return true;
+}
+
+
+template
+bool RPCCalls::check_if_response_is_ok<
+        COMMAND_RPC_SEND_RAW_TX::response>(
+    COMMAND_RPC_SEND_RAW_TX::response const& res,
+    string& error_msg) const;
+
+template
+bool RPCCalls::check_if_response_is_ok<
+        COMMAND_RPC_GET_HEIGHT::response>(
+    COMMAND_RPC_GET_HEIGHT::response const& res,
+    string& error_msg) const;
 }

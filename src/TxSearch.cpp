@@ -48,6 +48,8 @@ TxSearch::TxSearch(XmrAccount& _acc,
 
     last_ping_timestamp = 0s;
 
+    address_prefix = acc->address.substr(0, 6);
+
     ping();
 }
 
@@ -88,13 +90,16 @@ TxSearch::operator()()
 
                 if (h1 <= h2)
                 {
-                    OMERROR << "Cant get blocks from " << h1
+                    OMERROR << address_prefix
+                            << ": cant get blocks from " << h1
                             << " to " << h2;
                     stop();
                 }
                 else
                 {
-                    OMINFO << "Waiting for new block. Last scanned was " << h2;
+                    OMINFO << address_prefix
+                           << ": waiting for new block. "
+                              "Last scanned was " << h2;
                 }
 
                 std::this_thread::sleep_for(
@@ -110,8 +115,8 @@ TxSearch::operator()()
                 // stop the thread
                 if (loop_timestamp - last_ping_timestamp > thread_search_life)
                 {
-                    OMINFO << "Search thread stopped for address "
-                           << acc->address;
+                    OMINFO << address_prefix
+                              + ": search thread stopped.";
                     stop();
                 }
 
@@ -128,7 +133,8 @@ TxSearch::operator()()
                 continue;
             }
 
-            OMINFO << "Analyzing " << blocks.size() << " blocks from "
+            OMINFO << address_prefix  + ": analyzing "
+                   << blocks.size() << " blocks from "
                    << h1 << " to " << h2
                    << " out of " << last_block_height << " blocks";
 
@@ -141,7 +147,9 @@ TxSearch::operator()()
                                                       txs_in_blocks,
                                                       txs_data))
             {
-                OMERROR << "Cant get tx in blocks from " << h1 << " to " << h2;
+                OMERROR << address_prefix
+                           + ": cant get tx in blocks from "
+                        << h1 << " to " << h2;
                 return;
             }
 
@@ -256,8 +264,10 @@ TxSearch::operator()()
                                                 + pod_to_hex(tx_hash));
                     }
 
-                    OMINFO << " - found some outputs in block " << blk_height
-                            << ", tx: " << oi_identification.get_tx_hash_str();
+                    OMINFO << address_prefix
+                              + ": found some outputs in block "
+                           << blk_height << ", tx: "
+                            << oi_identification.get_tx_hash_str();
 
 
                     XmrTransaction tx_data;
@@ -300,14 +310,17 @@ TxSearch::operator()()
                     if (!current_bc_status->get_amount_specific_indices(
                             tx_hash, amount_specific_indices))
                     {
-                        OMERROR << "cant get_amount_specific_indices!";
+                        OMERROR << address_prefix
+                                   + ": cant get_amount_specific_indices!";
                         throw TxSearchException(
                                     "cant get_amount_specific_indices!");
                     }
 
                     if (tx_mysql_id == 0)
                     {                        
-                        OMERROR << "tx_mysql_id is zero!" << tx_data;
+                        OMERROR << address_prefix
+                                   + ": tx_mysql_id is zero!"
+                                << tx_data;
                         throw TxSearchException("tx_mysql_id is zero!");                        
                     }
 
@@ -411,7 +424,7 @@ TxSearch::operator()()
                                 ->tx_exist(oi_identification.tx_hash,
                                            blockchain_tx_id))
                         {
-                            OMERROR << "Tx "
+                            OMERROR << address_prefix  + ": tx "
                                     << oi_identification.get_tx_hash_str()
                                      << "not found in blockchain !";
                             throw TxSearchException(
@@ -420,7 +433,9 @@ TxSearch::operator()()
                         }
                     }
 
-                    OMINFO << "Found some possible inputs in block "
+                    OMINFO << address_prefix
+                              + ": found some possible "
+                                "inputs in block "
                            << blk_height << ", tx: "
                            << oi_identification.get_tx_hash_str();
 
@@ -513,7 +528,9 @@ TxSearch::operator()()
 
                             if (tx_mysql_id == 0)
                             {
-                                OMERROR << "tx_mysql_id is zero!" << tx_data;
+                                OMERROR << address_prefix
+                                           + ": tx_mysql_id is zero!"
+                                        << tx_data;
 
                                 //cerr << "tx_mysql_id is zero!" << endl;
                                 throw TxSearchException("tx_mysql_id is zero!");
@@ -582,7 +599,8 @@ TxSearch::operator()()
     }   
     catch(...)
     {
-        OMERROR << "Exception in TxSearch for " << acc->address;
+        OMERROR << address_prefix
+                   + ": exception in TxSearch!";
         set_exception_ptr();
     }
 
@@ -593,13 +611,16 @@ TxSearch::operator()()
 void
 TxSearch::stop()
 {
-    OMINFO << "Stopping the thread by setting continue_search=false";
+    OMINFO << address_prefix  + ": stopping the thread "
+                                "by setting "
+                                "continue_search=false";
     continue_search = false;
 }
 
 TxSearch::~TxSearch()
 {
-    OMINFO << "TxSearch destroyed";
+    OMINFO << address_prefix
+              + ": txSearch thread destroyed";
 }
 
 void
@@ -865,15 +886,17 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
 
     if (xmr_accounts->tx_exists(acc->id.data, tx_hash, tx_data_existing))
     {
-        OMINFO << "\nTransaction " << tx_hash
-               << " already present in mysql, so remove it";
+        OMINFO << '\n' << address_prefix
+                  + ": tx " << tx_hash
+               << " already present in db, so remove it";
 
         // if tx is already present for that user,
         // we remove it, as we get it data from scrach
 
         if (xmr_accounts->delete_tx(tx_data_existing.id.data) == 0)
         {
-            OMERROR << "cant remove tx " << tx_hash;
+            OMERROR << address_prefix  + ": cant remove tx "
+                    << tx_hash;
             return false;
         }
     }

@@ -56,6 +56,13 @@ public:
     get_current_height(uint64_t& current_height);
 
     virtual ~RPCCalls() = default;
+
+protected:
+
+    template <typename Command>
+    bool
+    check_if_response_is_ok(Command const& res,
+                            string& error_msg) const;
 };
 
 

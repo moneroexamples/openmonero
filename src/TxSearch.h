@@ -81,6 +81,8 @@ private:
     address_parse_info address;
     secret_key viewkey;
 
+    string address_prefix;
+
 public:
 
     // make default constructor. useful in testing
