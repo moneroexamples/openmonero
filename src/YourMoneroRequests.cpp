@@ -999,7 +999,7 @@ YourMoneroRequests::import_wallet_request(
     j_response["error"]  = "Some error occured";
 
     // if current_bc_status-> is zero, we just import the wallet.
-    // we dont care about any databases or anything, as importin all
+    // we dont care about any databases or anything, as importing
     // wallet is free.
     // just reset the scanned block height in mysql and finish.
     if (current_bc_status->get_bc_setup().import_fee == 0)
@@ -1007,7 +1007,8 @@ YourMoneroRequests::import_wallet_request(
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
-            cerr << "Updating searched_blk_no failed!" << endl;
+            OMERROR << xmr_address.substr(0,6)
+                       + ": updating searched_blk_no failed!";
             j_response["error"] = "Updating searched_blk_no failed!";
         }
 
@@ -1020,7 +1021,7 @@ YourMoneroRequests::import_wallet_request(
 
         auto response_headers
                 = make_headers({{ "Content-Length",
-                                         std::to_string(response_body.size())}});
+                                 std::to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
 
@@ -1031,13 +1032,14 @@ YourMoneroRequests::import_wallet_request(
 
     if (!xmr_accounts->select(xmr_address, acc))
     {
-        cerr << "xmr_address does not exists! " << endl;
+        OMERROR << xmr_address.substr(0,6) +
+                   ": address does not exists!";
         j_response["error"] = "The account does not exists!";
 
         string response_body = j_response.dump();
         auto response_headers
                 = make_headers({{ "Content-Length",
-                                     std::to_string(response_body.size())}});
+                                  std::to_string(response_body.size())}});
 
         session->close( OK, response_body, response_headers);
         return;
@@ -1057,7 +1059,8 @@ YourMoneroRequests::import_wallet_request(
 
         if (xmr_payments.size() > 1)
         {
-            cerr << "More than one payment record found! " << endl;
+             OMERROR << xmr_address.substr(0,6) +
+                        "More than one payment record found!";
             j_response["error"] = "TMore than one payment record found!";
 
             string response_body = j_response.dump();
@@ -1126,7 +1129,8 @@ YourMoneroRequests::import_wallet_request(
                             if (!current_bc_status
                                     ->set_new_searched_blk_no(xmr_address, 0))
                             {
-                                cerr << "Updating searched_blk_no failed!\n";
+                                 OMERROR << xmr_address.substr(0,6) +
+                                            ": updating searched_blk_no failed!\n";
                                 j_response["error"] = "Updating searched_blk_no"
                                                       " failed!";
                             }
@@ -1141,16 +1145,18 @@ YourMoneroRequests::import_wallet_request(
                     }
                     else
                     {
-                        cerr << "Updating accounts due to made "
-                                "payment mysql failed! \n";
+                         OMERROR << xmr_address.substr(0,6) +
+                                   ": updating accounts "
+                                    "payment db failed! \n";
                         j_response["error"]
-                                = "Updating accounts due to made "
-                                  "payment mysql failed!";
+                                = "Updating accounts  "
+                                  "payment db failed!";
                     }
                 }
                 else
                 {
-                    cerr << "Updating payment mysql failed!\n";
+                     OMERROR << xmr_address.substr(0,6) +
+                                "Updating payment db failed!\n";
                     j_response["error"] = "Updating payment mysql failed!";
                 }
 
