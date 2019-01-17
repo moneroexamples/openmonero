@@ -12,7 +12,7 @@
 #include "version.h"
 
 #include "CurrentBlockchainStatus.h"
-#include "MySqlAccounts.h"
+#include "db/MySqlAccounts.h"
 #include "../gen/version.h"
 
 #include "../ext/restbed/source/restbed"
@@ -147,17 +147,24 @@ private:
             json& j_response);
 
 
-    inline void
-    session_close(const shared_ptr< Session > session,
-                  string response_body,
-                  int return_code = OK);
-
     bool
     parse_request(const Bytes& body,
                   vector<string>& values_map,
                   json& j_request,
                   json& j_response);
 
+    boost::optional<XmrAccount>
+    select_account(string const& xmr_address) const;
+
+    boost::optional<XmrPayment>
+    select_payment(XmrAccount const& xmr_account) const;
+
+     void
+    session_close(
+            const shared_ptr< Session > session,
+            json& j_response,
+            int return_code = OK,
+            string error_msg = "") const;
 };
 
 

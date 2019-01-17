@@ -4,7 +4,7 @@
 
 #include "../src/MicroCore.h"
 #include "../src/YourMoneroRequests.h"
-#include "../src/MysqlPing.h"
+#include "../src/db/MysqlPing.h"
 
 //#include "chaingen.h"
 //#include "chaingen_tests_list.h"
@@ -335,6 +335,8 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
     xmreg::XmrAccount acc;
 
     bool is_success = xmr_accounts->select(xmr_addr, acc);
+
+    ASSERT_TRUE(is_success);
 
     EXPECT_EQ(acc.id.data, expected_primary_id);
     EXPECT_EQ(acc.scanned_block_height, mock_current_blockchain_height);
@@ -1100,7 +1102,7 @@ make_mock_payment_data(string last_char_pub_key = "0")
     mock_data.import_fee        = 10000000010ull; // xmr
     mock_data.request_fulfilled = false;
     mock_data.tx_hash           = ""; // no tx_hash yet with the payment
-    mock_data.payment_address   = "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLK4Tiiy";
+    mock_data.payment_address   = "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLGi6vcb2zkW7mhsWor";
 
     return mock_data;
 }

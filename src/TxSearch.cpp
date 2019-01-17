@@ -6,9 +6,9 @@
 
 #include "TxSearch.h"
 
-#include "MySqlAccounts.h"
+#include "db/MySqlAccounts.h"
 
-#include "ssqlses.h"
+#include "db/ssqlses.h"
 
 #include "CurrentBlockchainStatus.h"
 

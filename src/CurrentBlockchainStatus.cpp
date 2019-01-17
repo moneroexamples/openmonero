@@ -601,7 +601,7 @@ CurrentBlockchainStatus::start_tx_search_thread(
             {acc.address, ThreadRAII2<TxSearch>(std::move(tx_search))});
 
         OMINFO << acc.address.substr(0,6)
-                  + " :TxSearch thread created.";
+                  + ": TxSearch thread created.";
     }
     catch (const std::exception& e)
     {

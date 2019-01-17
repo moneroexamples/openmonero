@@ -132,7 +132,8 @@ public:
     virtual std::vector<uint64_t>
     get_tx_amount_output_indices(uint64_t const& tx_id) const
     {
-        return core_storage.get_db().get_tx_amount_output_indices(tx_id);
+        return core_storage.get_db()
+                .get_tx_amount_output_indices(tx_id).front();
     }
 
     virtual bool

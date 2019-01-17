@@ -3,7 +3,7 @@
 #include "src/MicroCore.h"
 #include "src/YourMoneroRequests.h"
 #include "src/ThreadRAII.h"
-#include "src/MysqlPing.h"
+#include "src/db/MysqlPing.h"
 
 #include <iostream>
 #include <memory>

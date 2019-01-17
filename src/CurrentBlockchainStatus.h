@@ -4,14 +4,14 @@
 
 #include "om_log.h"
 #include "MicroCore.h"
-#include "ssqlses.h"
+#include "db/ssqlses.h"
 #include "TxUnlockChecker.h"
 #include "BlockchainSetup.h"
 #include "TxSearch.h"
 #include "tools.h"
 #include "ThreadRAII.h"
 #include "RPCCalls.h"
-#include "MySqlAccounts.h"
+#include "db/MySqlAccounts.h"
 #include "RandomOutputs.h"
 
 #include <iostream>
@@ -27,7 +27,7 @@ using namespace std;
 
 class XmrAccount;
 class MySqlAccounts;
-
+class TxSearch;
 
 /*
 * This is a thread class. Probably it should be singleton, as we want
