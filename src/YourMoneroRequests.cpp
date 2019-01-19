@@ -1042,9 +1042,6 @@ YourMoneroRequests::import_wallet_request(
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
-            OMERROR << xmr_address.substr(0,6)
-                       + ": updating searched_blk_no failed!";
-
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "Updating searched_blk_no failed!");
             return;
@@ -1222,10 +1219,10 @@ YourMoneroRequests::import_wallet_request(
         if (!current_bc_status
                 ->set_new_searched_blk_no(xmr_address, 0))
         {
-             OMERROR << xmr_address.substr(0,6) +
-                        ": updating searched_blk_no failed!\n";
-            j_response["error"] = "Updating searched_blk_no"
-                                  " failed!";
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating searched_blk_no failed!");
+            return;
+
         }
 
         j_response["request_fulfilled"]

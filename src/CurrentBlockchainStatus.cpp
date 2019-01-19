@@ -837,7 +837,9 @@ CurrentBlockchainStatus::set_new_searched_blk_no(
     if (searching_threads.count(address) == 0)
     {
         // thread does not exist
-        OMERROR << " thread does not exist";
+        OMERROR << address.substr(0,6)
+                   + ": set_new_searched_blk_no failed:"
+                   " thread does not exist";
         return false;
     }
 
