@@ -985,11 +985,36 @@ void
 YourMoneroRequests::import_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
 {
-    json j_request = body_to_json(body);
-
-    string xmr_address   = j_request["address"];
 
     json j_response;
+    json j_request;
+
+    vector<string> requested_values {"address" , "view_key"};
+
+    if (!parse_request(body, requested_values,
+                       j_request, j_response))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Cant parse json body!");
+        return;
+    }
+
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        OMERROR << "json exception: " << e.what();
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      e.what());
+        return;
+    }
+
 
     j_response["request_fulfilled"] = false;
     j_response["import_fee"]        = std::to_string(
@@ -1035,16 +1060,21 @@ YourMoneroRequests::import_wallet_request(
         return;
     }
 
+    // payment fee is not zero, so we need to
+    // ask for the payment. So we first get payment details
+    // associated with the given account.
 
     auto xmr_payment = select_payment(*xmr_account);
 
+    // something went wrong.
     if (!xmr_payment)
     {
         session_close(session, j_response, UNPROCESSABLE_ENTITY,
-                      "Selecting payment details faild!");
+                      "Selecting payment details failed!");
         return;
     }
 
+    // payment id is null
     if (xmr_payment->id == mysqlpp::null)
     {
         // no current payment record exist,
@@ -1095,12 +1125,42 @@ YourMoneroRequests::import_wallet_request(
         return;
     } // if (xmr_payment->id == mysqlpp::null)
 
+    // payment id is not null, so it means that
+    // we have already payment record in our db for that
+    // account.
 
     bool request_fulfilled = bool {xmr_payment->request_fulfilled};
+
+    if (request_fulfilled)
+    {
+        // if payment has been made, and we get new request to import txs
+        // indicate that this is new requeest, but request was fulfiled.
+        // front end should give proper message in this case
+
+        j_response["request_fulfilled"] = request_fulfilled;
+        j_response["status"]            = "Wallet already imported or "
+                                          "in the progress.";
+        j_response["new_request"]       = false;
+        j_response["error"]             = "";
+
+        session_close(session, j_response);
+        return;
+    }
+
+    // payment has not been yet done, so we are going
+    // to check if it has just been done and update
+    // db accordingly
 
     string integrated_address =
             current_bc_status->get_account_integrated_address_as_str(
                     xmr_payment->payment_id);
+
+    if (integrated_address.empty())
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "get_account_integrated_address_as_str failed!");
+        return;
+    }
 
     j_response["payment_id"]        = xmr_payment->payment_id;
     j_response["import_fee"]        = std::to_string(xmr_payment->import_fee);
@@ -1112,91 +1172,70 @@ YourMoneroRequests::import_wallet_request(
     string tx_hash_with_payment;
 
     // if payment has not yet been done
-    if (!request_fulfilled)
+    // check if it has just been done now
+    // if yes, mark it in mysql
+
+    if(current_bc_status->search_if_payment_made(
+            xmr_payment->payment_id,
+            xmr_payment->import_fee,
+            tx_hash_with_payment))
     {
-        // check if it has just been done now
-        // if yes, mark it in mysql
-        if(current_bc_status->search_if_payment_made(
-                xmr_payment->payment_id,
-                xmr_payment->import_fee,
-                tx_hash_with_payment))
+        XmrPayment updated_xmr_payment = *xmr_payment;
+
+        // updated values
+        updated_xmr_payment.request_fulfilled = true;
+        updated_xmr_payment.tx_hash           = tx_hash_with_payment;
+
+        // save to mysql
+        if (!xmr_accounts->update(*xmr_payment, updated_xmr_payment))
         {
-            XmrPayment updated_xmr_payment = *xmr_payment;
 
-            // updated values
-            updated_xmr_payment.request_fulfilled = true;
-            updated_xmr_payment.tx_hash           = tx_hash_with_payment;
+            OMERROR << xmr_address.substr(0,6) +
+                        "Updating payment db failed!\n";
 
-            // save to mysql
-            if (xmr_accounts->update(*xmr_payment, updated_xmr_payment))
-            {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Updating payment db failed!");
+            return;
+        }
 
-                // set scanned_block_height	to 0 to begin
-                // scanning entire blockchain
+        XmrAccount updated_acc = *xmr_account;
 
-                XmrAccount acc;
+        updated_acc.scanned_block_height = 0;
 
-                if (xmr_accounts->select(xmr_address, acc))
-                {
-                    XmrAccount updated_acc = acc;
+        // set scanned_block_height	to 0 to begin
+        // scanning entire blockchain
 
-                    updated_acc.scanned_block_height = 0;
+        if (!xmr_accounts->update(*xmr_account, updated_acc))
+        {
+            OMERROR << xmr_address.substr(0,6) +
+                        "Updating scanned_block_height failed!\n";
 
-                    if (xmr_accounts->update(acc, updated_acc))
-                    {
-                        // if success, set acc to updated_acc;
-                        request_fulfilled = true;
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Updating scanned_block_height failed!");
+            return;
+        }
 
-                        // change search blk number in the search thread
-                        if (!current_bc_status
-                                ->set_new_searched_blk_no(xmr_address, 0))
-                        {
-                             OMERROR << xmr_address.substr(0,6) +
-                                        ": updating searched_blk_no failed!\n";
-                            j_response["error"] = "Updating searched_blk_no"
-                                                  " failed!";
-                        }
+        // if success, set acc to updated_acc;
+        request_fulfilled = true;
 
-                        j_response["request_fulfilled"]
-                                = request_fulfilled;
-                        j_response["status"]
-                                = "Payment received. Thank you.";
-                        j_response["new_request"]       = true;
-                        j_response["error"]             = "";
-                    }
-                }
-                else
-                {
-                     OMERROR << xmr_address.substr(0,6) +
-                               ": updating accounts "
-                                "payment db failed! \n";
-                    j_response["error"]
-                            = "Updating accounts  "
-                              "payment db failed!";
-                }
-            }
-            else
-            {
-                 OMERROR << xmr_address.substr(0,6) +
-                            "Updating payment db failed!\n";
-                j_response["error"] = "Updating payment mysql failed!";
-            }
+        // change search blk number in the search thread
+        if (!current_bc_status
+                ->set_new_searched_blk_no(xmr_address, 0))
+        {
+             OMERROR << xmr_address.substr(0,6) +
+                        ": updating searched_blk_no failed!\n";
+            j_response["error"] = "Updating searched_blk_no"
+                                  " failed!";
+        }
 
-        } // if(current_bc_status->search_if_payment_made(
-
-    }  // if (!request_fulfilled)
-    else
-    {
-        // if payment has been made, and we get new request to import txs
-        // indicate that this is new requeest, but request was fulfiled.
-        // front end should give proper message in this case
-
-        j_response["request_fulfilled"] = request_fulfilled;
-        j_response["status"]            = "Wallet already imported or "
-                                          "in the progress.";
-        j_response["new_request"]       = false;
+        j_response["request_fulfilled"]
+                = request_fulfilled;
+        j_response["status"]
+                = "Payment received. Thank you.";
+        j_response["new_request"]       = true;
         j_response["error"]             = "";
-    }
+
+    } // if(current_bc_status->search_if_payment_made(
 
 
     session_close(session, j_response);
@@ -1218,10 +1257,11 @@ YourMoneroRequests::import_recent_wallet_request(
     vector<string> requested_values {"address" , "view_key",
                                      "no_blocks_to_import"};
 
-    if (!parse_request(body, requested_values, j_request, j_response))
+    if (!parse_request(body, requested_values,
+                       j_request, j_response))
     {
-        j_response["Error"] = "Cant parse json body";
-        session_close(session, j_response);
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Cant parse json body!");
         return;
     }
 
@@ -1235,8 +1275,9 @@ YourMoneroRequests::import_recent_wallet_request(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
-        session_close(session, j_response);
+        OMERROR << "json exception: " << e.what();
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      e.what());
         return;
     }
 
@@ -1954,7 +1995,7 @@ boost::optional<XmrAccount>
 YourMoneroRequests::select_account(
         string const& xmr_address) const
 {
-     boost::optional<XmrAccount> acc;
+    boost::optional<XmrAccount> acc = XmrAccount{};
 
     if (!xmr_accounts->select(xmr_address, *acc))
     {
@@ -1964,7 +2005,7 @@ YourMoneroRequests::select_account(
         return acc;
     }
 
-    return {};
+    return acc;
 }
 
 boost::optional<XmrPayment>
@@ -1976,9 +2017,15 @@ YourMoneroRequests::select_payment(
      if (!xmr_accounts->select(xmr_account.id.data,
                                xmr_payments))
      {
-         OMERROR << xmr_account.address.substr(0,6) +
-                    ": address does not exists!";
-         return {};
+         OMINFO << xmr_account.address.substr(0,6) +
+                    ": no payment record found!";
+
+         // so create empty record to be inserted into
+         // db after.
+         XmrPayment xmr_payment;
+         xmr_payment.id = mysqlpp::null;
+
+         return xmr_payment;
      }
 
      if (xmr_payments.size() > 1)
@@ -1993,13 +2040,19 @@ YourMoneroRequests::select_payment(
      // paymnet record created. so new
      // paymnet will be created
      if (xmr_payments.empty())
-     {
+     {                  
          OMINFO << xmr_account.address.substr(0,6) +
                     ": no payment record found!";
-         return {XmrPayment{}};
+
+         // so create empty record to be inserted into
+         // db after.
+         XmrPayment xmr_payment;
+         xmr_payment.id = mysqlpp::null;
+
+         return xmr_payment;
      }
 
-     return {xmr_payments.at(1)};
+     return xmr_payments.at(0);
 }
 
 void
@@ -2011,7 +2064,7 @@ YourMoneroRequests::session_close(
 {
     if (return_code != OK)
     {
-        j_response["error"] = error_msg;
+        j_response["Error"] = error_msg;
     }
 
     string response_body = j_response.dump();
