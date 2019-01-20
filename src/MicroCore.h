@@ -212,11 +212,10 @@ public:
                                             secret_key);
     }
 
-
     virtual bool
     init_success() const;    
 
-    virtual ~MicroCore();
+    virtual ~MicroCore() = default;
 };
 
 }

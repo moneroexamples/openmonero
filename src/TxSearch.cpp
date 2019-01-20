@@ -67,6 +67,8 @@ TxSearch::operator()()
 
     auto current_bc_status_ptr = current_bc_status.get();
 
+    searching_is_ongoing = true;
+
     // we put everything in massive catch, as there are plenty ways in which
     // an exceptions can be thrown here. Mostly from mysql.
     // but because this is detatch thread, we cant catch them in main thread.
@@ -75,7 +77,8 @@ TxSearch::operator()()
     try
     {
         while(continue_search)
-        {
+        {            
+
             seconds loop_timestamp {current_timestamp};
 
             uint64_t last_block_height = current_bc_status->current_height;
@@ -604,16 +607,18 @@ TxSearch::operator()()
         set_exception_ptr();
     }
 
+    searching_is_ongoing = false;
+
     // it will stop anyway, but just call it so we get info message pritened out
     stop();
+
+
 }
 
 void
 TxSearch::stop()
 {
-    OMINFO << address_prefix  + ": stopping the thread "
-                                "by setting "
-                                "continue_search=false";
+    OMINFO << address_prefix  + ": stopping the thread";
     continue_search = false;
 }
 
@@ -655,7 +660,7 @@ TxSearch::ping()
 bool
 TxSearch::still_searching() const
 {
-    return continue_search;
+    return searching_is_ongoing;
 }
 
 void

@@ -44,6 +44,8 @@ MysqlPing::operator()()
 
         ++counter;
     }
+
+   OMINFO << "Exiting Mysql ping thread loop.";
 }
 
 }

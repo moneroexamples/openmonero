@@ -224,18 +224,18 @@ MicroCore::init_success() const
     return initialization_succeded;
 }
 
-MicroCore::~MicroCore()
-{
-    //cout << "\n\nMicroCore::~MicroCore()\n\n";
+//MicroCore::~MicroCore()
+//{
+//    //cout << "\n\nMicroCore::~MicroCore()\n\n";
 
-    if (initialization_succeded)
-    {
-        //core_storage.get_db().safesyncmode(true);
-        if (core_storage.get_db().is_open())
-            core_storage.get_db().close();
-        //cout << "\n\n core_storage.get_db().close();;\n\n";
-    }
+//    if (initialization_succeded)
+//    {
+//        //core_storage.get_db().safesyncmode(true);
+//        if (core_storage.get_db().is_open())
+//            core_storage.get_db().close();
+//        //cout << "\n\n core_storage.get_db().close();;\n\n";
+//    }
 
-}
+//}
 
 }

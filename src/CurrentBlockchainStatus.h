@@ -228,6 +228,9 @@ public:
     virtual void
     clean_search_thread_map();
 
+    virtual void
+    stop_search_threads();
+
     /*
      * The frontend requires rct field to work
      * the filed consisitct of rct_pk, mask, and amount.
@@ -263,6 +266,9 @@ public:
 
     virtual TxSearch&
     get_search_thread(string const& acc_address);
+
+    inline virtual void
+    stop() {stop_blockchain_monitor_loop = true;}
 
     // default destructor is fine
     virtual ~CurrentBlockchainStatus() = default;

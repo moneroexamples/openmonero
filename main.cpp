@@ -15,6 +15,23 @@ using namespace restbed;
 
 using boost::filesystem::path;
 
+// signal exit handler, addpated from aleth
+class ExitHandler
+{
+public:
+
+    static void exitHandler(int) { s_shouldExit = true; }
+
+    bool shouldExit() const { return s_shouldExit; }
+
+private:
+    static atomic<bool> s_shouldExit;
+    //Service& restbed_service;
+};
+
+atomic<bool> ExitHandler::s_shouldExit {false};
+
+
 int
 main(int ac, const char* av[])
 {
@@ -125,10 +142,11 @@ if (!current_bc_status->init_monero_blockchain())
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
 
-xmreg::ThreadRAII blockchain_monitoring_thread(
-            std::thread([current_bc_status]
-                        {current_bc_status->monitor_blockchain();}),
-            xmreg::ThreadRAII::DtorAction::join);
+std::thread blockchain_monitoring_thread(
+            [&current_bc_status]()
+{
+    current_bc_status->monitor_blockchain();
+});
 
 
 OMINFO << "Blockchain monitoring thread started";
@@ -171,9 +189,12 @@ xmreg::MysqlPing mysql_ping {
         mysql_accounts->get_connection(),
         bc_setup.mysql_ping_every};
 
-xmreg::ThreadRAII mysql_ping_thread(
-        std::thread(std::ref(mysql_ping)),
-        xmreg::ThreadRAII::DtorAction::join);
+std::thread mysql_ping_thread(
+            [&mysql_ping]()
+{
+    mysql_ping();
+});
+
 
 OMINFO << "MySQL ping thread started";
 
@@ -241,8 +262,52 @@ else
     OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }
 
+//ExitHandler exitHandler(service);
 
-service.start(settings);
+ExitHandler exitHandler;
+
+signal(SIGABRT, ExitHandler::exitHandler);
+signal(SIGTERM, ExitHandler::exitHandler);
+signal(SIGINT, ExitHandler::exitHandler);
+
+
+std::thread restbed_service(
+            [&service, &settings]()
+{
+    OMINFO << "Starting restbed service thread.";
+    service.start(settings);
+});
+
+
+
+
+// we are going to loop here for as long
+// as control+c has been pressed
+while (!exitHandler.shouldExit())
+{    
+    this_thread::sleep_for(100ms);
+};
+
+//////////////////////////////////////////////
+// Try to greacfully stop all threads/services
+//////////////////////////////////////////////
+
+OMINFO << "Stopping restbed service.";
+service.stop();
+restbed_service.join();
+
+OMINFO << "Stoppping blockchain_monitoring_thread. Please wait.";
+current_bc_status->stop();
+blockchain_monitoring_thread.join();
+
+OMINFO << "Stoppping mysql_ping. Please wait.";
+mysql_ping.stop();
+mysql_ping_thread.join();
+
+OMINFO << "Disconnecting from database.";
+mysql_accounts->disconnect();
+
+OMINFO << "All done. Bye.";
 
 return EXIT_SUCCESS;
 }

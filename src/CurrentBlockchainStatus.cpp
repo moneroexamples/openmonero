@@ -35,9 +35,14 @@ CurrentBlockchainStatus::monitor_blockchain()
        is_running = true;
 
        while (true)
-       {                   
+       {
            if (stop_blockchain_monitor_loop)
+           {
+               stop_search_threads();
+               clean_search_thread_map();
+               OMINFO << "Breaking monitor_blockchain thread loop.";
                break;
+           }
 
            update_current_blockchain_height();           
 
@@ -54,6 +59,8 @@ CurrentBlockchainStatus::monitor_blockchain()
 
        is_running = false;
     }
+
+    OMINFO << "Exiting monitor_blockchain thread loop.";
 }
 
 uint64_t
@@ -894,6 +901,17 @@ CurrentBlockchainStatus::clean_search_thread_map()
             OMINFO << "Ereasing a search thread";
             searching_threads.erase(st.first);
         }
+    }
+}
+
+void
+CurrentBlockchainStatus::stop_search_threads()
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    for (auto& st: searching_threads)
+    {
+        st.second.get_functor().stop();
     }
 }
 
