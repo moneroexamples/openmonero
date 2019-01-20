@@ -52,11 +52,11 @@
       "viewkey" : "53c5850e895122574c53a4f952c726be3fe22bcd2b08f4bfed8946d887cc950b"
     }
   },
-  "refresh_block_status_every_seconds" : 10,
+  "refresh_block_status_every_seconds" : 5,
   "blocks_search_lookahead"            : 200,
   "search_thread_life_in_seconds"      : 120,
   "max_number_of_blocks_to_import"     : 132000,
-  "mysql_ping_every_seconds"           : 10,
+  "mysql_ping_every_seconds"           : 5,
   "ssl" :
   {
     "enable" : false,

@@ -19,18 +19,26 @@ using boost::filesystem::path;
 class ExitHandler
 {
 public:
+    static std::mutex m;
+    static std::condition_variable cv;
 
-    static void exitHandler(int) { s_shouldExit = true; }
+    static void exitHandler(int)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        s_shouldExit = true;
+        OMINFO << "Request to finish the openmonero recieved";
+        cv.notify_one();
+    }
 
     bool shouldExit() const { return s_shouldExit; }
 
 private:
-    static atomic<bool> s_shouldExit;
-    //Service& restbed_service;
+    static bool s_shouldExit;
 };
 
-atomic<bool> ExitHandler::s_shouldExit {false};
-
+bool ExitHandler::s_shouldExit {false};
+std::mutex ExitHandler::m;
+std::condition_variable ExitHandler::cv;
 
 int
 main(int ac, const char* av[])
@@ -271,6 +279,10 @@ signal(SIGTERM, ExitHandler::exitHandler);
 signal(SIGINT, ExitHandler::exitHandler);
 
 
+
+// main restbed thread. this is where
+// restbed will be running and handling
+// requests
 std::thread restbed_service(
             [&service, &settings]()
 {
@@ -279,14 +291,14 @@ std::thread restbed_service(
 });
 
 
-
-
 // we are going to loop here for as long
-// as control+c has been pressed
-while (!exitHandler.shouldExit())
-{    
-    this_thread::sleep_for(100ms);
-};
+// as control+c hasn't been pressed
+{
+    std::unique_lock<std::mutex> lk(ExitHandler::m);
+    ExitHandler::cv.wait(lk, [&exitHandler]{
+        return exitHandler.shouldExit();});
+}
+
 
 //////////////////////////////////////////////
 // Try to greacfully stop all threads/services
