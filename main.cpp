@@ -26,7 +26,7 @@ public:
     {
         std::lock_guard<std::mutex> lk(m);
         s_shouldExit = true;
-        OMINFO << "Request to finish the openmonero recieved";
+        OMINFO << "Request to finish the openmonero received";
         cv.notify_one();
     }
 
@@ -39,6 +39,8 @@ private:
 bool ExitHandler::s_shouldExit {false};
 std::mutex ExitHandler::m;
 std::condition_variable ExitHandler::cv;
+
+
 
 int
 main(int ac, const char* av[])
@@ -55,11 +57,20 @@ if (*help_opt)
     return EXIT_SUCCESS;
 }
 
+auto monero_log_level  =
+        *(opts.get_option<size_t>("monero-log-level"));
+
+if (monero_log_level < 1 || monero_log_level > 4)
+{
+    cerr << "monero-log-level,m option must be between 1 and 4!\n";
+    return EXIT_SUCCESS;
+}
+
 // setup monero logger
 mlog_configure(mlog_get_default_log_path(""), true);
-mlog_set_log("1");
+mlog_set_log(std::to_string(monero_log_level).c_str());
 
-string log_file  = *(opts.get_option<string>("log-file"));
+auto log_file  = *(opts.get_option<string>("log-file"));
 
 // setup a logger for Open Monero
 
@@ -113,7 +124,7 @@ nlohmann::json config_json = bc_setup.get_config();
 
 
 //cast port number in string to uint16
-uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
+auto app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
@@ -270,14 +281,13 @@ else
     OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }
 
-//ExitHandler exitHandler(service);
-
+// intercept basic termination requests,
+// including Ctrl+c
 ExitHandler exitHandler;
 
 signal(SIGABRT, ExitHandler::exitHandler);
 signal(SIGTERM, ExitHandler::exitHandler);
 signal(SIGINT, ExitHandler::exitHandler);
-
 
 
 // main restbed thread. this is where
@@ -291,7 +301,7 @@ std::thread restbed_service(
 });
 
 
-// we are going to loop here for as long
+// we are going to whait here for as long
 // as control+c hasn't been pressed
 {
     std::unique_lock<std::mutex> lk(ExitHandler::m);
@@ -301,18 +311,18 @@ std::thread restbed_service(
 
 
 //////////////////////////////////////////////
-// Try to greacfully stop all threads/services
+// Try to gracefully stop all threads/services
 //////////////////////////////////////////////
 
 OMINFO << "Stopping restbed service.";
 service.stop();
 restbed_service.join();
 
-OMINFO << "Stoppping blockchain_monitoring_thread. Please wait.";
+OMINFO << "Stopping blockchain_monitoring_thread. Please wait.";
 current_bc_status->stop();
 blockchain_monitoring_thread.join();
 
-OMINFO << "Stoppping mysql_ping. Please wait.";
+OMINFO << "Stopping mysql_ping. Please wait.";
 mysql_ping.stop();
 mysql_ping_thread.join();
 

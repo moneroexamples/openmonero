@@ -7,22 +7,49 @@
 
 #include "MysqlPing.h"
 
+#include <algorithm>
+
 
 namespace xmreg
 {
 
 MysqlPing::MysqlPing(
         std::shared_ptr<MySqlConnector> _conn,
-        seconds _ping_time)
-        : conn {_conn}, ping_time {_ping_time}
+        seconds _ping_time, seconds _sleep_time)
+        : conn {_conn}, ping_time {_ping_time},   
+          thread_sleep_time {_sleep_time}  
 {}
 
 void
 MysqlPing::operator()()
 {
+
+    // the while loop below is going to execute
+    // faster than ping_time specified. The reason
+    // is so that we can exit it in a timely manner
+    // when keep_looping becomes false
+    uint64_t between_ping_counter {0};
+
+    // we are going to ping mysql every
+    // no_of_loops_between_pings iterations
+    // of the while loop
+    uint64_t no_of_loops_between_pings
+            = std::max<uint64_t>(1, 
+                    ping_time.count()/thread_sleep_time.count());
+
+    //cout << "no_of_loops_between_pings: "
+    //     << no_of_loops_between_pings << endl;
+    
     while (keep_looping)
     {
-        std::this_thread::sleep_for(chrono::seconds(ping_time));
+        std::this_thread::sleep_for(thread_sleep_time);
+
+        if (between_ping_counter++ < no_of_loops_between_pings)
+        {
+            continue;
+        }
+
+        between_ping_counter = 0;
 
         if (auto c = conn.lock())
         {
