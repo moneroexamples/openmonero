@@ -1,7 +1,7 @@
 #include "src/om_log.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-#include "src/YourMoneroRequests.h"
+#include "src/OpenMoneroRequests.h"
 #include "src/ThreadRAII.h"
 #include "src/db/MysqlPing.h"
 
@@ -218,7 +218,7 @@ std::thread mysql_ping_thread(
 OMINFO << "MySQL ping thread started";
 
 // create REST JSON API services
-xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
+xmreg::OpenMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);
