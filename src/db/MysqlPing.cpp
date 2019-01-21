@@ -29,22 +29,24 @@ MysqlPing::operator()()
     // is so that we can exit it in a timely manner
     // when keep_looping becomes false
     uint64_t between_ping_counter {0};
+    
+    // if ping_time lower than thread_sleep_time,
+    // use ping_time for thread_sleep_time 
+    thread_sleep_time = std::min(thread_sleep_time, ping_time);
 
     // we are going to ping mysql every
     // no_of_loops_between_pings iterations
     // of the while loop
     uint64_t no_of_loops_between_pings
             = std::max<uint64_t>(1, 
-                    ping_time.count()/thread_sleep_time.count());
+                    ping_time.count()/thread_sleep_time.count()) - 1;
 
-    //cout << "no_of_loops_between_pings: "
-    //     << no_of_loops_between_pings << endl;
-    
+
     while (keep_looping)
     {
         std::this_thread::sleep_for(thread_sleep_time);
-
-        if (between_ping_counter++ < no_of_loops_between_pings)
+    
+        if (++between_ping_counter <= no_of_loops_between_pings)
         {
             continue;
         }
