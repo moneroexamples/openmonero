@@ -805,8 +805,7 @@ OpenMoneroRequests::get_random_outs(
     {
         cerr << "Request ring size too big" << '\n';
         j_response["status"] = "error";
-        j_response["error"]  = fmt::format("Request ring size {:d} too large",
-                                           count);
+        j_response["error"]  = "Request ring size too large";
         session_close(session, j_response);
     }
 
@@ -874,8 +873,8 @@ OpenMoneroRequests::get_random_outs(
     else
     {
         j_response["status"] = "error";
-        j_response["error"]  = fmt::format("Error getting random "
-                                           "outputs from monero deamon");
+        j_response["error"]  = "Error getting random "
+                               "outputs from monero deamon";
     }
 
     string response_body = j_response.dump();

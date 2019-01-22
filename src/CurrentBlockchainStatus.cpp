@@ -219,10 +219,10 @@ CurrentBlockchainStatus::get_tx_with_output(
     catch (const OUTPUT_DNE& e)
     {
 
-        string out_msg = fmt::format(
-                "Output with amount {:d} and index {:d} does not exist!",
-                amount, output_idx
-        );
+        string out_msg = "Output with amount " + std::to_string(amount)
+                         + "  and index " + std::to_string(output_idx) 
+                         + " does not exist!";
+
 
         OMERROR << out_msg << ' ' << e.what();
 

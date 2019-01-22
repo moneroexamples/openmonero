@@ -87,7 +87,13 @@ if (!log_file.empty())
 
 defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
 
-el::Loggers::reconfigureLogger("openmonero", defaultConf);
+// default format: %datetime %level [%logger] %msg
+// we change to add file and func
+defaultConf.setGlobally(el::ConfigurationType::Format,
+                        "%datetime 
+                        [%levshort,%logger,%fbase:%func:%line] %msg");
+
+el::Loggers::reconfigureLogger(OPENMONERO_LOG_CATEGORY, defaultConf);
 
 OMINFO << "OpenMonero is starting";
 

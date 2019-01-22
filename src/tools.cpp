@@ -1001,11 +1001,11 @@ get_tx_pub_key_from_received_outs(const transaction &tx)
 
 
 
-string
-xmr_amount_to_str(const uint64_t& xmr_amount, string format)
-{
-    return fmt::format(format, XMR_AMOUNT(xmr_amount));
-}
+//string
+//xmr_amount_to_str(const uint64_t& xmr_amount, string format)
+//{
+    //return fmt::format(format, XMR_AMOUNT(xmr_amount));
+//}
 
 
 

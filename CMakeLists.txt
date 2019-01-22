@@ -111,7 +111,6 @@ add_executable(${PROJECT_NAME}
 
 set(LIBRARIES
         myxrm
-        myext
         restbed
         wallet
         cryptonote_core
