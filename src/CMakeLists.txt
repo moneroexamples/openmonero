@@ -7,10 +7,10 @@ set(SOURCE_FILES
 		tools.cpp
 		CmdLineOptions.cpp
 		CurrentBlockchainStatus.cpp
-                db/MySqlConnector.cpp
-                db/MySqlAccounts.cpp
-                db/ssqlses.cpp
-		YourMoneroRequests.cpp
+        db/MySqlConnector.cpp
+        db/MySqlAccounts.cpp
+        db/ssqlses.cpp
+		OpenMoneroRequests.cpp
 		TxSearch.cpp
                 RPCCalls.cpp
 		OutputInputIdentification.cpp

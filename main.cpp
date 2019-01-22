@@ -1,7 +1,7 @@
 #include "src/om_log.h"
 #include "src/CmdLineOptions.h"
 #include "src/MicroCore.h"
-#include "src/YourMoneroRequests.h"
+#include "src/OpenMoneroRequests.h"
 #include "src/ThreadRAII.h"
 #include "src/db/MysqlPing.h"
 
@@ -14,6 +14,33 @@ using namespace std;
 using namespace restbed;
 
 using boost::filesystem::path;
+
+// signal exit handler, addpated from aleth
+class ExitHandler
+{
+public:
+    static std::mutex m;
+    static std::condition_variable cv;
+
+    static void exitHandler(int)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        s_shouldExit = true;
+        OMINFO << "Request to finish the openmonero received";
+        cv.notify_one();
+    }
+
+    bool shouldExit() const { return s_shouldExit; }
+
+private:
+    static bool s_shouldExit;
+};
+
+bool ExitHandler::s_shouldExit {false};
+std::mutex ExitHandler::m;
+std::condition_variable ExitHandler::cv;
+
+
 
 int
 main(int ac, const char* av[])
@@ -30,11 +57,20 @@ if (*help_opt)
     return EXIT_SUCCESS;
 }
 
+auto monero_log_level  =
+        *(opts.get_option<size_t>("monero-log-level"));
+
+if (monero_log_level < 1 || monero_log_level > 4)
+{
+    cerr << "monero-log-level,m option must be between 1 and 4!\n";
+    return EXIT_SUCCESS;
+}
+
 // setup monero logger
 mlog_configure(mlog_get_default_log_path(""), true);
-mlog_set_log("1");
+mlog_set_log(std::to_string(monero_log_level).c_str());
 
-string log_file  = *(opts.get_option<string>("log-file"));
+auto log_file  = *(opts.get_option<string>("log-file"));
 
 // setup a logger for Open Monero
 
@@ -88,7 +124,7 @@ nlohmann::json config_json = bc_setup.get_config();
 
 
 //cast port number in string to uint16
-uint16_t app_port   = boost::lexical_cast<uint16_t>(*port_opt);
+auto app_port   = boost::lexical_cast<uint16_t>(*port_opt);
 
 // set mysql/mariadb connection details
 xmreg::MySqlConnector::url      = config_json["database"]["url"];
@@ -125,10 +161,11 @@ if (!current_bc_status->init_monero_blockchain())
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
 
-xmreg::ThreadRAII blockchain_monitoring_thread(
-            std::thread([current_bc_status]
-                        {current_bc_status->monitor_blockchain();}),
-            xmreg::ThreadRAII::DtorAction::join);
+std::thread blockchain_monitoring_thread(
+            [&current_bc_status]()
+{
+    current_bc_status->monitor_blockchain();
+});
 
 
 OMINFO << "Blockchain monitoring thread started";
@@ -171,14 +208,17 @@ xmreg::MysqlPing mysql_ping {
         mysql_accounts->get_connection(),
         bc_setup.mysql_ping_every};
 
-xmreg::ThreadRAII mysql_ping_thread(
-        std::thread(std::ref(mysql_ping)),
-        xmreg::ThreadRAII::DtorAction::join);
+std::thread mysql_ping_thread(
+            [&mysql_ping]()
+{
+    mysql_ping();
+});
+
 
 OMINFO << "MySQL ping thread started";
 
 // create REST JSON API services
-xmreg::YourMoneroRequests open_monero(mysql_accounts, current_bc_status);
+xmreg::OpenMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);
@@ -241,8 +281,55 @@ else
     OMINFO << "Start the service at http://127.0.0.1:" << app_port;
 }
 
+// intercept basic termination requests,
+// including Ctrl+c
+ExitHandler exitHandler;
 
-service.start(settings);
+signal(SIGABRT, ExitHandler::exitHandler);
+signal(SIGTERM, ExitHandler::exitHandler);
+signal(SIGINT, ExitHandler::exitHandler);
+
+
+// main restbed thread. this is where
+// restbed will be running and handling
+// requests
+std::thread restbed_service(
+            [&service, &settings]()
+{
+    OMINFO << "Starting restbed service thread.";
+    service.start(settings);
+});
+
+
+// we are going to whait here for as long
+// as control+c hasn't been pressed
+{
+    std::unique_lock<std::mutex> lk(ExitHandler::m);
+    ExitHandler::cv.wait(lk, [&exitHandler]{
+        return exitHandler.shouldExit();});
+}
+
+
+//////////////////////////////////////////////
+// Try to gracefully stop all threads/services
+//////////////////////////////////////////////
+
+OMINFO << "Stopping restbed service.";
+service.stop();
+restbed_service.join();
+
+OMINFO << "Stopping blockchain_monitoring_thread. Please wait.";
+current_bc_status->stop();
+blockchain_monitoring_thread.join();
+
+OMINFO << "Stopping mysql_ping. Please wait.";
+mysql_ping.stop();
+mysql_ping_thread.join();
+
+OMINFO << "Disconnecting from database.";
+mysql_accounts->disconnect();
+
+OMINFO << "All done. Bye.";
 
 return EXIT_SUCCESS;
 }

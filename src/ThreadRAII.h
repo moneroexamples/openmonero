@@ -15,7 +15,7 @@ namespace xmreg
 class ThreadRAII
 {
 public:
-    enum class DtorAction { join, detach};
+    enum class DtorAction {join, detach};
 
     ThreadRAII(std::thread&& _t, DtorAction _action);
 

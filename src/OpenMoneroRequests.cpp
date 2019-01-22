@@ -5,7 +5,7 @@
 #define MYSQLPP_SSQLS_NO_STATICS 1
 
 
-#include "YourMoneroRequests.h"
+#include "OpenMoneroRequests.h"
 
 #include "db/ssqlses.h"
 #include "OutputInputIdentification.h"
@@ -28,7 +28,7 @@ handel_::operator()(const shared_ptr< Session > session)
 
 
 
-YourMoneroRequests::YourMoneroRequests(
+OpenMoneroRequests::OpenMoneroRequests(
         shared_ptr<MySqlAccounts> _acc, 
         shared_ptr<CurrentBlockchainStatus> _current_bc_status):
     xmr_accounts {_acc}, current_bc_status {_current_bc_status}
@@ -38,7 +38,7 @@ YourMoneroRequests::YourMoneroRequests(
 
 
 void
-YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
+OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 {
     json j_response;
     json j_request;
@@ -157,7 +157,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 }
 
 void
-YourMoneroRequests::get_address_txs(
+OpenMoneroRequests::get_address_txs(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
@@ -389,7 +389,7 @@ YourMoneroRequests::get_address_txs(
 }
 
 void
-YourMoneroRequests::get_address_info(
+OpenMoneroRequests::get_address_info(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
@@ -555,7 +555,7 @@ YourMoneroRequests::get_address_info(
 
 
 void
-YourMoneroRequests::get_unspent_outs(
+OpenMoneroRequests::get_unspent_outs(
         const shared_ptr< Session > session,
         const Bytes & body)
 {
@@ -774,7 +774,7 @@ YourMoneroRequests::get_unspent_outs(
 }
 
 void
-YourMoneroRequests::get_random_outs(
+OpenMoneroRequests::get_random_outs(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_request;
@@ -888,7 +888,7 @@ YourMoneroRequests::get_random_outs(
 
 
 void
-YourMoneroRequests::submit_raw_tx(
+OpenMoneroRequests::submit_raw_tx(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_request = body_to_json(body);
@@ -982,7 +982,7 @@ YourMoneroRequests::submit_raw_tx(
 }
 
 void
-YourMoneroRequests::import_wallet_request(
+OpenMoneroRequests::import_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
 {
 
@@ -1241,7 +1241,7 @@ YourMoneroRequests::import_wallet_request(
 
 
 void
-YourMoneroRequests::import_recent_wallet_request(
+OpenMoneroRequests::import_recent_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
@@ -1373,7 +1373,7 @@ YourMoneroRequests::import_recent_wallet_request(
 
 
 void
-YourMoneroRequests::get_tx(
+OpenMoneroRequests::get_tx(
         const shared_ptr< Session > session, const Bytes & body)
 {
     json j_response;
@@ -1738,7 +1738,7 @@ YourMoneroRequests::get_tx(
 
 
 void
-YourMoneroRequests::get_version(
+OpenMoneroRequests::get_version(
         const shared_ptr< Session > session,
         const Bytes & body)
 {
@@ -1767,8 +1767,8 @@ YourMoneroRequests::get_version(
 
 
 shared_ptr<Resource>
-YourMoneroRequests::make_resource(
-        function< void (YourMoneroRequests&, const shared_ptr< Session >,
+OpenMoneroRequests::make_resource(
+        function< void (OpenMoneroRequests&, const shared_ptr< Session >,
                         const Bytes& ) > handle_func,
         const string& path)
 {
@@ -1787,7 +1787,7 @@ YourMoneroRequests::make_resource(
 
 
 void
-YourMoneroRequests::generic_options_handler(
+OpenMoneroRequests::generic_options_handler(
         const shared_ptr< Session > session )
 {
     const auto request = session->get_request( );
@@ -1804,7 +1804,7 @@ YourMoneroRequests::generic_options_handler(
 
 
 multimap<string, string>
-YourMoneroRequests::make_headers(
+OpenMoneroRequests::make_headers(
         const multimap<string, string>& extra_headers)
 {
     multimap<string, string> headers {
@@ -1819,20 +1819,20 @@ YourMoneroRequests::make_headers(
 };
 
 void
-YourMoneroRequests::print_json_log(const string& text, const json& j)
+OpenMoneroRequests::print_json_log(const string& text, const json& j)
 {
     cout << text << '\n' << j.dump(4) << endl;
 }
 
 
 string
-YourMoneroRequests::body_to_string(const Bytes & body)
+OpenMoneroRequests::body_to_string(const Bytes & body)
 {
     return string(reinterpret_cast<const char *>(body.data()), body.size());
 }
 
 json
-YourMoneroRequests::body_to_json(const Bytes & body)
+OpenMoneroRequests::body_to_json(const Bytes & body)
 {
     json j = json::parse(body_to_string(body));
     return j;
@@ -1840,13 +1840,13 @@ YourMoneroRequests::body_to_json(const Bytes & body)
 
 
 uint64_t
-YourMoneroRequests::get_current_blockchain_height()
+OpenMoneroRequests::get_current_blockchain_height()
 {
     return current_bc_status->get_current_blockchain_height();
 }
 
 bool
-YourMoneroRequests::login_and_start_search_thread(
+OpenMoneroRequests::login_and_start_search_thread(
                         const string& xmr_address,
                         const string& view_key,
                         XmrAccount& acc,
@@ -1946,7 +1946,7 @@ YourMoneroRequests::login_and_start_search_thread(
 
 
 bool
-YourMoneroRequests::parse_request(
+OpenMoneroRequests::parse_request(
         const Bytes& body,
         vector<string>& values_map,
         json& j_request,
@@ -1979,7 +1979,7 @@ YourMoneroRequests::parse_request(
     }
     catch (std::exception& e)
     {
-        cerr << "YourMoneroRequests::parse_request: " << e.what() << endl;
+        cerr << "OpenMoneroRequests::parse_request: " << e.what() << endl;
 
         j_response["status"] = "error";
         j_response["reason"] = "reqest json parsing failed";
@@ -1989,7 +1989,7 @@ YourMoneroRequests::parse_request(
 }
 
 boost::optional<XmrAccount>
-YourMoneroRequests::select_account(
+OpenMoneroRequests::select_account(
         string const& xmr_address) const
 {
     boost::optional<XmrAccount> acc = XmrAccount{};
@@ -2006,7 +2006,7 @@ YourMoneroRequests::select_account(
 }
 
 boost::optional<XmrPayment>
-YourMoneroRequests::select_payment(
+OpenMoneroRequests::select_payment(
         XmrAccount const& xmr_account) const
 {
      vector<XmrPayment> xmr_payments;
@@ -2053,7 +2053,7 @@ YourMoneroRequests::select_payment(
 }
 
 void
-YourMoneroRequests::session_close(
+OpenMoneroRequests::session_close(
         const shared_ptr< Session > session,
         json& j_response,
         int return_code,

@@ -19,7 +19,7 @@
 
 #ifndef MAKE_RESOURCE
 #define MAKE_RESOURCE(name) auto name = open_monero.make_resource( \
-                           &xmreg::YourMoneroRequests::name, "/" + string(#name));
+                           &xmreg::OpenMoneroRequests::name, "/" + string(#name));
 #endif
 
 
@@ -58,7 +58,7 @@ struct handel_
 };
 
 
-class YourMoneroRequests
+class OpenMoneroRequests
 {
 
     // this manages all mysql queries
@@ -67,7 +67,7 @@ class YourMoneroRequests
 
 public:
 
-    YourMoneroRequests(shared_ptr<MySqlAccounts> _acc,
+    OpenMoneroRequests(shared_ptr<MySqlAccounts> _acc,
                        shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     /**
@@ -114,7 +114,7 @@ public:
     get_version(const shared_ptr< Session > session, const Bytes & body);
 
     shared_ptr<Resource>
-    make_resource(function< void (YourMoneroRequests&, const shared_ptr< Session >, const Bytes& ) > handle_func,
+    make_resource(function< void (OpenMoneroRequests&, const shared_ptr< Session >, const Bytes& ) > handle_func,
                   const string& path);
 
     static void

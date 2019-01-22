@@ -3,7 +3,7 @@
 //
 
 #include "../src/MicroCore.h"
-#include "../src/YourMoneroRequests.h"
+#include "../src/OpenMoneroRequests.h"
 #include "../src/db/MysqlPing.h"
 
 //#include "chaingen.h"
