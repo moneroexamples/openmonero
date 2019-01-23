@@ -90,8 +90,8 @@ defaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
 // default format: %datetime %level [%logger] %msg
 // we change to add file and func
 defaultConf.setGlobally(el::ConfigurationType::Format,
-                        "%datetime 
-                        [%levshort,%logger,%fbase:%func:%line] %msg");
+                        "%datetime [%levshort,%logger,%fbase:%func:%line]"
+                        " %msg");
 
 el::Loggers::reconfigureLogger(OPENMONERO_LOG_CATEGORY, defaultConf);
 
