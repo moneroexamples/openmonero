@@ -55,6 +55,22 @@ public:
     virtual bool
     get_current_height(uint64_t& current_height);
 
+    virtual bool
+    get_blocks(vector<uint64_t> blk_heights,
+              COMMAND_RPC_GET_BLOCKS_BY_HEIGHT::response& res);
+    
+    std::vector<pair<block, vector<transaction>>>
+    get_blocks_range(uint64_t h1, uint64_t h2);
+
+    bool 
+    get_output_keys(uint64_t amount, 
+                    vector<uint64_t> const& absolute_offsets,
+                    vector<output_data_t>& outputs);
+
+    bool
+    get_tx_amount_output_indices(crypto::hash const& tx_hash,
+                                vector<uint64_t>& out_indices);
+
     virtual ~RPCCalls() = default;
 
 protected:

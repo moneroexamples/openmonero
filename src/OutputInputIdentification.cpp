@@ -231,7 +231,7 @@ OutputInputIdentification::identify_inputs(
             // just to be sure before we break out of this loop,
             // do it only after two misses
 
-            if (++search_misses > 2)
+            if (++search_misses > 1)
                 break;
         }
 

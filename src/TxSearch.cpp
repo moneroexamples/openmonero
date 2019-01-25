@@ -69,40 +69,51 @@ TxSearch::operator()()
 
     searching_is_ongoing = true;
 
+
+    //auto rpc = std::make_unique<xmreg::RPCCalls>(
+    //        current_bc_status->get_bc_setup().deamon_url);
+
     // we put everything in massive catch, as there are plenty ways in which
     // an exceptions can be thrown here. Mostly from mysql.
-    // but because this is detatch thread, we cant catch them in main thread.
+    // but because this is thread, we cant catch them in main thread.
     // program will blow up if exception is thrown. need to handle exceptions
     // here.
     try
     {
         while(continue_search)
-        {            
+        {
 
             seconds loop_timestamp {current_timestamp};
 
             uint64_t last_block_height = current_bc_status->current_height;
+    
+            // cout << "new searched_blk_no:" << searched_blk_no << '\n';
 
             uint64_t h1 = searched_blk_no;
-            uint64_t h2 = std::min(h1 + blocks_lookahead - 1, last_block_height);
+            //uint64_t h2 = std::min(h1 + blocks_lookahead - 1, last_block_height);
+            uint64_t h2 = std::min(h1 + blocks_lookahead, last_block_height+1);
 
-            vector<block> blocks = current_bc_status->get_blocks_range(h1, h2);
+            //vector<block> blocks = current_bc_status->get_blocks_range(h1, h2);
+            auto blocks = current_bc_status->get_blocks_and_txs_range(h1, h2);
+            //auto blocks = rpc->get_blocks_range(h1, h2);
+
+            //cout << "h1,h2, no_blocks:" << h1 << "," << h2 << "," << blocks.size() << '\n';
 
             if (blocks.empty())
             {
 
-                if (h1 <= h2)
+                if (h1 < h2)
                 {
                     OMERROR << address_prefix
-                            << ": cant get blocks from " << h1
-                            << " to " << h2;
+                            << ": cant get blocks from [" << h1
+                            << ", " << h2 << ")!";
                     stop();
                 }
                 else
                 {
                     OMINFO << address_prefix
                            << ": waiting for new block. "
-                              "Last scanned was " << h2;
+                              "Last scanned was " << h2 - 1;
                 }
 
                 std::this_thread::sleep_for(
@@ -137,24 +148,24 @@ TxSearch::operator()()
             }
 
             OMINFO << address_prefix  + ": analyzing "
-                   << blocks.size() << " blocks from "
-                   << h1 << " to " << h2
-                   << " out of " << last_block_height << " blocks";
+                   << blocks.size() << " blocks ["
+                   << h1 << ", " << h2
+                   << ") out of " << last_block_height;
 
-            vector<crypto::hash> txs_hashes_from_blocks;
-            vector<transaction> txs_in_blocks;
-            vector<CurrentBlockchainStatus::txs_tuple_t> txs_data;
+            //vector<crypto::hash> txs_hashes_from_blocks;
+            //vector<transaction> txs_in_blocks;
+            //vector<CurrentBlockchainStatus::txs_tuple_t> txs_data;
 
-            if (!current_bc_status->get_txs_in_blocks(blocks,
-                                                      txs_hashes_from_blocks,
-                                                      txs_in_blocks,
-                                                      txs_data))
-            {
-                OMERROR << address_prefix
-                           + ": cant get tx in blocks from "
-                        << h1 << " to " << h2;
-                return;
-            }
+            //if (!current_bc_status->get_txs_in_blocks(blocks,
+                                                      //txs_hashes_from_blocks,
+                                                      //txs_in_blocks,
+                                                      //txs_data))
+            //{
+                //OMERROR << address_prefix
+                           //+ ": cant get tx in blocks from "
+                        //<< h1 << " to " << h2;
+                //return;
+            //}
 
             // we will only create mysql DateTime object once, anything is found
             // in a given block;
@@ -179,13 +190,17 @@ TxSearch::operator()()
 
             size_t tx_idx {0};
 
-            for (auto const& tx_tuple: txs_data)
+            uint64_t blk_height {h1};
+            
+            for (auto const& blk_pair: blocks)
             {
-                crypto::hash const& tx_hash = txs_hashes_from_blocks[tx_idx];
-                transaction const& tx       = txs_in_blocks[tx_idx++];
-                uint64_t blk_height         = std::get<0>(tx_tuple);
-                uint64_t blk_timestamp      = std::get<1>(tx_tuple);
-                bool is_coinbase            = std::get<2>(tx_tuple);
+                auto blk_timestamp   = blk_pair.first.timestamp; 
+
+                for (auto const& tx: blk_pair.second)
+                {
+                    //continue;
+                    auto tx_hash = get_transaction_hash(tx);
+                    auto is_coinbase = cryptonote::is_coinbase(tx);
 
                 //cout << "\n\n\n" << blk_height << '\n';
 
@@ -258,14 +273,14 @@ TxSearch::operator()()
                     }
 
 
-                    if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
-                    {
-                        OMERROR << "Tx " << oi_identification.get_tx_hash_str()
-                                << " " << pod_to_hex(tx_hash)
-                                << " not found in blockchain !";
-                        throw TxSearchException("Cant get tx from blockchain: "
-                                                + pod_to_hex(tx_hash));
-                    }
+                    //if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
+                    //{
+                        //OMERROR << "Tx " << oi_identification.get_tx_hash_str()
+                                //<< " " << pod_to_hex(tx_hash)
+                                //<< " not found in blockchain !";
+                        //throw TxSearchException("Cant get tx from blockchain: "
+                                                //+ pod_to_hex(tx_hash));
+                    //}
 
                     OMINFO << address_prefix
                               + ": found some outputs in block "
@@ -574,6 +589,10 @@ TxSearch::operator()()
                 if (mysql_transaction)
                     mysql_transaction->commit();
 
+                } // end txs
+
+                ++blk_height;
+
             } // for (auto const& tx_pair: txs_map)
 
             // update scanned_block_height every given interval
@@ -581,10 +600,10 @@ TxSearch::operator()()
 
             XmrAccount updated_acc = *acc;
 
-            updated_acc.scanned_block_height    = h2;
+            updated_acc.scanned_block_height    = h2 - 1;
             updated_acc.scanned_block_timestamp
                     = DateTime(static_cast<time_t>(
-                                   blocks.back().timestamp));
+                                   blocks.back().first.timestamp));
 
             if (xmr_accounts->update(*acc, updated_acc))
             {
@@ -594,8 +613,14 @@ TxSearch::operator()()
             }
 
             //current_timestamp = loop_timestamp;
+            
+            // update this only when this variable is false
+            // otherwise a new search block value can 
+            // be overwritten to h2, instead of the new value 
+            if (!searched_block_got_updated) 
+                searched_blk_no = h2;
 
-            searched_blk_no = h2 + 1;
+            searched_block_got_updated = false;
 
         } // while(continue_search)
 
@@ -632,6 +657,7 @@ void
 TxSearch::set_searched_blk_no(uint64_t new_value)
 {
     searched_blk_no = new_value;
+    searched_block_got_updated = true;
 }
 
 uint64_t
@@ -692,7 +718,7 @@ void
 TxSearch::find_txs_in_mempool(
         TxSearch::pool_txs_t mempool_txs,
         json* j_transactions)
-{   
+{
 
     *j_transactions = json::array();
 
@@ -912,5 +938,4 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
 
 // default value of static veriables
 seconds TxSearch::thread_search_life {600};
-
 }

@@ -38,6 +38,16 @@ class MicroCore {
 
     bool initialization_succeded {false};
 
+    
+    // will be used to limit access to the blockchain
+    // these four mutexes should allow only 4 threads
+    // to query lmdb blockchain at the same time.
+    // its poor mans solution to MDB_READERS_FULL limit 
+    mutable mutex mtx1;
+    mutable mutex mtx2;
+    //mutable mutex mtx1;
+    //mutable mutex mtx1;
+
 public:
 
     //   <amoumt,
@@ -71,6 +81,7 @@ public:
                    vector<uint64_t> const& absolute_offsets,
                    vector<cryptonote::output_data_t>& outputs)
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         core_storage.get_db()
                 .get_output_key(epee::span<const uint64_t>(&amount, 1),
                                 absolute_offsets, outputs);
@@ -80,6 +91,7 @@ public:
     get_output_key(uint64_t amount,
                    uint64_t global_amount_index)
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db()
                     .get_output_key(amount, global_amount_index);
     }
@@ -90,48 +102,56 @@ public:
             std::vector<transaction>& txs,
             std::vector<crypto::hash>& missed_txs) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_transactions(txs_ids, txs, missed_txs);
     }
 
     virtual std::vector<block>
     get_blocks_range(const uint64_t& h1, const uint64_t& h2) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db().get_blocks_range(h1, h2);
     }
 
     virtual uint64_t
     get_tx_unlock_time(crypto::hash const& tx_hash) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db().get_tx_unlock_time(tx_hash);
     }
 
     virtual bool
     have_tx(crypto::hash const& tx_hash) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.have_tx(tx_hash);
     }
 
     virtual bool
     tx_exists(crypto::hash const& tx_hash, uint64_t& tx_id) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db().tx_exists(tx_hash, tx_id);
     }
 
     virtual tx_out_index
     get_output_tx_and_index(uint64_t const& amount, uint64_t const& index) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db().get_output_tx_and_index(amount, index);
     }
 
     virtual uint64_t
     get_tx_block_height(crypto::hash const& tx_hash) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db().get_tx_block_height(tx_hash);
     }
 
     virtual std::vector<uint64_t>
     get_tx_amount_output_indices(uint64_t const& tx_id) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_db()
                 .get_tx_amount_output_indices(tx_id).front();
     }
@@ -141,6 +161,7 @@ public:
             std::vector<tx_info>& tx_infos,
             std::vector<spent_key_image_info>& key_image_infos) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return m_mempool.get_transactions_and_spent_keys_info(
                     tx_infos, key_image_infos);
     }
@@ -148,6 +169,7 @@ public:
     virtual uint64_t
     get_current_blockchain_height() const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_current_blockchain_height();
     }
 
@@ -159,6 +181,7 @@ public:
     {
         //                           tx_hash     , index in tx
         // tx_out_index is std::pair<crypto::hash, uint64_t>;
+        std::lock_guard<std::mutex> lock(mtx1);
 
         core_storage.get_db().get_output_tx_and_index(
                     amount, offsets, indices);
@@ -184,12 +207,14 @@ public:
     get_outs(COMMAND_RPC_GET_OUTPUTS_BIN::request const& req,
              COMMAND_RPC_GET_OUTPUTS_BIN::response& res) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_outs(req, res);
     }
 
     virtual uint64_t
     get_dynamic_base_fee_estimate(uint64_t const& grace_blocks) const
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         return core_storage.get_dynamic_base_fee_estimate(grace_blocks);
     }
 

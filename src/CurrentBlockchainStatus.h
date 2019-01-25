@@ -88,7 +88,10 @@ public:
     get_block(uint64_t height, block &blk);
 
     virtual vector<block>
-    get_blocks_range(uint64_t const& h1, uint64_t const& h2);
+    get_blocks_range(uint64_t h1, uint64_t h2);
+
+    vector<pair<block, vector<transaction>>>
+    get_blocks_and_txs_range(uint64_t h1, uint64_t h2);
 
     virtual bool
     get_block_txs(const block &blk,

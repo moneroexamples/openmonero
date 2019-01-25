@@ -120,15 +120,35 @@ CurrentBlockchainStatus::get_block(uint64_t height, block& blk)
 
 vector<block>
 CurrentBlockchainStatus::get_blocks_range(
-        uint64_t const& h1, uint64_t const& h2)
+        uint64_t h1, uint64_t h2)
 {
     try
     {
         return mcore->get_blocks_range(h1, h2);
     }
-    catch (BLOCK_DNE& e)
+    catch (std::exception const& e)
     {
-        cerr << e.what() << endl;
+        OMERROR << e.what();
+    }
+
+    return {};
+}
+
+vector<pair<block, vector<transaction>>>
+CurrentBlockchainStatus::get_blocks_and_txs_range(
+        uint64_t h1, uint64_t h2)
+{
+    try
+    {
+
+        if (h1 >= h2)
+            return {};
+
+        return rpc->get_blocks_range(h1, h2);
+    }
+    catch (std::exception const& e)
+    {
+        OMERROR << e.what();
     }
 
     return {};
@@ -249,8 +269,9 @@ CurrentBlockchainStatus::get_output_keys(
 {
     try
     {
-        mcore->get_output_key(amount, absolute_offsets, outputs);
-        return true;
+        //mcore->get_output_key(amount, absolute_offsets, outputs);
+        //return true;
+        return rpc->get_output_keys(amount, absolute_offsets, outputs);
     }
     catch (const OUTPUT_DNE& e)
     {
@@ -292,12 +313,13 @@ CurrentBlockchainStatus::get_amount_specific_indices(
         // this index is lmdb index of a tx, not tx hash
         uint64_t tx_index;
 
-        if (mcore->tx_exists(tx_hash, tx_index))
-        {
-            out_indices = mcore->get_tx_amount_output_indices(tx_index);
-
-            return true;
-        }
+        //if (mcore->tx_exists(tx_hash, tx_index))
+       // {
+            //out_indices = mcore->get_tx_amount_output_indices(tx_index);
+            //return true;
+       // }
+        
+        return rpc->get_tx_amount_output_indices(tx_hash, out_indices);
     }
     catch(const exception& e)
     {

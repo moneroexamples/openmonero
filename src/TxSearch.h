@@ -46,11 +46,16 @@ private:
     static seconds thread_search_life;
 
     // indicate that a thread loop should keep running
-    bool continue_search {true};
+    atomic<bool> continue_search {true};
 
     // this acctually indicates whether thread loop finished
     // its execution
-    bool searching_is_ongoing {false};
+    atomic<bool> searching_is_ongoing {false};
+
+    // marked true when we set new searched block value
+    // from other thread. for example, when we import account
+    // we set it to 0
+    atomic<bool> searched_block_got_updated {false};
 
     // to store last exception thrown in the search thread
     // using this, a main thread can get info what went wrong here

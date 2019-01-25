@@ -1046,6 +1046,8 @@ OpenMoneroRequests::import_wallet_request(
             return;
         }
 
+        OMINFO << xmr_address.substr(0, 6) + ": searched block set to 0";
+
         j_response["request_fulfilled"] = true;
         j_response["status"]            = "Import will start shortly";
         j_response["new_request"]       = true;

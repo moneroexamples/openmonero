@@ -100,6 +100,7 @@ MicroCore::get_block_from_height(uint64_t height, block& blk) const
 
     try
     {
+        std::lock_guard<std::mutex> lock(mtx1);
         blk = core_storage.get_db().get_block_from_height(height);
     }
     catch (const exception& e)
@@ -135,6 +136,8 @@ MicroCore::get_block_complete_entry(block const& b, block_complete_entry& bce)
 bool
 MicroCore::get_tx(crypto::hash const& tx_hash, transaction& tx) const
 {
+
+    std::lock_guard<std::mutex> lock(mtx1);
     if (core_storage.have_tx(tx_hash))
     {
         // get transaction with given hash
@@ -155,6 +158,8 @@ MicroCore::get_output_histogram(
 {
     try
     {
+        std::lock_guard<std::mutex> lock(mtx1);
+
         histogram = core_storage.get_output_histogram(
                         amounts,
                         unlocked,
