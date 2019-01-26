@@ -139,6 +139,12 @@ xmreg::MySqlConnector::username = config_json["database"]["user"];
 xmreg::MySqlConnector::password = config_json["database"]["password"];
 xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
+// number of thread in blockchain access pool thread
+auto threads_no = std::max<uint32_t>(
+        std::thread::hardware_concurrency()/2, 2u) - 1;
+
+
+OMINFO << "Thread pool size: " << threads_no << " threads";
 
 // once we have all the parameters for the blockchain and our backend
 // we can create and instance of CurrentBlockchainStatus class.
@@ -150,7 +156,8 @@ auto current_bc_status
         = make_shared<xmreg::CurrentBlockchainStatus>(
             bc_setup,
             std::make_unique<xmreg::MicroCore>(),
-            std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url));
+            std::make_unique<xmreg::RPCCalls>(bc_setup.deamon_url),
+            std::make_unique<TP::ThreadPool>(threads_no));
 
 // since CurrentBlockchainStatus class monitors current status
 // of the blockchain (e.g., current height) .This is the only class

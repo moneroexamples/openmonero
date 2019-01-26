@@ -37,7 +37,7 @@ class MicroCore {
     network_type nettype;
 
     bool initialization_succeded {false};
-
+    
 public:
 
     //   <amoumt,
@@ -98,6 +98,27 @@ public:
     {
         return core_storage.get_db().get_blocks_range(h1, h2);
     }
+    
+    //virtual std::vector<block>
+    //get_blocks_range(const uint64_t& h1, const uint64_t& h2) const
+    //{
+        //std::vector<std::pair<cryptonote::blobdata,block>> blobblocks;
+        //std::vector<blobdata> txs;
+        //vector<block> blocks;
+
+        //{
+            //std::lock_guard<std::mutex> lock(mtx1);
+            //cout << "tid: " << std::this_thread::get_id() << endl;;
+            //core_storage.get_blocks(h1, h2-h1+1, blobblocks, txs);
+        //}
+
+        //blocks.reserve(blobblocks.size());
+
+        //for (auto const& bpair: blobblocks)
+            //blocks.push_back(std::move(bpair.second));
+
+        //return blocks; 
+    //}
 
     virtual uint64_t
     get_tx_unlock_time(crypto::hash const& tx_hash) const
@@ -159,7 +180,6 @@ public:
     {
         //                           tx_hash     , index in tx
         // tx_out_index is std::pair<crypto::hash, uint64_t>;
-
         core_storage.get_db().get_output_tx_and_index(
                     amount, offsets, indices);
     }
@@ -218,8 +238,8 @@ public:
     virtual ~MicroCore() = default;
 };
 
-}
 
+}
 
 
 #endif //XMREG01_MICROCORE_H

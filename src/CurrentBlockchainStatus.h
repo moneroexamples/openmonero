@@ -14,6 +14,8 @@
 #include "db/MySqlAccounts.h"
 #include "RandomOutputs.h"
 
+#include "../ext/ThreadPool.hpp"
+
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -60,7 +62,8 @@ public:
 
     CurrentBlockchainStatus(BlockchainSetup _bc_setup,
                             std::unique_ptr<MicroCore> _mcore,
-                            std::unique_ptr<RPCCalls> _rpc);
+                            std::unique_ptr<RPCCalls> _rpc,
+                            std::unique_ptr<TP::ThreadPool> _tp);
 
     virtual void
     monitor_blockchain();
@@ -112,6 +115,10 @@ public:
     virtual bool
     get_tx_with_output(uint64_t output_idx, uint64_t amount,
                        transaction& tx, uint64_t& output_idx_in_tx);
+
+    virtual tx_out_index
+    get_output_tx_and_index(uint64_t amount, 
+                            uint64_t index) const;
 
     virtual bool
     get_output_keys(const uint64_t& amount,
@@ -211,7 +218,8 @@ public:
     get_tx(string const& tx_hash_str, transaction& tx);
 
     virtual bool
-    get_tx_block_height(crypto::hash const& tx_hash, int64_t& tx_height);
+    get_tx_block_height(crypto::hash const& tx_hash, 
+                        int64_t& tx_height);
 
     virtual bool
     set_new_searched_blk_no(const string& address,
@@ -223,7 +231,8 @@ public:
 
     virtual bool
     get_known_outputs_keys(string const& address,
-                           unordered_map<public_key, uint64_t>& known_outputs_keys);
+                           unordered_map<public_key, 
+                           uint64_t>& known_outputs_keys);
 
     virtual void
     clean_search_thread_map();
@@ -297,6 +306,13 @@ protected:
     // this class is also the only class which can
     // use talk to monero deamon using RPC.
     std::unique_ptr<RPCCalls> rpc;
+    
+    // any operation required to use blockchain
+    // i.e., access through mcore, will be performed
+    // by threads in this thread_pool. we have to
+    // have fixed and limited number of threads so that 
+    // the lmdb does not throw MDB_READERS_FULL 
+    std::unique_ptr<TP::ThreadPool> thread_pool;
 
     // vector of mempool transactions that all threads
     // can refer to
@@ -317,6 +333,7 @@ protected:
 
     // to synchronize access to mempool_txs vector
     mutex getting_mempool_txs;
+
 
     // have this method will make it easier to moc
     // RandomOutputs in our tests later
