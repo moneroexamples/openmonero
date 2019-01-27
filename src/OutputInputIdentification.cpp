@@ -34,12 +34,16 @@ OutputInputIdentification::OutputInputIdentification(
 
     if (!generate_key_derivation(tx_pub_key, *viewkey, derivation))
     {
-        OMERROR << "Cant get derived key for: "  << "\n"
-             << "pub_tx_key: " << get_tx_pub_key_str() << " and "
-             << "prv_view_key" << viewkey;;
+        OMWARN << "Cant get derived key for tx: "  
+               << pod_to_hex(tx_hash)
+               << ", pub_tx_key: " 
+               << pod_to_hex(tx_pub_key);
 
-        throw OutputInputIdentificationException(
-                    "Cant get derived key for a tx");
+       static_assert(sizeof(derivation) == sizeof(rct::key), 
+               "Mismatched sizes of key_derivation and rct::key");
+      
+       // use identity derivation instead  
+       memcpy(&derivation, rct::identity().bytes, sizeof(derivation)); 
     }
 }
 
