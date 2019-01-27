@@ -51,6 +51,11 @@ class OutputInputIdentification
 
 public:
 
+    // quick workaround to issue: 128
+    // so that search threads dont terminate
+    // when an error of creating derived key occurs
+    enum class INTERNAL_STATUS {FAIL, OK, CANT_DERIVE_KEY};
+
     // define a structure to keep information about found
     // outputs that we can need in later parts.
     struct output_info
@@ -102,6 +107,8 @@ public:
 
     std::shared_ptr<CurrentBlockchainStatus> current_bc_status;
 
+    INTERNAL_STATUS status = INTERNAL_STATUS::FAIL; 
+
     // default constructor. Useful for unit tests
     OutputInputIdentification() = default;
 
@@ -112,6 +119,8 @@ public:
                               bool is_coinbase,
                               std::shared_ptr<CurrentBlockchainStatus>
                                 _current_bc_status);
+
+
 
     /**
      * FIRST step. search for the incoming xmr using address, viewkey and

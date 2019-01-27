@@ -62,6 +62,8 @@ TxSearch::operator()()
     uint64_t blocks_lookahead
             = current_bc_status->get_bc_setup().blocks_search_lookahead;
 
+    string address_prefix = acc->address.substr(0, 6);
+
     // we put everything in massive catch, as there are plenty ways in which
     // an exceptions can be thrown here. Mostly from mysql.
     // but because this is detatch thread, we cant catch them in main thread.
@@ -171,6 +173,14 @@ TxSearch::operator()()
                 OutputInputIdentification oi_identification {
                             &address, &viewkey, &tx, tx_hash,
                             is_coinbase, current_bc_status};
+
+                if (oi_identification.status 
+                        != OutputInputIdentification::INTERNAL_STATUS::OK)
+                {
+                    OMWARN << address_prefix << " :tx " 
+                           << pod_to_hex(tx_hash) << " skipped.";
+                    continue;
+                }
 
                 // flag indicating whether the txs in the given block are spendable.
                 // this is true when block number is more than 10 blocks from current
@@ -669,6 +679,8 @@ TxSearch::find_txs_in_mempool(
 
     auto local_xmr_accounts = make_shared<MySqlAccounts>(current_bc_status);
 
+    string address_prefix = acc->address.substr(0, 6);
+
     for (auto const& mtx: mempool_txs)
     {
 
@@ -684,6 +696,14 @@ TxSearch::find_txs_in_mempool(
         OutputInputIdentification oi_identification
                  {&address, &viewkey, &tx, tx_hash, coinbase,
                  current_bc_status};
+                
+        if (oi_identification.status 
+                != OutputInputIdentification::INTERNAL_STATUS::OK)
+        {
+            OMWARN << address_prefix << ": mempool tx " 
+                  << pod_to_hex(tx_hash) << " skipped.";
+            continue;
+        }
 
         // FIRSt step. to search for the incoming xmr, we use address,
         // viewkey and

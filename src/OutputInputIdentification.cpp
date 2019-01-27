@@ -40,9 +40,14 @@ OutputInputIdentification::OutputInputIdentification(
              << "pub_tx_key: " << get_tx_pub_key_str() << " and "
              << "prv_view_key" << viewkey;;
 
-        throw OutputInputIdentificationException(
-                    "Cant get derived key for a tx");
+        //throw OutputInputIdentificationException(
+       //             "Cant get derived key for a tx");
+       
+       status = INTERNAL_STATUS::CANT_DERIVE_KEY;
+       return;
     }
+
+    status = INTERNAL_STATUS::OK;
 }
 
 uint64_t
