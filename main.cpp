@@ -141,8 +141,10 @@ xmreg::MySqlConnector::dbname   = config_json["database"]["dbname"];
 
 // number of thread in blockchain access pool thread
 auto threads_no = std::max<uint32_t>(
-        std::thread::hardware_concurrency()/2, 2u) - 1;
+        std::thread::hardware_concurrency()/2, 1u) - 1;
 
+if (bc_setup.blockchain_treadpool_size > 0)
+    threads_no = bc_setup.blockchain_treadpool_size;
 
 OMINFO << "Thread pool size: " << threads_no << " threads";
 

@@ -41,8 +41,12 @@ protected:
         rpc = std::make_unique<MockRPCCalls>("dummy deamon url");
         rpc_ptr = rpc.get();
 
+        tp = std::make_unique<TP::ThreadPool>();
+        tp_ptr = tp.get();
+
         bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(
-                    bc_setup, std::move(mcore), std::move(rpc));
+                    bc_setup, std::move(mcore), std::move(rpc),
+                    std::move(tp));
     }
 
      network_type net_type {network_type::STAGENET};
@@ -50,10 +54,12 @@ protected:
      xmreg::BlockchainSetup bc_setup;
      std::unique_ptr<MockMicroCore> mcore;
      std::unique_ptr<MockRPCCalls> rpc;
+     std::unique_ptr<TP::ThreadPool> tp;
      std::unique_ptr<xmreg::CurrentBlockchainStatus> bcs;
 
      MockMicroCore* mcore_ptr;
      MockRPCCalls* rpc_ptr;
+     TP::ThreadPool* tp_ptr;
 
      static nlohmann::json config_json;
 };
@@ -64,7 +70,8 @@ nlohmann::json BCSTATUS_TEST::config_json;
 
 TEST_P(BCSTATUS_TEST, DefaultConstruction)
 {
-    xmreg::CurrentBlockchainStatus bcs {bc_setup, nullptr, nullptr};
+    xmreg::CurrentBlockchainStatus bcs {
+        bc_setup, nullptr, nullptr, nullptr};
     EXPECT_TRUE(true);
 }
 

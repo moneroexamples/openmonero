@@ -57,6 +57,8 @@
   "search_thread_life_in_seconds"      : 120,
   "max_number_of_blocks_to_import"     : 132000,
   "mysql_ping_every_seconds"           : 200,
+  "_comment": "if the threadpool_size (no of threads) below is 0, its size is automaticly set based on your cpu. If its not 0, the value specified is used instead",
+  "blockchain_treadpool_size"          : 0,
   "ssl" :
   {
     "enable" : false,

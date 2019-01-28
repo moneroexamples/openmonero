@@ -148,6 +148,15 @@ public:
                        RandomOutputs::outs_for_amount_v&
                        found_outputs);
 
+    virtual bool
+    get_output_histogram(
+            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request& req,
+            COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res) const;
+
+    virtual bool
+    get_outs(COMMAND_RPC_GET_OUTPUTS_BIN::request const& req,
+             COMMAND_RPC_GET_OUTPUTS_BIN::response& res) const;
+
     virtual uint64_t
     get_dynamic_per_kb_fee_estimate() const;
 

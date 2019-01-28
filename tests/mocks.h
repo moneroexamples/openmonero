@@ -180,7 +180,7 @@ class MockCurrentBlockchainStatus : public xmreg::CurrentBlockchainStatus
 public:
     MockCurrentBlockchainStatus()
         : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup(),
-                                         nullptr, nullptr)
+                                         nullptr, nullptr, nullptr)
     {}
 
     MOCK_METHOD3(get_output_keys,

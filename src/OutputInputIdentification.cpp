@@ -43,6 +43,8 @@ OutputInputIdentification::OutputInputIdentification(
                "Mismatched sizes of key_derivation and rct::key");
       
        // use identity derivation instead  
+       // solution based on that found in wallet2.cpp in monero
+       // this will cause the tx output to be effectively skipped
        memcpy(&derivation, rct::identity().bytes, sizeof(derivation)); 
     }
 }
