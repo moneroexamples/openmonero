@@ -146,6 +146,14 @@ auto threads_no = std::max<uint32_t>(
 if (bc_setup.blockchain_treadpool_size > 0)
     threads_no = bc_setup.blockchain_treadpool_size;
 
+if (threads_no > 100)
+{
+    threads_no = 100;
+    OMWARN << "Requested Thread Pool size " 
+        << threads_no << " is greater than 100!."
+            " Overwriting to 100!" ;
+}
+
 OMINFO << "Thread pool size: " << threads_no << " threads";
 
 // once we have all the parameters for the blockchain and our backend

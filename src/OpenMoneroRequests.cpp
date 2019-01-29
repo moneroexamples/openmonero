@@ -1285,7 +1285,7 @@ OpenMoneroRequests::import_recent_wallet_request(
                 = boost::lexical_cast<uint64_t>(
                     j_request["no_blocks_to_import"].get<string>());
     }
-    catch (boost::bad_lexical_cast& e)
+    catch (std::exception const& e)
     {
         string msg = "Cant parse "
                 + j_request["no_blocks_to_import"].get<string>()
@@ -1951,7 +1951,6 @@ OpenMoneroRequests::parse_request(
         json& j_request,
         json& j_response)
 {
-
     try
     {
         j_request = body_to_json(body);
@@ -1961,7 +1960,6 @@ OpenMoneroRequests::parse_request(
 
         for (const auto& v: values_map)
         {
-
             if (j_request.count(v) == 0)
             {
                 cerr << v + " value not provided" << endl;
@@ -1971,7 +1969,6 @@ OpenMoneroRequests::parse_request(
 
                 return false;
             }
-
         }
 
         return true;
