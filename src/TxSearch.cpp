@@ -260,14 +260,14 @@ TxSearch::operator()()
                     }
 
 
-                    //if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
-                    //{
-                        //OMERROR << "Tx " << oi_identification.get_tx_hash_str()
-                                //<< " " << pod_to_hex(tx_hash)
-                                //<< " not found in blockchain !";
-                        //throw TxSearchException("Cant get tx from blockchain: "
-                                                //+ pod_to_hex(tx_hash));
-                    //}
+                    if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
+                    {
+                        OMERROR << "Tx " << oi_identification.get_tx_hash_str()
+                                << " " << pod_to_hex(tx_hash)
+                                << " not found in blockchain !";
+                        throw TxSearchException("Cant get tx from blockchain: "
+                                                + pod_to_hex(tx_hash));
+                    }
 
                     OMINFO << address_prefix
                               + ": found some outputs in block "
