@@ -1872,7 +1872,7 @@ OpenMoneroRequests::login_and_start_search_thread(
             acc.viewkey = view_key;
 
             // so we have an account now. Either existing or
-            // newly created. Thus, we can start a tread
+            // newly created. Thus, we can start a thread
             // which will scan for transactions belonging to
             // that account, using its address and view key.
             // the thread will scan the blockchain for txs belonging
@@ -1884,7 +1884,7 @@ OpenMoneroRequests::login_and_start_search_thread(
             // any belonging transactions in a loop.
             // Thus the thread does not need
             // to do anything except looking for tx and updating mysql
-            // with relative tx information
+            // with relevant tx information
 
             if (!current_bc_status->search_thread_exist(acc.address))
             {
