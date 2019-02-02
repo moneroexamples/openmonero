@@ -56,10 +56,13 @@ CurrentBlockchainStatus::monitor_blockchain()
            OMINFO << "Current blockchain height: " << current_height
                   << ", no of mempool txs: " << mempool_txs.size();
 
-           clean_search_thread_map();
+           //clean_search_thread_map();
 
            std::this_thread::sleep_for(
                        bc_setup.refresh_block_status_every);
+           
+           //boost::this_fiber::sleep_for(
+           //            bc_setup.refresh_block_status_every);
        }
 
        is_running = false;
@@ -764,8 +767,11 @@ CurrentBlockchainStatus::start_tx_search_thread(
     {
         // launch SearchTx thread for the given xmr account
 
-        searching_threads.insert(
-            {acc.address, ThreadRAII2<TxSearch>(std::move(tx_search))});
+        //searching_threads.insert(
+            //{acc.address, ThreadRAII2<TxSearch>(std::move(tx_search))});
+
+        searching_fibers.insert(
+            {acc.address, FiberRAII<TxSearch>(std::move(tx_search))});
 
         OMINFO << acc.address.substr(0,6)
                   + ": TxSearch thread created.";
@@ -843,7 +849,8 @@ CurrentBlockchainStatus::search_thread_exist(const string& address)
     // no mutex here, as this will be executed
     // from other methods, which do use mutex.
     // so if you put mutex here, you will get into deadlock.
-    return searching_threads.count(address) > 0;
+    //return searching_threads.count(address) > 0;
+    return searching_fibers.count(address) > 0;
 }
 
 bool
@@ -876,7 +883,7 @@ CurrentBlockchainStatus::find_txs_in_mempool(
 {
     std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
-    if (searching_threads.count(address_str) == 0)
+    if (searching_fibers.count(address_str) == 0)
     {
         // thread does not exist
         OMERROR << "thread for " << address_str << " does not exist";
@@ -1015,7 +1022,7 @@ CurrentBlockchainStatus::set_new_searched_blk_no(
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    if (searching_threads.count(address) == 0)
+    if (searching_fibers.count(address) == 0)
     {
         // thread does not exist
         OMERROR << address.substr(0,6)
@@ -1034,9 +1041,9 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
 {
     // do not need locking mutex here, as this function should be only
     // executed from others that do lock the mutex already.
-    auto it = searching_threads.find(acc_address);
+    auto it = searching_fibers.find(acc_address);
 
-    if (it == searching_threads.end())
+    if (it == searching_fibers.end())
     {
         OMERROR << "Search thread does not exisit for addr: "
                 << acc_address;
@@ -1044,7 +1051,7 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
                                  "non-existing search thread");
     }
 
-    return searching_threads.find(acc_address)->second.get_functor();
+    return searching_fibers.find(acc_address)->second.get_functor();
 }
 
 void
@@ -1052,7 +1059,7 @@ CurrentBlockchainStatus::clean_search_thread_map()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    for (auto& st: searching_threads)
+    for (auto& st: searching_fibers)
     {
         if (search_thread_exist(st.first)
                 && st.second.get_functor().still_searching() == false)
@@ -1073,7 +1080,7 @@ CurrentBlockchainStatus::clean_search_thread_map()
             }
 
             OMINFO << "Ereasing a search thread";
-            searching_threads.erase(st.first);
+            searching_fibers.erase(st.first);
         }
     }
 }
@@ -1083,7 +1090,7 @@ CurrentBlockchainStatus::stop_search_threads()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    for (auto& st: searching_threads)
+    for (auto& st: searching_fibers)
     {
         st.second.get_functor().stop();
     }

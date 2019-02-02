@@ -8,6 +8,8 @@
 #include <thread>
 #include <iostream>
 
+#include <boost/fiber/all.hpp>
+
 namespace xmreg
 {
 
@@ -46,6 +48,32 @@ public:
 
 protected:
     std::unique_ptr<T> f;
+};
+
+template <typename T>
+class FiberRAII
+{
+    public:
+
+    FiberRAII(std::unique_ptr<T> _functor)
+        : f {std::move(_functor)}, 
+        fbr {new boost::fibers::fiber(std::ref(*f))}
+    {}
+
+    FiberRAII(FiberRAII&&) = default;
+    FiberRAII& operator=(FiberRAII&&) = default;
+    //virtual ~FiberRAII() {
+        //std::cout << "virtual ~FiberRAII() " << std::endl;
+        //if (fbr.joinable())
+            //fbr.join();
+    //};
+    virtual ~FiberRAII() = default;
+
+    T& get_functor() {return *f;}
+
+    protected:
+        std::unique_ptr<T> f;
+        std::unique_ptr<boost::fibers::fiber> fbr;
 };
 
 }

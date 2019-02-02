@@ -107,7 +107,13 @@ TxSearch::operator()()
                               "Last scanned was " << h2;
                 }
 
-                std::this_thread::sleep_for(
+                //std::this_thread::sleep_for(
+                        //std::chrono::seconds(
+                                //current_bc_status->get_bc_setup()
+                                //.refresh_block_status_every)
+                //);
+                
+                boost::this_fiber::sleep_for(
                         std::chrono::seconds(
                                 current_bc_status->get_bc_setup()
                                 .refresh_block_status_every)
@@ -137,6 +143,9 @@ TxSearch::operator()()
 
                 continue;
             }
+
+
+            boost::this_fiber::yield();
 
             OMINFO << address_prefix  + ": analyzing "
                    << blocks.size() << " blocks from "

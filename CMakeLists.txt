@@ -90,6 +90,7 @@ find_package(Boost COMPONENTS
         date_time
         chrono
         regex
+        fiber
         serialization
         program_options
         date_time

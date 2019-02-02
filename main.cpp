@@ -316,13 +316,14 @@ signal(SIGINT, ExitHandler::exitHandler);
 // main restbed thread. this is where
 // restbed will be running and handling
 // requests
-std::thread restbed_service(
-            [&service, &settings]()
-{
-    OMINFO << "Starting restbed service thread.";
-    service.start(settings);
-});
+//std::thread restbed_service(
+            //[&service, &settings]()
+//{
+    //OMINFO << "Starting restbed service thread.";
+    //service.start(settings);
+//});
 
+service.start(settings);
 
 // we are going to whait here for as long
 // as control+c hasn't been pressed
@@ -338,8 +339,8 @@ std::thread restbed_service(
 //////////////////////////////////////////////
 
 OMINFO << "Stopping restbed service.";
-service.stop();
-restbed_service.join();
+//service.stop();
+//restbed_service.join();
 
 OMINFO << "Stopping blockchain_monitoring_thread. Please wait.";
 current_bc_status->stop();

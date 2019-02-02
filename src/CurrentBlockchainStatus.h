@@ -16,6 +16,8 @@
 
 #include "../ext/ThreadPool.hpp"
 
+#include <boost/fiber/all.hpp>
+
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -332,6 +334,8 @@ protected:
     // map, key is address to which a running thread belongs to.
     // make it static to guarantee only one such map exist.
     map<string, ThreadRAII2<TxSearch>> searching_threads;
+    
+    map<string, FiberRAII<TxSearch>> searching_fibers;
 
     // thread that will be dispachaed and will keep monitoring blockchain
     // and mempool changes
@@ -339,7 +343,7 @@ protected:
 
     // to synchronize searching access to searching_threads map
     mutex searching_threads_map_mtx;
-
+    
     // to synchronize access to mempool_txs vector
     mutex getting_mempool_txs;
 
