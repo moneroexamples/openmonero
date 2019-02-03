@@ -184,11 +184,22 @@ if (!current_bc_status->init_monero_blockchain())
 // by tx searching threads that are launched for each user independently,
 // when they log back or create new account.
 
-std::thread blockchain_monitoring_thread(
-            [&current_bc_status]()
+//std::thread blockchain_monitoring_thread(
+            //[&current_bc_status]()
+//{
+    //current_bc_status->monitor_blockchain();
+//});
+//
+//
+//boost::fibers::use_scheduling_algorithm<boost::fibers::algo::work_stealing>(2);
+
+boost::fibers::fiber fb([&current_bc_status]()
 {
     current_bc_status->monitor_blockchain();
 });
+
+
+fb.detach();
 
 
 OMINFO << "Blockchain monitoring thread started";
@@ -256,19 +267,19 @@ MAKE_RESOURCE(get_tx);
 MAKE_RESOURCE(get_version);
 
 // restbed service
-Service service;
+auto service = make_unique<Service>();
 
 // Publish the Open Monero API created so that front end can use it
-service.publish(login);
-service.publish(get_address_txs);
-service.publish(get_address_info);
-service.publish(get_unspent_outs);
-service.publish(get_random_outs);
-service.publish(submit_raw_tx);
-service.publish(import_wallet_request);
-service.publish(import_recent_wallet_request);
-service.publish(get_tx);
-service.publish(get_version);
+service->publish(login);
+service->publish(get_address_txs);
+service->publish(get_address_info);
+service->publish(get_unspent_outs);
+service->publish(get_random_outs);
+service->publish(submit_raw_tx);
+service->publish(import_wallet_request);
+service->publish(import_recent_wallet_request);
+service->publish(get_tx);
+service->publish(get_version);
 
 OMINFO << "JSON API endpoints published";
 
@@ -317,13 +328,17 @@ signal(SIGINT, ExitHandler::exitHandler);
 // restbed will be running and handling
 // requests
 //std::thread restbed_service(
-            //[&service, &settings]()
+//            [service = std::move(service), &settings]()
+
 //{
     //OMINFO << "Starting restbed service thread.";
-    //service.start(settings);
+    //boost::fibers::use_scheduling_algorithm<boost::fibers::algo::work_stealing>(2);
+    //service->start(settings);
 //});
+//fb.join();
+service->start(settings);
 
-service.start(settings);
+//service.start(settings);
 
 // we are going to whait here for as long
 // as control+c hasn't been pressed
@@ -333,7 +348,6 @@ service.start(settings);
         return exitHandler.shouldExit();});
 }
 
-
 //////////////////////////////////////////////
 // Try to gracefully stop all threads/services
 //////////////////////////////////////////////
@@ -342,9 +356,9 @@ OMINFO << "Stopping restbed service.";
 //service.stop();
 //restbed_service.join();
 
-OMINFO << "Stopping blockchain_monitoring_thread. Please wait.";
-current_bc_status->stop();
-blockchain_monitoring_thread.join();
+//OMINFO << "Stopping blockchain_monitoring_thread. Please wait.";
+//current_bc_status->stop();
+//blockchain_monitoring_thread.join();
 
 OMINFO << "Stopping mysql_ping. Please wait.";
 mysql_ping.stop();

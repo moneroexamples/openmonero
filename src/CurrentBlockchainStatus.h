@@ -335,7 +335,8 @@ protected:
     // make it static to guarantee only one such map exist.
     map<string, ThreadRAII2<TxSearch>> searching_threads;
     
-    map<string, FiberRAII<TxSearch>> searching_fibers;
+    map<string, std::unique_ptr<TxSearch>> searching_fibers;
+    map<string, std::unique_ptr<boost::fibers::fiber>> searching_fibers2;
 
     // thread that will be dispachaed and will keep monitoring blockchain
     // and mempool changes

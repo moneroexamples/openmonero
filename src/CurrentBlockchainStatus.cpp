@@ -58,11 +58,12 @@ CurrentBlockchainStatus::monitor_blockchain()
 
            //clean_search_thread_map();
 
-           std::this_thread::sleep_for(
-                       bc_setup.refresh_block_status_every);
+//           std::this_thread::sleep_for(
+//                       bc_setup.refresh_block_status_every);
            
-           //boost::this_fiber::sleep_for(
-           //            bc_setup.refresh_block_status_every);
+          cout << " monitor threadid " << std::this_thread::get_id() << endl;
+           boost::this_fiber::sleep_for(
+                       bc_setup.refresh_block_status_every);
        }
 
        is_running = false;
@@ -770,11 +771,47 @@ CurrentBlockchainStatus::start_tx_search_thread(
         //searching_threads.insert(
             //{acc.address, ThreadRAII2<TxSearch>(std::move(tx_search))});
 
-        searching_fibers.insert(
-            {acc.address, FiberRAII<TxSearch>(std::move(tx_search))});
+//        searching_fibers.insert(
+//            {acc.address, std::move(tx_search)});
 
+//        boost::fibers::fiber(std::ref(*tx_search)).detach();
+//        boost::fibers::fiber(
+//                    std::ref(*searching_fibers.find(acc.address)->second)
+//                    ).detach();
+
+
+        //boost::fibers::fiber fb(boost::fibers::launch::dispatch, 
+        auto fb = make_unique<boost::fibers::fiber>(
+                [ts = std::move(tx_search)]()
+        {
+           cout << "Fiber starting" << endl;
+           (*ts)();
+        });
+        
+
+
+        searching_fibers2.insert(
+                    {acc.address, std::move(fb)});
+
+        //searching_fibers2.insert(
+                    //{acc.address, boost::fibers::fiber(
+                         //boost::fibers::launch::post,
+                         //[ts = std::move(tx_search)]() -> void
+                     //{
+                        //cout << "Fiber starting" << endl;
+                        //(*ts)();
+                        //cout << "Fiber finished" << endl;
+                     //})});
+                     
+        cout << "threadid " << std::this_thread::get_id() << endl;
+        searching_fibers2.find(acc.address)->second->detach();
+
+        //fb.detach();
+
+        //boost::this_fiber::sleep_for(120s);
         OMINFO << acc.address.substr(0,6)
                   + ": TxSearch thread created.";
+        //boost::this_fiber::yield();
     }
     catch (const std::exception& e)
     {
@@ -1051,7 +1088,7 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
                                  "non-existing search thread");
     }
 
-    return searching_fibers.find(acc_address)->second.get_functor();
+    return *searching_fibers.find(acc_address)->second;
 }
 
 void
@@ -1062,14 +1099,14 @@ CurrentBlockchainStatus::clean_search_thread_map()
     for (auto& st: searching_fibers)
     {
         if (search_thread_exist(st.first)
-                && st.second.get_functor().still_searching() == false)
+                && st.second->still_searching() == false)
         {
 
             // before erasing a search thread, check if there was any
             // exception thrown by it
             try
             {
-                auto eptr = st.second.get_functor().get_exception_ptr();
+                auto eptr = st.second->get_exception_ptr();
                 if (eptr != nullptr)
                     std::rethrow_exception(eptr);
             }
@@ -1092,7 +1129,7 @@ CurrentBlockchainStatus::stop_search_threads()
 
     for (auto& st: searching_fibers)
     {
-        st.second.get_functor().stop();
+        st.second->stop();
     }
 }
 

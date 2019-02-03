@@ -57,11 +57,18 @@ class FiberRAII
 
     FiberRAII(std::unique_ptr<T> _functor)
         : f {std::move(_functor)}, 
-        fbr {new boost::fibers::fiber(std::ref(*f))}
-    {}
+        fbr {std::ref(*f)}
+    {
+        fbr.detach();
+    }
 
-    FiberRAII(FiberRAII&&) = default;
-    FiberRAII& operator=(FiberRAII&&) = default;
+    FiberRAII(FiberRAII&& other)
+        : f {std::move(other.f)},
+          fbr {std::move(other.fbr)}
+    {
+        std::cout << "FiberRAII(FiberRAII&& other)" << std::endl;
+    };
+    //FiberRAII& operator=(FiberRAII&&) = default;
     //virtual ~FiberRAII() {
         //std::cout << "virtual ~FiberRAII() " << std::endl;
         //if (fbr.joinable())
@@ -73,7 +80,7 @@ class FiberRAII
 
     protected:
         std::unique_ptr<T> f;
-        std::unique_ptr<boost::fibers::fiber> fbr;
+        boost::fibers::fiber fbr;
 };
 
 }

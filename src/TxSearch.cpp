@@ -89,6 +89,8 @@ TxSearch::operator()()
             vector<block> blocks;
            
             blocks = current_bc_status->get_blocks_range(h1, h2);
+          
+            cout << "tx search threadid " << std::this_thread::get_id() << endl;
 
             if (blocks.empty())
             {
@@ -113,11 +115,10 @@ TxSearch::operator()()
                                 //.refresh_block_status_every)
                 //);
                 
+                OMINFO << address_prefix  + ": sleeping ";
                 boost::this_fiber::sleep_for(
-                        std::chrono::seconds(
                                 current_bc_status->get_bc_setup()
-                                .refresh_block_status_every)
-                );
+                                .refresh_block_status_every);
 
                 loop_timestamp = get_current_timestamp();
 
@@ -145,12 +146,15 @@ TxSearch::operator()()
             }
 
 
-            boost::this_fiber::yield();
 
             OMINFO << address_prefix  + ": analyzing "
                    << blocks.size() << " blocks from "
                    << h1 << " to " << h2
                    << " out of " << last_block_height << " blocks";
+            
+            OMINFO << address_prefix  + ": yielding ";
+            boost::this_fiber::yield();
+            OMINFO << address_prefix  + ": back from yield ";
 
             vector<crypto::hash> txs_hashes_from_blocks;
             vector<transaction> txs_in_blocks;
