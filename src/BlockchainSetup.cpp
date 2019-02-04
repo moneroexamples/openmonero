@@ -170,6 +170,8 @@ BlockchainSetup::_init()
             = config_json["wallet_import"]["fee"];
     mysql_ping_every
             = seconds {config_json["mysql_ping_every_seconds"]};
+    blockchain_treadpool_size 
+            = config_json["blockchain_treadpool_size"];
 
     get_blockchain_path();
 

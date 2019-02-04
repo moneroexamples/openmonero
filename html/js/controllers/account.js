@@ -238,7 +238,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
                         // decrypt payment_id8 which results in using
                         // integrated address
-                        if (transactions[i].payment_id.length == 16) {
+                        if (transactions[i].payment_id.length === 16) {
                             if (transactions[i].tx_pub_key) {
                                 var decrypted_payment_id8
                                     = decrypt_payment_id(transactions[i].payment_id,

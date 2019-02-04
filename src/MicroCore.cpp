@@ -135,6 +135,7 @@ MicroCore::get_block_complete_entry(block const& b, block_complete_entry& bce)
 bool
 MicroCore::get_tx(crypto::hash const& tx_hash, transaction& tx) const
 {
+
     if (core_storage.have_tx(tx_hash))
     {
         // get transaction with given hash
@@ -237,5 +238,6 @@ MicroCore::init_success() const
 //    }
 
 //}
+
 
 }

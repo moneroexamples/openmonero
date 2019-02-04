@@ -490,8 +490,12 @@ protected:
         rpc = std::make_unique<MockRPCCalls>("dummy deamon url");
         rpc_ptr = rpc.get();
 
+        tp = std::make_unique<TP::ThreadPool>();
+        tp_ptr = tp.get();
+
         bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(
-                    bc_setup, std::move(mcore), std::move(rpc));
+                    bc_setup, std::move(mcore), std::move(rpc),
+                    std::move(tp));
     }
 
      network_type net_type {network_type::STAGENET};
@@ -500,9 +504,11 @@ protected:
      std::unique_ptr<MockMicroCore> mcore;
      std::unique_ptr<MockRPCCalls> rpc;
      std::unique_ptr<xmreg::CurrentBlockchainStatus> bcs;
+     std::unique_ptr<TP::ThreadPool> tp;
 
      MockMicroCore* mcore_ptr;
      MockRPCCalls* rpc_ptr;
+     TP::ThreadPool* tp_ptr;
 
      static json config_json;
 };

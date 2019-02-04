@@ -1285,7 +1285,7 @@ OpenMoneroRequests::import_recent_wallet_request(
                 = boost::lexical_cast<uint64_t>(
                     j_request["no_blocks_to_import"].get<string>());
     }
-    catch (boost::bad_lexical_cast& e)
+    catch (std::exception const& e)
     {
         string msg = "Cant parse "
                 + j_request["no_blocks_to_import"].get<string>()
@@ -1872,7 +1872,7 @@ OpenMoneroRequests::login_and_start_search_thread(
             acc.viewkey = view_key;
 
             // so we have an account now. Either existing or
-            // newly created. Thus, we can start a tread
+            // newly created. Thus, we can start a thread
             // which will scan for transactions belonging to
             // that account, using its address and view key.
             // the thread will scan the blockchain for txs belonging
@@ -1884,7 +1884,7 @@ OpenMoneroRequests::login_and_start_search_thread(
             // any belonging transactions in a loop.
             // Thus the thread does not need
             // to do anything except looking for tx and updating mysql
-            // with relative tx information
+            // with relevant tx information
 
             if (!current_bc_status->search_thread_exist(acc.address))
             {
@@ -1951,7 +1951,6 @@ OpenMoneroRequests::parse_request(
         json& j_request,
         json& j_response)
 {
-
     try
     {
         j_request = body_to_json(body);
@@ -1961,7 +1960,6 @@ OpenMoneroRequests::parse_request(
 
         for (const auto& v: values_map)
         {
-
             if (j_request.count(v) == 0)
             {
                 cerr << v + " value not provided" << endl;
@@ -1971,7 +1969,6 @@ OpenMoneroRequests::parse_request(
 
                 return false;
             }
-
         }
 
         return true;

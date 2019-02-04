@@ -49,6 +49,8 @@ public:
 
     uint64_t max_number_of_blocks_to_import {132000};
 
+    uint64_t blockchain_treadpool_size {0};
+
     string   import_payment_address_str;
     string   import_payment_viewkey_str;
 

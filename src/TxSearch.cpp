@@ -86,7 +86,9 @@ TxSearch::operator()()
             uint64_t h1 = searched_blk_no;
             uint64_t h2 = std::min(h1 + blocks_lookahead - 1, last_block_height);
 
-            vector<block> blocks = current_bc_status->get_blocks_range(h1, h2);
+            vector<block> blocks;
+           
+            blocks = current_bc_status->get_blocks_range(h1, h2);
 
             if (blocks.empty())
             {
@@ -594,8 +596,13 @@ TxSearch::operator()()
             }
 
             //current_timestamp = loop_timestamp;
-
-            searched_blk_no = h2 + 1;
+            // update this only when this variable is false
+            // otherwise a new search block value can 
+            // be overwritten to h2, instead of the new value 
+            if (!searched_block_got_updated) 
+                searched_blk_no = h2 + 1;
+    
+            searched_block_got_updated = false;
 
         } // while(continue_search)
 
@@ -632,6 +639,7 @@ void
 TxSearch::set_searched_blk_no(uint64_t new_value)
 {
     searched_blk_no = new_value;
+    searched_block_got_updated = true;
 }
 
 uint64_t
