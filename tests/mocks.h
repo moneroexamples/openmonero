@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "../src/MicroCore.h"
+#include "src/MicroCore.h"
 #include "../src/CurrentBlockchainStatus.h"
 #include "../src/ThreadRAII.h"
 

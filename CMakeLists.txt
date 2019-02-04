@@ -6,6 +6,7 @@ set(PROJECT_NAME
 project(${PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE Debug)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
@@ -14,6 +15,8 @@ endif()
 if (NOT MONERO_DIR)
     set(MONERO_DIR ~/monero)
 endif()
+
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 option(BUILD_TESTS "Build tests for the project" OFF)
 
@@ -31,6 +34,8 @@ set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
 
 list(APPEND CMAKE_MODULE_PATH "${MY_CMAKE_DIR}")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/src/xmregcore/cmake")
+
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
         CACHE PATH "Add Monero directory for library searching")
 
@@ -47,14 +52,16 @@ if (${BUILD_TESTS})
             '${CMAKE_SOURCE_DIR}/tests/*')
 endif()
 
-find_package(Monero)
-
 find_package(MYSQL)
 
 if (NOT MYSQL_INCLUDE_DIR)
-    message(SEND_ERROR "MySQL libraries not found! Please install mysql++/mysqlpp libraries")
+    message(SEND_ERROR "MySQL libraries not found! 
+            Please install mysql++/mysqlpp libraries")
     return()
 endif()
+
+
+
 
 include_directories(${MYSQL_INCLUDE_DIR})
 
@@ -79,7 +86,8 @@ link_directories(
 
 create_git_version()
 
-configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_BINARY_DIR}/config)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/config 
+                ${CMAKE_CURRENT_BINARY_DIR}/config)
 
 
 # find boost
@@ -96,6 +104,11 @@ find_package(Boost COMPONENTS
         REQUIRED)
 
 
+# add XMREGCORE submodule
+set(BUILD_XMREGCORE_TESTS OFF CACHE INTERNAL "")
+add_subdirectory(src/xmregcore)    
+
+
 # add src/ subfolder
 add_subdirectory(src/)
 
@@ -109,36 +122,24 @@ set(SOURCE_FILES
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
+target_include_directories(${PROJECT_NAME}
+        PRIVATE src/xmregcore)
+
+# include monero headers
+target_include_monero_directories(${PROJECT_NAME})    
+
 set(LIBRARIES
         myxrm
+        myxrmcore
+        ${Monero_LIBRARIES}
         restbed
-        wallet
-        cryptonote_core
-        blockchain_db       
-        cryptonote_protocol
-        cryptonote_basic
-        daemonizer
-        cncrypto
-        blocks
-        lmdb
-        ringct
-        ringct_basic
-        common
-        mnemonics
-        epee
-        easylogging
         mysqlpp
         mysqlclient
-        device
-        epee
-        checkpoints
-        version       
-        sodium
         ${Boost_LIBRARIES}
+        sodium
         pthread
         unbound
         curl
-        cncrypto
         ssl
         crypto)
 

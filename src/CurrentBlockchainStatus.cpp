@@ -3,7 +3,6 @@
 //
 
 #include "CurrentBlockchainStatus.h"
-#include "PaymentSearcher.hpp"
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -669,39 +668,39 @@ CurrentBlockchainStatus::search_if_payment_made(
         return false;
     }
 
-    PaymentSearcher<crypto::hash8> tx_searcher {
-        bc_setup.import_payment_address,
-        bc_setup.import_payment_viewkey};
+    //PaymentSearcher<crypto::hash8> tx_searcher {
+        //bc_setup.import_payment_address,
+        //bc_setup.import_payment_viewkey};
 
 
-    auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));
+    //auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));
 
-    try
-    {
-        found_amount_pair
-                = tx_searcher.search(expected_payment_id, txs_to_check);
-    }
-    catch (PaymentSearcherException const& e)
-    {
-        OMERROR << e.what();
-        return false;
-    }
+    //try
+    //{
+        //found_amount_pair
+                //= tx_searcher.search(expected_payment_id, txs_to_check);
+    //}
+    //catch (PaymentSearcherException const& e)
+    //{
+        //OMERROR << e.what();
+        //return false;
+    //}
 
-    if (found_amount_pair.first >= desired_amount)
-    {
-        string tx_hash_str = pod_to_hex(
-                    get_transaction_hash(*found_amount_pair.second));
+    //if (found_amount_pair.first >= desired_amount)
+    //{
+        //string tx_hash_str = pod_to_hex(
+                    //get_transaction_hash(*found_amount_pair.second));
 
-        OMINFO << " Payment id check in tx: "
-               << tx_hash_str
-               << " found: " << found_amount_pair.first;
+        //OMINFO << " Payment id check in tx: "
+               //<< tx_hash_str
+               //<< " found: " << found_amount_pair.first;
 
-        // the payment has been made.
-        tx_hash_with_payment = tx_hash_str;
-        OMINFO << "Import payment done";
+        //// the payment has been made.
+        //tx_hash_with_payment = tx_hash_str;
+        //OMINFO << "Import payment done";
 
-        return true;
-    }
+        //return true;
+    //}
 
     return false;
 }

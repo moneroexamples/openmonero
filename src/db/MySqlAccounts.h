@@ -5,7 +5,7 @@
 #ifndef RESTBED_XMR_MYSQLACCOUNTS_H
 #define RESTBED_XMR_MYSQLACCOUNTS_H
 
-#include "../tools.h"
+#include "../utils.h"
 #include "MySqlConnector.h"
 
 

@@ -6,7 +6,7 @@
 #ifndef CROWXMR_RPCCALLS_H
 #define CROWXMR_RPCCALLS_H
 
-#include "monero_headers.h"
+#include "src/monero_headers.h"
 
 #include <mutex>
 #include <chrono>

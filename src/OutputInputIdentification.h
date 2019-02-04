@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CurrentBlockchainStatus.h"
-#include "tools.h"
 
 #include <map>
 #include <utility>

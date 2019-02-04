@@ -13,9 +13,9 @@
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
-#include "monero_headers.h"
+#include "src/monero_headers.h"
 
-#include "../ext/json.hpp"
+#include "ext/json.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>

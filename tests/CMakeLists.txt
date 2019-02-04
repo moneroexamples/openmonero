@@ -14,6 +14,11 @@ macro(add_om_test _TEST_NAME)
             gmock gmock_main
             ${LIBRARIES})
 
+    target_include_monero_directories(${_TEST_NAME}_tests)
+
+    target_include_directories(${_TEST_NAME}_tests
+     PRIVATE ../src/xmregcore)
+
     add_test(NAME ${_TEST_NAME}_tests COMMAND ${_TEST_NAME}_tests)
 
 endmacro()
@@ -24,7 +29,6 @@ add_om_test(mysql)
 add_om_test(microcore)
 add_om_test(bcstatus)
 add_om_test(txsearch)
-add_om_test(universalidentifier)
 
 SETUP_TARGET_FOR_COVERAGE(
         NAME mysql_cov
@@ -41,10 +45,6 @@ SETUP_TARGET_FOR_COVERAGE(
 SETUP_TARGET_FOR_COVERAGE(
         NAME txsearch_cov
         EXECUTABLE txsearch_tests)
-
-SETUP_TARGET_FOR_COVERAGE(
-        NAME universalidentifier_cov
-        EXECUTABLE universalidentifier_tests)
 
 add_custom_target(cov
     COMMAND ;

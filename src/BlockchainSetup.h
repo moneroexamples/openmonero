@@ -5,8 +5,8 @@
 #ifndef OPENMONERO_BLOCKCHAINSETUP_H
 #define OPENMONERO_BLOCKCHAINSETUP_H
 
-#include "monero_headers.h"
-#include "tools.h"
+#include "src/monero_headers.h"
+#include "utils.h"
 
 #include <string>
 

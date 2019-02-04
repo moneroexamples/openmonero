@@ -8,12 +8,8 @@
 #include <iostream>
 #include <functional>
 
-
-#include "version.h"
-
 #include "CurrentBlockchainStatus.h"
 #include "db/MySqlAccounts.h"
-#include "../gen/version.h"
 
 #include "../ext/restbed/source/restbed"
 
