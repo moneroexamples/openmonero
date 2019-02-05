@@ -3,6 +3,7 @@
 //
 
 #include "CurrentBlockchainStatus.h"
+#include "src/UniversalIdentifier.hpp"
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -668,39 +669,44 @@ CurrentBlockchainStatus::search_if_payment_made(
         return false;
     }
 
-    //PaymentSearcher<crypto::hash8> tx_searcher {
-        //bc_setup.import_payment_address,
-        //bc_setup.import_payment_viewkey};
 
+    for (auto&& tx: txs_to_check)
+    {
+        auto identifier = make_identifier(
+                            tx, 
+                            make_unique<Output>(
+                                &bc_setup.import_payment_address,
+                                &bc_setup.import_payment_viewkey),
+                            make_unique<IntegratedPaymentID>(
+                                &bc_setup.import_payment_address,
+                                &bc_setup.import_payment_viewkey));
+        identifier.identify();
 
-    //auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));
+        auto payment_id = identifier.get<IntegratedPaymentID>()->get();
 
-    //try
-    //{
-        //found_amount_pair
-                //= tx_searcher.search(expected_payment_id, txs_to_check);
-    //}
-    //catch (PaymentSearcherException const& e)
-    //{
-        //OMERROR << e.what();
-        //return false;
-    //}
+        if (payment_id == expected_payment_id)
+        {
+            auto amount_paid = identifier.get<Output>()->get_total();
 
-    //if (found_amount_pair.first >= desired_amount)
-    //{
-        //string tx_hash_str = pod_to_hex(
-                    //get_transaction_hash(*found_amount_pair.second));
+            if (amount_paid >= desired_amount)
+            {
 
-        //OMINFO << " Payment id check in tx: "
-               //<< tx_hash_str
-               //<< " found: " << found_amount_pair.first;
+                string tx_hash_str = pod_to_hex(
+                    get_transaction_hash(tx));
 
-        //// the payment has been made.
-        //tx_hash_with_payment = tx_hash_str;
-        //OMINFO << "Import payment done";
+                OMINFO << " Payment id check in tx: " << tx_hash_str
+                       << " found: " << amount_paid;
 
-        //return true;
-    //}
+                // the payment has been made.
+                tx_hash_with_payment = tx_hash_str;
+
+                OMINFO << "Import payment done";
+
+                return true;
+            }
+        }
+    }
+
 
     return false;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "src/UniversalIdentifier.hpp"
+
 #include <string>
 
 #define RAND_TX_HASH()                                      \

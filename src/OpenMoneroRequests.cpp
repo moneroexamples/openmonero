@@ -6,6 +6,7 @@
 
 
 #include "OpenMoneroRequests.h"
+#include "src/UniversalIdentifier.hpp"
 
 #include "db/ssqlses.h"
 #include "OutputInputIdentification.h"

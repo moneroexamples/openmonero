@@ -3,6 +3,7 @@
 //
 
 #include "OutputInputIdentification.h"
+#include "src/UniversalIdentifier.hpp"
 
 
 namespace xmreg

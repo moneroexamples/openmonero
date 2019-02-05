@@ -48,8 +48,8 @@ public:
                        bool(uint64_t height, block& blk));
 
     MOCK_CONST_METHOD2(get_blocks_range,
-                       std::vector<block>(const uint64_t& h1,
-                                          const uint64_t& h2));
+                       std::vector<block>(uint64_t h1,
+                                          uint64_t h2));
 
     MOCK_CONST_METHOD3(get_transactions,
                        bool(const std::vector<crypto::hash>& txs_ids,
@@ -66,11 +66,11 @@ public:
                             uint64_t& tx_id));
 
     MOCK_CONST_METHOD2(get_output_tx_and_index,
-                       tx_out_index(uint64_t const& amount,
-                                    uint64_t const& index));
+                       tx_out_index(uint64_t amount,
+                                    uint64_t index));
 
     MOCK_CONST_METHOD3(get_output_tx_and_index,
-                       void(const uint64_t& amount,
+                       void(uint64_t amount,
                             const std::vector<uint64_t> &offsets,
                             std::vector<tx_out_index> &indices));
 
@@ -78,17 +78,17 @@ public:
                        bool(crypto::hash const& tx_hash,
                             transaction& tx));
 
-    MOCK_METHOD3(get_output_key,
+    MOCK_CONST_METHOD3(get_output_key,
                     void(uint64_t amount,
                          vector<uint64_t> const& absolute_offsets,
                          vector<output_data_t>& outputs));
 
-    MOCK_METHOD2(get_output_key,
+    MOCK_CONST_METHOD2(get_output_key,
                     output_data_t(uint64_t amount,
                                   uint64_t global_amount_index));
 
     MOCK_CONST_METHOD1(get_tx_amount_output_indices,
-                    std::vector<uint64_t>(uint64_t const& tx_id));
+                    std::vector<uint64_t>(uint64_t tx_id));
 
     MOCK_CONST_METHOD2(get_random_outs_for_amounts,
                         bool(COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request const& req,
@@ -99,7 +99,7 @@ public:
                              COMMAND_RPC_GET_OUTPUTS_BIN::response& res));
 
     MOCK_CONST_METHOD1(get_dynamic_base_fee_estimate,
-                       uint64_t(uint64_t const& grace_blocks));
+                       uint64_t(uint64_t grace_blocks));
 
     MOCK_CONST_METHOD2(get_mempool_txs,
                        bool(vector<tx_info>& tx_infos,

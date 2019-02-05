@@ -1,3 +1,3 @@
 [submodule "src/xmregcore"]
 	path = src/xmregcore
-	url = git@github.com:moneroexamples/xmregcore.git
+	url = https://github.com/moneroexamples/xmregcore.git
