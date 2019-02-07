@@ -120,6 +120,12 @@ public:
     get_output_tx_and_index(uint64_t amount, 
                             uint64_t index) const;
 
+    virtual void
+    get_output_tx_and_index(
+            uint64_t amount,
+            std::vector<uint64_t> const& offsets,
+            std::vector<tx_out_index>& indices) const;
+
     virtual bool
     get_output_keys(const uint64_t& amount,
                     const vector<uint64_t>& absolute_offsets,

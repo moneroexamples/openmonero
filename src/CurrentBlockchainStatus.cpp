@@ -273,6 +273,25 @@ CurrentBlockchainStatus::get_output_tx_and_index(
     return future_result.get();
 }
 
+void
+CurrentBlockchainStatus::get_output_tx_and_index(
+            uint64_t amount,
+            std::vector<uint64_t> const& offsets,
+            std::vector<tx_out_index>& indices) const
+{
+    auto future_result = thread_pool->submit(
+        [this](auto amount, 
+               auto const& offsets, 
+               auto& indices) 
+            -> void
+        {
+            this->mcore
+                ->get_output_tx_and_index(
+                        amount, offsets, indices);
+        }, amount, std::cref(offsets), 
+           std::ref(indices));
+}
+
 bool
 CurrentBlockchainStatus::get_tx_with_output(
         uint64_t output_idx, uint64_t amount,

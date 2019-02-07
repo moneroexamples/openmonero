@@ -2,6 +2,7 @@
 #include "src/MicroCore.h"
 #include "../src/CurrentBlockchainStatus.h"
 #include "../src/ThreadRAII.h"
+#include "../src/OutputInputIdentification.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

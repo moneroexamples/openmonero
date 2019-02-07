@@ -106,7 +106,7 @@ sudo apt install libmysql++-dev
 # go to home folder if still in ~/monero
 cd ~
 
-git clone https://github.com/moneroexamples/openmonero.git
+git clone --recursive https://github.com/moneroexamples/openmonero.git
 
 cd openmonero
 
