@@ -11,7 +11,6 @@ set(SOURCE_FILES
 		OpenMoneroRequests.cpp
 		TxSearch.cpp
         RPCCalls.cpp
-		OutputInputIdentification.cpp
 		omversion.h.in
 		BlockchainSetup.cpp
 		ThreadRAII.cpp

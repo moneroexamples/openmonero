@@ -9,7 +9,6 @@
 #include "src/UniversalIdentifier.hpp"
 
 #include "db/ssqlses.h"
-#include "OutputInputIdentification.h"
 
 #include "version.h"
 #include "../gen/omversion.h"
@@ -1545,6 +1544,8 @@ OpenMoneroRequests::get_tx(
         address_parse_info address_info;
         secret_key viewkey;
 
+        MicroCoreAdapter mcore_addapter {current_bc_status.get()};
+
         // to get info about recived xmr in this tx, we calculate it from
         // scrach, i.e., search for outputs. We could get this info
         // directly from the database, but doing it again here, is a good way
@@ -1557,21 +1558,16 @@ OpenMoneroRequests::get_tx(
         if (current_bc_status->get_xmr_address_viewkey(
                     xmr_address, address_info, viewkey))
         {
-            OutputInputIdentification oi_identification {
-                &address_info, &viewkey, &tx, tx_hash,
-                        coinbase};
+        
+            auto identifier = make_identifier(tx, 
+                            make_unique<Output>(&address_info, &viewkey));
 
-            oi_identification.identify_outputs();
+            identifier.identify();
+        
+            auto const& outputs_identified 
+                    = identifier.get<Output>()->get();
 
-            uint64_t total_received {0};
-
-            // we just get total amount recieved. we have viewkey,
-            // so this must be correct and front end does not
-            // need to do anything to check this.
-            for (auto& out_info: oi_identification.identified_outputs)
-            {
-                total_received += out_info.amount;
-            }
+            auto total_received = calc_total_xmr(outputs_identified);
 
             j_response["total_received"] = std::to_string(total_received);
 
@@ -1669,20 +1665,22 @@ OpenMoneroRequests::get_tx(
                         // Class that is resposnible for idenficitaction
                         // of our outputs
                         // and inputs in a given tx.
-                        OutputInputIdentification oi_identification
-                                {&address_info, &viewkey, &tx, tx_hash,
-                                    coinbase};
 
-                        // no need mutex here, as this will be exectued only
-                        // after the above. there is no threads here.
-                        oi_identification.identify_inputs(known_outputs_keys,
-                                                          current_bc_status.get());
+                        auto identifier = make_identifier(tx, 
+                                        make_unique<Input>(&address_info, &viewkey, 
+                                                           &known_outputs_keys, 
+                                                           &mcore_addapter));
+                        identifier.identify();
+        
+                        
+                        auto const& inputs_identfied 
+                            = identifier.get<Input>()->get();
 
                         json j_spent_outputs = json::array();
 
                         uint64_t total_spent {0};
 
-                        for (auto& in_info: oi_identification.identified_inputs)
+                        for (auto& in_info: inputs_identfied)
                         {
 
                             // need to get output info from mysql, as we need
@@ -1699,7 +1697,7 @@ OpenMoneroRequests::get_tx(
 
                                 j_spent_outputs.push_back({
                                           {"amount"     , std::to_string(in_info.amount)},
-                                          {"key_image"  , in_info.key_img},
+                                          {"key_image"  , pod_to_hex(in_info.key_img)},
                                           {"tx_pub_key" , out.tx_pub_key},
                                           {"out_index"  , out.out_index},
                                           {"mixin"      , out.mixin}});

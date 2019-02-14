@@ -1236,5 +1236,39 @@ CurrentBlockchainStatus::get_txs_in_blocks(
     return true;
 }
 
+
+
+    
+MicroCoreAdapter::MicroCoreAdapter(CurrentBlockchainStatus* _cbs)
+: cbs {_cbs}
+{}
+
+void 
+MicroCoreAdapter::get_output_key(uint64_t amount,
+                  vector<uint64_t> const& absolute_offsets,
+                  vector<cryptonote::output_data_t>& outputs) 
+                   const 
+{
+    cbs->get_output_keys(amount, absolute_offsets, outputs);
+}
+
+void
+MicroCoreAdapter::get_output_tx_and_index(
+            uint64_t amount,
+            std::vector<uint64_t> const& offsets,
+            std::vector<tx_out_index>& indices) 
+                const 
+{
+    cbs->get_output_tx_and_index(amount, offsets, indices);
+}
+
+bool
+MicroCoreAdapter::get_tx(crypto::hash const& tx_hash, transaction& tx) 
+        const
+{
+    return cbs->get_tx(tx_hash, tx);
+}
+
+
 }
 
