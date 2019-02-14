@@ -348,7 +348,7 @@ CurrentBlockchainStatus::get_output_keys(
                             absolute_offsets, outputs);
                     return true;
                 }
-                catch (const OUTPUT_DNE& e)
+                catch (std::exception const& e)
                 {
                     OMERROR << "get_output_keys: " << e.what();
                 }
