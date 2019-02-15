@@ -831,7 +831,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        OMERROR << "thread for " << address << " does not exist";
+        OMERROR << "thread for " << address.substr(0,6) << " does not exist";
         return false;
     }
 
@@ -850,7 +850,7 @@ CurrentBlockchainStatus::get_known_outputs_keys(
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        OMERROR << "thread for " << address << " does not exist";
+        OMERROR << "thread for " << address.substr(0,6) << " does not exist";
         return false;
     }
 
@@ -881,7 +881,8 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
     if (!search_thread_exist(address_str))
     {
         // thread does not exist
-        OMERROR << "thread for " << address_str << " does not exist";
+        OMERROR << "thread for " << address_str.substr(0,6)
+                << " does not exist";
         return false;
     }
 
@@ -903,7 +904,8 @@ CurrentBlockchainStatus::find_txs_in_mempool(
     if (searching_threads.count(address_str) == 0)
     {
         // thread does not exist
-        OMERROR << "thread for " << address_str << " does not exist";
+        OMERROR << "thread for "
+                << address_str.substr(0,6) << " does not exist";
         return false;
     }
 
