@@ -442,7 +442,14 @@ var cnUtil = (function(initConfig) {
             first = seed; //only input reduced seeds or this will not give you the result you want
         }
         keys.spend = this.generate_keys(first);
-        var second = this.cn_fast_hash(first);
+
+        var second;
+        if (seed.length !== 64) {
+            second = this.cn_fast_hash(first);
+        } else {
+            second = this.cn_fast_hash(keys.spend.sec);
+        }
+
         keys.view = this.generate_keys(second);
         keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
         return keys;
