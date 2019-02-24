@@ -131,7 +131,7 @@ public:
     body_to_json(const Bytes & body);
 
     inline uint64_t
-    get_current_blockchain_height();
+    get_current_blockchain_height() const;
 
 private:
 
@@ -147,10 +147,19 @@ private:
     parse_request(const Bytes& body,
                   vector<string>& values_map,
                   json& j_request,
-                  json& j_response);
+                  json& j_response) const;
 
     boost::optional<XmrAccount>
-    select_account(string const& xmr_address) const;
+    create_account(string const& xmr_address,
+                   string const& view_key) const;
+
+    bool 
+    make_search_thread(XmrAccount& acc) const;
+
+    boost::optional<XmrAccount>
+    select_account(string const& xmr_address,
+                   string const& view_key,
+                   bool create_if_notfound = true) const;
 
     boost::optional<XmrPayment>
     select_payment(XmrAccount const& xmr_account) const;

@@ -19,7 +19,7 @@ namespace xmreg
 
 
 
-TxSearch::TxSearch(XmrAccount& _acc,
+TxSearch::TxSearch(XmrAccount const& _acc,
                    std::shared_ptr<CurrentBlockchainStatus> _current_bc_status)
     : current_bc_status {_current_bc_status}
 {
