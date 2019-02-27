@@ -992,11 +992,12 @@ OpenMoneroRequests::import_wallet_request(
         return;
     }
 
-    // if import_fee is zero, we just import the wallet.
+    auto import_fee = current_bc_status->get_bc_setup().import_fee;
+
     // we dont care about any databases or anything, as importing
     // wallet is free.
     // just reset the scanned block height in mysql and finish.
-    if (current_bc_status->get_bc_setup().import_fee == 0)
+    if (import_fee == 0)
     {
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
@@ -1094,6 +1095,7 @@ OpenMoneroRequests::import_wallet_request(
         // front end should give proper message in this case
 
         j_response["request_fulfilled"] = request_fulfilled;
+        j_response["import_fee"]        = 0;
         j_response["status"]            = "Wallet already imported or "
                                           "in the progress.";
         j_response["new_request"]       = false;
