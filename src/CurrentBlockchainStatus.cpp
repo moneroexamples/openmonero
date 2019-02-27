@@ -1249,7 +1249,7 @@ void
 MicroCoreAdapter::get_output_key(uint64_t amount,
                   vector<uint64_t> const& absolute_offsets,
                   vector<cryptonote::output_data_t>& outputs) 
-                   const 
+                   /*const */
 {
     cbs->get_output_keys(amount, absolute_offsets, outputs);
 }
