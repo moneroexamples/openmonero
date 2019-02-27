@@ -2,7 +2,7 @@
 // Created by mwo on 15/06/18.
 //
 
-#include "../src/MicroCore.h"
+#include "src/MicroCore.h"
 #include "../src/BlockchainSetup.h"
 
 

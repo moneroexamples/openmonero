@@ -3,7 +3,7 @@
 //
 
 #include "CurrentBlockchainStatus.h"
-#include "PaymentSearcher.hpp"
+#include "src/UniversalIdentifier.hpp"
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -273,6 +273,25 @@ CurrentBlockchainStatus::get_output_tx_and_index(
     return future_result.get();
 }
 
+void
+CurrentBlockchainStatus::get_output_tx_and_index(
+            uint64_t amount,
+            std::vector<uint64_t> const& offsets,
+            std::vector<tx_out_index>& indices) const
+{
+    auto future_result = thread_pool->submit(
+        [this](auto amount, 
+               auto const& offsets, 
+               auto& indices) 
+            -> void
+        {
+            this->mcore
+                ->get_output_tx_and_index(
+                        amount, offsets, indices);
+        }, amount, std::cref(offsets), 
+           std::ref(indices));
+}
+
 bool
 CurrentBlockchainStatus::get_tx_with_output(
         uint64_t output_idx, uint64_t amount,
@@ -329,7 +348,7 @@ CurrentBlockchainStatus::get_output_keys(
                             absolute_offsets, outputs);
                     return true;
                 }
-                catch (const OUTPUT_DNE& e)
+                catch (std::exception const& e)
                 {
                     OMERROR << "get_output_keys: " << e.what();
                 }
@@ -669,39 +688,44 @@ CurrentBlockchainStatus::search_if_payment_made(
         return false;
     }
 
-    PaymentSearcher<crypto::hash8> tx_searcher {
-        bc_setup.import_payment_address,
-        bc_setup.import_payment_viewkey};
 
-
-    auto found_amount_pair = std::make_pair(0ull, std::cend(txs_to_check));
-
-    try
+    for (auto&& tx: txs_to_check)
     {
-        found_amount_pair
-                = tx_searcher.search(expected_payment_id, txs_to_check);
+        auto identifier = make_identifier(
+                            tx, 
+                            make_unique<Output>(
+                                &bc_setup.import_payment_address,
+                                &bc_setup.import_payment_viewkey),
+                            make_unique<IntegratedPaymentID>(
+                                &bc_setup.import_payment_address,
+                                &bc_setup.import_payment_viewkey));
+        identifier.identify();
+
+        auto payment_id = identifier.get<IntegratedPaymentID>()->get();
+
+        if (payment_id == expected_payment_id)
+        {
+            auto amount_paid = identifier.get<Output>()->get_total();
+
+            if (amount_paid >= desired_amount)
+            {
+
+                string tx_hash_str = pod_to_hex(
+                    get_transaction_hash(tx));
+
+                OMINFO << " Payment id check in tx: " << tx_hash_str
+                       << " found: " << amount_paid;
+
+                // the payment has been made.
+                tx_hash_with_payment = tx_hash_str;
+
+                OMINFO << "Import payment done";
+
+                return true;
+            }
+        }
     }
-    catch (PaymentSearcherException const& e)
-    {
-        OMERROR << e.what();
-        return false;
-    }
 
-    if (found_amount_pair.first >= desired_amount)
-    {
-        string tx_hash_str = pod_to_hex(
-                    get_transaction_hash(*found_amount_pair.second));
-
-        OMINFO << " Payment id check in tx: "
-               << tx_hash_str
-               << " found: " << found_amount_pair.first;
-
-        // the payment has been made.
-        tx_hash_with_payment = tx_hash_str;
-        OMINFO << "Import payment done";
-
-        return true;
-    }
 
     return false;
 }
@@ -807,7 +831,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        OMERROR << "thread for " << address << " does not exist";
+        OMERROR << "thread for " << address.substr(0,6) << " does not exist";
         return false;
     }
 
@@ -826,7 +850,7 @@ CurrentBlockchainStatus::get_known_outputs_keys(
     if (!search_thread_exist(address))
     {
         // thread does not exist
-        OMERROR << "thread for " << address << " does not exist";
+        OMERROR << "thread for " << address.substr(0,6) << " does not exist";
         return false;
     }
 
@@ -857,7 +881,8 @@ CurrentBlockchainStatus::get_xmr_address_viewkey(
     if (!search_thread_exist(address_str))
     {
         // thread does not exist
-        OMERROR << "thread for " << address_str << " does not exist";
+        OMERROR << "thread for " << address_str.substr(0,6)
+                << " does not exist";
         return false;
     }
 
@@ -879,7 +904,8 @@ CurrentBlockchainStatus::find_txs_in_mempool(
     if (searching_threads.count(address_str) == 0)
     {
         // thread does not exist
-        OMERROR << "thread for " << address_str << " does not exist";
+        OMERROR << "thread for "
+                << address_str.substr(0,6) << " does not exist";
         return false;
     }
 
@@ -1211,6 +1237,40 @@ CurrentBlockchainStatus::get_txs_in_blocks(
 
     return true;
 }
+
+
+
+    
+MicroCoreAdapter::MicroCoreAdapter(CurrentBlockchainStatus* _cbs)
+: cbs {_cbs}
+{}
+
+void 
+MicroCoreAdapter::get_output_key(uint64_t amount,
+                  vector<uint64_t> const& absolute_offsets,
+                  vector<cryptonote::output_data_t>& outputs) 
+                   /*const */
+{
+    cbs->get_output_keys(amount, absolute_offsets, outputs);
+}
+
+void
+MicroCoreAdapter::get_output_tx_and_index(
+            uint64_t amount,
+            std::vector<uint64_t> const& offsets,
+            std::vector<tx_out_index>& indices) 
+                const 
+{
+    cbs->get_output_tx_and_index(amount, offsets, indices);
+}
+
+bool
+MicroCoreAdapter::get_tx(crypto::hash const& tx_hash, transaction& tx) 
+        const
+{
+    return cbs->get_tx(tx_hash, tx);
+}
+
 
 }
 

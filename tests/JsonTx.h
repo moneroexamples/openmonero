@@ -1,7 +1,7 @@
 #ifndef JSONTX_H
 #define JSONTX_H
 
-#include "../src/tools.h"
+#include "../src/utils.h"
 
 namespace xmreg
 {

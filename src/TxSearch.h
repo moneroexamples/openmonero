@@ -1,7 +1,6 @@
 #pragma once
 
 #include "db/MySqlAccounts.h"
-#include "OutputInputIdentification.h"
 
 #include <memory>
 #include <mutex>
@@ -98,7 +97,7 @@ public:
     // make default constructor. useful in testing
     TxSearch() = default;
 
-    TxSearch(XmrAccount& _acc,
+    TxSearch(XmrAccount const& _acc,
              std::shared_ptr<CurrentBlockchainStatus> _current_bc_status);
 
     virtual void

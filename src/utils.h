@@ -13,9 +13,9 @@
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
-#include "monero_headers.h"
+#include "src/monero_headers.h"
 
-#include "../ext/json.hpp"
+#include "ext/json.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -225,11 +225,6 @@ url_decode(const std::string& in, std::string& out);
 map<std::string, std::string>
 parse_crow_post_data(const string& req_body);
 
-
-// based on
-// crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
-public_key
-get_tx_pub_key_from_received_outs(const transaction &tx);
 
 
 //string
