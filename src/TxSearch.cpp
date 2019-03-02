@@ -197,7 +197,6 @@ for (auto const& tx_tuple: txs_data)
     bool is_rct                 = (tx.version == 2);
     uint8_t rct_type            = (is_rct ? tx.rct_signatures.type : 0);
 
-    //cout << "\n\n\n" << blk_height << '\n';
 
     // Class that is responsible for identification of our outputs
     // and inputs in a given tx.
