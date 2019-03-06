@@ -104,11 +104,11 @@
                     <div class="move-text-div">
                         <div class="middle-text receive">{{sent_tx.tx_id}}</div>
                     </div>
-                    <!--
-                    <label class="send-label" >Transaction Private Key</label>
+                    <label class="send-label" >Transaction Private Key (save it as the key is not recoverable!)</label>
                     <div class="move-text-div">
-                        <div class="middle-text receive">{{sent_tx.tx_prvkey}}</div>
+                        <div class="middle-text receive">{{sent_tx.tx_key}}</div>
                     </div>
+                    <!--
                     <label class="send-label" >Soon should be visible in a blockchain explorer</label>
                     <div class="move-text-div">
                         <a class="login-link" href="{{ sent_tx.explorerLink }} " target="_blank">{{ sent_tx.explorerLink }}</a>
