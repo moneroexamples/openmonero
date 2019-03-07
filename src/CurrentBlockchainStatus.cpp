@@ -1141,37 +1141,74 @@ CurrentBlockchainStatus::construct_output_rct_field(
     string rtc_mask(64, '0');
     string rtc_amount(64, '0');
 
+
+    //if (random_output_tx.version == 1)
+    //{
+        //rtc_outpk = "";
+        //rtc_mask = "";
+        //rtc_amount = "";
+    //}
+    //else
+    //{
+
+        
+        //if (random_output_tx.rct_signatures.type > 0)
+        //{
+            //rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures
+                                    //.outPk[output_idx_in_tx].mask);
+            //rtc_mask   = pod_to_hex(random_output_tx.rct_signatures
+                                    //.ecdhInfo[output_idx_in_tx].mask);
+            //rtc_amount = pod_to_hex(random_output_tx.rct_signatures
+                                    //.ecdhInfo[output_idx_in_tx].amount);
+        //}
+
+        //if (random_output_tx.rct_signatures.type == 0)
+        //{
+            //rtc_outpk = "coinbase";
+        //}
+        //else if (random_output_tx.rct_signatures.type == 4)
+        //{
+            //rtc_amount = rtc_amount.substr(0,16);
+        //}
+    //}
+
+    //cout << "random_outs : " << rtc_outpk << "," 
+         //<< rtc_mask << ","<< rtc_amount << endl;
+
+
+
     if (random_output_tx.version > 1 && !is_coinbase(random_output_tx))
     {
         rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures
-                                .outPk[output_idx_in_tx].mask);
+                               .outPk[output_idx_in_tx].mask);
         rtc_mask   = pod_to_hex(random_output_tx.rct_signatures
                                 .ecdhInfo[output_idx_in_tx].mask);
         rtc_amount = pod_to_hex(random_output_tx.rct_signatures
                                 .ecdhInfo[output_idx_in_tx].amount);
+
     }
     else
     {
-        // for non ringct txs, we need to take it rct amount commitment
-        // and sent to the frontend. the mask is zero mask for those,
-        // as frontend will produce identy mask autmatically
-        // for non-ringct outputs
+        //// for non ringct txs, we need to take it rct amount commitment
+        //// and sent to the frontend. the mask is zero mask for those,
+        //// as frontend will produce identy mask autmatically
+        //// for non-ringct outputs
 
         output_data_t od = get_output_key(out_amount, global_amount_index);
 
         rtc_outpk  = pod_to_hex(od.commitment);
 
-        if (is_coinbase(random_output_tx))
-        {
-            // commenting this out. think its not needed.
-            // as this function provides keys for mixin outputs
-            // not the ones we actually spend.
-            // ringct coinbase txs are special. they have identity mask.
-            // as suggested by this code:
-            // https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
-            // https://github.com/monero-project/monero/blob/master/src/blockchain_db/blockchain_db.cpp#L100
-            // rtc_mask   = pod_to_hex(rct::identity());
-        }
+        //if (is_coinbase(random_output_tx))
+        //{
+            //// commenting this out. think its not needed.
+            //// as this function provides keys for mixin outputs
+            //// not the ones we actually spend.
+            //// ringct coinbase txs are special. they have identity mask.
+            //// as suggested by this code:
+            //// https://github.com/monero-project/monero/blob/eacf2124b6822d088199179b18d4587404408e0f/src/wallet/wallet2.cpp#L893
+            //// https://github.com/monero-project/monero/blob/master/src/blockchain_db/blockchain_db.cpp#L100
+            //// rtc_mask   = pod_to_hex(rct::identity());
+        //}
 
     }
 
