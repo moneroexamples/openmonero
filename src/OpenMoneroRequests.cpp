@@ -1502,6 +1502,8 @@ OpenMoneroRequests::get_tx(
     j_response["mixin_no"]       = mixin_no;
     j_response["num_of_outputs"] = output_pub_keys.size();
     j_response["num_of_inputs"]  = input_key_imgs.size();
+    j_response["tx_version"]     = tx.version;
+    j_response["rct_type"]       = tx.rct_signatures.type;
 
     if (!coinbase &&  tx.vin.size() > 0)
     {

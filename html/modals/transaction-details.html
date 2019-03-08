@@ -53,9 +53,13 @@
             <label class="field-label review">Is coinbase?</label>
             <div class="review-text">{{coinbase}}</div>
           </div>
-          <div class="w-col w-col-10 responsive-column">
+          <div class="w-col w-col-7 responsive-column">
             <label class="field-label review" for="Mnemonic-2">Payment ID</label>
             <div class="review-text">{{payment_id || "N/A"}}</div>
+          </div>
+          <div class="w-col w-col-3 responsive-column">
+            <label class="field-label review" for="Mnemonic-2">tx/rct type</label>
+            <div class="review-text">{{tx_version}}/{{rct_type}}</div>
           </div>
         </div>
         <div class="w-row">

@@ -11,8 +11,8 @@
     "_comment" : "if paths are empty, default Monero paths will be used",
     "mainnet"  : "",
     "testnet"  : "",
-    "stagenet" : "",
-    "stagenet2" : "/home/mwo2/stagenet/node_01/stagenet/lmdb"
+    "stagenet2" : "",
+    "stagenet" : "/home/mwo2/stagenet/node_01/stagenet/lmdb"
   },
   "database" :
   {
