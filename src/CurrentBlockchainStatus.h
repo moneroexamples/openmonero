@@ -70,6 +70,9 @@ public:
 
     virtual uint64_t
     get_current_blockchain_height();
+    
+    virtual uint64_t
+    get_hard_fork_version() const;
 
     virtual void
     update_current_blockchain_height();

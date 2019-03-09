@@ -48,7 +48,9 @@ class HostedMoneroAPIClient
         ).catch(
             function(data)
             {
-                fn(data && data.data.Error ? data.data.Error : "Something went wrong with getting your available balance for spending");
+                fn(data && data.data.Error 
+                    ? data.data.Error 
+                    : "Something went wrong with getting your available balance for spending");
             }
         );
         const requestHandle = 
@@ -72,7 +74,10 @@ class HostedMoneroAPIClient
         ).catch(
             function(data)
             {
-                fn(data && data.data.Error ? data.data.Error : "Something went wrong while getting decoy outputs");
+                fn(data
+                    && data.data.Error 
+                    ? data.data.Error 
+                    : "Something went wrong while getting decoy outputs");
             }
         );
         const requestHandle = 
@@ -96,7 +101,10 @@ class HostedMoneroAPIClient
         ).catch(
             function(data)
             {
-                fn(data && data.data.Error ? data.data.Error : "Something went wrong while submitting your transaction");
+                //console.log("submit_raw_data_error:", data);
+                fn(data && data.data.Error 
+                    ? data.data.Error 
+                    : "Something went wrong while submitting your transaction");
             }
         );
         const requestHandle = 

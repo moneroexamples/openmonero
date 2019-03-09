@@ -569,6 +569,8 @@ OpenMoneroRequests::get_unspent_outs(
 
     j_response = json  {
             {"amount" , "0"},          // total value of the outputs
+            {"fork_version", 
+                current_bc_status->get_hard_fork_version()},
             {"outputs", json::array()} // list of outputs
                                        // exclude those without require
                                        // no of confirmation
@@ -908,13 +910,13 @@ OpenMoneroRequests::submit_raw_tx(
 
     if(!epee::string_tools::parse_hexstr_to_binbuff(raw_tx_blob, tx_blob))
     {
-        j_response["status"] = "error";
-        j_response["Error"]  = "Tx faild parse_hexstr_to_binbuff";
+        error_msg  = "Tx faild parse_hexstr_to_binbuff";
 
-        OMERROR << j_response["Error"];
+        OMERROR << error_msg;
 
         session_close(session, j_response,
-                      UNPROCESSABLE_ENTITY);
+                      UNPROCESSABLE_ENTITY,
+                      error_msg);
         return;
     }
 
@@ -922,28 +924,28 @@ OpenMoneroRequests::submit_raw_tx(
 
     if (!parse_and_validate_tx_from_blob(tx_blob, tx_to_be_submitted))
     {
-        j_response["status"] = "error";
-        j_response["Error"]  = "Tx faild parse_and_validate_tx_from_blob";
+        error_msg = "Tx faild parse_and_validate_tx_from_blob";
 
-        OMERROR << j_response["Error"];
+        OMERROR << error_msg;
 
         session_close(session, j_response,
-                      UNPROCESSABLE_ENTITY);
+                      UNPROCESSABLE_ENTITY, 
+                      error_msg);
         return;
     }
 
     if (current_bc_status->find_key_images_in_mempool(tx_to_be_submitted))
     {
-        j_response["status"] = "error";
-        j_response["Error"]  = "Tx uses your outputs that area already "
+        error_msg =  "Tx uses your outputs that area already "
                                "in the mempool. "
                                "Please wait till your previous tx(s) "
                                "get mined";
 
-        OMERROR << j_response["Error"];
+        OMERROR << error_msg;
 
         session_close(session, j_response,
-                      UNPROCESSABLE_ENTITY);
+                      UNPROCESSABLE_ENTITY,
+                      error_msg);
         return;
     }
 
@@ -951,17 +953,13 @@ OpenMoneroRequests::submit_raw_tx(
             raw_tx_blob, error_msg,
             current_bc_status->get_bc_setup().do_not_relay))
     {
-        j_response["status"] = "error";
-        j_response["Error"]  = error_msg;
-
-        OMERROR << j_response["Error"];
+        OMERROR << error_msg;
 
         session_close(session, j_response,
-                      UNPROCESSABLE_ENTITY);
+                      UNPROCESSABLE_ENTITY,
+                      error_msg);
         return;
     }
-
-    j_response["status"] = "success";
 
 
     string response_body = j_response.dump();

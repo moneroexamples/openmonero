@@ -74,12 +74,24 @@ CurrentBlockchainStatus::get_current_blockchain_height()
     return current_height;
 }
 
+uint64_t
+CurrentBlockchainStatus::get_hard_fork_version() const
+{
+
+    auto future_result = thread_pool->submit(
+        [this](auto current_height) 
+        {
+            return this->mcore
+                       ->get_hard_fork_version(
+                               current_height);
+        }, current_height.load());
+
+    return future_result.get();
+}
 
 void
 CurrentBlockchainStatus::update_current_blockchain_height()
 {
-    //current_height = mcore->get_current_blockchain_height() - 1;
-
     uint64_t tmp {0};
 
     // This rpc call not only gets the blockchain height
