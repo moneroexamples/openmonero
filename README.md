@@ -88,6 +88,7 @@ For other Linux operating systems, the instructions are analogical.
 
 To download and compile recent Monero follow instructions
 in the following link:
+git clone --recursive -b release-v0.13 https://github.com/monero-project/monero.git
 
 https://github.com/moneroexamples/monero-compilation/blob/master/README.md
 
@@ -107,7 +108,7 @@ sudo apt install libmysql++-dev
 cd ~
 
 # download the source code of the devel branch
-git clone --recursive -b devel  https://github.com/moneroexamples/openmonero.git
+git clone --recursive https://github.com/moneroexamples/openmonero.git
 
 cd openmonero
 
@@ -223,16 +224,21 @@ Command line options
 
 ```bash
 ./openmonero -h
+openmonero, Open Monero backend service:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
-  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes.
-                                        useful when testing construction and
+  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
+                                        useful when testing construction and 
                                         submiting txs
-  -p [ --port ] arg (=1984)             default port for restbed service of
+  -p [ --port ] arg (=1984)             default port for restbed service of 
                                         Open Monero
   -c [ --config-file ] arg (=./config/config.json)
                                         Config file path.
+  -m [ --monero-log-level ] arg (=1)    Monero log level 1-4, default is 1.
+  -l [ --log-file ] arg (=./openmonero.log)
+                                        Name and path to log file. -l "" to 
+                                        disable log file.
 ```
 
 Other backend options are in `confing/config.json`.
