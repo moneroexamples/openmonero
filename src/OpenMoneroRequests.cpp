@@ -57,10 +57,22 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     string xmr_address;
     string view_key;
 
+    // this is true for both newly created accounts
+    // and existing/imported ones
+    bool create_accountt {true};
+
+    // client sends generated_localy as true
+    // for new accounts, and false for 
+    // adding existing accounts (i.e., importing wallet)
+    bool generated_locally {false};
+
     try
     {
-        xmr_address = j_request["address"];
-        view_key    = j_request["view_key"];
+        xmr_address       = j_request["address"];
+        view_key          = j_request["view_key"];
+        create_accountt   = j_request["create_account"];
+        if (j_request.count("generated_locally"))
+            generated_locally = j_request["generated_locally"];
     }
     catch (json::exception const& e)
     {
@@ -68,6 +80,24 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         session_close(session, j_response);
         return;
     }
+
+    if (create_accountt == false)
+    {
+        j_response = json {{"status", "error"},
+                           {"reason", "Not making an account"}};
+
+        session_close(session, j_response);
+        return;
+    }
+
+
+    // return same as what we recieved to client
+    j_response["generated_locally"] = generated_locally;
+    //j_response["generated_locally"] = true;
+
+    // optinoal field, but we set it to current height
+    j_response["start_height"] = current_bc_status
+        ->get_current_blockchain_height();
 
     // a placeholder for exciting or new account data
 
