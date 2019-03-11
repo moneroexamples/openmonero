@@ -13,4 +13,6 @@ build
 .cproject
 .project
 .settings/
-
+.kdev4/
+.vscode/
+openmonero.kdev4

@@ -86,27 +86,11 @@ For other Linux operating systems, the instructions are analogical.
 
 #### Monero download and compilation
 
-Download and compile recent Monero (v 0.13) into your home folder:
-
-```bash
-# first install monero dependecines
-sudo apt update
-
-sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libhidapi-dev libhidapi-libusb0
-
-# go to home folder
-cd ~
-
-# download monero sourced for branch release-v0.13
+To download and compile recent Monero follow instructions
+in the following link:
 git clone --recursive -b release-v0.13 https://github.com/monero-project/monero.git
 
-cd monero/
-
-# checkout latest release of monero v0.13.0.4
-git checkount -b v13004 v0.13.0.4
-
-USE_SINGLE_BUILDDIR=1 make
-```
+https://github.com/moneroexamples/monero-compilation/blob/master/README.md
 
 #### Compilation of the OpenMonero (don't run it yet)
 
@@ -116,14 +100,15 @@ we can just do it now, to see if it compiles. But don't run it yet. It will not
 work without database, setup frontend, and synced and running monero blockchain.
 
 ```bash
-# need mysql++ library gcovr (for code coverage)
-sudo apt install libmysql++-dev gcovr
+# need mysql++ library
+sudo apt install libmysql++-dev
 
 
 # go to home folder if still in ~/monero
 cd ~
 
-git clone https://github.com/moneroexamples/openmonero.git
+# download the source code of the devel branch
+git clone --recursive https://github.com/moneroexamples/openmonero.git
 
 cd openmonero
 
@@ -183,22 +168,77 @@ frontend files are stored. All these can be changed to suit your requirements.
 
 Go to localhost (http://127.0.0.1) and check if frontend is working.
 
+#### mymonero-core-js (optional)
+
+OpenMonero uses frontend code provided by mymonero.com. Among many files
+used, the two crtical ones are binary webassamply
+[MyMoneroCoreCpp_WASM.wasm](https://mymonero.com/js/lib/mymonero_core_js/monero_utils/MyMoneroCoreCpp_WASM.wasm) and
+the corresponding JavaScript [mymonero-core.js](https://mymonero.com/js/lib/mymonero-core.js) files.
+They are used by [send_coins.js](https://mymonero.com/js/controllers/send_coins.js?) for providing
+transaction generation functionality.
+
+OpenMonero provides these files here: `./html/js/lib`. They were generated using forked  `mymonero-core-js` repo:
+https://github.com/moneroexamples/mymonero-core-js/tree/openmonero
+
+However, you can compile them yourself using the orginal repository located at
+https://github.com/mymonero/mymonero-core-js.
+
+Below are instructions on how it can be done on Arch Linux.
+
+```
+git clone https://github.com/mymonero/mymonero-core-js.git
+
+cd mymonero-core-js/
+
+./bin/update_submodules
+
+npm install
+
+# download boost
+wget -c "https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz" -O /tmp/boost.tar.gz && mkdir -p ./contrib && tar xzvf /tmp/boost.tar.gz -C ./contrib && mv ./contrib/boost_1_68_0/ ./contrib/boost-sdk
+
+# set EMSCRIPTEN paths (for this, you need to have EMSCRIPTEN setup, e.g. in your home folder)
+# http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html
+source ~/emsdk/emsdk_env.sh
+
+# compile boost
+./bin/build-boost-emscripten.sh
+
+# compile mymonero-core-js
+./bin/build-emcpp.sh
+
+# generate mymonero-core.js
+./bin/package_browser_js
+
+```
+
+The above instructions should produce `mymonero-core.js`
+and `mymonero_core_js/monero_utils/MyMoneroCoreCpp_WASM.wasm`
+(both located in `./build` folder), which can
+be used in place the files bundled with OpenMonero.
+
+
 #### Run OpenMonero
 
 Command line options
 
 ```bash
 ./openmonero -h
+openmonero, Open Monero backend service:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
-  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes.
-                                        useful when testing construction and
+  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
+                                        useful when testing construction and 
                                         submiting txs
-  -p [ --port ] arg (=1984)             default port for restbed service of
+  -p [ --port ] arg (=1984)             default port for restbed service of 
                                         Open Monero
   -c [ --config-file ] arg (=./config/config.json)
                                         Config file path.
+  -m [ --monero-log-level ] arg (=1)    Monero log level 1-4, default is 1.
+  -l [ --log-file ] arg (=./openmonero.log)
+                                        Name and path to log file. -l "" to 
+                                        disable log file.
 ```
 
 Other backend options are in `confing/config.json`.

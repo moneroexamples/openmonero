@@ -6,9 +6,10 @@
 #ifndef CROWXMR_RPCCALLS_H
 #define CROWXMR_RPCCALLS_H
 
-#include "monero_headers.h"
+#include "src/monero_headers.h"
 
 #include <mutex>
+#include <chrono>
 
 namespace xmreg
 {
@@ -17,13 +18,14 @@ using namespace cryptonote;
 using namespace crypto;
 using namespace std;
 
+using namespace std::chrono_literals;
 
 class RPCCalls
 {
     string deamon_url;
     uint64_t timeout_time;
 
-    std::chrono::milliseconds timeout_time_ms;
+    chrono::seconds rpc_timeout;
 
     epee::net_utils::http::url_content url;
 
@@ -36,18 +38,7 @@ class RPCCalls
 public:
 
     RPCCalls(string _deamon_url = "http:://127.0.0.1:18081",
-             uint64_t _timeout = 200000);    
-
-    RPCCalls(RPCCalls&& a);
-
-    RPCCalls&
-    operator=(RPCCalls&& a);
-
-    virtual bool
-    operator==(RPCCalls const& a);
-
-    virtual bool
-    operator!=(RPCCalls const& a);
+             chrono::seconds _timeout = 3min + 30s);
 
     virtual bool
     connect_to_monero_deamon();
@@ -61,8 +52,17 @@ public:
     commit_tx(tools::wallet2::pending_tx& ptx,
               string& error_msg);
 
+    virtual bool
+    get_current_height(uint64_t& current_height);
 
     virtual ~RPCCalls() = default;
+
+protected:
+
+    template <typename Command>
+    bool
+    check_if_response_is_ok(Command const& res,
+                            string& error_msg) const;
 };
 
 

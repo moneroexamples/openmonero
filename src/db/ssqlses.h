@@ -5,7 +5,7 @@
 #ifndef RESTBED_XMR_SSQLSES_H
 #define RESTBED_XMR_SSQLSES_H
 
-#include "../ext/json.hpp"
+#include "ext/json.hpp"
 
 #include <mysql++/mysql++.h>
 #include <mysql++/ssqls.h>

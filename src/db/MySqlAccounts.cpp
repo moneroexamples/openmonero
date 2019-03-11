@@ -5,8 +5,8 @@
 #define MYSQLPP_SSQLS_NO_STATICS 1
 
 #include "MySqlAccounts.h"
-#include "TxSearch.h"
-#include "CurrentBlockchainStatus.h"
+//#include "TxSearch.h"
+#include "../CurrentBlockchainStatus.h"
 
 #include "ssqlses.h"
 
@@ -19,7 +19,8 @@ MysqlInputs::MysqlInputs(shared_ptr<MySqlConnector> _conn)
 {}
 
 bool
-MysqlInputs::select_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
+MysqlInputs::select_for_out(const uint64_t& output_id,
+                            vector<XmrInput>& ins)
 {
     try
     {
@@ -77,7 +78,8 @@ MysqlOutpus::exist(const string& output_public_key_str, XmrOutput& out)
 }
 
 
-MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn): conn {_conn}
+MysqlTransactions::MysqlTransactions(shared_ptr<MySqlConnector> _conn)
+    : conn {_conn}
 {}
 
 uint64_t
@@ -87,9 +89,10 @@ MysqlTransactions::mark_spendable(const uint64_t& tx_id_no, bool spendable)
     {
         conn->check_if_connected();
 
-        Query query = conn->query(spendable ?
-                                  XmrTransaction::MARK_AS_SPENDABLE_STMT
-                                            : XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
+        Query query = conn->query(
+                    spendable ?
+                      XmrTransaction::MARK_AS_SPENDABLE_STMT
+                                : XmrTransaction::MARK_AS_NONSPENDABLE_STMT);
         query.parse();
 
 
@@ -131,7 +134,8 @@ MysqlTransactions::delete_tx(const uint64_t& tx_id_no)
 
 
 bool
-MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
+MysqlTransactions::exist(const uint64_t& account_id,
+                         const string& tx_hash_str, XmrTransaction& tx)
 {
     try
     {
@@ -161,7 +165,8 @@ MysqlTransactions::exist(const uint64_t& account_id, const string& tx_hash_str, 
 
 
 bool
-MysqlTransactions::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
+MysqlTransactions::get_total_recieved(const uint64_t& account_id,
+                                      uint64_t& amount)
 {
     try
     {
@@ -190,7 +195,8 @@ MysqlPayments::MysqlPayments(shared_ptr<MySqlConnector> _conn): conn {_conn}
 {}
 
 bool
-MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments)
+MysqlPayments::select_by_payment_id(const string& payment_id,
+                                    vector<XmrPayment>& payments)
 {
 
     try
@@ -214,17 +220,20 @@ MysqlPayments::select_by_payment_id(const string& payment_id, vector<XmrPayment>
     return false;
 }
 
-MySqlAccounts::MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status)
+MySqlAccounts::MySqlAccounts(
+        shared_ptr<CurrentBlockchainStatus> _current_bc_status)
     : current_bc_status {_current_bc_status}
 {
     // create connection to the mysql
-    conn = make_shared<MySqlConnector>();
+    conn = make_shared<MySqlConnector>(
+            new mysqlpp::ReconnectOption(true));
 
     _init();
 }
 
-MySqlAccounts::MySqlAccounts(shared_ptr<CurrentBlockchainStatus> _current_bc_status,
-                             shared_ptr<MySqlConnector> _conn)
+MySqlAccounts::MySqlAccounts(
+        shared_ptr<CurrentBlockchainStatus> _current_bc_status,
+        shared_ptr<MySqlConnector> _conn)
     : current_bc_status {_current_bc_status}
 {
     conn = _conn;
@@ -245,6 +254,8 @@ MySqlAccounts::select(const string& address, XmrAccount& account)
 
         vector<XmrAccount> res;
         query.storein(res, address);
+
+        //while(query.more_results());
 
         if (!res.empty())
         {
@@ -292,7 +303,8 @@ MySqlAccounts::insert(const T& data_to_insert)
 template
 uint64_t MySqlAccounts::insert<XmrAccount>(const XmrAccount& data_to_insert);
 template
-uint64_t MySqlAccounts::insert<XmrTransaction>(const XmrTransaction& data_to_insert);
+uint64_t MySqlAccounts::insert<XmrTransaction>(
+                    const XmrTransaction& data_to_insert);
 template
 uint64_t MySqlAccounts::insert<XmrOutput>(const XmrOutput& data_to_insert);
 template
@@ -327,9 +339,12 @@ MySqlAccounts::insert(const vector<T>& data_to_insert)
 
 // Explicitly instantiate insert template for our tables
 template
-uint64_t MySqlAccounts::insert<XmrOutput>(const vector<XmrOutput>& data_to_insert);
+uint64_t MySqlAccounts::insert<XmrOutput>(
+        const vector<XmrOutput>& data_to_insert);
+
 template
-uint64_t MySqlAccounts::insert<XmrInput>(const vector<XmrInput>& data_to_insert);
+uint64_t MySqlAccounts::insert<XmrInput>(
+        const vector<XmrInput>& data_to_insert);
 
 template <typename T, size_t query_no>
 bool
@@ -339,14 +354,18 @@ MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
     {
         conn->check_if_connected();
 
-        Query query = conn->query((query_no == 1 ? T::SELECT_STMT : T::SELECT_STMT2));
+        Query query = conn->query((query_no == 1
+                                   ? T::SELECT_STMT : T::SELECT_STMT2));
         query.parse();
 
         selected_data.clear();
 
         query.storein(selected_data, account_id);
 
+        // this is confusing. So I get false from this method
+        // when this is empty and when there is some exception!
         return !selected_data.empty();
+        //return true;
     }
     catch (std::exception const& e)
     {
@@ -357,25 +376,34 @@ MySqlAccounts::select(uint64_t account_id, vector<T>& selected_data)
 }
 
 template
-bool MySqlAccounts::select<XmrAccount>(uint64_t account_id, vector<XmrAccount>& selected_data);
+bool MySqlAccounts::select<XmrAccount>(uint64_t account_id,
+        vector<XmrAccount>& selected_data);
 
 template
-bool MySqlAccounts::select<XmrTransaction>(uint64_t account_id, vector<XmrTransaction>& selected_data);
+bool MySqlAccounts::select<XmrTransaction>(uint64_t account_id,
+        vector<XmrTransaction>& selected_data);
 
 template
-bool MySqlAccounts::select<XmrOutput>(uint64_t account_id, vector<XmrOutput>& selected_data);
+bool MySqlAccounts::select<XmrOutput>(uint64_t account_id,
+        vector<XmrOutput>& selected_data);
 
-template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
-bool MySqlAccounts::select<XmrOutput, 2>(uint64_t tx_id, vector<XmrOutput>& selected_data);
+template // this will use SELECT_STMT2 which selectes
+        // based on transaction id, not account_id,
+bool MySqlAccounts::select<XmrOutput, 2>(uint64_t tx_id,
+        vector<XmrOutput>& selected_data);
 
 template
-bool MySqlAccounts::select<XmrInput>(uint64_t account_id, vector<XmrInput>& selected_data);
+bool MySqlAccounts::select<XmrInput>(uint64_t account_id,
+        vector<XmrInput>& selected_data);
 
 template
-bool MySqlAccounts::select<XmrPayment>(uint64_t account_id, vector<XmrPayment>& selected_data);
+bool MySqlAccounts::select<XmrPayment>(uint64_t account_id,
+        vector<XmrPayment>& selected_data);
 
-template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
-bool MySqlAccounts::select<XmrInput, 2>(uint64_t tx_id, vector<XmrInput>& selected_data);
+template // this will use SELECT_STMT2 which selectes
+         // based on transaction id, not account_id,
+bool MySqlAccounts::select<XmrInput, 2>(uint64_t tx_id,
+        vector<XmrInput>& selected_data);
 
 
 template <typename T>
@@ -403,10 +431,12 @@ MySqlAccounts::update(T const& orginal_row, T const& new_row)
 }
 
 template
-bool MySqlAccounts::update<XmrAccount>(XmrAccount const& orginal_row, XmrAccount const& new_row);
+bool MySqlAccounts::update<XmrAccount>(
+        XmrAccount const& orginal_row, XmrAccount const& new_row);
 
 template
-bool MySqlAccounts::update<XmrPayment>(XmrPayment const& orginal_row, XmrPayment const& new_row);
+bool MySqlAccounts::update<XmrPayment>(
+        XmrPayment const& orginal_row, XmrPayment const& new_row);
 
 template <typename T>
 bool
@@ -415,12 +445,16 @@ MySqlAccounts::select_for_tx(uint64_t tx_id, vector<T>& selected_data)
     return select<T, 2>(tx_id, selected_data);
 }
 
-template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
-bool MySqlAccounts::select_for_tx<XmrOutput>(uint64_t tx_id, vector<XmrOutput>& selected_data);
+template // this will use SELECT_STMT2 which selectes based on
+         // transaction id, not account_id,
+bool MySqlAccounts::select_for_tx<XmrOutput>(uint64_t tx_id,
+        vector<XmrOutput>& selected_data);
 
 
-template // this will use SELECT_STMT2 which selectes based on transaction id, not account_id,
-bool MySqlAccounts::select_for_tx<XmrInput>(uint64_t tx_id, vector<XmrInput>& selected_data);
+template // this will use SELECT_STMT2 which selectes
+         //based on transaction id, not account_id,
+bool MySqlAccounts::select_for_tx<XmrInput>(uint64_t tx_id,
+        vector<XmrInput>& selected_data);
 
 template <typename T>
 bool
@@ -453,16 +487,20 @@ MySqlAccounts::select_by_primary_id(uint64_t id, T& selected_data)
 }
 
 //template
-//bool MySqlAccounts::select_by_primary_id<XmrTransaction>(uint64_t id, XmrTransaction& selected_data);
+//bool MySqlAccounts::select_by_primary_id<XmrTransaction>(
+//                           uint64_t id, XmrTransaction& selected_data);
 
 template
-bool MySqlAccounts::select_by_primary_id<XmrInput>(uint64_t id, XmrInput& selected_data);
+bool MySqlAccounts::select_by_primary_id<XmrInput>(
+        uint64_t id, XmrInput& selected_data);
 
 template
-bool MySqlAccounts::select_by_primary_id<XmrOutput>(uint64_t id, XmrOutput& selected_data);
+bool MySqlAccounts::select_by_primary_id<XmrOutput>(
+        uint64_t id, XmrOutput& selected_data);
 
 template
-bool MySqlAccounts::select_by_primary_id<XmrPayment>(uint64_t id, XmrPayment& selected_data);
+bool MySqlAccounts::select_by_primary_id<XmrPayment>(
+        uint64_t id, XmrPayment& selected_data);
 
 bool
 MySqlAccounts::select_txs_for_account_spendability_check(
@@ -492,7 +530,8 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                 if (no_row_updated != 1)
                 {
-                    cerr << "no_row_updated != 1 due to  xmr_accounts->mark_tx_spendable(tx.id)\n";
+                    cerr << "no_row_updated != 1 due to  "
+                            "xmr_accounts->mark_tx_spendable(tx.id)\n";
                     return false;
                 }
 
@@ -512,14 +551,16 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
                 if (blockchain_tx_id != tx.blockchain_tx_id)
                 {
-                    // tx does not exist in blockchain, or its blockchain_id changed
+                    // tx does not exist in blockchain, or its blockchain_id
+                    // changed
                     // for example, it was orhpaned, and then readded.
 
                     uint64_t no_row_updated = delete_tx(tx.id.data);
 
                     if (no_row_updated != 1)
                     {
-                        cerr << "no_row_updated != 1 due to  xmr_accounts->delete_tx(tx.id)\n";
+                        cerr << "no_row_updated != 1 due to  "
+                                "xmr_accounts->delete_tx(tx.id)\n";
                         return false;
                     }
 
@@ -539,7 +580,8 @@ MySqlAccounts::select_txs_for_account_spendability_check(
                 // be spent anyway.
 
                 if (tx.unlock_time == 0)
-                    tx.unlock_time = tx.height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
+                    tx.unlock_time = tx.height
+                            + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
 
             } // else
 
@@ -555,19 +597,22 @@ MySqlAccounts::select_txs_for_account_spendability_check(
 
 
 bool
-MySqlAccounts::select_inputs_for_out(const uint64_t& output_id, vector<XmrInput>& ins)
+MySqlAccounts::select_inputs_for_out(const uint64_t& output_id,
+                                     vector<XmrInput>& ins)
 {
     return mysql_in->select_for_out(output_id, ins);
 }
 
 bool
-MySqlAccounts::output_exists(const string& output_public_key_str, XmrOutput& out)
+MySqlAccounts::output_exists(const string& output_public_key_str,
+                             XmrOutput& out)
 {
     return mysql_out->exist(output_public_key_str, out);
 }
 
 bool
-MySqlAccounts::tx_exists(const uint64_t& account_id, const string& tx_hash_str, XmrTransaction& tx)
+MySqlAccounts::tx_exists(const uint64_t& account_id,
+                         const string& tx_hash_str, XmrTransaction& tx)
 {
     return mysql_tx->exist(account_id, tx_hash_str, tx);
 }
@@ -591,13 +636,15 @@ MySqlAccounts::delete_tx(const uint64_t& tx_id_no)
 }
 
 bool
-MySqlAccounts::select_payment_by_id(const string& payment_id, vector<XmrPayment>& payments)
+MySqlAccounts::select_payment_by_id(const string& payment_id,
+                                    vector<XmrPayment>& payments)
 {
     return mysql_payment->select_by_payment_id(payment_id, payments);
 }
 
 bool
-MySqlAccounts::get_total_recieved(const uint64_t& account_id, uint64_t& amount)
+MySqlAccounts::get_total_recieved(const uint64_t& account_id,
+                                  uint64_t& amount)
 {
     return mysql_tx->get_total_recieved(account_id, amount);
 }
@@ -617,7 +664,8 @@ MySqlAccounts::get_connection()
 
 
 void
-MySqlAccounts::set_bc_status_provider(shared_ptr<CurrentBlockchainStatus> bc_status_provider)
+MySqlAccounts::set_bc_status_provider(
+        shared_ptr<CurrentBlockchainStatus> bc_status_provider)
 {
     current_bc_status = bc_status_provider;
 }

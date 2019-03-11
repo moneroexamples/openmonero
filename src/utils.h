@@ -13,10 +13,9 @@
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
-#include "monero_headers.h"
+#include "src/monero_headers.h"
 
-#include "../ext/format.h"
-#include "../ext/json.hpp"
+#include "ext/json.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -158,10 +157,32 @@ get_payment_id(const vector<uint8_t>& extra,
                crypto::hash& payment_id,
                crypto::hash8& payment_id8);
 
-bool
+
+inline bool
 get_payment_id(const transaction& tx,
                crypto::hash& payment_id,
-               crypto::hash8& payment_id8);
+               crypto::hash8& payment_id8)
+{
+    return get_payment_id(tx.extra, payment_id, payment_id8);
+}
+
+inline tuple<crypto::hash, crypto::hash8>
+get_payment_id(transaction const& tx)
+{
+    crypto::hash payment_id;
+    crypto::hash8 payment_id8;
+
+    get_payment_id(tx.extra, payment_id, payment_id8);
+
+    return make_tuple(payment_id, payment_id8);
+}
+
+// Encryption and decryption are the same operation (xor with a key)
+bool
+encrypt_payment_id(crypto::hash8 &payment_id,
+                   const crypto::public_key &public_key,
+                   const crypto::secret_key &secret_key);
+
 
 inline double
 get_xmr(uint64_t core_amount)
@@ -193,20 +214,21 @@ decode_ringct(const rct::rctSig & rv,
               uint64_t & amount);
 
 bool
+decode_ringct(rct::rctSig const& rv,
+              crypto::key_derivation const& derivation,
+              unsigned int i,
+              rct::key& mask,
+              uint64_t& amount);
+bool
 url_decode(const std::string& in, std::string& out);
 
 map<std::string, std::string>
 parse_crow_post_data(const string& req_body);
 
 
-// based on
-// crypto::public_key wallet2::get_tx_pub_key_from_received_outs(const tools::wallet2::transfer_details &td) const
-public_key
-get_tx_pub_key_from_received_outs(const transaction &tx);
 
-
-string
-xmr_amount_to_str(const uint64_t& xmr_amount, string format="{:0.12f}");
+//string
+//xmr_amount_to_str(const uint64_t& xmr_amount, string format="{:0.12f}");
 
 bool
 is_output_ours(const size_t& output_index,

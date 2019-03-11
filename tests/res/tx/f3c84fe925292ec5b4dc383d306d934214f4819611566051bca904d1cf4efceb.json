@@ -1,0 +1,33 @@
+{
+    "_comment": "Just a placeholder for some comment if needed later",
+    "block": "0111010101010201010405626c6f636b0a050209098aab83e005e094b83d50e762b943df3158e9a87bc49f75ab9f2e800be380bd92bbaae477e84ac9844a02d08e0d01ff948e0d01b7de97a0f0bc0502472b5dcf3d976fa1b8e0d250a7c4e9dc52ae9db7b8fb00934f9dac800da9f89f2101b9e281d63f319b30ea87d789d324cbce8b5edfa6a8e00f001f8449d8ba2b71fe0000",
+    "block_version": [9, 9],
+    "hash": "f3c84fe925292ec5b4dc383d306d934214f4819611566051bca904d1cf4efceb",
+    "hex": "02d08e0d01ff948e0d01b7de97a0f0bc0502472b5dcf3d976fa1b8e0d250a7c4e9dc52ae9db7b8fb00934f9dac800da9f89f2101b9e281d63f319b30ea87d789d324cbce8b5edfa6a8e00f001f8449d8ba2b71fe00",
+    "inputs": [],
+    "is_ringct": true,
+    "nettype": 2,
+    "payment_id": "0000000000000000000000000000000000000000000000000000000000000000",
+    "payment_id8": "0000000000000000",
+    "payment_id8e": "0000000000000000",
+    "rct_type": 0,
+    "recipient": [{
+            "_comment": "monerowalletstagenet3, coinbase tx",
+            "address": "56heRv2ANffW1Py2kBkJDy8xnWqZsSrgjLygwjua2xc8Wbksead1NK1ehaYpjQhymGK4S8NPL9eLuJ16CuEJDag8Hq3RbPV",
+            "amount": 24081949126455,
+            "is_subaddress": false,
+            "seed": "",
+            "spendkey": "df0f5720ae0b69454ca7db35db677272c7c19513cd0dc4147b0e00792a10f406",
+            "viewkey": "b45e6f38b2cd1c667459527decb438cdeadf9c64d93c8bccf40a9bf98943dc09",
+            "outputs": [[0, "472b5dcf3d976fa1b8e0d250a7c4e9dc52ae9db7b8fb00934f9dac800da9f89f", 24081949126455]]
+        }],
+    "sender": {
+        "_comment": "",
+        "address": "",
+        "amount": 0,
+        "change": 0,
+        "seed": "",
+        "spendkey": "",
+        "viewkey": ""
+    }
+}

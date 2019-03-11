@@ -5,7 +5,7 @@
 #ifndef RESTBED_XMR_MYSQLACCOUNTS_H
 #define RESTBED_XMR_MYSQLACCOUNTS_H
 
-#include "tools.h"
+#include "../utils.h"
 #include "MySqlConnector.h"
 
 
@@ -29,7 +29,6 @@ class XmrOutput;
 class XmrTransaction;
 class XmrPayment;
 class XmrAccount;
-class TxSearch;
 class Table;
 class CurrentBlockchainStatus;
 
@@ -99,7 +98,6 @@ public:
     select_by_payment_id(const string& payment_id, vector<XmrPayment>& payments);
 };
 
-class TxSearch;
 
 class MySqlAccounts
 {

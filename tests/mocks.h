@@ -1,14 +1,14 @@
 #pragma once
 
 
-#include "../src/MicroCore.h"
+#include "src/MicroCore.h"
 #include "../src/CurrentBlockchainStatus.h"
 #include "../src/ThreadRAII.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-
+#include "JsonTx.h"
 
 namespace
 {
@@ -48,8 +48,8 @@ public:
                        bool(uint64_t height, block& blk));
 
     MOCK_CONST_METHOD2(get_blocks_range,
-                       std::vector<block>(const uint64_t& h1,
-                                          const uint64_t& h2));
+                       std::vector<block>(uint64_t h1,
+                                          uint64_t h2));
 
     MOCK_CONST_METHOD3(get_transactions,
                        bool(const std::vector<crypto::hash>& txs_ids,
@@ -66,24 +66,29 @@ public:
                             uint64_t& tx_id));
 
     MOCK_CONST_METHOD2(get_output_tx_and_index,
-                       tx_out_index(uint64_t const& amount,
-                                    uint64_t const& index));
+                       tx_out_index(uint64_t amount,
+                                    uint64_t index));
+
+    MOCK_CONST_METHOD3(get_output_tx_and_index,
+                       void(uint64_t amount,
+                            const std::vector<uint64_t> &offsets,
+                            std::vector<tx_out_index> &indices));
 
     MOCK_CONST_METHOD2(get_tx,
                        bool(crypto::hash const& tx_hash,
                             transaction& tx));
 
     MOCK_METHOD3(get_output_key,
-                    void(const uint64_t& amount,
-                         const vector<uint64_t>& absolute_offsets,
-                         vector<cryptonote::output_data_t>& outputs));
+                    void(uint64_t amount,
+                         vector<uint64_t> const& absolute_offsets,
+                         vector<output_data_t>& outputs));
 
     MOCK_METHOD2(get_output_key,
                     output_data_t(uint64_t amount,
                                   uint64_t global_amount_index));
 
     MOCK_CONST_METHOD1(get_tx_amount_output_indices,
-                    std::vector<uint64_t>(uint64_t const& tx_id));
+                    std::vector<uint64_t>(uint64_t tx_id));
 
     MOCK_CONST_METHOD2(get_random_outs_for_amounts,
                         bool(COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request const& req,
@@ -94,7 +99,7 @@ public:
                              COMMAND_RPC_GET_OUTPUTS_BIN::response& res));
 
     MOCK_CONST_METHOD1(get_dynamic_base_fee_estimate,
-                       uint64_t(uint64_t const& grace_blocks));
+                       uint64_t(uint64_t grace_blocks));
 
     MOCK_CONST_METHOD2(get_mempool_txs,
                        bool(vector<tx_info>& tx_infos,
@@ -118,6 +123,9 @@ public:
     MOCK_METHOD3(commit_tx, bool(const string& tx_blob,
                                  string& error_msg,
                                  bool do_not_relay));
+
+    MOCK_METHOD1(get_current_height,
+                 bool(uint64_t& current_height));
 };
 
 class MockTxSearch : public xmreg::TxSearch
@@ -172,7 +180,7 @@ class MockCurrentBlockchainStatus : public xmreg::CurrentBlockchainStatus
 public:
     MockCurrentBlockchainStatus()
         : xmreg::CurrentBlockchainStatus(xmreg::BlockchainSetup(),
-                                         nullptr, nullptr)
+                                         nullptr, nullptr, nullptr)
     {}
 
     MOCK_METHOD3(get_output_keys,
@@ -209,7 +217,7 @@ struct MockGettingOutputs
     // based on absolute_offsets
     virtual bool
     get_output_keys(
-            const uint64_t& amount,
+            uint64_t amount,
             vector<uint64_t> absolute_offsets,
             vector<cryptonote::output_data_t>& outputs)
     {
@@ -225,15 +233,19 @@ struct MockGettingOutputs
         return true;
     }
 
+    /*
+     * MicroCore uses get_output_key, so provide this for convinience
+     * which is just same as  get_output_keys above
+    */
+    virtual void
+    get_output_key(
+            uint64_t amount,
+            vector<uint64_t> absolute_offsets,
+            vector<cryptonote::output_data_t>& outputs)
+    {
+        get_output_keys(amount, absolute_offsets, outputs);
+    }
+
 };
-
-bool
-check_and_adjust_path(string& in_path)
-{
-    if (!boost::filesystem::exists(in_path))
-        in_path = "./tests/" + in_path;
-
-    return boost::filesystem::exists(in_path);
-}
 
 }

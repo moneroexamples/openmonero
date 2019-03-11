@@ -2,11 +2,13 @@
 #define RANDOMOUTPUTS_H
 
 #include "om_log.h"
-#include "MicroCore.h"
+#include "src/MicroCore.h"
 
 
 namespace xmreg
 {
+
+class CurrentBlockchainStatus;
 
 /**
  * @brief Returns random ouputs for given amounts
@@ -46,7 +48,7 @@ public:
 
     using outs_for_amount_v = vector<outs_for_amount>;
 
-    RandomOutputs(MicroCore const& _mcore,
+    RandomOutputs(CurrentBlockchainStatus const* _cbs,
                   vector<uint64_t> const& _amounts,
                   uint64_t _outs_count);
 
@@ -59,7 +61,8 @@ public:
     virtual ~RandomOutputs() = default;
 
 protected:
-    MicroCore const& mcore;
+    //MicroCore const& mcore;
+    CurrentBlockchainStatus const* cbs;
 
     vector<uint64_t> amounts;
     uint64_t outs_count;

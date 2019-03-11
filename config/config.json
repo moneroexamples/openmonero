@@ -34,7 +34,7 @@
   "wallet_import" :
   {
     "_comment": "if fee is 0, then importing is free. fee is in base 1e12, e.g., 0.1 xmr is 0.1 x 1e12 = 100000000000",
-    "fee"     : 0,
+    "fee"     : 1000000000,
     "testnet" :
     {
       "address" : "9tzmPMTViHYM3z6NAgQni1Qm1Emzxy5hQFibPgWD3LVTAz91yok5Eni1pH6zKhBHzpTU15GZooPHSGHXFvFuXEdmEG2sWAZ",
@@ -56,7 +56,9 @@
   "blocks_search_lookahead"            : 200,
   "search_thread_life_in_seconds"      : 120,
   "max_number_of_blocks_to_import"     : 132000,
-  "mysql_ping_every_seconds"           : 300,
+  "mysql_ping_every_seconds"           : 200,
+  "_comment": "if the threadpool_size (no of threads) below is 0, its size is automaticly set based on your cpu. If its not 0, the value specified is used instead",
+  "blockchain_treadpool_size"          : 1,
   "ssl" :
   {
     "enable" : false,

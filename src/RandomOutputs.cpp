@@ -1,13 +1,13 @@
 #include "RandomOutputs.h"
-
+#include "CurrentBlockchainStatus.h"
 namespace xmreg
 {
 
 RandomOutputs::RandomOutputs(
-        MicroCore const& _mcore,
+        CurrentBlockchainStatus const* _cbs,
         vector<uint64_t> const& _amounts,
         uint64_t _outs_count)
-    : mcore {_mcore},
+    : cbs {_cbs},
       amounts {_amounts},
       outs_count {_outs_count}
 {
@@ -39,7 +39,7 @@ RandomOutputs::get_output_pub_key(
 
     req.outputs.push_back(get_outputs_out {amount, global_output_index});
 
-    if (!mcore.get_outs(req, res))
+    if (!cbs->get_outs(req, res))
     {
         OMERROR << "mcore->get_outs(req, res) failed";
         return false;
@@ -65,7 +65,7 @@ RandomOutputs::find_random_outputs()
     req.min_count = outs_count;
     req.max_count = 0;
 
-    if (!mcore.get_output_histogram(req, res))
+    if (!cbs->get_output_histogram(req, res))
     {
         OMERROR << "mcore->get_output_histogram(req, res)";
         return false;
@@ -80,15 +80,16 @@ RandomOutputs::find_random_outputs()
         // find histogram_entry for amount that we look
         // random outputs for
         auto const hist_entry_it = std::find_if(
-                    begin(res.histogram), end(res.histogram),
-                    [&amount](histogram_entry const& he)
-                {
-                     return amount == he.amount;
-                });
+             std::begin(res.histogram), std::end(res.histogram),
+             [&amount](auto const& he)
+            {
+                 return amount == he.amount;
+            });
 
         if (hist_entry_it == res.histogram.end())
         {
-            OMERROR << "Could not find amount: it == res.histogram.end()\n";
+            OMERROR << "Could not find amount: it "
+                       "== res.histogram.end()\n";
             return false;
         }
 

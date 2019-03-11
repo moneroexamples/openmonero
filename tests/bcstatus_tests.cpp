@@ -1,5 +1,5 @@
 
-#include "../src/MicroCore.h"
+#include "src/MicroCore.h"
 #include "../src/CurrentBlockchainStatus.h"
 #include "../src/ThreadRAII.h"
 
@@ -11,8 +11,6 @@
 
 namespace
 {
-
-
 
 
 
@@ -43,8 +41,12 @@ protected:
         rpc = std::make_unique<MockRPCCalls>("dummy deamon url");
         rpc_ptr = rpc.get();
 
+        tp = std::make_unique<TP::ThreadPool>();
+        tp_ptr = tp.get();
+
         bcs = std::make_unique<xmreg::CurrentBlockchainStatus>(
-                    bc_setup, std::move(mcore), std::move(rpc));
+                    bc_setup, std::move(mcore), std::move(rpc),
+                    std::move(tp));
     }
 
      network_type net_type {network_type::STAGENET};
@@ -52,10 +54,12 @@ protected:
      xmreg::BlockchainSetup bc_setup;
      std::unique_ptr<MockMicroCore> mcore;
      std::unique_ptr<MockRPCCalls> rpc;
+     std::unique_ptr<TP::ThreadPool> tp;
      std::unique_ptr<xmreg::CurrentBlockchainStatus> bcs;
 
      MockMicroCore* mcore_ptr;
      MockRPCCalls* rpc_ptr;
+     TP::ThreadPool* tp_ptr;
 
      static nlohmann::json config_json;
 };
@@ -66,7 +70,8 @@ nlohmann::json BCSTATUS_TEST::config_json;
 
 TEST_P(BCSTATUS_TEST, DefaultConstruction)
 {
-    xmreg::CurrentBlockchainStatus bcs {bc_setup, nullptr, nullptr};
+    xmreg::CurrentBlockchainStatus bcs {
+        bc_setup, nullptr, nullptr, nullptr};
     EXPECT_TRUE(true);
 }
 
@@ -316,8 +321,8 @@ TEST_P(BCSTATUS_TEST, GetCurrentHeight)
 {
     uint64_t mock_current_height {1619148};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 
@@ -333,8 +338,8 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
 
     const uint64_t mock_current_height {100};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 
@@ -366,7 +371,7 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
             - CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
 
     EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
-                                              not_used_block_height));
+                                    not_used_block_height));
 
     // expected unlock time is same as as current height
     // thus a tx is unlocked
@@ -374,7 +379,7 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario1)
     tx_unlock_time = mock_current_height;
 
     EXPECT_TRUE(bcs->is_tx_unlocked(tx_unlock_time,
-                                              not_used_block_height));
+                                    not_used_block_height));
 }
 
 
@@ -395,8 +400,8 @@ TEST_P(BCSTATUS_TEST, IsTxSpendtimeUnlockedScenario2)
 
     const uint64_t mock_current_height {100};
 
-    EXPECT_CALL(*mcore_ptr, get_current_blockchain_height())
-            .WillOnce(Return(mock_current_height));
+    EXPECT_CALL(*rpc_ptr, get_current_height(_))
+            .WillOnce(SetArgReferee<0>(mock_current_height));
 
     bcs->update_current_blockchain_height();
 
@@ -1496,7 +1501,7 @@ TEST_P(BCSTATUS_TEST, MonitorBlockchain)
 
     // set refresh rate to 1 second as we dont wont to wait long
     xmreg::BlockchainSetup bs = bcs->get_bc_setup();
-    bs.refresh_block_status_every_seconds = 1;
+    bs.refresh_block_status_every = 1s;
     bcs->set_bc_setup(bs);
     bcs->is_running = false;
 

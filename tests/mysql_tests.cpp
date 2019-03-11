@@ -2,9 +2,9 @@
 // Created by mwo on 15/06/18.
 //
 
-#include "../src/MicroCore.h"
-#include "../src/YourMoneroRequests.h"
-#include "../src/MysqlPing.h"
+#include "src/MicroCore.h"
+#include "../src/OpenMoneroRequests.h"
+#include "../src/db/MysqlPing.h"
 
 //#include "chaingen.h"
 //#include "chaingen_tests_list.h"
@@ -118,7 +118,7 @@ TEST(MYSQL_CONNECTION, CanConnect)
     json db_config = readin_config();
 
     if (db_config.empty())
-        FAIL() << "Cant readin_config()";
+        FAIL() << "Cant read in_config()";
 
     xmreg::MySqlConnector::url = db_config["url"];
     xmreg::MySqlConnector::port = db_config["port"];
@@ -159,7 +159,7 @@ public:
         db_config = readin_config();
 
         if (db_config.empty())
-            FAIL() << "Cant readin_config()";
+            FAIL() << "Cant read in_config()";
 
         xmreg::MySqlConnector::url = db_config["url"];
         xmreg::MySqlConnector::port = db_config["port"];
@@ -335,6 +335,8 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
     xmreg::XmrAccount acc;
 
     bool is_success = xmr_accounts->select(xmr_addr, acc);
+
+    ASSERT_TRUE(is_success);
 
     EXPECT_EQ(acc.id.data, expected_primary_id);
     EXPECT_EQ(acc.scanned_block_height, mock_current_blockchain_height);
@@ -1100,7 +1102,7 @@ make_mock_payment_data(string last_char_pub_key = "0")
     mock_data.import_fee        = 10000000010ull; // xmr
     mock_data.request_fulfilled = false;
     mock_data.tx_hash           = ""; // no tx_hash yet with the payment
-    mock_data.payment_address   = "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLK4Tiiy";
+    mock_data.payment_address   = "5DUWE29P72Eb8inMa41HuNJG4tj9CcaNKGr6EVSbvhWGJdpDQCiNNYBUNF1oDb8BczU5aD68d3HNKXaEsPq8cvbQLGi6vcb2zkW7mhsWor";
 
     return mock_data;
 }
@@ -1197,7 +1199,7 @@ public:
     MockCurrentBlockchainStatus1()
             : xmreg::CurrentBlockchainStatus(
                   xmreg::BlockchainSetup(),
-                  nullptr, nullptr)
+                  nullptr, nullptr, nullptr)
     {}
 
     bool tx_unlock_state {true};
@@ -1502,7 +1504,7 @@ TEST_F(MYSQL_TEST, MysqlPingThreadStopsOnPingFailure)
     auto conn = xmr_accounts->get_connection();
 
     // create ping functor that will be pinging mysql every 1 second
-    xmreg::MysqlPing mysql_ping {conn, 1};
+    xmreg::MysqlPing mysql_ping {conn, 1s};
 
     {
         // create ping thread and start pinging
@@ -1543,7 +1545,7 @@ TEST_F(MYSQL_TEST, MysqlPingThreadStopsOnPointerExpiry)
     ASSERT_TRUE(new_conn->get_connection().connected());
 
     // create ping functor that will be pinging mysql every 1 second
-    xmreg::MysqlPing mysql_ping {new_conn, 1};
+    xmreg::MysqlPing mysql_ping {new_conn, 1s};
 
     {
         // create ping thread and start pinging
