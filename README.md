@@ -88,7 +88,6 @@ For other Linux operating systems, the instructions are analogical.
 
 To download and compile recent Monero follow instructions
 in the following link:
-git clone --recursive -b release-v0.13 https://github.com/monero-project/monero.git
 
 https://github.com/moneroexamples/monero-compilation/blob/master/README.md
 
