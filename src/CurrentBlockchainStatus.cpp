@@ -1067,6 +1067,30 @@ CurrentBlockchainStatus::set_new_searched_blk_no(
     return true;
 }
 
+// this can be only used for updateding accont details
+// of the same account. Cant be used to change the account
+// to different addresses for example.
+bool
+CurrentBlockchainStatus::update_acc(
+        const string& address, 
+        XmrAccount const& _acc)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (searching_threads.count(address) == 0)
+    {
+        // thread does not exist
+        OMERROR << address.substr(0,6)
+                   + ": set_new_searched_blk_no failed:"
+                   " thread does not exist";
+        return false;
+    }
+
+    get_search_thread(address).update_acc(_acc);
+
+    return true;
+}
+
 TxSearch&
 CurrentBlockchainStatus::get_search_thread(string const& acc_address)
 {

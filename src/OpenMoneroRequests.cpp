@@ -117,10 +117,6 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             return;
         }
     
-        j_response["generated_locally"] = bool {acc->generated_locally};
-
-        j_response["start_height"] = acc->start_height;
-
         // set this flag to indicate that we have just created a
         // new account in mysql. this information is sent to front-end
         // as it can disply some greeting window to new users upon
@@ -128,6 +124,11 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         new_account_created = true;
 
     } // if (!acc)
+        
+    
+    j_response["generated_locally"] = bool {acc->generated_locally};
+
+    j_response["start_height"] = acc->start_height;
 
 
     // so by now new account has been created or it already exists
@@ -997,6 +998,10 @@ OpenMoneroRequests::submit_raw_tx(
     session->close( OK, response_body, response_headers);
 }
 
+//@todo current import_wallet_request end point
+// still requires some work. The reason is that 
+// at this moment it is not clear how it is
+// handled in mymonero-app-js
 void
 OpenMoneroRequests::import_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
@@ -1052,16 +1057,49 @@ OpenMoneroRequests::import_wallet_request(
 
     auto import_fee = current_bc_status->get_bc_setup().import_fee;
 
-    // we dont care about any databases or anything, as importing
-    // wallet is free.
-    // just reset the scanned block height in mysql and finish.
+    // if import is free than just upadte mysql and set new 
+    // tx search block 
     if (import_fee == 0)
     {
+        
+        XmrAccount updated_acc = *xmr_account;
+
+        updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
+
+        // set scanned_block_height	to 0 to begin
+        // scanning entire blockchain
+
+
+
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
+
+        if (!xmr_accounts->update(*xmr_account, updated_acc))
+        {
+            OMERROR << xmr_address.substr(0,6) +
+                        "Updating scanned_block_height failed!\n";
+
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Updating scanned_block_height failed!");
+            return;
+        }
+        
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "Updating searched_blk_no failed!");
+            return;
+        }
+        
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
             return;
         }
 
@@ -1217,9 +1255,15 @@ OpenMoneroRequests::import_wallet_request(
         XmrAccount updated_acc = *xmr_account;
 
         updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
 
         // set scanned_block_height	to 0 to begin
         // scanning entire blockchain
+        
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
 
         if (!xmr_accounts->update(*xmr_account, updated_acc))
         {
@@ -1230,6 +1274,7 @@ OpenMoneroRequests::import_wallet_request(
                           "Updating scanned_block_height failed!");
             return;
         }
+        
 
         // if success, set acc to updated_acc;
         request_fulfilled = true;
@@ -1241,7 +1286,14 @@ OpenMoneroRequests::import_wallet_request(
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "updating searched_blk_no failed!");
             return;
+        }
 
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
+            return;
         }
 
         j_response["request_fulfilled"]
@@ -2047,16 +2099,34 @@ OpenMoneroRequests::create_account(
                 current_blockchain_timestamp);
 
 
-    // accounts generated locally (using create account button)
-    // will have start height equal to current blockchain height.
-    // existing accounts, i.e., those imported ones or extenal ones
-    // will have start_height of 0 to indicated that they could
-    // have been created years ago
-    uint64_t start_height = generated_locally
-                            ? current_blockchain_height
-                            : 0;
+    //@todo setting up start_height and scanned_block_height
+    //needs to be revisited as they are needed for importing
+    //wallets. The simples way is when import is free and this
+    //should already work. More problematic is how to set these
+    //fields when import fee is non-zero. It depends
+    //how mymonero is doing this. At the momemnt, I'm not sure.
+    
+    uint64_t start_height  =  current_blockchain_height;
+    uint64_t scanned_block_height = current_blockchain_height;
+    
+    if (current_bc_status->get_bc_setup().import_fee == 0)
+    {
+    
+        // accounts generated locally (using create account button)
+        // will have start height equal to current blockchain height.
+        // existing accounts, i.e., those imported ones, also called
+        //  extenal ones  will have start_height of 0 to 
+        //  indicated that they could
+        // have been created years ago
+    
+        start_height  = generated_locally
+                        ? current_blockchain_height : 0;
+    
+        // if scan block height is zero (for extranl wallets)
+        // blockchain scanning starts immedietly.
+        scanned_block_height = start_height;
 
-    uint64_t scanned_block_height = start_height;
+    }
 
     // create new account
     acc = XmrAccount(

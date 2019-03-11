@@ -71,6 +71,8 @@ uint64_t blocks_lookahead
 
 auto current_bc_status_ptr = current_bc_status.get();
 
+uint64_t account_id = acc->id.data;
+
 searching_is_ongoing = true;
 
 MicroCoreAdapter mcore_addapter {current_bc_status_ptr};
@@ -306,7 +308,7 @@ for (auto const& tx_tuple: txs_data)
         tx_data.hash             = tx_hash_str;
         tx_data.prefix_hash      = tx_hash_prefix_str;
         tx_data.tx_pub_key       = tx_pub_key_str;
-        tx_data.account_id       = acc->id.data;
+        tx_data.account_id       = account_id;
         tx_data.blockchain_tx_id = blockchain_tx_id;
         tx_data.total_received   = total_received;
         tx_data.total_sent       = 0; // at this stage we don't have
@@ -360,7 +362,7 @@ for (auto const& tx_tuple: txs_data)
             XmrOutput out_data;
 
             out_data.id           = mysqlpp::null;
-            out_data.account_id   = acc->id.data;
+            out_data.account_id   = account_id;
             out_data.tx_id        = tx_mysql_id;
             out_data.out_pub_key  = pod_to_hex(out_info.pub_key);
             out_data.tx_pub_key   = tx_pub_key_str;
@@ -600,6 +602,8 @@ for (auto const& tx_tuple: txs_data)
 
 // update scanned_block_height every given interval
 // or when we reached top of the blockchain
+
+std::lock_guard<std::mutex> acc_lck(access_acc);
 
 XmrAccount updated_acc = *acc;
 
@@ -975,6 +979,13 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
     }
 
     return true;
+}
+
+void
+TxSearch::update_acc(XmrAccount const& _acc)
+{
+    std::lock_guard<std::mutex> acc_lck(access_acc);
+    *acc = _acc;
 }
 
 
