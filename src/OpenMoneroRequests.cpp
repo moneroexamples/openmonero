@@ -91,14 +91,6 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
 
 
-    // return same as what we recieved to client
-    j_response["generated_locally"] = generated_locally;
-    //j_response["generated_locally"] = true;
-
-    // optinoal field, but we set it to current height
-    j_response["start_height"] = current_bc_status
-        ->get_current_blockchain_height();
-
     // a placeholder for exciting or new account data
 
     uint64_t acc_id {0};
@@ -114,7 +106,8 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     {
         // account does not exist, so create new one
         // for this address
-        if (!(acc = create_account(xmr_address, view_key)))
+        if (!(acc = create_account(xmr_address, view_key, 
+                                   generated_locally)))
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -123,6 +116,10 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             session_close(session, j_response);
             return;
         }
+    
+        j_response["generated_locally"] = bool {acc->generated_locally};
+
+        j_response["start_height"] = acc->start_height;
 
         // set this flag to indicate that we have just created a
         // new account in mysql. this information is sent to front-end
@@ -2016,7 +2013,8 @@ OpenMoneroRequests::parse_request(
 boost::optional<XmrAccount>
 OpenMoneroRequests::create_account(
         string const& xmr_address,
-        string const& view_key) const
+        string const& view_key,
+        bool generated_locally) const
 {
     boost::optional<XmrAccount> acc = XmrAccount{};
 
@@ -2048,14 +2046,27 @@ OpenMoneroRequests::create_account(
             = XmrTransaction::timestamp_to_DateTime(
                 current_blockchain_timestamp);
 
+
+    // accounts generated locally (using create account button)
+    // will have start height equal to current blockchain height.
+    // existing accounts, i.e., those imported ones or extenal ones
+    // will have start_height of 0 to indicated that they could
+    // have been created years ago
+    uint64_t start_height = generated_locally
+                            ? current_blockchain_height
+                            : 0;
+
+    uint64_t scanned_block_height = start_height;
+
     // create new account
     acc = XmrAccount(
                    mysqlpp::null,
                    xmr_address,
                    make_hash(view_key),
-                   current_blockchain_height, /* for scanned_block_height */
+                   scanned_block_height,
                    blk_timestamp_mysql_format,
-                   current_blockchain_height);
+                   start_height,
+                   generated_locally);
 
     uint64_t acc_id {0};
 
