@@ -242,6 +242,10 @@ public:
     virtual bool
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
+    
+    virtual bool
+    update_acc(const string& address, 
+               XmrAccount const& _acc);
 
     virtual bool
     get_searched_blk_no(const string& address,
