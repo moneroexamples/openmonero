@@ -12,12 +12,13 @@ thinwalletServices
             return $http.post(config.apiUrl + 'get_version');
         };
 
-        api.login = function(public_address, view_key) {
+        api.login = function(public_address, view_key, gen_locally) {
             return $http.post(config.apiUrl + "login", {
                     withCredentials: true,
                     address: public_address,
                     view_key: view_key,
-                    create_account: true
+                    create_account: true,
+                    generated_locally: gen_locally
                 });
         };
 
