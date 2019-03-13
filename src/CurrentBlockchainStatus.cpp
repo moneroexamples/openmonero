@@ -342,6 +342,19 @@ CurrentBlockchainStatus::get_tx_with_output(
 
     return true;
 }
+    
+uint64_t 
+CurrentBlockchainStatus::get_num_outputs(
+        uint64_t amount) const
+{
+    auto future_result = thread_pool->submit(
+            [this](auto const& amount) -> uint64_t
+            {
+                  return this->mcore->get_num_outputs(amount);
+            }, std::cref(amount));
+
+    return future_result.get();
+}
 
 bool
 CurrentBlockchainStatus::get_output_keys(
@@ -360,9 +373,9 @@ CurrentBlockchainStatus::get_output_keys(
                             absolute_offsets, outputs);
                     return true;
                 }
-                catch (std::exception const& e)
+                catch (...)
                 {
-                    OMERROR << "get_output_keys: " << e.what();
+                    OMERROR << "Can get_output_keys";
                 }
 
                 return false;
@@ -1317,6 +1330,12 @@ CurrentBlockchainStatus::get_txs_in_blocks(
 MicroCoreAdapter::MicroCoreAdapter(CurrentBlockchainStatus* _cbs)
 : cbs {_cbs}
 {}
+
+uint64_t 
+MicroCoreAdapter::get_num_outputs(uint64_t amount) const
+{
+    return cbs->get_num_outputs(amount);
+}
 
 void 
 MicroCoreAdapter::get_output_key(uint64_t amount,

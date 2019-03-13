@@ -2125,7 +2125,6 @@ OpenMoneroRequests::create_account(
         // if scan block height is zero (for extranl wallets)
         // blockchain scanning starts immedietly.
         scanned_block_height = start_height;
-
     }
 
     // create new account
