@@ -128,6 +128,9 @@ public:
             uint64_t amount,
             std::vector<uint64_t> const& offsets,
             std::vector<tx_out_index>& indices) const;
+    
+    virtual uint64_t 
+    get_num_outputs(uint64_t amount) const;
 
     virtual bool
     get_output_keys(const uint64_t& amount,
@@ -377,6 +380,9 @@ class MicroCoreAdapter : public AbstractCore
 {
 public:
     MicroCoreAdapter(CurrentBlockchainStatus* _cbs);
+    
+    virtual uint64_t 
+    get_num_outputs(uint64_t amount) const override;
 
     virtual void 
     get_output_key(uint64_t amount,

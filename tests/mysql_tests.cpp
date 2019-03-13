@@ -307,6 +307,7 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
 
     uint64_t mock_current_blockchain_height = 452145;
     uint64_t mock_current_blockchain_timestamp = 1529302789;
+    bool mock_generated_locally {true};
 
     DateTime blk_timestamp_mysql_format
             = mysqlpp::DateTime(static_cast<time_t>(
@@ -326,6 +327,7 @@ TEST_F(MYSQL_TEST, InsertAndGetAccount)
                                   view_key_hash,
                                   mock_current_blockchain_height, /* for scanned_block_height */
                                   blk_timestamp_mysql_format,
+                                  mock_generated_locally,
                                   mock_current_blockchain_height);
 
     int64_t acc_id = xmr_accounts->insert(new_account);
