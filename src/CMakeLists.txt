@@ -19,13 +19,10 @@ set(SOURCE_FILES
         utils.cpp
         RandomOutputs.cpp)
 
+add_library(myxmr STATIC)
 
-# make static library called libmyxrm
-# that we are going to link to
-# in the root CMakeLists.txt file
-add_library(myxmr
-		STATIC
-		${SOURCE_FILES})
+target_sources(myxmr
+    PRIVATE ${SOURCE_FILES})
 
 target_link_libraries(myxmr 
     PUBLIC

@@ -1,7 +1,10 @@
 macro(add_om_test _TEST_NAME)
 
-    add_executable(${_TEST_NAME}_tests
-            ${_TEST_NAME}_tests.cpp
+    add_executable(${_TEST_NAME}_tests)
+
+    target_sources(${_TEST_NAME}_tests
+            PRIVATE 
+            "${_TEST_NAME}_tests.cpp"
             JsonTx.cpp)
 
     target_link_libraries(${_TEST_NAME}_tests
@@ -14,14 +17,6 @@ macro(add_om_test _TEST_NAME)
 
 endmacro()
 
-
-include(CodeCoverage)
-APPEND_COVERAGE_COMPILER_FLAGS()
-set(COVERAGE_EXCLUDES
-        '${CMAKE_SOURCE_DIR}/ext/*'
-        'asio/*'
-        '${MONERO_SOURCE_DIR}/*'
-        '${CMAKE_SOURCE_DIR}/tests/*')
 
 resource_dir("res")
 
@@ -37,7 +32,7 @@ add_om_test(txsearch)
 
 include(CodeCoverage)
 
-#APPEND_COVERAGE_COMPILER_FLAGS()
+APPEND_COVERAGE_COMPILER_FLAGS()
 
 set(COVERAGE_LCOV_EXCLUDES
     '*/ext/*' '*boost/*' '*c++/*'
