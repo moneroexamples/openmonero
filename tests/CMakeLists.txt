@@ -40,9 +40,10 @@ include(CodeCoverage)
 #APPEND_COVERAGE_COMPILER_FLAGS()
 
 set(COVERAGE_LCOV_EXCLUDES
-    '../ext/*' '*boost/*' '*c++/*'
+    '*/ext/*' '*boost/*' '*c++/*'
      '*/monero/*' '*googletest/*' '*googlemock/*'
-     '*restbed/*' '*/mysql++/*' '*tests/*')
+     '*restbed/*' '*/mysql++/*' '*tests/*'
+     '*src/xmregcore/*')
 
  SETUP_TARGET_FOR_COVERAGE_LCOV(
        NAME coverage
