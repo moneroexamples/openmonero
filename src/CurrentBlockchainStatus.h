@@ -262,6 +262,9 @@ public:
     virtual void
     clean_search_thread_map();
 
+    virtual size_t
+    thread_map_size(); 
+
     virtual void
     stop_search_threads();
 

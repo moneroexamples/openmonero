@@ -103,16 +103,14 @@ if (blocks.empty())
 
     if (h1 <= h2)
     {
-        OMERROR << address_prefix
-                << ": cant get blocks from " << h1
+        OMERROR << address_prefix  << ": cant get blocks from " << h1
                 << " to " << h2;
         stop();
     }
     else
     {
-        OMINFO << address_prefix
-               << ": waiting for new block. "
-                  "Last scanned was " << h2;
+        OMVLOG1 << address_prefix << ": waiting for new block. "
+               << "Last scanned was " << h2;
     }
 
     std::this_thread::sleep_for(
@@ -146,10 +144,10 @@ if (blocks.empty())
     continue;
 }
 
-OMINFO << address_prefix  + ": analyzing "
-       << blocks.size() << " blocks from "
-       << h1 << " to " << h2
-       << " out of " << last_block_height << " blocks";
+OMVLOG2 << address_prefix  + ": analyzing "
+        << blocks.size() << " blocks from "
+        << h1 << " to " << h2
+        << " out of " << last_block_height << " blocks";
 
 vector<crypto::hash> txs_hashes_from_blocks;
 vector<transaction> txs_in_blocks;
@@ -291,15 +289,13 @@ for (auto const& tx_tuple: txs_data)
         if (!current_bc_status->tx_exist(tx_hash, blockchain_tx_id))
         {
             OMERROR << "Tx " << tx_hash_str
-                    << " not found in blockchain !";
+                    << " not found in blockchain!";
             throw TxSearchException("Cant get tx from blockchain: "
                                     + tx_hash_str);
         }
 
-        OMINFO << address_prefix
-                  + ": found some outputs in block "
-               << blk_height << ", tx: "
-                << tx_hash_str;
+        OMVLOG1 << address_prefix + ": found some outputs in block "
+                << blk_height << ", tx: " << tx_hash_str;
 
 
         XmrTransaction tx_data;
@@ -467,11 +463,9 @@ for (auto const& tx_tuple: txs_data)
             }
         }
 
-        OMINFO << address_prefix
-                  + ": found some possible "
-                    "inputs in block "
-               << blk_height << ", tx: "
-               << tx_hash_str;
+        OMVLOG1 << address_prefix + ": found some possible "
+                << "inputs in block " << blk_height << ", tx: "
+                << tx_hash_str;
 
         vector<XmrInput> inputs_found;
 

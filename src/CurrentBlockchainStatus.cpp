@@ -46,15 +46,16 @@ CurrentBlockchainStatus::monitor_blockchain()
                break;
            }
 
-           OMINFO << "PoolQueue size: " 
-               << TP::DefaultThreadPool::queueSize(); 
+           OMVLOG1 << "PoolQueue size: " 
+                   << TP::DefaultThreadPool::queueSize(); 
 
            update_current_blockchain_height();           
 
            read_mempool();
 
            OMINFO << "Current blockchain height: " << current_height
-                  << ", no of mempool txs: " << mempool_txs.size();
+                  << ", pool size: " << mempool_txs.size() << " txs"
+                  << ", no of TxSearch threads: " << thread_map_size(); 
 
            clean_search_thread_map();
 
@@ -1120,6 +1121,13 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
     }
 
     return searching_threads.find(acc_address)->second.get_functor();
+}
+
+size_t
+CurrentBlockchainStatus::thread_map_size() 
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+    return searching_threads.size();
 }
 
 void
