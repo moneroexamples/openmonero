@@ -1364,10 +1364,8 @@ OpenMoneroRequests::import_recent_wallet_request(
                 + j_request["no_blocks_to_import"].get<string>()
                 + " into number";
 
-        OMERROR << xmr_address.substr(0,6)  + ": " + msg;
-
-        j_response["Error"] = msg;
-        session_close(session, j_response);
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      msg);
         return;
     }
     
@@ -1387,9 +1385,12 @@ OpenMoneroRequests::import_recent_wallet_request(
                                    current_bc_status->get_bc_setup()
                                    .max_number_of_blocks_to_import);
 
+    auto current_blkchain_height
+            = current_bc_status->get_current_blockchain_height();
+
     no_blocks_to_import
             = std::min(no_blocks_to_import,
-                      current_bc_status->get_current_blockchain_height());
+                      current_blkchain_height);
 
     XmrAccount& acc = *xmr_account;
 
@@ -1398,45 +1399,59 @@ OpenMoneroRequests::import_recent_wallet_request(
     // make sure scanned_block_height is larger than
     // no_blocks_to_import so we dont
     // end up with overflowing uint64_t.
-
-    if (updated_acc.scanned_block_height >= no_blocks_to_import)
+    if (updated_acc.scanned_block_height < no_blocks_to_import)
     {
-        // repetead calls to import_recent_wallet_request will be
-        // moving the scanning backward.
-        // not sure yet if any protection is needed to
-        // make sure that a user does not
-        // go back too much back by importing his/hers
-        // wallet multiple times in a row.
-        updated_acc.scanned_block_height
-                = updated_acc.scanned_block_height - no_blocks_to_import;
-
-        if (xmr_accounts->update(acc, updated_acc))
-        {
-            // change search blk number in the search thread
-            if (!current_bc_status
-                    ->set_new_searched_blk_no(xmr_address,
-                                updated_acc.scanned_block_height))
-            {
-
-                OMERROR << xmr_address.substr(0,6) 
-                        << ": updating searched_blk_no failed!" << endl;
-                j_response["Error"]  = "Updating searched_blk_no failed!";
-            }
-            else
-            {
-                // if success, makre that request was successful;
-                request_fulfilled = true;
-            }
-        }
-
-    }  // if (updated_acc.scanned_block_height > no_blocks_to_import)
-
-    if (request_fulfilled)
-    {
-        j_response["request_fulfilled"] = request_fulfilled;
-        j_response["status"]  = "Updating account with for"
-                                " importing recent txs successeful.";
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "scanned_block_height < no_blocks_to_import!");
+        return;
     }
+
+    // if import fee is zero, than scanned_block_height will
+    // be automatically set to zero. But in case someone does
+    // not want to imporot from scrach, we set it here to
+    // current blockchain height
+    auto import_fee = current_bc_status->get_bc_setup().import_fee;
+
+    if (import_fee == 0)
+        updated_acc.scanned_block_height = current_blkchain_height;
+
+    // repetead calls to import_recent_wallet_request will be
+    // moving the scanning backward.
+    // not sure yet if any protection is needed to
+    // make sure that a user does not
+    // go back too much back by importing his/hers
+    // wallet multiple times in a row.
+    updated_acc.scanned_block_height
+            = updated_acc.scanned_block_height - no_blocks_to_import;
+
+    if (!xmr_accounts->update(acc, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating account failed!");
+        return;
+    }
+
+    // change search blk number in the search thread
+    if (!current_bc_status
+            ->set_new_searched_blk_no(xmr_address,
+                        updated_acc.scanned_block_height))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating searched_blk_no failed!");
+        return;
+    }
+
+    if (!current_bc_status
+            ->update_acc(xmr_address, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "updating acc in search thread failed!");
+        return;
+    }
+        
+    j_response["request_fulfilled"] = true; 
+    j_response["status"]  = "Updating account with for"
+                            " importing recent txs successeful.";
 
     string response_body = j_response.dump();
 
