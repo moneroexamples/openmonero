@@ -957,9 +957,9 @@ TxSearch::delete_existing_tx_if_exists(string const& tx_hash)
 
     if (xmr_accounts->tx_exists(acc->id.data, tx_hash, tx_data_existing))
     {
-        OMINFO << '\n' << address_prefix
+        OMVLOG1 << '\n' << address_prefix
                   + ": tx " << tx_hash
-               << " already present in db, so remove it";
+                << " already present in db, so remove it";
 
         // if tx is already present for that user,
         // we remove it, as we get it data from scrach
