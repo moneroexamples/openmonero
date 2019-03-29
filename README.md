@@ -30,6 +30,7 @@ to MyMonero. They include:
 ## Live stagenet version
 
 - [http://139.162.60.17:81](http://139.162.60.17:81)
+- [http://139.162.60.17:9100](http://139.162.60.17:9100) - MyMonero frontend
 
 This is OpenMonero running on stagnet network. You can use it to play around with it.
 Please note that the live version is running on cheap VPS, which may result in
