@@ -91,14 +91,6 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
 
 
-    // return same as what we recieved to client
-    j_response["generated_locally"] = generated_locally;
-    //j_response["generated_locally"] = true;
-
-    // optinoal field, but we set it to current height
-    j_response["start_height"] = current_bc_status
-        ->get_current_blockchain_height();
-
     // a placeholder for exciting or new account data
 
     uint64_t acc_id {0};
@@ -114,7 +106,8 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     {
         // account does not exist, so create new one
         // for this address
-        if (!(acc = create_account(xmr_address, view_key)))
+        if (!(acc = create_account(xmr_address, view_key, 
+                                   generated_locally)))
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -123,7 +116,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             session_close(session, j_response);
             return;
         }
-
+    
         // set this flag to indicate that we have just created a
         // new account in mysql. this information is sent to front-end
         // as it can disply some greeting window to new users upon
@@ -131,6 +124,11 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         new_account_created = true;
 
     } // if (!acc)
+        
+    
+    j_response["generated_locally"] = bool {acc->generated_locally};
+
+    j_response["start_height"] = acc->start_height;
 
 
     // so by now new account has been created or it already exists
@@ -1000,6 +998,10 @@ OpenMoneroRequests::submit_raw_tx(
     session->close( OK, response_body, response_headers);
 }
 
+//@todo current import_wallet_request end point
+// still requires some work. The reason is that 
+// at this moment it is not clear how it is
+// handled in mymonero-app-js
 void
 OpenMoneroRequests::import_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
@@ -1055,16 +1057,49 @@ OpenMoneroRequests::import_wallet_request(
 
     auto import_fee = current_bc_status->get_bc_setup().import_fee;
 
-    // we dont care about any databases or anything, as importing
-    // wallet is free.
-    // just reset the scanned block height in mysql and finish.
+    // if import is free than just upadte mysql and set new 
+    // tx search block 
     if (import_fee == 0)
     {
+        
+        XmrAccount updated_acc = *xmr_account;
+
+        updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
+
+        // set scanned_block_height	to 0 to begin
+        // scanning entire blockchain
+
+
+
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
+
+        if (!xmr_accounts->update(*xmr_account, updated_acc))
+        {
+            OMERROR << xmr_address.substr(0,6) +
+                        "Updating scanned_block_height failed!\n";
+
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Updating scanned_block_height failed!");
+            return;
+        }
+        
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "Updating searched_blk_no failed!");
+            return;
+        }
+        
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
             return;
         }
 
@@ -1220,9 +1255,15 @@ OpenMoneroRequests::import_wallet_request(
         XmrAccount updated_acc = *xmr_account;
 
         updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
 
         // set scanned_block_height	to 0 to begin
         // scanning entire blockchain
+        
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
 
         if (!xmr_accounts->update(*xmr_account, updated_acc))
         {
@@ -1233,6 +1274,7 @@ OpenMoneroRequests::import_wallet_request(
                           "Updating scanned_block_height failed!");
             return;
         }
+        
 
         // if success, set acc to updated_acc;
         request_fulfilled = true;
@@ -1244,7 +1286,14 @@ OpenMoneroRequests::import_wallet_request(
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "updating searched_blk_no failed!");
             return;
+        }
 
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
+            return;
         }
 
         j_response["request_fulfilled"]
@@ -1315,10 +1364,8 @@ OpenMoneroRequests::import_recent_wallet_request(
                 + j_request["no_blocks_to_import"].get<string>()
                 + " into number";
 
-        OMERROR << xmr_address.substr(0,6)  + ": " + msg;
-
-        j_response["Error"] = msg;
-        session_close(session, j_response);
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      msg);
         return;
     }
     
@@ -1338,9 +1385,12 @@ OpenMoneroRequests::import_recent_wallet_request(
                                    current_bc_status->get_bc_setup()
                                    .max_number_of_blocks_to_import);
 
+    auto current_blkchain_height
+            = current_bc_status->get_current_blockchain_height();
+
     no_blocks_to_import
             = std::min(no_blocks_to_import,
-                      current_bc_status->get_current_blockchain_height());
+                      current_blkchain_height);
 
     XmrAccount& acc = *xmr_account;
 
@@ -1349,45 +1399,59 @@ OpenMoneroRequests::import_recent_wallet_request(
     // make sure scanned_block_height is larger than
     // no_blocks_to_import so we dont
     // end up with overflowing uint64_t.
-
-    if (updated_acc.scanned_block_height >= no_blocks_to_import)
+    if (updated_acc.scanned_block_height < no_blocks_to_import)
     {
-        // repetead calls to import_recent_wallet_request will be
-        // moving the scanning backward.
-        // not sure yet if any protection is needed to
-        // make sure that a user does not
-        // go back too much back by importing his/hers
-        // wallet multiple times in a row.
-        updated_acc.scanned_block_height
-                = updated_acc.scanned_block_height - no_blocks_to_import;
-
-        if (xmr_accounts->update(acc, updated_acc))
-        {
-            // change search blk number in the search thread
-            if (!current_bc_status
-                    ->set_new_searched_blk_no(xmr_address,
-                                updated_acc.scanned_block_height))
-            {
-
-                OMERROR << xmr_address.substr(0,6) 
-                        << ": updating searched_blk_no failed!" << endl;
-                j_response["Error"]  = "Updating searched_blk_no failed!";
-            }
-            else
-            {
-                // if success, makre that request was successful;
-                request_fulfilled = true;
-            }
-        }
-
-    }  // if (updated_acc.scanned_block_height > no_blocks_to_import)
-
-    if (request_fulfilled)
-    {
-        j_response["request_fulfilled"] = request_fulfilled;
-        j_response["status"]  = "Updating account with for"
-                                " importing recent txs successeful.";
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "scanned_block_height < no_blocks_to_import!");
+        return;
     }
+
+    // if import fee is zero, than scanned_block_height will
+    // be automatically set to zero. But in case someone does
+    // not want to imporot from scrach, we set it here to
+    // current blockchain height
+    auto import_fee = current_bc_status->get_bc_setup().import_fee;
+
+    if (import_fee == 0)
+        updated_acc.scanned_block_height = current_blkchain_height;
+
+    // repetead calls to import_recent_wallet_request will be
+    // moving the scanning backward.
+    // not sure yet if any protection is needed to
+    // make sure that a user does not
+    // go back too much back by importing his/hers
+    // wallet multiple times in a row.
+    updated_acc.scanned_block_height
+            = updated_acc.scanned_block_height - no_blocks_to_import;
+
+    if (!xmr_accounts->update(acc, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating account failed!");
+        return;
+    }
+
+    // change search blk number in the search thread
+    if (!current_bc_status
+            ->set_new_searched_blk_no(xmr_address,
+                        updated_acc.scanned_block_height))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating searched_blk_no failed!");
+        return;
+    }
+
+    if (!current_bc_status
+            ->update_acc(xmr_address, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "updating acc in search thread failed!");
+        return;
+    }
+        
+    j_response["request_fulfilled"] = true; 
+    j_response["status"]  = "Updating account with for"
+                            " importing recent txs successeful.";
 
     string response_body = j_response.dump();
 
@@ -2016,7 +2080,8 @@ OpenMoneroRequests::parse_request(
 boost::optional<XmrAccount>
 OpenMoneroRequests::create_account(
         string const& xmr_address,
-        string const& view_key) const
+        string const& view_key,
+        bool generated_locally) const
 {
     boost::optional<XmrAccount> acc = XmrAccount{};
 
@@ -2048,14 +2113,44 @@ OpenMoneroRequests::create_account(
             = XmrTransaction::timestamp_to_DateTime(
                 current_blockchain_timestamp);
 
+
+    //@todo setting up start_height and scanned_block_height
+    //needs to be revisited as they are needed for importing
+    //wallets. The simples way is when import is free and this
+    //should already work. More problematic is how to set these
+    //fields when import fee is non-zero. It depends
+    //how mymonero is doing this. At the momemnt, I'm not sure.
+    
+    uint64_t start_height  =  current_blockchain_height;
+    uint64_t scanned_block_height = current_blockchain_height;
+    
+    if (current_bc_status->get_bc_setup().import_fee == 0)
+    {
+    
+        // accounts generated locally (using create account button)
+        // will have start height equal to current blockchain height.
+        // existing accounts, i.e., those imported ones, also called
+        //  extenal ones  will have start_height of 0 to 
+        //  indicated that they could
+        // have been created years ago
+    
+        start_height  = generated_locally
+                        ? current_blockchain_height : 0;
+    
+        // if scan block height is zero (for extranl wallets)
+        // blockchain scanning starts immedietly.
+        scanned_block_height = start_height;
+    }
+
     // create new account
     acc = XmrAccount(
                    mysqlpp::null,
                    xmr_address,
                    make_hash(view_key),
-                   current_blockchain_height, /* for scanned_block_height */
+                   scanned_block_height,
                    blk_timestamp_mysql_format,
-                   current_blockchain_height);
+                   start_height,
+                   generated_locally);
 
     uint64_t acc_id {0};
 

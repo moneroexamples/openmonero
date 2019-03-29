@@ -30,13 +30,14 @@ public:
     friend std::ostream& operator<< (std::ostream& stream, const Table& data);
 };
 
-sql_create_8(Accounts, 1, 6,
+sql_create_9(Accounts, 1, 7,
              sql_bigint_unsigned_null, id,
              sql_varchar        , address,
              sql_char           , viewkey_hash,
              sql_bigint_unsigned, scanned_block_height,
              sql_timestamp      , scanned_block_timestamp,
              sql_bigint_unsigned, start_height,
+             sql_boolean        , generated_locally,
              sql_timestamp      , created,
              sql_timestamp      , modified);
 
@@ -61,9 +62,10 @@ struct XmrAccount : public Accounts, Table
     static constexpr const char* INSERT_STMT = R"(
         INSERT INTO `Accounts` (`address`, `viewkey_hash`,
                                 `scanned_block_height`,
-                                `scanned_block_timestamp`, `start_height`)
+                                `scanned_block_timestamp`, `start_height`,
+                                `generated_locally`)
                                 VALUES
-                                (%0q, %1q, %2q, %3q, %4q);
+                                (%0q, %1q, %2q, %3q, %4q, %5q);
     )";
 
     using Accounts::Accounts;

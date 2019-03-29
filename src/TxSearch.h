@@ -62,6 +62,7 @@ private:
 
     mutex getting_eptr;
     mutex getting_known_outputs_keys;
+    mutex access_acc;
 
     seconds last_ping_timestamp;
 
@@ -126,6 +127,9 @@ public:
 
     virtual known_outputs_t
     get_known_outputs_keys();
+
+    virtual void
+    update_acc(XmrAccount const& _acc);
 
     virtual void
     set_exception_ptr()

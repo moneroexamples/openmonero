@@ -151,7 +151,8 @@ private:
 
     boost::optional<XmrAccount>
     create_account(string const& xmr_address,
-                   string const& view_key) const;
+                   string const& view_key,
+                   bool generated_locally = true) const;
 
     bool 
     make_search_thread(XmrAccount& acc) const;

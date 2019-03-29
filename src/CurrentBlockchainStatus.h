@@ -128,6 +128,9 @@ public:
             uint64_t amount,
             std::vector<uint64_t> const& offsets,
             std::vector<tx_out_index>& indices) const;
+    
+    virtual uint64_t 
+    get_num_outputs(uint64_t amount) const;
 
     virtual bool
     get_output_keys(const uint64_t& amount,
@@ -242,6 +245,10 @@ public:
     virtual bool
     set_new_searched_blk_no(const string& address,
                             uint64_t new_value);
+    
+    virtual bool
+    update_acc(const string& address, 
+               XmrAccount const& _acc);
 
     virtual bool
     get_searched_blk_no(const string& address,
@@ -254,6 +261,9 @@ public:
 
     virtual void
     clean_search_thread_map();
+
+    virtual size_t
+    thread_map_size(); 
 
     virtual void
     stop_search_threads();
@@ -373,12 +383,15 @@ class MicroCoreAdapter : public AbstractCore
 {
 public:
     MicroCoreAdapter(CurrentBlockchainStatus* _cbs);
+    
+    virtual uint64_t 
+    get_num_outputs(uint64_t amount) const override;
 
     virtual void 
     get_output_key(uint64_t amount,
                    vector<uint64_t> const& absolute_offsets,
                    vector<cryptonote::output_data_t>& outputs) 
-                    /*const*/ override;
+                    const override;
 
     virtual void
     get_output_tx_and_index(

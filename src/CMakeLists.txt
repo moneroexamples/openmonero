@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.10)
 
-project(myxrm)
+project(myxmr)
 
 set(SOURCE_FILES
 		CmdLineOptions.cpp
@@ -19,19 +19,18 @@ set(SOURCE_FILES
         utils.cpp
         RandomOutputs.cpp)
 
+add_library(myxmr STATIC)
 
-# make static library called libmyxrm
-# that we are going to link to
-# in the root CMakeLists.txt file
-add_library(myxrm
-		STATIC
-		${SOURCE_FILES})
+target_sources(myxmr
+    PRIVATE ${SOURCE_FILES})
 
-target_include_monero_directories(myxrm)
-target_include_directories(myxrm PRIVATE "xmregcore")
+target_link_libraries(myxmr 
+    PUBLIC
+    XMREG::core 
+    ${restbed_LIBRARY}
+    ${MYSQLPP_LIBRARIES})
 
-    #target_include_directories(myxmr 
-    #  PUBLIC 
-    #${MONERO_SOURCE_DIR}/contrib/epee/include)
-
-
+target_include_directories(myxmr 
+    PUBLIC
+    ${restbed_INCLUDE}
+    ${MYSQLPP_INCLUDE_DIRS})
