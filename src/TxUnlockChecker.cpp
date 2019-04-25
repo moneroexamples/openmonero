@@ -23,9 +23,7 @@ TxUnlockChecker::get_leeway(
         uint64_t tx_block_height,
         network_type net_type) const
 {
-    return tx_block_height < get_v2height(net_type)
-            ? CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1
-            : CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2;
+    return CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS;
 }
 
 bool

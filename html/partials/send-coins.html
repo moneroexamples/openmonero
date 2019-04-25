@@ -13,7 +13,7 @@
                     <div ng-show="!success_page">
                         <div class="header-div-block">
                             <h1 class="heading-contained">Send Funds</h1>
-                            <div class="subhead-text inner">Send funds to any Monero user anywhere in the world</div>
+                            <div class="subhead-text inner">Send funds to any Swap user anywhere in the world</div>
                         </div>
                     </div>
                     <div ng-show="success_page">
@@ -37,7 +37,7 @@
                 <form name="email-form" data-name="Email Form" data-redirect="/transaction-successful.html"
                       ng-submit="sendCoins(targets, payment_id)">
                     <label class="send-label" for="receiver-address">Receiver Address</label>
-                    <input class="w-input" id="receiver-address" type="text" placeholder="e.g. donate@getmonero.org / donate.getmonero.org / a full Monero address"
+                    <input class="w-input" id="receiver-address" type="text" placeholder="swap address"
                            name="Receiver-address" data-name="Receiver address" required="required" ng-model="targets[0].address">
                     <div class="w-row">
                         <div class="w-col w-col-6 responsive-column">
