@@ -206,7 +206,7 @@ source ~/emsdk/emsdk_env.sh
 # compile mymonero-core-js
 ./bin/build-emcpp.sh
 
-# generate mymonero-core.js
+# generate mymonero-core.js and MyMoneroCoreCpp_WASM.wasm 
 ./bin/package_browser_js
 
 ```
