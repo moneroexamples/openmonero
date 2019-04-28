@@ -76,7 +76,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
@@ -400,7 +400,7 @@ OpenMoneroRequests::get_address_info(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
@@ -580,13 +580,13 @@ OpenMoneroRequests::get_unspent_outs(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
     catch (boost::bad_lexical_cast const& e)
     {
-        cerr << "Bed lexical cast" << e.what() << '\n';
+        OMERROR << "Bed lexical cast" << e.what() << '\n';
         session_close(session, j_response);
         return;
     }
@@ -815,14 +815,14 @@ OpenMoneroRequests::get_random_outs(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     };
 
     if (count > 41)
     {
-        cerr << "Request ring size too big" << '\n';
+        OMERROR << "Request ring size too big" << '\n';
         j_response["status"] = "error";
         j_response["error"]  = "Request ring size too large";
         session_close(session, j_response);
@@ -844,7 +844,7 @@ OpenMoneroRequests::get_random_outs(
     }
     catch (boost::bad_lexical_cast& e)
     {
-        cerr << "Bed lexical cast" << '\n';
+        OMERROR << "Bed lexical cast";
         session_close(session, j_response);
         return;
     }

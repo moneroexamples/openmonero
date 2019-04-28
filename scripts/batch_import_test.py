@@ -46,7 +46,10 @@ class OpenMonero:
         return await make_request(om_url+"get_version")
 
     async def login(self):
-        return await make_request(self.url+"login", self.payload)
+        payload = dict(self.payload, 
+                **{"create_account":False,
+                   "generated_locally":False})
+        return await make_request(self.url+"login", payload)
        
     async def import_recent_wallet(self, no_blocks=100000):
         payload = dict(self.payload, 
