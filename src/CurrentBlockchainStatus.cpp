@@ -1084,18 +1084,19 @@ CurrentBlockchainStatus::get_search_thread(string const& acc_address)
 
     return searching_threads.find(acc_address)->second.get_functor();
 }
-
 void
 CurrentBlockchainStatus::clean_search_thread_map()
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 
-    for (auto& st: searching_threads)
+    for (auto it = searching_threads.begin(); 
+            it != searching_threads.end();)
     {
+        auto& st = *it;
+
         if (search_thread_exist(st.first)
                 && st.second.get_functor().still_searching() == false)
         {
-
             // before erasing a search thread, check if there was any
             // exception thrown by it
             try
@@ -1111,7 +1112,11 @@ CurrentBlockchainStatus::clean_search_thread_map()
             }
 
             OMINFO << "Ereasing a search thread";
-            searching_threads.erase(st.first);
+            it = searching_threads.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
 }
