@@ -60,19 +60,6 @@ if (NOT MYSQL_INCLUDE_DIR)
     return()
 endif()
 
-macro(target_include_monero_directories target_name)
-
-    target_include_directories(${target_name}
-        PRIVATE
-        ${MONERO_SOURCE_DIR}/src
-        ${MONERO_SOURCE_DIR}/external
-        ${MONERO_SOURCE_DIR}/build
-        ${MONERO_SOURCE_DIR}/external/easylogging++
-        ${MONERO_SOURCE_DIR}/contrib/epee/include
-        ${MONERO_SOURCE_DIR}/external/db_drivers/liblmdb)
-
-endmacro(target_include_monero_directories)
-
 
 include_directories(${MYSQL_INCLUDE_DIR})
 
@@ -142,7 +129,7 @@ target_include_monero_directories(${PROJECT_NAME})
 set(LIBRARIES
         myxrm
         myxrmcore
-        ${Monero_LIBRARIES}
+        Monero::Monero
         restbed
         mysqlpp
         mysqlclient

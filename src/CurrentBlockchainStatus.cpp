@@ -1307,6 +1307,12 @@ MicroCoreAdapter::get_output_key(uint64_t amount,
 {
     cbs->get_output_keys(amount, absolute_offsets, outputs);
 }
+    
+uint64_t
+MicroCoreAdapter::get_num_outputs(uint64_t amount)
+{
+ return 0;
+}
 
 void
 MicroCoreAdapter::get_output_tx_and_index(

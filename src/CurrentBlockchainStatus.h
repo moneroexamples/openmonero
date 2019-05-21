@@ -378,7 +378,10 @@ public:
     get_output_key(uint64_t amount,
                    vector<uint64_t> const& absolute_offsets,
                    vector<cryptonote::output_data_t>& outputs) 
-                    /*const*/ override;
+                     override;
+
+    virtual uint64_t
+    get_num_outputs(uint64_t amount) override;
 
     virtual void
     get_output_tx_and_index(

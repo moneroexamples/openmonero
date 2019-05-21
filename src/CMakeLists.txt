@@ -30,8 +30,4 @@ add_library(myxrm
 target_include_monero_directories(myxrm)
 target_include_directories(myxrm PRIVATE "xmregcore")
 
-    #target_include_directories(myxmr 
-    #  PUBLIC 
-    #${MONERO_SOURCE_DIR}/contrib/epee/include)
-
 
