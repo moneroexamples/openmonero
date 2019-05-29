@@ -3,6 +3,7 @@
 //
 
 #include "BlockchainSetup.h"
+#include "xmregcore/src/tools.h"
 
 namespace xmreg
 {

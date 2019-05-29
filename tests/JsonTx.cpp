@@ -1,4 +1,5 @@
 #include "JsonTx.h"
+#include "../src/xmregcore/src/tools.h"
 
 namespace xmreg
 {

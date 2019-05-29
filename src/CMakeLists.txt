@@ -19,10 +19,8 @@ set(SOURCE_FILES
         utils.cpp
         RandomOutputs.cpp)
 
-add_library(myxmr STATIC)
-
-target_sources(myxmr
-    PRIVATE ${SOURCE_FILES})
+add_library(myxmr STATIC
+    ${SOURCE_FILES})
 
 target_link_libraries(myxmr 
     PUBLIC

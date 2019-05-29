@@ -50,32 +50,17 @@ using json = nlohmann::json;
 using  epee::string_tools::pod_to_hex;
 using  epee::string_tools::hex_to_pod;
 
-template <typename T>
-bool
-parse_str_secret_key(const string& key_str, T& secret_key);
-
 
 bool
 get_tx_pub_key_from_str_hash(Blockchain& core_storage,
                          const string& hash_str,
                          transaction& tx);
 
-bool
-parse_str_address(const string& address_str,
-                  address_parse_info& address_info,
-                  cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
-
 inline bool
 is_separator(char c);
 
 string
 print_sig (const signature& sig);
-
-string
-remove_trailing_path_separator(const string& in_path);
-
-bf::path
-remove_trailing_path_separator(const bf::path& in_path);
 
 
 string
@@ -85,9 +70,6 @@ ostream&
 operator<< (ostream& os, const address_parse_info& addr);
 
 
-string
-get_default_lmdb_folder(network_type nettype = network_type::MAINNET);
-
 bool
 generate_key_image(const crypto::key_derivation& derivation,
                    const std::size_t output_index,
@@ -95,13 +77,7 @@ generate_key_image(const crypto::key_derivation& derivation,
                    const crypto::public_key& pub_key,
                    crypto::key_image& key_img);
 
-bool
-get_blockchain_path(bf::path& blockchain_path,
-                    network_type nettype = network_type::MAINNET);
 
-bool
-get_blockchain_path(string& blockchain_path,
-                    network_type nettype = network_type::MAINNET);
 
 array<uint64_t, 4>
 summary_of_in_out_rct(
@@ -279,13 +255,6 @@ get_human_readable_timestamp(uint64_t ts);
 string
 make_hash(const string& in_str);
 
-bool
-hex_to_tx(string const& tx_hex, transaction& tx,
-          crypto::hash& tx_hash,  crypto::hash& tx_prefix_hash);
-
-string
-tx_to_hex(transaction const& tx);
-
 
 bool
 hex_to_tx_blob(string const& tx_hex, string& tx_blob);
@@ -303,13 +272,6 @@ blocks_and_txs_from_complete_blocks(
         vector<block_complete_entry> const& cblks,
         vector<block>& blocks,
         vector<transaction>& txs);
-
-bool
-addr_and_viewkey_from_string(string const& addres_str,
-                             string const& viewkey_str,
-                             network_type net_type,
-                             address_parse_info& address_info,
-                             crypto::secret_key& viewkey);
 
 // this function only useful in google test for mocking
 // ring member output info
