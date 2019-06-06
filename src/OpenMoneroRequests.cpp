@@ -91,8 +91,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
 
 
-    // a placeholder for exciting or new account data
-
+    // a placeholder for exciting or new account data id
     uint64_t acc_id {0};
 
     // marks if this is new account creation or not
@@ -120,7 +119,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
         // set this flag to indicate that we have just created a
         // new account in mysql. this information is sent to front-end
         // as it can disply some greeting window to new users upon
-        // their first install
+        // their first entry 
         new_account_created = true;
 
     } // if (!acc)
@@ -133,14 +132,14 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
     // so by now new account has been created or it already exists
     // so we just login into it.
-
+    
     if (login_and_start_search_thread(xmr_address, view_key, *acc, j_response))
     {
        // if successfuly logged in and created search thread
         j_response["status"]      = "success";
 
         // we overwrite what ever was sent in login_and_start_search_thread
-        // for the j_response["new_address"].
+       // for the j_response["new_address"].
         j_response["new_address"] = new_account_created;
     }
     else
@@ -206,102 +205,8 @@ OpenMoneroRequests::get_address_txs(
 
     // for this to continue, search thread must have already been
     // created and still exisits.
-      if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
-      {
-        // before fetching txs, check if provided view key
-        // is correct. this is simply to ensure that
-        // we cant fetch an account's txs using only address.
-        // knowlage of the viewkey is also needed.
-
-        uint64_t total_received {0};
-        uint64_t total_received_unlocked {0};
-
-        j_response["total_received"]          = total_received;
-        j_response["start_height"]            = acc.start_height;
-        j_response["scanned_block_height"]    = acc.scanned_block_height;
-        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(
-                    acc.scanned_block_timestamp);
-        j_response["blockchain_height"]  = get_current_blockchain_height();
-
-        vector<XmrTransaction> txs;
-
-        xmr_accounts->select(acc.id.data, txs);
-
-        if (xmr_accounts->select_txs_for_account_spendability_check(
-                    acc.id.data, txs))
-        {
-            json j_txs = json::array();
-
-            for (XmrTransaction const& tx: txs)
-            {
-                json j_tx {
-                        {"id"             , tx.blockchain_tx_id},
-                        {"coinbase"       , bool {tx.coinbase}},
-                        {"tx_pub_key"     , tx.tx_pub_key},
-                        {"hash"           , tx.hash},
-                        {"height"         , tx.height},
-                        {"mixin"          , tx.mixin},
-                        {"payment_id"     , tx.payment_id},
-                        {"unlock_time"    , tx.unlock_time},                  
-                        {"total_sent"     , 0}, // to be field when checking for spent_outputs below
-                        {"total_received" , std::to_string(tx.total_received)},
-                        {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
-                        {"mempool"        , false} // tx in database are never from mempool
-                };
-
-                vector<XmrInput> inputs;
-
-                if (xmr_accounts->select_for_tx(tx.id.data, inputs))
-                {
-                    json j_spent_outputs = json::array();
-
-                    uint64_t total_spent {0};
-
-                    for (XmrInput input: inputs)
-                    {
-                        XmrOutput out;
-
-                        if (xmr_accounts->select_by_primary_id(
-                                    input.output_id, out))
-                        {
-                            total_spent += input.amount;
-
-                            j_spent_outputs.push_back({
-                              {"amount"     , std::to_string(input.amount)},
-                              {"key_image"  , input.key_image},
-                              {"tx_pub_key" , out.tx_pub_key},
-                              {"out_index"  , out.out_index},
-                              {"mixin"      , out.mixin}});
-                        }
-                    }
-
-                    j_tx["total_sent"] = std::to_string(total_spent);
-
-                    j_tx["spent_outputs"] = j_spent_outputs;
-
-                } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
-
-                total_received += tx.total_received;
-
-                if (bool {tx.spendable})
-                {
-                    total_received_unlocked += tx.total_received;
-                }
-
-                j_txs.push_back(j_tx);
-
-            } // for (XmrTransaction tx: txs)
-
-            j_response["total_received"]          = std::to_string(total_received);
-            j_response["total_received_unlocked"] = std::to_string(total_received_unlocked);
-
-            j_response["transactions"] = j_txs;
-
-        } // if (xmr_accounts->select_txs_for_ac
-
-    } // if (current_bc_status->search_thread_exist(xmr_address))
-    else
-    {        
+    if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    {
         j_response = json {{"status", "error"},
                            {"reason", "Search thread does not exist."}};
 
@@ -309,6 +214,97 @@ OpenMoneroRequests::get_address_txs(
         session_close(session, j_response);
         return;
     }
+
+    // before fetching txs, check if provided view key
+    // is correct. this is simply to ensure that
+    // we cant fetch an account's txs using only address.
+    // knowlage of the viewkey is also needed.
+
+    uint64_t total_received {0};
+    uint64_t total_received_unlocked {0};
+
+    j_response["total_received"]          = total_received;
+    j_response["start_height"]            = acc.start_height;
+    j_response["scanned_block_height"]    = acc.scanned_block_height;
+    j_response["scanned_block_timestamp"] = static_cast<uint64_t>(
+                acc.scanned_block_timestamp);
+    j_response["blockchain_height"]  = get_current_blockchain_height();
+
+    vector<XmrTransaction> txs;
+
+    xmr_accounts->select(acc.id.data, txs);
+
+    if (xmr_accounts->select_txs_for_account_spendability_check(
+                acc.id.data, txs))
+    {
+        json j_txs = json::array();
+
+        for (XmrTransaction const& tx: txs)
+        {
+            json j_tx {
+                    {"id"             , tx.blockchain_tx_id},
+                    {"coinbase"       , bool {tx.coinbase}},
+                    {"tx_pub_key"     , tx.tx_pub_key},
+                    {"hash"           , tx.hash},
+                    {"height"         , tx.height},
+                    {"mixin"          , tx.mixin},
+                    {"payment_id"     , tx.payment_id},
+                    {"unlock_time"    , tx.unlock_time},                  
+                    {"total_sent"     , 0}, // to be field when checking for spent_outputs below
+                    {"total_received" , std::to_string(tx.total_received)},
+                    {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
+                    {"mempool"        , false} // tx in database are never from mempool
+            };
+
+            vector<XmrInput> inputs;
+
+            if (xmr_accounts->select_for_tx(tx.id.data, inputs))
+            {
+                json j_spent_outputs = json::array();
+
+                uint64_t total_spent {0};
+
+                for (XmrInput input: inputs)
+                {
+                    XmrOutput out;
+
+                    if (xmr_accounts->select_by_primary_id(
+                                input.output_id, out))
+                    {
+                        total_spent += input.amount;
+
+                        j_spent_outputs.push_back({
+                          {"amount"     , std::to_string(input.amount)},
+                          {"key_image"  , input.key_image},
+                          {"tx_pub_key" , out.tx_pub_key},
+                          {"out_index"  , out.out_index},
+                          {"mixin"      , out.mixin}});
+                    }
+                }
+
+                j_tx["total_sent"] = std::to_string(total_spent);
+
+                j_tx["spent_outputs"] = j_spent_outputs;
+
+            } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+
+            total_received += tx.total_received;
+
+            if (bool {tx.spendable})
+            {
+                total_received_unlocked += tx.total_received;
+            }
+
+            j_txs.push_back(j_tx);
+
+        } // for (XmrTransaction tx: txs)
+
+        j_response["total_received"]          = std::to_string(total_received);
+        j_response["total_received_unlocked"] = std::to_string(total_received_unlocked);
+
+        j_response["transactions"] = j_txs;
+
+    } // if (xmr_accounts->select_txs_for_ac
 
     // append txs found in mempool to the json returned
 
@@ -363,14 +359,15 @@ OpenMoneroRequests::get_address_txs(
                         boost::lexical_cast<uint64_t>(
                             j_response["total_received_unlocked"].get<string>())
                                           + total_received_mempool - total_sent_mempool);
-        }
 
-    }
+        } //if(!j_mempool_tx.empty())
+
+    } // current_bc_status->find_txs_in_mempool
 
     string response_body = j_response.dump();
 
-    auto response_headers = make_headers({{ "Content-Length",
-                                            to_string(response_body.size())}});
+    auto response_headers = make_headers(
+            {{ "Content-Length", to_string(response_body.size()) }});
 
     session->close(OK, response_body, response_headers);
 }
