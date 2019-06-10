@@ -28,7 +28,7 @@
 // advance which version they will stop working with
 // Don't go over 32767 for any of these
 #define OPENMONERO_RPC_VERSION_MAJOR 1
-#define OPENMONERO_RPC_VERSION_MINOR 5
+#define OPENMONERO_RPC_VERSION_MINOR 6
 #define MAKE_OPENMONERO_RPC_VERSION(major,minor) (((major)<<16)|(minor))
 #define OPENMONERO_RPC_VERSION \
     MAKE_OPENMONERO_RPC_VERSION(OPENMONERO_RPC_VERSION_MAJOR, OPENMONERO_RPC_VERSION_MINOR)
@@ -81,6 +81,9 @@ public:
      */
     void
     login(const shared_ptr<Session> session, const Bytes & body);
+    
+    void
+    ping(const shared_ptr<Session> session, const Bytes & body);
 
     void
     get_address_txs(const shared_ptr< Session > session, const Bytes & body);

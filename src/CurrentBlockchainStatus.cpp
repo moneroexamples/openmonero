@@ -897,6 +897,19 @@ CurrentBlockchainStatus::search_thread_exist(const string& address)
 }
 
 bool
+CurrentBlockchainStatus::search_thread_exist(
+        string const& address, 
+        string const& viewkey)
+{
+    std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
+
+    if (!search_thread_exist(address))
+        return false;
+
+    return get_search_thread(address).get_viewkey() == viewkey;
+}
+
+bool
 CurrentBlockchainStatus::get_xmr_address_viewkey(
         const string& address_str,
         address_parse_info& address,

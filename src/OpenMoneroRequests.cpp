@@ -16,7 +16,6 @@
 namespace xmreg
 {
 
-
 handel_::handel_(const fetch_func_t& callback):
         request_callback {callback}
 {}
@@ -25,7 +24,7 @@ void
 handel_::operator()(const shared_ptr< Session > session)
 {
     const auto request = session->get_request( );
-    size_t content_length = request->get_header( "Content-Length", 0);
+    size_t content_length = request->get_header("Content-Length", 0);
     session->fetch(content_length, this->request_callback);
 }
 
@@ -152,6 +151,67 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
 
 
     session_close(session, j_response);
+}
+
+void
+OpenMoneroRequests::ping(const shared_ptr<Session> session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    vector<string> required_values {"address", "view_key"};
+
+    if (!parse_request(body, required_values, j_request, j_response))
+    {
+        session_close(session, j_response);
+        return;
+    }
+
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        OMERROR << "json exception: " << e.what();
+        session_close(session, j_response, UNPROCESSABLE_ENTITY);
+        return;
+    }
+
+    if (!current_bc_status->search_thread_exist(xmr_address, view_key))
+    {
+        OMERROR << xmr_address.substr(0,6) + ": search thread does not exist";
+        session_close(session, j_response, UNPROCESSABLE_ENTITY);
+        return;
+    }
+
+    // ping the search thread that we still need it.
+    // otherwise it will finish after some time.
+    if (!current_bc_status->ping_search_thread(xmr_address))
+    {
+        j_response = json {{"status", "error"},
+                           {"reason", "Pinging search thread failed."}};
+
+        // some error with loggin in or search thread start
+        session_close(session, j_response);
+        return;
+
+    }
+
+    OMINFO << xmr_address.substr(0,6) + ": search thread ping successful";
+    
+    j_response["status"]  = "success";
+    
+    string response_body = j_response.dump();
+
+    auto response_headers = make_headers({{ "Content-Length",
+                                            to_string(response_body.size())}});
+
+    session->close(OK, response_body, response_headers);
 }
 
 void

@@ -683,11 +683,12 @@ TxSearch::get_current_timestamp() const
 void
 TxSearch::ping()
 {
-    //OMINFO << "New last_ping_timestamp: "
-    //       << last_ping_timestamp.count();
-
     last_ping_timestamp = chrono::duration_cast<seconds>(
             chrono::system_clock::now().time_since_epoch());
+
+    OMVLOG2 << address_prefix 
+            << ": last_ping_timestamp updated to: " 
+            << last_ping_timestamp.count();
 }
 
 bool
@@ -941,6 +942,15 @@ TxSearch::addr_view_t
 TxSearch::get_xmr_address_viewkey() const
 {
     return make_pair(address, viewkey);
+}
+
+
+string
+TxSearch::get_viewkey() const
+{
+    static string viewkey = pod_to_hex(this->viewkey);
+
+    return viewkey;
 }
 
 

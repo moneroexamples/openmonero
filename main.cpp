@@ -259,6 +259,7 @@ xmreg::OpenMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);
+MAKE_RESOURCE(ping);
 MAKE_RESOURCE(get_address_txs);
 MAKE_RESOURCE(get_address_info);
 MAKE_RESOURCE(get_unspent_outs);
@@ -274,6 +275,7 @@ Service service;
 
 // Publish the Open Monero API created so that front end can use it
 service.publish(login);
+service.publish(ping);
 service.publish(get_address_txs);
 service.publish(get_address_info);
 service.publish(get_unspent_outs);

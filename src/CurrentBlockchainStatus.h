@@ -213,6 +213,9 @@ public:
 
     virtual bool
     search_thread_exist(const string& address);
+    
+    virtual bool
+    search_thread_exist(string const& address, string const& viewkey);
 
     virtual bool
     get_xmr_address_viewkey(const string& address_str,

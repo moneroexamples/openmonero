@@ -176,6 +176,9 @@ public:
 
     virtual addr_view_t
     get_xmr_address_viewkey() const;
+    
+    virtual string
+    get_viewkey() const;
 
     static void
     set_search_thread_life(seconds life_seconds);

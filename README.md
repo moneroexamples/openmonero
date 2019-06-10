@@ -327,6 +327,18 @@ Example output:
 {"generated_locally":false,"new_address":true,"start_height":0,"status":"success"}
 ```
 
+### ping 
+
+Pings a search thread for a given account to extend its life.
+
+```bash
+curl  -w "\n" -X POST http://127.0.0.1:1984/ping -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
+```
+
+Example output:
+```json
+{"generated_locally":false,"new_address":true,"start_height":0,"status":"success"}
+```
 #### get_address_txs
 
 Get the list of all txs for the given user with their possible spendings.
