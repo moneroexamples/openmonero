@@ -822,7 +822,10 @@ CurrentBlockchainStatus::start_tx_search_thread(
     }
     catch (const std::exception& e)
     {
-        OMERROR << "Faild created a search thread: " << e.what();
+        OMERROR << acc.address.substr(0,6)
+                << ": Faild created a search thread: " 
+                << e.what();
+
         return false;
     }
 

@@ -135,15 +135,19 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     if (login_and_start_search_thread(xmr_address, view_key, *acc, j_response))
     {
        // if successfuly logged in and created search thread
-        j_response["status"]      = "success";
+       j_response["status"]      = "success";
 
-        // we overwrite what ever was sent in login_and_start_search_thread
+       // we overwrite what ever was sent in login_and_start_search_thread
        // for the j_response["new_address"].
-        j_response["new_address"] = new_account_created;
+       j_response["new_address"] = new_account_created;
     }
     else
     {
         // some error with loggin in or search thread start
+        OMERROR << xmr_address.substr(0,6) << ": " 
+                << "login_and_start_search_thread failed. "
+                << j_response.dump();
+
         session_close(session, j_response);
         return;
 
@@ -206,12 +210,7 @@ OpenMoneroRequests::ping(const shared_ptr<Session> session, const Bytes & body)
     
     j_response["status"]  = "success";
     
-    string response_body = j_response.dump();
-
-    auto response_headers = make_headers({{ "Content-Length",
-                                            to_string(response_body.size())}});
-
-    session->close(OK, response_body, response_headers);
+    session_close(session, j_response);
 }
 
 void
@@ -2145,7 +2144,12 @@ OpenMoneroRequests::create_account(
     if (xmr_accounts->select(xmr_address, *acc))
     {
         // if acc already exist, just return 
-        // existing one
+        // existing oneo
+        
+        OMINFO << xmr_address.substr(0,6) 
+               <<  ": account already exists. "
+               << "Return existing account";
+
         return acc;
     }
 
@@ -2215,7 +2219,9 @@ OpenMoneroRequests::create_account(
     if ((acc_id = xmr_accounts->insert(*acc)) == 0)
     {
         // if creating account failed
-        OMERROR << xmr_address.substr(0,6) + ": account creation failed";
+        OMERROR << xmr_address.substr(0,6) 
+                << ": account creation failed: "
+                << (*acc) ;
 
         return {};
     }
@@ -2244,16 +2250,27 @@ OpenMoneroRequests::select_account(
                    ": address does not exists";
 
         if (!create_if_notfound)
+        {
+            OMINFO << "create_if_notfound is false";
             return {};
+        }
 
         // for this address
         if (!(acc = create_account(xmr_address, view_key)))
+        {
+            OMERROR << xmr_address.substr(0,6) 
+                    << ": create_account failed";
             return {};
+        }
 
         // once account has been created
         // make and start a search thread for it
         if (!make_search_thread(*acc))
+        {
+            OMERROR << xmr_address.substr(0,6) 
+                    << ": make_search_thread failed";
             return {};
+        }
     }
 
     // also need to check if view key matches
