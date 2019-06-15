@@ -71,6 +71,7 @@ private:
     // represents a row in mysql's Accounts table
     shared_ptr<XmrAccount> acc;
 
+
     // stores known output public keys.
     // used as a cash to fast look up of
     // our public keys in key images. Saves a lot of

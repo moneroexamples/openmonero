@@ -6,7 +6,7 @@
 
 #include "TxSearch.h"
 
-#include "db/MySqlAccounts.h"
+//#include "db/MySqlAccounts.h"
 
 #include "db/ssqlses.h"
 
@@ -76,6 +76,13 @@ uint64_t account_id = acc->id.data;
 searching_is_ongoing = true;
 
 MicroCoreAdapter mcore_addapter {current_bc_status_ptr};
+
+// make instance of Account from xmregcore. We need this to be
+// able to identify outputs addressed to subaddresses based
+// on the primary address
+
+auto xmregcore_account = xmreg::make_account(
+        acc->address, acc->viewkey);
 
 // we put everything in massive catch, as there are plenty ways in which
 // an exceptions can be thrown here. Mostly from mysql.
@@ -201,9 +208,14 @@ for (auto const& tx_tuple: txs_data)
     // Class that is responsible for identification of our outputs
     // and inputs in a given tx.
 
+    //auto identifier = make_identifier(tx,
+                        //make_unique<Output>(&address, &viewkey),
+                        //make_unique<Input>(&address, &viewkey,
+                                           //&known_outputs_keys,
+                                           //&mcore_addapter));
     auto identifier = make_identifier(tx,
-                        make_unique<Output>(&address, &viewkey),
-                        make_unique<Input>(&address, &viewkey,
+                        make_unique<Output>(xmregcore_account.get()),
+                        make_unique<Input>(xmregcore_account.get(),
                                            &known_outputs_keys,
                                            &mcore_addapter));
     identifier.identify();
