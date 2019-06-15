@@ -38,10 +38,10 @@ thinwalletCtrls.controller("ImportWalletCtrl", function($scope, $location, $http
     $scope.success = '';
 
     function get_import_request() {
-        if ($scope.account_scan_start_height === 0) {
-            ModalService.hide('import-wallet');
-            return;
-        }
+//        if ($scope.account_scan_start_height === 0) {
+//            ModalService.hide('import-wallet');
+//            return;
+//        }
         ApiCalls.import_wallet_request(AccountService.getAddress(), AccountService.getViewKey())
             .then(function(response) {
 
