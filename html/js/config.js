@@ -1,6 +1,5 @@
 var config = {
-    apiUrl: "http://0.0.0.0:1984/",
-    //apiUrl: "http://127.0.0.1:1984/",
+    apiUrl: "http://127.0.0.1:1984/",
     mainnetExplorerUrl: "https://xmrchain.com/",
     testnetExplorerUrl: "https://testnet.xmrchain.com/",
     stagenetExplorerUrl: "http://139.162.60.17:8082/",
