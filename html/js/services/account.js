@@ -115,7 +115,7 @@ thinwalletServices
                 logged_in = true;
                 // console.log("logged_in = true;");
 
-                ApiCalls.login(public_address, view_key)
+                ApiCalls.login(public_address, view_key, generated_account)
                     .then(function(response) {
                         // set account_imported to true if we are not logging in with a newly generated account, and a new account was created on the server
 

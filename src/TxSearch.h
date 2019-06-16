@@ -62,6 +62,7 @@ private:
 
     mutex getting_eptr;
     mutex getting_known_outputs_keys;
+    mutex access_acc;
 
     seconds last_ping_timestamp;
 
@@ -128,6 +129,9 @@ public:
     get_known_outputs_keys();
 
     virtual void
+    update_acc(XmrAccount const& _acc);
+
+    virtual void
     set_exception_ptr()
     {
         std::lock_guard<std::mutex> lck (getting_eptr);
@@ -172,6 +176,9 @@ public:
 
     virtual addr_view_t
     get_xmr_address_viewkey() const;
+    
+    virtual string
+    get_viewkey() const;
 
     static void
     set_search_thread_life(seconds life_seconds);

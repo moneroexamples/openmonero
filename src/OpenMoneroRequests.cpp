@@ -16,7 +16,6 @@
 namespace xmreg
 {
 
-
 handel_::handel_(const fetch_func_t& callback):
         request_callback {callback}
 {}
@@ -25,7 +24,7 @@ void
 handel_::operator()(const shared_ptr< Session > session)
 {
     const auto request = session->get_request( );
-    size_t content_length = request->get_header( "Content-Length", 0);
+    size_t content_length = request->get_header("Content-Length", 0);
     session->fetch(content_length, this->request_callback);
 }
 
@@ -76,7 +75,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
@@ -91,16 +90,7 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     }
 
 
-    // return same as what we recieved to client
-    j_response["generated_locally"] = generated_locally;
-    //j_response["generated_locally"] = true;
-
-    // optinoal field, but we set it to current height
-    j_response["start_height"] = current_bc_status
-        ->get_current_blockchain_height();
-
-    // a placeholder for exciting or new account data
-
+    // a placeholder for exciting or new account data id
     uint64_t acc_id {0};
 
     // marks if this is new account creation or not
@@ -114,7 +104,8 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     {
         // account does not exist, so create new one
         // for this address
-        if (!(acc = create_account(xmr_address, view_key)))
+        if (!(acc = create_account(xmr_address, view_key, 
+                                   generated_locally)))
         {
             // if creating account failed
             j_response = json {{"status", "error"},
@@ -123,37 +114,102 @@ OpenMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
             session_close(session, j_response);
             return;
         }
-
+    
         // set this flag to indicate that we have just created a
         // new account in mysql. this information is sent to front-end
         // as it can disply some greeting window to new users upon
-        // their first install
+        // their first entry 
         new_account_created = true;
 
     } // if (!acc)
+        
+    
+    j_response["generated_locally"] = bool {acc->generated_locally};
+
+    j_response["start_height"] = acc->start_height;
 
 
     // so by now new account has been created or it already exists
     // so we just login into it.
-
+    
     if (login_and_start_search_thread(xmr_address, view_key, *acc, j_response))
     {
        // if successfuly logged in and created search thread
-        j_response["status"]      = "success";
+       j_response["status"]      = "success";
 
-        // we overwrite what ever was sent in login_and_start_search_thread
-        // for the j_response["new_address"].
-        j_response["new_address"] = new_account_created;
+       // we overwrite what ever was sent in login_and_start_search_thread
+       // for the j_response["new_address"].
+       j_response["new_address"] = new_account_created;
     }
     else
     {
         // some error with loggin in or search thread start
+        OMERROR << xmr_address.substr(0,6) << ": " 
+                << "login_and_start_search_thread failed. "
+                << j_response.dump();
+
         session_close(session, j_response);
         return;
 
     } // else  if (login_and_start_search_thread(xmr_address,
 
 
+    session_close(session, j_response);
+}
+
+void
+OpenMoneroRequests::ping(const shared_ptr<Session> session, const Bytes & body)
+{
+    json j_response;
+    json j_request;
+
+    vector<string> required_values {"address", "view_key"};
+
+    if (!parse_request(body, required_values, j_request, j_response))
+    {
+        session_close(session, j_response);
+        return;
+    }
+
+    string xmr_address;
+    string view_key;
+
+    try
+    {
+        xmr_address = j_request["address"];
+        view_key    = j_request["view_key"];
+    }
+    catch (json::exception const& e)
+    {
+        OMERROR << "json exception: " << e.what();
+        session_close(session, j_response, UNPROCESSABLE_ENTITY);
+        return;
+    }
+
+    if (!current_bc_status->search_thread_exist(xmr_address, view_key))
+    {
+        OMERROR << xmr_address.substr(0,6) + ": search thread does not exist";
+        session_close(session, j_response, UNPROCESSABLE_ENTITY);
+        return;
+    }
+
+    // ping the search thread that we still need it.
+    // otherwise it will finish after some time.
+    if (!current_bc_status->ping_search_thread(xmr_address))
+    {
+        j_response = json {{"status", "error"},
+                           {"reason", "Pinging search thread failed."}};
+
+        // some error with loggin in or search thread start
+        session_close(session, j_response);
+        return;
+
+    }
+
+    OMINFO << xmr_address.substr(0,6) + ": search thread ping successful";
+    
+    j_response["status"]  = "success";
+    
     session_close(session, j_response);
 }
 
@@ -208,102 +264,8 @@ OpenMoneroRequests::get_address_txs(
 
     // for this to continue, search thread must have already been
     // created and still exisits.
-      if (login_and_start_search_thread(xmr_address, view_key, acc, j_response))
-      {
-        // before fetching txs, check if provided view key
-        // is correct. this is simply to ensure that
-        // we cant fetch an account's txs using only address.
-        // knowlage of the viewkey is also needed.
-
-        uint64_t total_received {0};
-        uint64_t total_received_unlocked {0};
-
-        j_response["total_received"]          = total_received;
-        j_response["start_height"]            = acc.start_height;
-        j_response["scanned_block_height"]    = acc.scanned_block_height;
-        j_response["scanned_block_timestamp"] = static_cast<uint64_t>(
-                    acc.scanned_block_timestamp);
-        j_response["blockchain_height"]  = get_current_blockchain_height();
-
-        vector<XmrTransaction> txs;
-
-        xmr_accounts->select(acc.id.data, txs);
-
-        if (xmr_accounts->select_txs_for_account_spendability_check(
-                    acc.id.data, txs))
-        {
-            json j_txs = json::array();
-
-            for (XmrTransaction const& tx: txs)
-            {
-                json j_tx {
-                        {"id"             , tx.blockchain_tx_id},
-                        {"coinbase"       , bool {tx.coinbase}},
-                        {"tx_pub_key"     , tx.tx_pub_key},
-                        {"hash"           , tx.hash},
-                        {"height"         , tx.height},
-                        {"mixin"          , tx.mixin},
-                        {"payment_id"     , tx.payment_id},
-                        {"unlock_time"    , tx.unlock_time},                  
-                        {"total_sent"     , 0}, // to be field when checking for spent_outputs below
-                        {"total_received" , std::to_string(tx.total_received)},
-                        {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
-                        {"mempool"        , false} // tx in database are never from mempool
-                };
-
-                vector<XmrInput> inputs;
-
-                if (xmr_accounts->select_for_tx(tx.id.data, inputs))
-                {
-                    json j_spent_outputs = json::array();
-
-                    uint64_t total_spent {0};
-
-                    for (XmrInput input: inputs)
-                    {
-                        XmrOutput out;
-
-                        if (xmr_accounts->select_by_primary_id(
-                                    input.output_id, out))
-                        {
-                            total_spent += input.amount;
-
-                            j_spent_outputs.push_back({
-                              {"amount"     , std::to_string(input.amount)},
-                              {"key_image"  , input.key_image},
-                              {"tx_pub_key" , out.tx_pub_key},
-                              {"out_index"  , out.out_index},
-                              {"mixin"      , out.mixin}});
-                        }
-                    }
-
-                    j_tx["total_sent"] = std::to_string(total_spent);
-
-                    j_tx["spent_outputs"] = j_spent_outputs;
-
-                } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
-
-                total_received += tx.total_received;
-
-                if (bool {tx.spendable})
-                {
-                    total_received_unlocked += tx.total_received;
-                }
-
-                j_txs.push_back(j_tx);
-
-            } // for (XmrTransaction tx: txs)
-
-            j_response["total_received"]          = std::to_string(total_received);
-            j_response["total_received_unlocked"] = std::to_string(total_received_unlocked);
-
-            j_response["transactions"] = j_txs;
-
-        } // if (xmr_accounts->select_txs_for_ac
-
-    } // if (current_bc_status->search_thread_exist(xmr_address))
-    else
-    {        
+    if (!login_and_start_search_thread(xmr_address, view_key, acc, j_response))
+    {
         j_response = json {{"status", "error"},
                            {"reason", "Search thread does not exist."}};
 
@@ -311,6 +273,97 @@ OpenMoneroRequests::get_address_txs(
         session_close(session, j_response);
         return;
     }
+
+    // before fetching txs, check if provided view key
+    // is correct. this is simply to ensure that
+    // we cant fetch an account's txs using only address.
+    // knowlage of the viewkey is also needed.
+
+    uint64_t total_received {0};
+    uint64_t total_received_unlocked {0};
+
+    j_response["total_received"]          = total_received;
+    j_response["start_height"]            = acc.start_height;
+    j_response["scanned_block_height"]    = acc.scanned_block_height;
+    j_response["scanned_block_timestamp"] = static_cast<uint64_t>(
+                acc.scanned_block_timestamp);
+    j_response["blockchain_height"]  = get_current_blockchain_height();
+
+    vector<XmrTransaction> txs;
+
+    xmr_accounts->select(acc.id.data, txs);
+
+    if (xmr_accounts->select_txs_for_account_spendability_check(
+                acc.id.data, txs))
+    {
+        json j_txs = json::array();
+
+        for (XmrTransaction const& tx: txs)
+        {
+            json j_tx {
+                    {"id"             , tx.blockchain_tx_id},
+                    {"coinbase"       , bool {tx.coinbase}},
+                    {"tx_pub_key"     , tx.tx_pub_key},
+                    {"hash"           , tx.hash},
+                    {"height"         , tx.height},
+                    {"mixin"          , tx.mixin},
+                    {"payment_id"     , tx.payment_id},
+                    {"unlock_time"    , tx.unlock_time},                  
+                    {"total_sent"     , 0}, // to be field when checking for spent_outputs below
+                    {"total_received" , std::to_string(tx.total_received)},
+                    {"timestamp"      , static_cast<uint64_t>(tx.timestamp)*1000},
+                    {"mempool"        , false} // tx in database are never from mempool
+            };
+
+            vector<XmrInput> inputs;
+
+            if (xmr_accounts->select_for_tx(tx.id.data, inputs))
+            {
+                json j_spent_outputs = json::array();
+
+                uint64_t total_spent {0};
+
+                for (XmrInput input: inputs)
+                {
+                    XmrOutput out;
+
+                    if (xmr_accounts->select_by_primary_id(
+                                input.output_id, out))
+                    {
+                        total_spent += input.amount;
+
+                        j_spent_outputs.push_back({
+                          {"amount"     , std::to_string(input.amount)},
+                          {"key_image"  , input.key_image},
+                          {"tx_pub_key" , out.tx_pub_key},
+                          {"out_index"  , out.out_index},
+                          {"mixin"      , out.mixin}});
+                    }
+                }
+
+                j_tx["total_sent"] = std::to_string(total_spent);
+
+                j_tx["spent_outputs"] = j_spent_outputs;
+
+            } // if (xmr_accounts->select_inputs_for_tx(tx.id, inputs))
+
+            total_received += tx.total_received;
+
+            if (bool {tx.spendable})
+            {
+                total_received_unlocked += tx.total_received;
+            }
+
+            j_txs.push_back(j_tx);
+
+        } // for (XmrTransaction tx: txs)
+
+        j_response["total_received"]          = std::to_string(total_received);
+        j_response["total_received_unlocked"] = std::to_string(total_received_unlocked);
+
+        j_response["transactions"] = j_txs;
+
+    } // if (xmr_accounts->select_txs_for_ac
 
     // append txs found in mempool to the json returned
 
@@ -365,14 +418,15 @@ OpenMoneroRequests::get_address_txs(
                         boost::lexical_cast<uint64_t>(
                             j_response["total_received_unlocked"].get<string>())
                                           + total_received_mempool - total_sent_mempool);
-        }
 
-    }
+        } //if(!j_mempool_tx.empty())
+
+    } // current_bc_status->find_txs_in_mempool
 
     string response_body = j_response.dump();
 
-    auto response_headers = make_headers({{ "Content-Length",
-                                            to_string(response_body.size())}});
+    auto response_headers = make_headers(
+            {{ "Content-Length", to_string(response_body.size()) }});
 
     session->close(OK, response_body, response_headers);
 }
@@ -402,7 +456,7 @@ OpenMoneroRequests::get_address_info(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
@@ -582,13 +636,13 @@ OpenMoneroRequests::get_unspent_outs(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     }
     catch (boost::bad_lexical_cast const& e)
     {
-        cerr << "Bed lexical cast" << e.what() << '\n';
+        OMERROR << "Bed lexical cast" << e.what() << '\n';
         session_close(session, j_response);
         return;
     }
@@ -817,14 +871,14 @@ OpenMoneroRequests::get_random_outs(
     }
     catch (json::exception const& e)
     {
-        cerr << "json exception: " << e.what() << '\n';
+        OMERROR << "json exception: " << e.what();
         session_close(session, j_response);
         return;
     };
 
     if (count > 41)
     {
-        cerr << "Request ring size too big" << '\n';
+        OMERROR << "Request ring size too big" << '\n';
         j_response["status"] = "error";
         j_response["error"]  = "Request ring size too large";
         session_close(session, j_response);
@@ -846,7 +900,7 @@ OpenMoneroRequests::get_random_outs(
     }
     catch (boost::bad_lexical_cast& e)
     {
-        cerr << "Bed lexical cast" << '\n';
+        OMERROR << "Bed lexical cast";
         session_close(session, j_response);
         return;
     }
@@ -1000,6 +1054,10 @@ OpenMoneroRequests::submit_raw_tx(
     session->close( OK, response_body, response_headers);
 }
 
+//@todo current import_wallet_request end point
+// still requires some work. The reason is that 
+// at this moment it is not clear how it is
+// handled in mymonero-app-js
 void
 OpenMoneroRequests::import_wallet_request(
         const shared_ptr< Session > session, const Bytes & body)
@@ -1055,16 +1113,49 @@ OpenMoneroRequests::import_wallet_request(
 
     auto import_fee = current_bc_status->get_bc_setup().import_fee;
 
-    // we dont care about any databases or anything, as importing
-    // wallet is free.
-    // just reset the scanned block height in mysql and finish.
+    // if import is free than just upadte mysql and set new 
+    // tx search block 
     if (import_fee == 0)
     {
+        
+        XmrAccount updated_acc = *xmr_account;
+
+        updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
+
+        // set scanned_block_height	to 0 to begin
+        // scanning entire blockchain
+
+
+
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
+
+        if (!xmr_accounts->update(*xmr_account, updated_acc))
+        {
+            OMERROR << xmr_address.substr(0,6) +
+                        "Updating scanned_block_height failed!\n";
+
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Updating scanned_block_height failed!");
+            return;
+        }
+        
         // change search blk number in the search thread
         if (!current_bc_status->set_new_searched_blk_no(xmr_address, 0))
         {
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "Updating searched_blk_no failed!");
+            return;
+        }
+        
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
             return;
         }
 
@@ -1220,9 +1311,15 @@ OpenMoneroRequests::import_wallet_request(
         XmrAccount updated_acc = *xmr_account;
 
         updated_acc.scanned_block_height = 0;
+        updated_acc.start_height = 0;
 
         // set scanned_block_height	to 0 to begin
         // scanning entire blockchain
+        
+        // @todo we will have race condition here
+        // as we updated mysql here, but at the same time 
+        // txsearch tread does the same thing
+        // and just few lines blow we update_acc yet again
 
         if (!xmr_accounts->update(*xmr_account, updated_acc))
         {
@@ -1233,6 +1330,7 @@ OpenMoneroRequests::import_wallet_request(
                           "Updating scanned_block_height failed!");
             return;
         }
+        
 
         // if success, set acc to updated_acc;
         request_fulfilled = true;
@@ -1244,7 +1342,14 @@ OpenMoneroRequests::import_wallet_request(
             session_close(session, j_response, UNPROCESSABLE_ENTITY,
                           "updating searched_blk_no failed!");
             return;
+        }
 
+        if (!current_bc_status
+                ->update_acc(xmr_address, updated_acc))
+        {
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "updating acc in search thread failed!");
+            return;
         }
 
         j_response["request_fulfilled"]
@@ -1315,10 +1420,8 @@ OpenMoneroRequests::import_recent_wallet_request(
                 + j_request["no_blocks_to_import"].get<string>()
                 + " into number";
 
-        OMERROR << xmr_address.substr(0,6)  + ": " + msg;
-
-        j_response["Error"] = msg;
-        session_close(session, j_response);
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      msg);
         return;
     }
     
@@ -1338,9 +1441,12 @@ OpenMoneroRequests::import_recent_wallet_request(
                                    current_bc_status->get_bc_setup()
                                    .max_number_of_blocks_to_import);
 
+    auto current_blkchain_height
+            = current_bc_status->get_current_blockchain_height();
+
     no_blocks_to_import
             = std::min(no_blocks_to_import,
-                      current_bc_status->get_current_blockchain_height());
+                      current_blkchain_height);
 
     XmrAccount& acc = *xmr_account;
 
@@ -1349,45 +1455,59 @@ OpenMoneroRequests::import_recent_wallet_request(
     // make sure scanned_block_height is larger than
     // no_blocks_to_import so we dont
     // end up with overflowing uint64_t.
-
-    if (updated_acc.scanned_block_height >= no_blocks_to_import)
+    if (updated_acc.scanned_block_height < no_blocks_to_import)
     {
-        // repetead calls to import_recent_wallet_request will be
-        // moving the scanning backward.
-        // not sure yet if any protection is needed to
-        // make sure that a user does not
-        // go back too much back by importing his/hers
-        // wallet multiple times in a row.
-        updated_acc.scanned_block_height
-                = updated_acc.scanned_block_height - no_blocks_to_import;
-
-        if (xmr_accounts->update(acc, updated_acc))
-        {
-            // change search blk number in the search thread
-            if (!current_bc_status
-                    ->set_new_searched_blk_no(xmr_address,
-                                updated_acc.scanned_block_height))
-            {
-
-                OMERROR << xmr_address.substr(0,6) 
-                        << ": updating searched_blk_no failed!" << endl;
-                j_response["Error"]  = "Updating searched_blk_no failed!";
-            }
-            else
-            {
-                // if success, makre that request was successful;
-                request_fulfilled = true;
-            }
-        }
-
-    }  // if (updated_acc.scanned_block_height > no_blocks_to_import)
-
-    if (request_fulfilled)
-    {
-        j_response["request_fulfilled"] = request_fulfilled;
-        j_response["status"]  = "Updating account with for"
-                                " importing recent txs successeful.";
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "scanned_block_height < no_blocks_to_import!");
+        return;
     }
+
+    // if import fee is zero, than scanned_block_height will
+    // be automatically set to zero. But in case someone does
+    // not want to imporot from scrach, we set it here to
+    // current blockchain height
+    auto import_fee = current_bc_status->get_bc_setup().import_fee;
+
+    if (import_fee == 0)
+        updated_acc.scanned_block_height = current_blkchain_height;
+
+    // repetead calls to import_recent_wallet_request will be
+    // moving the scanning backward.
+    // not sure yet if any protection is needed to
+    // make sure that a user does not
+    // go back too much back by importing his/hers
+    // wallet multiple times in a row.
+    updated_acc.scanned_block_height
+            = updated_acc.scanned_block_height - no_blocks_to_import;
+
+    if (!xmr_accounts->update(acc, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating account failed!");
+        return;
+    }
+
+    // change search blk number in the search thread
+    if (!current_bc_status
+            ->set_new_searched_blk_no(xmr_address,
+                        updated_acc.scanned_block_height))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "Updating searched_blk_no failed!");
+        return;
+    }
+
+    if (!current_bc_status
+            ->update_acc(xmr_address, updated_acc))
+    {
+        session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                      "updating acc in search thread failed!");
+        return;
+    }
+        
+    j_response["request_fulfilled"] = true; 
+    j_response["status"]  = "Updating account with for"
+                            " importing recent txs successeful.";
 
     string response_body = j_response.dump();
 
@@ -2016,14 +2136,20 @@ OpenMoneroRequests::parse_request(
 boost::optional<XmrAccount>
 OpenMoneroRequests::create_account(
         string const& xmr_address,
-        string const& view_key) const
+        string const& view_key,
+        bool generated_locally) const
 {
     boost::optional<XmrAccount> acc = XmrAccount{};
 
     if (xmr_accounts->select(xmr_address, *acc))
     {
         // if acc already exist, just return 
-        // existing one
+        // existing oneo
+        
+        OMINFO << xmr_address.substr(0,6) 
+               <<  ": account already exists. "
+               << "Return existing account";
+
         return acc;
     }
 
@@ -2048,14 +2174,44 @@ OpenMoneroRequests::create_account(
             = XmrTransaction::timestamp_to_DateTime(
                 current_blockchain_timestamp);
 
+
+    //@todo setting up start_height and scanned_block_height
+    //needs to be revisited as they are needed for importing
+    //wallets. The simples way is when import is free and this
+    //should already work. More problematic is how to set these
+    //fields when import fee is non-zero. It depends
+    //how mymonero is doing this. At the momemnt, I'm not sure.
+    
+    uint64_t start_height  =  current_blockchain_height;
+    uint64_t scanned_block_height = current_blockchain_height;
+    
+    if (current_bc_status->get_bc_setup().import_fee == 0)
+    {
+    
+        // accounts generated locally (using create account button)
+        // will have start height equal to current blockchain height.
+        // existing accounts, i.e., those imported ones, also called
+        //  extenal ones  will have start_height of 0 to 
+        //  indicated that they could
+        // have been created years ago
+    
+        start_height  = generated_locally
+                        ? current_blockchain_height : 0;
+    
+        // if scan block height is zero (for extranl wallets)
+        // blockchain scanning starts immedietly.
+        scanned_block_height = start_height;
+    }
+
     // create new account
     acc = XmrAccount(
                    mysqlpp::null,
                    xmr_address,
                    make_hash(view_key),
-                   current_blockchain_height, /* for scanned_block_height */
+                   scanned_block_height,
                    blk_timestamp_mysql_format,
-                   current_blockchain_height);
+                   start_height,
+                   generated_locally);
 
     uint64_t acc_id {0};
 
@@ -2063,7 +2219,9 @@ OpenMoneroRequests::create_account(
     if ((acc_id = xmr_accounts->insert(*acc)) == 0)
     {
         // if creating account failed
-        OMERROR << xmr_address.substr(0,6) + ": account creation failed";
+        OMERROR << xmr_address.substr(0,6) 
+                << ": account creation failed: "
+                << (*acc) ;
 
         return {};
     }
@@ -2092,16 +2250,27 @@ OpenMoneroRequests::select_account(
                    ": address does not exists";
 
         if (!create_if_notfound)
+        {
+            OMINFO << "create_if_notfound is false";
             return {};
+        }
 
         // for this address
         if (!(acc = create_account(xmr_address, view_key)))
+        {
+            OMERROR << xmr_address.substr(0,6) 
+                    << ": create_account failed";
             return {};
+        }
 
         // once account has been created
         // make and start a search thread for it
         if (!make_search_thread(*acc))
+        {
+            OMERROR << xmr_address.substr(0,6) 
+                    << ": make_search_thread failed";
             return {};
+        }
     }
 
     // also need to check if view key matches

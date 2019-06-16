@@ -60,9 +60,18 @@ if (*help_opt)
 auto monero_log_level  =
         *(opts.get_option<size_t>("monero-log-level"));
 
+auto verbose_level = 
+        *(opts.get_option<size_t>("verbose"));
+
 if (monero_log_level < 1 || monero_log_level > 4)
 {
     cerr << "monero-log-level,m option must be between 1 and 4!\n";
+    return EXIT_SUCCESS;
+}
+
+if (verbose_level < 0 || verbose_level > 4)
+{
+    cerr << "verbose,v option must be between 0 and 4!\n";
     return EXIT_SUCCESS;
 }
 
@@ -93,9 +102,14 @@ defaultConf.setGlobally(el::ConfigurationType::Format,
                         "%datetime [%levshort,%logger,%fbase:%func:%line]"
                         " %msg");
 
+el::Loggers::setVerboseLevel(verbose_level);
+
 el::Loggers::reconfigureLogger(OPENMONERO_LOG_CATEGORY, defaultConf);
 
 OMINFO << "OpenMonero is starting";
+
+if (verbose_level > 0)
+    OMINFO << "Using verbose log level to: " << verbose_level;
 
 auto do_not_relay_opt = opts.get_option<bool>("do-not-relay");
 auto testnet_opt      = opts.get_option<bool>("testnet");
@@ -245,6 +259,7 @@ xmreg::OpenMoneroRequests open_monero(mysql_accounts, current_bc_status);
 
 // create Open Monero APIs
 MAKE_RESOURCE(login);
+MAKE_RESOURCE(ping);
 MAKE_RESOURCE(get_address_txs);
 MAKE_RESOURCE(get_address_info);
 MAKE_RESOURCE(get_unspent_outs);
@@ -260,6 +275,7 @@ Service service;
 
 // Publish the Open Monero API created so that front end can use it
 service.publish(login);
+service.publish(ping);
 service.publish(get_address_txs);
 service.publish(get_address_info);
 service.publish(get_unspent_outs);
