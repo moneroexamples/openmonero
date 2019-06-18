@@ -11,7 +11,7 @@
 #include "db/ssqlses.h"
 
 #include "CurrentBlockchainStatus.h"
-#include "src/UniversalIdentifier.hpp"
+
 
 namespace xmreg
 {
@@ -42,6 +42,18 @@ TxSearch::TxSearch(XmrAccount const& _acc,
         OMERROR << "Cant parse private view key: " + acc->address;
         throw TxSearchException("Cant parse private view key: "
                                 + acc->viewkey);
+    }
+
+    // make instance of Account from xmregcore. We need this to be
+    // able to identify outputs addressed to subaddresses based
+    // on the primary address
+    xmregcore_account = xmreg::make_account(
+            acc->address, acc->viewkey);
+
+    if (!xmregcore_account)
+    {
+        throw TxSearchException("Cant create xmregcore_account: "
+                                + acc->address);
     }
 
     populate_known_outputs();
@@ -76,13 +88,6 @@ uint64_t account_id = acc->id.data;
 searching_is_ongoing = true;
 
 MicroCoreAdapter mcore_addapter {current_bc_status_ptr};
-
-// make instance of Account from xmregcore. We need this to be
-// able to identify outputs addressed to subaddresses based
-// on the primary address
-
-auto xmregcore_account = xmreg::make_account(
-        acc->address, acc->viewkey);
 
 // we put everything in massive catch, as there are plenty ways in which
 // an exceptions can be thrown here. Mostly from mysql.
@@ -246,6 +251,12 @@ for (auto const& tx_tuple: txs_data)
     //oi_identification.identify_outputs();
     auto const& outputs_identified
         = identifier.get<Output>()->get();
+
+    if (!outputs_identified.empty())
+    {
+        cout << "outputs_identified.size(): " 
+             << outputs_identified.size() << '\n';
+    }
 
     auto total_received = calc_total_xmr(outputs_identified);
 
@@ -783,8 +794,8 @@ uint8_t rct_type            = (is_rct ? tx.rct_signatures.type : 0);
 // and inputs in a given tx.
 
 auto identifier = make_identifier(tx, 
-                    make_unique<Output>(&address, &viewkey),
-                    make_unique<Input>(&address, &viewkey, 
+                    make_unique<Output>(xmregcore_account.get()),
+                    make_unique<Input>(xmregcore_account.get(),
                                        &known_outputs_keys, 
                                        &mcore_addapter));
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "db/MySqlAccounts.h"
+#include "src/UniversalIdentifier.hpp"
 
 #include <memory>
 #include <mutex>
@@ -71,6 +72,7 @@ private:
     // represents a row in mysql's Accounts table
     shared_ptr<XmrAccount> acc;
 
+    unique_ptr<xmreg::Account> xmregcore_account;
 
     // stores known output public keys.
     // used as a cash to fast look up of
