@@ -393,7 +393,8 @@ for (auto const& tx_tuple: txs_data)
         {
             OMERROR << address_prefix 
                     << ": insert outputs_found: no_rows_inserted is zero!"
-                    << outputs_found << " in tx " << tx_hash_str;
+                    << " in tx " << tx_hash_str << " in blk " << blk_height
+                    << ' ' << outputs_found;
 
             throw TxSearchException("insert output_found: "
                                     "no_rows_inserted is zero!");
@@ -582,7 +583,8 @@ for (auto const& tx_tuple: txs_data)
             {
                 OMERROR << address_prefix 
                         << ": insert inputs_found: no_rows_inserted is zero!"
-                        << inputs_found << " in tx " << tx_hash_str;
+                        << " in tx " << tx_hash_str << " in blk " << blk_height 
+                        << ' ' << inputs_found;
 
                 throw TxSearchException(
                             "insert inputs_found: no_rows_inserted is zero!");
