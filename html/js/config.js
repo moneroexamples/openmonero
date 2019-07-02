@@ -1,8 +1,4 @@
 var config = {
-<<<<<<< HEAD
-=======
-    //apiUrl: "http://0.0.0.0:1984/",
->>>>>>> master
     apiUrl: "http://127.0.0.1:1984/",
     mainnetExplorerUrl: "https://xmrchain.com/",
     testnetExplorerUrl: "https://testnet.xmrchain.com/",
