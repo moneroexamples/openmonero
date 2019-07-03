@@ -721,7 +721,7 @@ TxSearch::populate_known_outputs()
 
             hex_to_pod(out.out_pub_key, out_pub_key);
 
-            known_outputs_keys[out_pub_key] = out.amount;
+            known_outputs_keys.insert({out_pub_key, out.amount});
         }
     }
 }

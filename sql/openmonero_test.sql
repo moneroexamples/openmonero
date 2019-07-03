@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS `Outputs` (
   `mixin` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `out_pub_key` (`out_pub_key`),
+  UNIQUE KEY `out_pub_key` (`out_pub_key`, `tx_id`),
   KEY `tx_id` (`tx_id`),
   KEY `account_id` (`account_id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=140460833003782 DEFAULT CHARSET=utf8;

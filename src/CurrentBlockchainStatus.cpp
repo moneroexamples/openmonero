@@ -872,7 +872,7 @@ CurrentBlockchainStatus::get_searched_blk_no(const string& address,
 bool
 CurrentBlockchainStatus::get_known_outputs_keys(
         string const& address,
-        unordered_map<public_key, uint64_t>& known_outputs_keys)
+        known_outputs_t& known_outputs_keys)
 {
     std::lock_guard<std::mutex> lck (searching_threads_map_mtx);
 

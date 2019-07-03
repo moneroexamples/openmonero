@@ -1452,6 +1452,9 @@ OpenMoneroRequests::import_recent_wallet_request(
 
     XmrAccount updated_acc = acc;
 
+    //cout << updated_acc.scanned_block_height 
+         //<< ',' << no_blocks_to_import << '\n';
+
     // make sure scanned_block_height is larger than
     // no_blocks_to_import so we dont
     // end up with overflowing uint64_t.
@@ -1805,7 +1808,7 @@ OpenMoneroRequests::get_tx(
 
                 // we have to redo this info from basically from scrach.
 
-                unordered_map<public_key, uint64_t> known_outputs_keys;
+                CurrentBlockchainStatus::known_outputs_t known_outputs_keys;
 
                 if (current_bc_status->get_known_outputs_keys(
                         xmr_address, known_outputs_keys))

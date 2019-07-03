@@ -50,6 +50,8 @@ public:
     //                               recieved_time, tx
     using mempool_txs_t = vector<pair<uint64_t, transaction>>;
 
+                                            //output_pubk, amount
+    using known_outputs_t = unordered_multimap<public_key, uint64_t>;
 
     //              height , timestamp, is_coinbase
     using txs_tuple_t
@@ -259,8 +261,7 @@ public:
 
     virtual bool
     get_known_outputs_keys(string const& address,
-                           unordered_map<public_key, 
-                           uint64_t>& known_outputs_keys);
+                           known_outputs_t& known_outputs_keys);
 
     virtual void
     clean_search_thread_map();
