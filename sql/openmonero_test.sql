@@ -80,7 +80,6 @@ CREATE TABLE IF NOT EXISTS `Inputs` (
   `amount` bigint(20) UNSIGNED ZEROFILL NOT NULL DEFAULT '00000000000000000000',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `output_id` (`output_id`,`key_image`),
   KEY `account_id2` (`account_id`),
   KEY `tx_id2` (`tx_id`),
   KEY `output_id2` (`output_id`)
