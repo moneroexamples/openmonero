@@ -27,6 +27,8 @@ public:
     virtual string table_name() const = 0;
     virtual json to_json()      const = 0;
 
+    virtual ~Table() = default;
+
     friend std::ostream& operator<< (std::ostream& stream, const Table& data);
 };
 

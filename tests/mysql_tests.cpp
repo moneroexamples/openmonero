@@ -925,10 +925,32 @@ TEST_F(MYSQL_TEST, SelectInputsForOutput)
 
     ASSERT_TRUE(xmr_accounts->select_inputs_for_out(output_id, inputs));
 
+    for (auto&& in: inputs)
+    {
+        cout << in << 'n';
+    }
+
     EXPECT_EQ(inputs.size(), 3);
 
-    EXPECT_EQ(inputs.front().key_image, "00dd88b3a16b3616d342faec2bc47b24add433407ef79b9a00b55b75d96239a4");
-    EXPECT_EQ(inputs.back().key_image, "abc529357f90641d501d5108f822617049c19461569eafa45cb5400ee45bef33");
+    auto it= std::find_if(
+        inputs.begin(), inputs.end(),
+        [](auto const& input)
+        {
+           return input.key_image 
+            == "00dd88b3a16b3616d342faec2bc47b24add433407ef79b9a00b55b75d96239a4";
+        });
+
+    EXPECT_TRUE(it != inputs.end());
+
+    it= std::find_if(
+        inputs.begin(), inputs.end(),
+        [](auto const& input)
+        {
+           return input.key_image 
+            == "abc529357f90641d501d5108f822617049c19461569eafa45cb5400ee45bef33";
+        });
+
+    EXPECT_TRUE(it != inputs.end());
 
     inputs.clear();
 
@@ -1035,7 +1057,9 @@ TEST_F(MYSQL_TEST, InsertSeverlInputsAtOnce)
 TEST_F(MYSQL_TEST, TryToInsertSameInputTwice)
 {
     // the input table requires a row to be unique for pair
-    // of key_image + output_id
+    // of key_image + output_id. UPDATE. This is no longer
+    // the case as output public keys are not garanteed to 
+    // be unique
 
     ACC_FROM_HEX(owner_addr_5Ajfk);
 
@@ -1048,10 +1072,10 @@ TEST_F(MYSQL_TEST, TryToInsertSameInputTwice)
 
     EXPECT_GT(inserted_id, 0);
 
-    // second insert should fail and result in 0
+    // second insert should also be fine
     inserted_id = xmr_accounts->insert(mock_data);
 
-    EXPECT_EQ(inserted_id, 0);
+    EXPECT_GT(inserted_id, 0);
 }
 
 
