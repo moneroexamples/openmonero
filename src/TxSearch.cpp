@@ -396,8 +396,9 @@ for (auto const& tx_tuple: txs_data)
                     << " in tx " << tx_hash_str << " in blk " << blk_height
                     << ' ' << outputs_found;
 
-            throw TxSearchException("insert output_found: "
-                                    "no_rows_inserted is zero!");
+            continue;
+            //throw TxSearchException("insert output_found: "
+            //                        "no_rows_inserted is zero!");
         }
 
     } // if (!found_mine_outputs.empty())
@@ -586,8 +587,9 @@ for (auto const& tx_tuple: txs_data)
                         << " in tx " << tx_hash_str << " in blk " << blk_height 
                         << ' ' << inputs_found;
 
-                throw TxSearchException(
-                            "insert inputs_found: no_rows_inserted is zero!");
+                continue;
+                //throw TxSearchException(
+                            //"insert inputs_found: no_rows_inserted is zero!");
             }
 
         } //  if (!inputs_found.empty())
