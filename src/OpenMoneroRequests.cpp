@@ -2159,7 +2159,8 @@ OpenMoneroRequests::create_account(
     // in a moment we will try to get last block timestamp
     // to replace this value. But if it fails, we just use current
     // timestamp
-    uint64_t current_blockchain_timestamp = std::time(nullptr);
+    uint64_t current_blockchain_timestamp 
+        = std::time(nullptr);
 
     // get last block so we have its timestamp when
     // createing the account
@@ -2167,13 +2168,13 @@ OpenMoneroRequests::create_account(
 
     if (current_bc_status->get_block(current_blockchain_height, last_blk))
     {
-        current_blockchain_timestamp = last_blk.timestamp;
+        if (last_blk.timestamp != 0)
+            current_blockchain_timestamp = last_blk.timestamp;
     }
 
     DateTime blk_timestamp_mysql_format
             = XmrTransaction::timestamp_to_DateTime(
                 current_blockchain_timestamp);
-
 
     //@todo setting up start_height and scanned_block_height
     //needs to be revisited as they are needed for importing
