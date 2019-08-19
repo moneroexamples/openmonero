@@ -46,7 +46,8 @@ CurrentBlockchainStatus::monitor_blockchain()
                break;
            }
 
-           OMVLOG1 << "PoolQueue size: " 
+           //OMVLOG1 << "PoolQueue size: " 
+           OMINFO << "PoolQueue size: " 
                    << TP::DefaultThreadPool::queueSize(); 
 
            update_current_blockchain_height();           
