@@ -1710,9 +1710,19 @@ OpenMoneroRequests::get_tx(
     if (current_bc_status->get_xmr_address_viewkey(
                 xmr_address, address_info, viewkey))
     {
+        auto coreacc = make_account(xmr_address, view_key);
+
+        if (!coreacc)
+        {
+            // if creation failed, just close the session
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Cant create coreacc for " + xmr_address);
+            return;
+        }
     
-        auto identifier = make_identifier(tx, 
-                        make_unique<Output>(&address_info, &viewkey));
+        auto identifier = make_identifier(
+                                tx, 
+                                make_unique<Output>(coreacc.get()));
 
         identifier.identify();
     
@@ -1738,6 +1748,7 @@ OpenMoneroRequests::get_tx(
 
         // a placeholder for exciting or new account data
         XmrAccount acc;
+
 
         // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
@@ -1819,7 +1830,7 @@ OpenMoneroRequests::get_tx(
                     // and inputs in a given tx.
 
                     auto identifier = make_identifier(tx, 
-                                    make_unique<Input>(&address_info, &viewkey, 
+                                    make_unique<Input>(coreacc.get(), 
                                                        &known_outputs_keys, 
                                                        &mcore_addapter));
                     identifier.identify();
