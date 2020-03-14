@@ -590,62 +590,51 @@ bool
 CurrentBlockchainStatus::read_mempool()
 {
     // get txs in the mempool
-    std::vector<tx_info> mempool_tx_info;
-    vector<spent_key_image_info> key_image_infos;
+
+    mempool_txs_t local_mempool_txs;
     
     auto future_result = thread_pool->submit(
-        [this](auto& mempool_tx_info, auto& key_image_infos) 
+        [this](auto& local_mempool_txs)
             -> bool 
         {
-            if (!this->mcore->get_mempool_txs(
-                        mempool_tx_info, key_image_infos))
+
+            std::vector<transaction> txs;
+
+            if (!this->mcore->get_mempool_txs(txs))
             {
                 OMERROR << "Getting mempool failed ";
                 return false;
             }
+
+            for (size_t i = 0; i < txs.size(); ++i)
+            {
+                // get transaction info of the tx in the mempool
+                auto const& tx = txs.at(i);
+
+                tx_memory_pool::tx_details txd;
+
+                txpool_tx_meta_t meta;
+
+                if (!this->mcore->get_core().get_txpool_tx_meta(tx.hash, meta))
+                {
+                  OMERROR << "Failed to find tx in txpool";
+                  return false;
+                }
+
+                local_mempool_txs.emplace_back(meta.receive_time, tx);
+
+            } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
+
             return true;
 
-        }, std::ref(mempool_tx_info),
-           std::ref(key_image_infos));
+        }, std::ref(local_mempool_txs));
 
     if (!future_result.get())
         return false;
 
-    // not using this info at present
-    (void) key_image_infos;
-
     std::lock_guard<std::mutex> lck (getting_mempool_txs);
 
-    // clear current mempool txs vector
-    // repopulate it with each execution of read_mempool()
-    // not very efficient but good enough for now.
-    mempool_txs.clear();
-
-    // if dont have tx_blob member, construct tx
-    // from json obtained from the rpc call
-
-    for (size_t i = 0; i < mempool_tx_info.size(); ++i)
-    {
-        // get transaction info of the tx in the mempool
-        tx_info const& _tx_info = mempool_tx_info.at(i);
-
-        transaction tx;
-        crypto::hash tx_hash;
-        crypto::hash tx_prefix_hash;
-
-        if (!parse_and_validate_tx_from_blob(
-                _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
-        {
-            OMERROR << "Cant make tx from _tx_info.tx_blob";
-            return false;
-        }
-
-        (void) tx_hash;
-        (void) tx_prefix_hash;
-
-        mempool_txs.emplace_back(_tx_info.receive_time, tx);
-
-    } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
+    mempool_txs = std::move(local_mempool_txs);
 
     return true;
 }
