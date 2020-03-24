@@ -1240,7 +1240,7 @@ blocks_and_txs_from_complete_blocks(
         {
             transaction tx;
 
-            if (!parse_and_validate_tx_from_blob(tx_blob, tx))
+            if (!parse_and_validate_tx_from_blob(tx_blob.blob, tx))
                 return false;
 
             txs.push_back(tx);

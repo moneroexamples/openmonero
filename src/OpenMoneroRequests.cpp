@@ -1710,9 +1710,19 @@ OpenMoneroRequests::get_tx(
     if (current_bc_status->get_xmr_address_viewkey(
                 xmr_address, address_info, viewkey))
     {
+        auto coreacc = make_account(xmr_address, view_key);
+
+        if (!coreacc)
+        {
+            // if creation failed, just close the session
+            session_close(session, j_response, UNPROCESSABLE_ENTITY,
+                          "Cant create coreacc for " + xmr_address);
+            return;
+        }
     
-        auto identifier = make_identifier(tx, 
-                        make_unique<Output>(&address_info, &viewkey));
+        auto identifier = make_identifier(
+                                tx, 
+                                make_unique<Output>(coreacc.get()));
 
         identifier.identify();
     
@@ -1738,6 +1748,7 @@ OpenMoneroRequests::get_tx(
 
         // a placeholder for exciting or new account data
         XmrAccount acc;
+
 
         // select this account if its existing one
         if (xmr_accounts->select(xmr_address, acc))
@@ -1819,7 +1830,7 @@ OpenMoneroRequests::get_tx(
                     // and inputs in a given tx.
 
                     auto identifier = make_identifier(tx, 
-                                    make_unique<Input>(&address_info, &viewkey, 
+                                    make_unique<Input>(coreacc.get(), 
                                                        &known_outputs_keys, 
                                                        &mcore_addapter));
                     identifier.identify();
@@ -2159,7 +2170,8 @@ OpenMoneroRequests::create_account(
     // in a moment we will try to get last block timestamp
     // to replace this value. But if it fails, we just use current
     // timestamp
-    uint64_t current_blockchain_timestamp = std::time(nullptr);
+    uint64_t current_blockchain_timestamp 
+        = std::time(nullptr);
 
     // get last block so we have its timestamp when
     // createing the account
@@ -2167,13 +2179,13 @@ OpenMoneroRequests::create_account(
 
     if (current_bc_status->get_block(current_blockchain_height, last_blk))
     {
-        current_blockchain_timestamp = last_blk.timestamp;
+        if (last_blk.timestamp != 0)
+            current_blockchain_timestamp = last_blk.timestamp;
     }
 
     DateTime blk_timestamp_mysql_format
             = XmrTransaction::timestamp_to_DateTime(
                 current_blockchain_timestamp);
-
 
     //@todo setting up start_height and scanned_block_height
     //needs to be revisited as they are needed for importing
