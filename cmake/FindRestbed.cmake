@@ -25,7 +25,7 @@ if ( restbed_SOURCE )
     message( STATUS "${Green}Found Restbed include at: 
     ${restbed_SOURCE}${Reset}" )
 
-    
+    mark_as_advanced(restbed_INCLUDE restbed_LIBRARY)
 
     #add_library(Restbed::Restbed INTERFACE IMPORTED GLOBAL)
 
