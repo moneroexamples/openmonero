@@ -460,6 +460,21 @@ CurrentBlockchainStatus::get_output_histogram(
     return future_result.get();
 }
 
+bool
+CurrentBlockchainStatus::get_rct_output_distribution(
+        std::vector<uint64_t>& rct_offsets) const
+{
+
+    if (!rpc->get_rct_output_distribution(rct_offsets))
+    {
+        OMERROR << "rpc->get_rct_output_distribution() "
+                   "get_rct_output_distribution failed";
+        return false;
+    }
+
+    return true;
+}
+
 unique_ptr<RandomOutputs>
 CurrentBlockchainStatus::create_random_outputs_object(
         vector<uint64_t> const& amounts,
