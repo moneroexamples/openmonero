@@ -55,6 +55,9 @@ public:
     virtual bool
     get_current_height(uint64_t& current_height);
 
+    virtual bool
+    get_rct_output_distribution(std::vector<uint64_t>& rct_offsets);
+
     virtual ~RPCCalls() = default;
 
 protected:

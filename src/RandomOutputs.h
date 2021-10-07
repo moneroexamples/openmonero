@@ -69,13 +69,25 @@ protected:
 
     outs_for_amount_v found_outputs;
 
+    virtual bool
+    get_outputs_per_second(std::vector<uint64_t> rct_offsets, double& outputs_per_second) const;
+
+    virtual bool
+    gamma_pick(std::vector<uint64_t> rct_offsets,
+               double outputs_per_second,
+               uint64_t& decoy_output_index) const;
+
     virtual uint64_t
-    get_random_output_index(uint64_t num_outs) const;
+    triangular_pick(uint64_t num_outs) const;
 
     virtual bool
     get_output_pub_key(uint64_t amount,
                        uint64_t global_output_index,
                        crypto::public_key& out_pk) const;
+
+    virtual bool
+    get_output_histogram(const std::vector<uint64_t> pre_rct_output_amounts,
+                         std::vector<COMMAND_RPC_GET_OUTPUT_HISTOGRAM::entry>& histogram) const;
 
 };
 

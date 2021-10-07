@@ -166,6 +166,9 @@ public:
             COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res) const;
 
     virtual bool
+    get_rct_output_distribution(std::vector<uint64_t>& rct_offsets) const;
+
+    virtual bool
     get_outs(COMMAND_RPC_GET_OUTPUTS_BIN::request const& req,
              COMMAND_RPC_GET_OUTPUTS_BIN::response& res) const;
 
