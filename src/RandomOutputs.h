@@ -83,7 +83,8 @@ protected:
     virtual bool
     get_output_pub_key(uint64_t amount,
                        uint64_t global_output_index,
-                       crypto::public_key& out_pk) const;
+                       crypto::public_key& out_pk,
+                       bool& unlocked) const;
 
     virtual bool
     get_output_histogram(const std::vector<uint64_t> pre_rct_output_amounts,

@@ -137,7 +137,8 @@ bool
 RandomOutputs::get_output_pub_key(
         uint64_t amount,
         uint64_t global_output_index,
-        crypto::public_key& out_pk) const
+        crypto::public_key& out_pk,
+        bool& unlocked) const
 {
     COMMAND_RPC_GET_OUTPUTS_BIN::request req;
     COMMAND_RPC_GET_OUTPUTS_BIN::response res;
@@ -154,6 +155,7 @@ RandomOutputs::get_output_pub_key(
         return false;
 
     out_pk = res.outs[0].key;
+    unlocked = res.outs[0].unlocked;
 
     return true;
 }
@@ -225,7 +227,7 @@ RandomOutputs::find_random_outputs()
         // use it as a failself, as we don't want infinit loop here
         size_t trial_i {0};
 
-        while (seen_indices.size() < outs_count)
+        while (outs_info.outs.size() < outs_count)
         {
             if (trial_i++ > max_no_of_trials)
             {
@@ -246,18 +248,24 @@ RandomOutputs::find_random_outputs()
             seen_indices.emplace(random_global_amount_idx);
 
             crypto::public_key found_output_public_key;
+            bool unlocked;
 
             if (!get_output_pub_key(amount,
                                     random_global_amount_idx,
-                                    found_output_public_key))
+                                    found_output_public_key,
+                                    unlocked))
             {
                 OMERROR << "Cant find outputs public key for amount "
                         << amount << " and global_index of "
                         << random_global_amount_idx;
+                continue;
             }
 
-            outs_info.outs.push_back({random_global_amount_idx,
-                                      found_output_public_key});
+            if (unlocked)
+            {
+                outs_info.outs.push_back({random_global_amount_idx,
+                                          found_output_public_key});
+            }
         }
 
         found_outputs.push_back(outs_info);
