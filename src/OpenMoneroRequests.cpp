@@ -1627,7 +1627,7 @@ OpenMoneroRequests::get_tx(
     vector<txin_to_key> input_key_imgs;
 
     // public keys and xmr amount of outputs
-    vector<pair<txout_to_key, uint64_t>> output_pub_keys;
+    vector<pair<public_key, uint64_t>> output_pub_keys;
 
     uint64_t xmr_inputs;
     uint64_t xmr_outputs;
