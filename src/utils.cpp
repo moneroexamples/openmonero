@@ -852,14 +852,9 @@ is_output_ours(const size_t& output_index,
     boost::optional<crypto::view_tag> vt;
     vt = cryptonote::get_output_view_tag(tx.vout[output_index]);
 
-    if (vt)
+    if (!cryptonote::out_can_be_to_acc(vt, derivation, output_index))
     {
-        crypto::view_tag out_vt;
-        crypto::derive_view_tag(derivation, output_index, out_vt);
-        if (*vt != out_vt)
-        {
-            return false;
-        }
+       return false;
     }
 
     // get the tx output public key
@@ -933,7 +928,7 @@ make_tx_from_json(const string& json_str, transaction& tx)
         {
             target = {txout_to_key {out_pub_key}};
         }
-        else if (vo["target"].contains["tagged_key"] &&
+        else if (vo["target"].contains("tagged_key") &&
                  epee::string_tools::hex_to_pod(vo["target"]["tagged_key"]["key"],
                                                 out_pub_key) &&
                  epee::string_tools::hex_to_pod(vo["target"]["tagged_key"]["view_tag"],
