@@ -168,7 +168,7 @@ generate_key_image(const crypto::key_derivation& derivation,
 array<uint64_t, 4>
 summary_of_in_out_rct(
         const transaction& tx,
-        vector<pair<txout_to_key, uint64_t>>& output_pub_keys,
+        vector<pair<public_key, uint64_t>>& output_pub_keys,
         vector<txin_to_key>& input_key_imgs)
 {
 
@@ -180,18 +180,15 @@ summary_of_in_out_rct(
 
     for (const tx_out& txout: tx.vout)
     {
-        if (txout.target.type() != typeid(txout_to_key))
+        public_key output_pub_key;
+        if (!cryptonote::get_output_public_key(txout, output_pub_key))
         {
             // push empty pair.
-            output_pub_keys.push_back(pair<txout_to_key, uint64_t>{});
+            output_pub_keys.push_back(pair<public_key, uint64_t>{});
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(txout.target);
-
-        output_pub_keys.push_back(make_pair(txout_key, txout.amount));
+        output_pub_keys.push_back(make_pair(output_pub_key, txout.amount));
 
         xmr_outputs += txout.amount;
     }
@@ -402,47 +399,41 @@ sum_fees_in_txs(const vector<transaction>& txs)
 
 
 
-vector<pair<txout_to_key, uint64_t>>
+vector<pair<public_key, uint64_t>>
 get_ouputs(const transaction& tx)
 {
-    vector<pair<txout_to_key, uint64_t>> outputs;
+    vector<pair<public_key, uint64_t>> outputs;
 
     for (const tx_out& txout: tx.vout)
     {
-        if (txout.target.type() != typeid(txout_to_key))
+        public_key out_pub_key;
+        if (!cryptonote::get_output_public_key(txout, out_pub_key))
         {
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(txout.target);
-
-        outputs.push_back(make_pair(txout_key, txout.amount));
+        outputs.push_back(make_pair(out_pub_key, txout.amount));
     }
 
     return outputs;
 
 };
 
-vector<tuple<txout_to_key, uint64_t, uint64_t>>
+vector<tuple<public_key, uint64_t, uint64_t>>
 get_ouputs_tuple(const transaction& tx)
 {
-    vector<tuple<txout_to_key, uint64_t, uint64_t>> outputs;
+    vector<tuple<public_key, uint64_t, uint64_t>> outputs;
 
     for (uint64_t n = 0; n < tx.vout.size(); ++n)
     {
 
-        if (tx.vout[n].target.type() != typeid(txout_to_key))
+        public_key out_pub_key;
+        if (!cryptonote::get_output_public_key(tx.vout[n], out_pub_key))
         {
             continue;
         }
 
-        // get tx input key
-        const txout_to_key& txout_key
-                = boost::get<cryptonote::txout_to_key>(tx.vout[n].target);
-
-        outputs.push_back(make_tuple(txout_key, tx.vout[n].amount, n));
+        outputs.push_back(make_tuple(out_pub_key, tx.vout[n].amount, n));
     }
 
     return outputs;
@@ -855,6 +846,16 @@ is_output_ours(const size_t& output_index,
         return false;
     }
 
+    // check view tag for a match
+    // if no match, output isn't ours
+    // if match, check output public key
+    boost::optional<crypto::view_tag> vt;
+    vt = cryptonote::get_output_view_tag(tx.vout[output_index]);
+
+    if (!cryptonote::out_can_be_to_acc(vt, derivation, output_index))
+    {
+       return false;
+    }
 
     // get the tx output public key
     // that normally would be generated for us,
@@ -869,11 +870,14 @@ is_output_ours(const size_t& output_index,
     //cout << "\n" << tx.vout.size() << " " << output_index << endl;
 
     // get tx output public key
-    const txout_to_key tx_out_to_key
-            = boost::get<txout_to_key>(tx.vout[output_index].target);
+    public_key out_pub_key;
+    if (!cryptonote::get_output_public_key(tx.vout[output_index], out_pub_key))
+    {
+        return false;
+    }
 
 
-    if (tx_out_to_key.key == pubkey)
+    if (out_pub_key == pubkey)
     {
         return true;
     }
@@ -916,14 +920,27 @@ make_tx_from_json(const string& json_str, transaction& tx)
         uint64_t amount = vo["amount"].get<uint64_t>();
 
         public_key out_pub_key;
+        crypto::view_tag vt;
+        txout_target_v target;
 
-        if (!epee::string_tools::hex_to_pod(vo["target"]["key"], out_pub_key))
+        if (vo["target"].contains("key") &&
+            epee::string_tools::hex_to_pod(vo["target"]["key"], out_pub_key))
+        {
+            target = {txout_to_key {out_pub_key}};
+        }
+        else if (vo["target"].contains("tagged_key") &&
+                 epee::string_tools::hex_to_pod(vo["target"]["tagged_key"]["key"],
+                                                out_pub_key) &&
+                 epee::string_tools::hex_to_pod(vo["target"]["tagged_key"]["view_tag"],
+                                                vt))
+        {
+            target = {txout_to_tagged_key {out_pub_key, vt}};
+        }
+        else
         {
             cerr << "Faild to parse public_key of an output from json" << endl;
             return false;
         }
-
-        txout_target_v target {txout_to_key {out_pub_key}};
 
         tx_outputs.push_back(tx_out {amount, target});
     }
